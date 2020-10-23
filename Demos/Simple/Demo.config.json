@@ -1,0 +1,9 @@
+{
+  "connections": [
+    {
+      "name": "Test",
+      "server": "(local)",
+      "databasename": "Test"
+    }
+  ]
+}
