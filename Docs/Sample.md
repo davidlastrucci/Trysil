@@ -10,9 +10,9 @@
 > *Trysil* - Operation ORM (World War II)<br>
 > http://codenames.info/operation/orm/
 
+### Model
 Using **Trysil** you can define a model that map a database table into a class.
 
-### Model
 <pre>
 <b>type</b>
 
@@ -42,9 +42,10 @@ Using **Trysil** you can define a model that map a database table into a class.
   <b>end</b>;
 </pre>
 
- Then you can use entities for CRUD operations
 
 ### Example
+ Then you can use entities for CRUD operations
+
 <pre>
 <b>var</b>
   LConnection: TTDataConnection;
