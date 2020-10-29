@@ -59,7 +59,7 @@ Using **Trysil** you can define a model that map a database table into a class.
 
   LConnection := TTDataSqlServerConnection.Create('Main');
   <b>try</b>
-    LContext := TTContext.Create(FConnection);
+    LContext := TTContext.Create(LConnection);
     <b>try</b>
       LPersons := TTList&lt;TPerson&gt;.Create;
       <b>try</b>

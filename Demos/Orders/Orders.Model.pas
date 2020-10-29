@@ -1,4 +1,4 @@
-(*
+﻿(*
 
   Trysil
   Copyright © David Lastrucci
@@ -203,8 +203,8 @@ type
     [TColumn('CustomerID')]
     FCustomer: TTLazy<TCustomer>;
 
-    [TColumn('Cached')]
-    FCached: Boolean;
+    [TColumn('Cashed')]
+    FCashed: Boolean;
 
     [TVersionColumn]
     [TColumn('VersionID')]
@@ -220,7 +220,7 @@ type
     property ID: TTPrimaryKey read FID;
     property OrderDate: TDateTime read FOrderDate write FOrderDate;
     property Customer: TCustomer read GetCustomer write SetCustomer;
-    property Cached: Boolean read FCached write FCached;
+    property Cashed: Boolean read FCashed write FCashed;
 
     property Detail: TTList<TOrderDetail> read GetDetail;
   end;
