@@ -34,6 +34,7 @@ type
 
     procedure Add(const AKey: K; const AValue: V);
     function TryGetValue(const AKey: K; var AValue: V): Boolean;
+    procedure Remove(const AKey: K);
   end;
 
 { TTCacheEx<K, V> }
@@ -79,6 +80,16 @@ end;
 function TTCache<K, V>.TryGetValue(const AKey: K; var AValue: V): Boolean;
 begin
   result := FCache.TryGetValue(AKey, AValue);
+end;
+
+procedure TTCache<K, V>.Remove(const AKey: K);
+begin
+  FCriticalSection.Acquire;
+  try
+    FCache.Remove(AKey);
+  finally
+    FCriticalSection.Leave;
+  end;
 end;
 
 { TTCacheEx<K, V> }

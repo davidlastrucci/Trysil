@@ -37,6 +37,7 @@ type
     procedure AddEntity<T: class>(
       const APrimaryKey: TTPrimaryKey; const AEntity: T);
     function GetEntity<T: class>(const APrimaryKey: TTPrimaryKey): T;
+    procedure RemoveEntity<T: class>(const APrimaryKey: TTPrimaryKey);
   end;
 
 implementation
@@ -62,6 +63,11 @@ begin
   result := default(T);
   if GetValueOrCreate(TypeInfo(T)).TryGetValue(APrimaryKey, LResult) then
     result := T(LResult);
+end;
+
+procedure TTIdentityMap.RemoveEntity<T>(const APrimaryKey: TTPrimaryKey);
+begin
+  GetValueOrCreate(TypeInfo(T)).Remove(APrimaryKey);
 end;
 
 end.
