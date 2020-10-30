@@ -84,11 +84,15 @@ end;
 
 procedure TTCache<K, V>.Remove(const AKey: K);
 begin
-  FCriticalSection.Acquire;
-  try
-    FCache.Remove(AKey);
-  finally
-    FCriticalSection.Leave;
+  if FCache.ContainsKey(AKey) then
+  begin
+    FCriticalSection.Acquire;
+    try
+      if FCache.ContainsKey(AKey) then
+        FCache.Remove(AKey);
+    finally
+      FCriticalSection.Leave;
+    end;
   end;
 end;
 
