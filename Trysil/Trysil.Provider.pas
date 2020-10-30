@@ -111,10 +111,11 @@ begin
   try
     LPrimaryKey := FContext.Connection.GetSequenceID(LTableMap.SequenceName);
     LTableMap.PrimaryKey.Member.SetValue(result, LPrimaryKey);
-    FContext.IdentityMap.AddEntity<T>(LPrimaryKey, result);
 
     MapLazyColumns<T>(LTableMap, nil, result);
     MapLazyListColumns<T>(LTableMap, nil, result);
+
+    FContext.IdentityMap.AddEntity<T>(LPrimaryKey, result);
   except
     result.Free;
     raise;
