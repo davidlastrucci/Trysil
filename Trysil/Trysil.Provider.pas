@@ -67,6 +67,7 @@ type
     constructor Create(const AContext: TTAbstractContext);
 
     function CreateEntity<T: class, constructor>(): T;
+    function CloneEntity<T: class, constructor>(const AEntity: T): T;
 
     function GetMetadata<T: class>(): TTTableMetadata;
 
@@ -136,6 +137,28 @@ begin
   end;
 
   MapEntity<T>(ATableMap, AReader, result);
+end;
+
+function TTProvider.CloneEntity<T>(const AEntity: T): T;
+var
+  LTableMap: TTTableMap;
+  LColumnMap: TTColumnMap;
+  LDetailColumnMap: TTDetailColumnMap;
+begin
+  LTableMap := FContext.Mapper.Load<T>();
+  result := T.Create;
+  try
+    MapLazyColumns<T>(LTableMap, nil, result);
+    MapLazyListColumns<T>(LTableMap, nil, result);
+    for LColumnMap in LTableMap.Columns do
+      LColumnMap.Member.SetValue(result, LColumnMap.Member.GetValue(AEntity));
+    for LDetailColumnMap in LTableMap.DetailColums do
+      LDetailColumnMap.Member.SetValue(
+        result, LDetailColumnMap.Member.GetValue(AEntity));
+  except
+    result.Free;
+    raise;
+  end;
 end;
 
 function TTProvider.GetValue(

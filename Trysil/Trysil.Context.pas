@@ -43,6 +43,7 @@ type
     procedure RollbackTransaction;
 
     function CreateEntity<T: class, constructor>(): T;
+    function CloneEntity<T: class, constructor>(const AEntity: T): T;
 
     function GetMetadata<T: class>(): TTTableMetadata;
 
@@ -97,6 +98,11 @@ end;
 function TTContext.CreateEntity<T>(): T;
 begin
   result := FProvider.CreateEntity<T>();
+end;
+
+function TTContext.CloneEntity<T>(const AEntity: T): T;
+begin
+  result := FProvider.CloneEntity<T>(AEntity);
 end;
 
 function TTContext.GetMetadata<T>: TTTableMetadata;
