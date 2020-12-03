@@ -499,10 +499,12 @@ begin
   try
     for LColumnMap in FTableMap.Columns do
       if (LColumnMap <> FTableMap.VersionColumn) then
-        LResult.AppendFormat(':%s, ', [LColumnMap.Name]);
-    // VersionColumn
-    LResult.Append('0');
+        LResult.AppendFormat(':%s, ', [LColumnMap.Name])
+      else
+        LResult.Append('0, ');
+
     result := LResult.ToString();
+    result := result.SubString(0, result.Length - 2);
   finally
     LResult.Free;
   end;
