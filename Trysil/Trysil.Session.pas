@@ -32,7 +32,8 @@ type
   TTSession<T: class, constructor> = class
   strict private
     FContext: TTContext;
-    FOriginalEntities: TTList<T>;
+    FOriginalEntities: TList<T>;
+
     FApplied: Boolean;
     FClonedEntities: TObjectList<T>;
     FAllEntities: TList<T>;
@@ -43,7 +44,7 @@ type
     function GetEntityState(const AEntity: T): TTSessionState;
     procedure InternalApplyChanges;
   public
-    constructor Create(const AContext: TTContext; const AList: TTList<T>);
+    constructor Create(const AContext: TTContext; const AList: TList<T>);
     destructor Destroy; override;
 
     procedure AfterConstruction; override;
@@ -68,7 +69,7 @@ implementation
 { TTSession<T> }
 
 constructor TTSession<T>.Create(
-  const AContext: TTContext; const AList: TTList<T>);
+  const AContext: TTContext; const AList: TList<T>);
 begin
   inherited Create;
   FContext := AContext;
