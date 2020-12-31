@@ -188,12 +188,13 @@ begin
     InternalApplyChanges;
     if LLocalTransaction then
       FContext.CommitTransaction;
-    FApplied := True;
   except
     if LLocalTransaction then
       FContext.RollbackTransaction;
     raise;
   end;
+
+  FApplied := True;
 end;
 
 end.
