@@ -162,13 +162,13 @@ begin
   begin
     LState := GetEntityState(LEntity);
     case LState of
-      Inserted:
+      TTSessionState.Inserted:
         FContext.Insert<T>(LEntity);
 
-      Updated:
+      TTSessionState.Updated:
         FContext.Update<T>(LEntity);
 
-      Deleted:
+      TTSessionState.Deleted:
         FContext.Delete<T>(LEntity);
     end;
   end;
