@@ -34,6 +34,8 @@ type
     FConnection: TTDataConnection;
     FProvider: TTProvider;
     FResolver: TTResolver;
+
+    function GetInTransaction: Boolean;
   public
     constructor Create(const AConnection: TTDataConnection); override;
     destructor Destroy; override;
@@ -59,6 +61,7 @@ type
     procedure Update<T: class>(const AEntity: T);
     procedure Delete<T: class>(const AEntity: T);
 
+    property InTransaction: Boolean read GetInTransaction;
   end;
 
 implementation
@@ -78,6 +81,11 @@ begin
   FResolver.Free;
   FProvider.Free;
   inherited Destroy;
+end;
+
+function TTContext.GetInTransaction: Boolean;
+begin
+  result := FConnection.InTransaction;
 end;
 
 procedure TTContext.StartTransaction;

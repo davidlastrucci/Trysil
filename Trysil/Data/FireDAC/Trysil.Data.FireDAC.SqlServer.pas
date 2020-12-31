@@ -43,6 +43,7 @@ type
     FMSSQLDriverLink: TFDPhysMSSQLDriverLink;
     FConnection: TFDConnection;
   strict protected
+    function GetInTransaction: Boolean; override;
     function SelectCount(
       const ATableMap: TTTableMap;
       const ATableName: String;
@@ -228,6 +229,11 @@ begin
   finally
     LSyntax.Free;
   end;
+end;
+
+function TTDataSqlServerConnection.GetInTransaction: Boolean;
+begin
+  result := FConnection.InTransaction;
 end;
 
 procedure TTDataSqlServerConnection.GetMetadata(
