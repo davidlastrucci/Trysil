@@ -101,19 +101,20 @@ procedure TTSession<T>.CloneEntities;
 var
   LEntity, LClone: T;
 begin
-  for LEntity in FOriginalEntities do
-  begin
-    LClone := FContext.CloneEntity<T>(LEntity);
-    try
-      FEntities.Add(LClone);
-      FAllEntities.Add(LClone);
-      FEntityStates.Add(LClone, TTSessionState.Original);
-      FClonedEntities.Add(LClone);
-    except
-      LClone.Free;
-      raise;
+  if Assigned(FOriginalEntities) then
+    for LEntity in FOriginalEntities do
+    begin
+      LClone := FContext.CloneEntity<T>(LEntity);
+      try
+        FEntities.Add(LClone);
+        FAllEntities.Add(LClone);
+        FEntityStates.Add(LClone, TTSessionState.Original);
+        FClonedEntities.Add(LClone);
+      except
+        LClone.Free;
+        raise;
+      end;
     end;
-  end;
 end;
 
 function TTSession<T>.GetEntityState(const AEntity: T): TTSessionState;
