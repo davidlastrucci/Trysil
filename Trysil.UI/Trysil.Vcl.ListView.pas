@@ -679,6 +679,9 @@ begin
 
     if (not Assigned(SelectedEntity)) and (Items.Count > 0) then
       Selected := Items[0];
+
+    if Assigned(Selected) then
+      Selected.MakeVisible(True);
   finally
     Items.EndUpdate;
   end;
