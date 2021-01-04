@@ -76,6 +76,9 @@
 - TTRttiMember
 - TTRttiField: TTRttiMember
 - TTRttiProperty: TTRttiMember
+### Trysil.Session
+- TTSessionState
+- TTSession<T>
 ### Trysil.Sync
 - TTCriticalSection
 ### Trysil.Types
