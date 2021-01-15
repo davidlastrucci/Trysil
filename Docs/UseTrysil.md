@@ -75,7 +75,7 @@ procedure TDemo.Execute;
 var
   LPersonalData: TPersonalData;
 begin
-  LPersonalData := FContext.CreateEntity<TPersonalData>();
+  LPersonalData := FContext.CreateEntity&lt;TPersonalData&gt;();
   Insert(LPersonalData);
   Update(LPersonalData);
   Delete(LPersonalData);
