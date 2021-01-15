@@ -40,7 +40,8 @@
 constructor TDemo.Create;
 begin
   inherited Create;
-  TTDataSqlServerConnection.RegisterConnection('Test', '127.0.0.1', 'DatabaseName');
+  TTDataSqlServerConnection.RegisterConnection(
+    'Test', '127.0.0.1', 'DatabaseName');
   FConnection := TTDataSqlServerConnection.Create('Test');
   FContext := TTContext.Create(FConnection);
 end;
