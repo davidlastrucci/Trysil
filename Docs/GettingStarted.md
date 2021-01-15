@@ -10,7 +10,7 @@
 > *Trysil* - Operation ORM (World War II)<br>
 > http://codenames.info/operation/orm/
 
-### Getting Started
+### Getting started
 
 In this example we will see how to:
 
