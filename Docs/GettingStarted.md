@@ -18,6 +18,8 @@ In this example we will see how to:
 - [Define entity](https://github.com/davidlastrucci/Trysil/blob/master/Docs/DefineEntity.md)
 - [Use Trysil](https://github.com/davidlastrucci/Trysil/blob/master/Docs/UseTrysil.md)
 
+**Enjoy!**
+
 ---
 <p>
   <a href="https://www.lastrucci.net/">
