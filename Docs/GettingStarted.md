@@ -15,7 +15,7 @@
 In this example we will see how to:
 
 - [Design database](https://github.com/davidlastrucci/Trysil/blob/master/Docs/DesignDatabase.md)
-- [Define the entity](https://github.com/davidlastrucci/Trysil/blob/master/Docs/DefineEntity.md)
+- [Define entity](https://github.com/davidlastrucci/Trysil/blob/master/Docs/DefineEntity.md)
 - [Use Trysil](https://github.com/davidlastrucci/Trysil/blob/master/Docs/UseTrysil.md)
 
 ---
