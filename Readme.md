@@ -21,6 +21,7 @@ For further information:
 - [Classes](https://github.com/davidlastrucci/Trysil/blob/master/Docs/Classes.md)
 - [Attributes](https://github.com/davidlastrucci/Trysil/blob/master/Docs/Attributes.md)
 - [Sample](https://github.com/davidlastrucci/Trysil/blob/master/Docs/Sample.md)
+- [Getting Started](https://github.com/davidlastrucci/Trysil/blob/master/Docs/GettingStarted.md)
 
 ---
 <p>
