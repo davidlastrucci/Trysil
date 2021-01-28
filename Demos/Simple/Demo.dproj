@@ -107,6 +107,10 @@
         <DCCReference Include="..\..\Trysil\Trysil.Classes.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Context.Abstract.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Context.pas"/>
+        <DCCReference Include="..\..\Trysil\Trysil.Events.Abstract.pas"/>
+        <DCCReference Include="..\..\Trysil\Trysil.Events.Attributes.pas"/>
+        <DCCReference Include="..\..\Trysil\Trysil.Events.Factory.pas"/>
+        <DCCReference Include="..\..\Trysil\Trysil.Events.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Exceptions.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Filter.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Generics.Collections.pas"/>
@@ -117,6 +121,7 @@
         <DCCReference Include="..\..\Trysil\Trysil.Provider.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Resolver.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Rtti.pas"/>
+        <DCCReference Include="..\..\Trysil\Trysil.Session.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Sync.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Types.pas"/>
         <DCCReference Include="..\..\Trysil\Data\Trysil.Data.Columns.pas"/>
@@ -136,7 +141,6 @@
             <Form>EditDialog</Form>
         </DCCReference>
         <DCCReference Include="Demo.ListView.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Session.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

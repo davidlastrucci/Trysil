@@ -7,6 +7,10 @@ uses
   Trysil.Classes in '..\..\Trysil\Trysil.Classes.pas',
   Trysil.Context.Abstract in '..\..\Trysil\Trysil.Context.Abstract.pas',
   Trysil.Context in '..\..\Trysil\Trysil.Context.pas',
+  Trysil.Events.Abstract in '..\..\Trysil\Trysil.Events.Abstract.pas',
+  Trysil.Events.Attributes in '..\..\Trysil\Trysil.Events.Attributes.pas',
+  Trysil.Events.Factory in '..\..\Trysil\Trysil.Events.Factory.pas',
+  Trysil.Events in '..\..\Trysil\Trysil.Events.pas',
   Trysil.Exceptions in '..\..\Trysil\Trysil.Exceptions.pas',
   Trysil.Filter in '..\..\Trysil\Trysil.Filter.pas',
   Trysil.Generics.Collections in '..\..\Trysil\Trysil.Generics.Collections.pas',
@@ -17,6 +21,7 @@ uses
   Trysil.Provider in '..\..\Trysil\Trysil.Provider.pas',
   Trysil.Resolver in '..\..\Trysil\Trysil.Resolver.pas',
   Trysil.Rtti in '..\..\Trysil\Trysil.Rtti.pas',
+  Trysil.Session in '..\..\Trysil\Trysil.Session.pas',
   Trysil.Sync in '..\..\Trysil\Trysil.Sync.pas',
   Trysil.Types in '..\..\Trysil\Trysil.Types.pas',
   Trysil.Data.Columns in '..\..\Trysil\Data\Trysil.Data.Columns.pas',
@@ -31,8 +36,7 @@ uses
   Demo.Model in 'Demo.Model.pas',
   Demo.MainForm in 'Demo.MainForm.pas' {MainForm},
   Demo.EditDialog in 'Demo.EditDialog.pas' {EditDialog},
-  Demo.ListView in 'Demo.ListView.pas',
-  Trysil.Session in '..\..\Trysil\Trysil.Session.pas';
+  Demo.ListView in 'Demo.ListView.pas';
 
 {$R *.res}
 
