@@ -21,7 +21,9 @@ uses
   Trysil.Mapping,
   Trysil.Metadata,
   Trysil.Data,
-  Trysil.Context.Abstract;
+  Trysil.Context.Abstract,
+  Trysil.Events.Abstract,
+  Trysil.Events.Factory;
 
 type
 
@@ -53,13 +55,21 @@ var
   LTableMap: TTTableMap;
   LTableMetadata: TTTableMetadata;
   LCommand: TTDataInsertCommand;
+  LEvent: TTEvent;
 begin
   LTableMap := FContext.Mapper.Load<T>();
   LTableMetadata := FContext.Metadata.Load<T>();
   LCommand := FContext.Connection.CreateInsertCommand(
     LTableMap, LTableMetadata);
   try
-    LCommand.Execute(AEntity);
+    LEvent := TTEventFactory.Instance.CreateEvent<T>(
+      LTableMap.Events.InsertTypeInfo, FContext, AEntity);
+    try
+      LCommand.Execute(AEntity, LEvent);
+    finally
+      if Assigned(LEvent) then
+        LEvent.Free;
+    end;
     LTableMap.VersionColumn.Member.SetValue(AEntity, 0);
   finally
     LCommand.Free;
@@ -71,13 +81,21 @@ var
   LTableMap: TTTableMap;
   LTableMetadata: TTTableMetadata;
   LCommand: TTDataUpdateCommand;
+  LEvent: TTEvent;
 begin
   LTableMap := FContext.Mapper.Load<T>();
   LTableMetadata := FContext.Metadata.Load<T>();
   LCommand := FContext.Connection.CreateUpdateCommand(
     LTableMap, LTableMetadata);
   try
-    LCommand.Execute(AEntity);
+    LEvent := TTEventFactory.Instance.CreateEvent<T>(
+      LTableMap.Events.UpdateTypeInfo, FContext, AEntity);
+    try
+      LCommand.Execute(AEntity, LEvent);
+    finally
+      if Assigned(LEvent) then
+        LEvent.Free;
+    end;
     LTableMap.VersionColumn.Member.SetValue(
       AEntity,
       LTableMap.VersionColumn.Member.GetValue(AEntity).AsType<TTVersion>() + 1);
@@ -91,6 +109,7 @@ var
   LTableMap: TTTableMap;
   LTableMetadata: TTTableMetadata;
   LCommand: TTDataDeleteCommand;
+  LEvent: TTEvent;
 begin
   LTableMap := FContext.Mapper.Load<T>();
   FContext.Connection.CheckRelations(LTableMap, AEntity);
@@ -98,7 +117,14 @@ begin
   LCommand := FContext.Connection.CreateDeleteCommand(
     LTableMap, LTableMetadata);
   try
-    LCommand.Execute(AEntity);
+    LEvent := TTEventFactory.Instance.CreateEvent<T>(
+      LTableMap.Events.DeleteTypeInfo, FContext, AEntity);
+    try
+      LCommand.Execute(AEntity, LEvent);
+    finally
+      if Assigned(LEvent) then
+        LEvent.Free;
+    end;
   finally
     LCommand.Free;
   end;

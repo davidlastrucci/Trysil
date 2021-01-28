@@ -26,6 +26,7 @@ uses
   Trysil.Rtti,
   Trysil.Metadata,
   Trysil.Mapping,
+  Trysil.Events.Abstract,
   Trysil.Data.FireDAC.Parameters;
 
 type
@@ -133,7 +134,10 @@ type
     procedure InitializeParameters;
     procedure AssignParameterValues(const AEntity: TObject);
   strict protected
-    procedure BeforeExecute(const AEntity: TObject); virtual;
+    procedure BeforeExecute(
+      const AEntity: TObject; const AEvent: TTEvent); virtual;
+    procedure AfterExecute(
+      const AEntity: TObject; const AEvent: TTEvent); virtual;
   public
     constructor Create(
       const AConnection: TFDConnection;
@@ -143,7 +147,7 @@ type
 
     procedure AfterConstruction; override;
 
-    procedure Execute(const AEntity: TObject);
+    procedure Execute(const AEntity: TObject; const AEvent: TTEvent);
   end;
 
 { TTDataSqlServerInsertSyntax }
@@ -169,7 +173,8 @@ type
 
   TTDataSqlServerDeleteSyntax = class(TTDataSqlServerCommandSyntax)
   strict protected
-    procedure BeforeExecute(const AEntity: TObject); override;
+    procedure BeforeExecute(
+      const AEntity: TObject; const AEvent: TTEvent); override;
     function GetSqlSyntax: String; override;
   end;
 
@@ -439,12 +444,22 @@ begin
     LParameter.SetValue(AEntity);
 end;
 
-procedure TTDataSqlServerCommandSyntax.BeforeExecute(const AEntity: TObject);
+procedure TTDataSqlServerCommandSyntax.BeforeExecute(
+  const AEntity: TObject; const AEvent: TTEvent);
 begin
-  // Do nothing
+  if Assigned(AEvent) then
+    AEvent.DoBefore;
 end;
 
-procedure TTDataSqlServerCommandSyntax.Execute(const AEntity: TObject);
+procedure TTDataSqlServerCommandSyntax.AfterExecute(
+  const AEntity: TObject; const AEvent: TTEvent);
+begin
+  if Assigned(AEvent) then
+    AEvent.DoAfter;
+end;
+
+procedure TTDataSqlServerCommandSyntax.Execute(
+  const AEntity: TObject; const AEvent: TTEvent);
 var
   LLocalTransaction: Boolean;
 begin
@@ -452,7 +467,7 @@ begin
   if LLocalTransaction then
     FConnection.StartTransaction;
   try
-    BeforeExecute(AEntity);
+    BeforeExecute(AEntity, AEvent);
 
     AssignParameterValues(AEntity);
     FDataset.ExecSQL();
@@ -460,6 +475,8 @@ begin
       raise ETException.Create(SRecordChanged)
     else if FDataset.RowsAffected > 1 then
       raise ETException.Create(SSyntaxError);
+
+    AfterExecute(AEntity, AEvent);
 
     if LLocalTransaction then
       FConnection.Commit;
@@ -573,13 +590,14 @@ end;
 
 { TTDataSqlServerDeleteSyntax }
 
-procedure TTDataSqlServerDeleteSyntax.BeforeExecute(const AEntity: TObject);
+procedure TTDataSqlServerDeleteSyntax.BeforeExecute(
+  const AEntity: TObject; const AEvent: TTEvent);
 var
   LID: TTPrimaryKey;
   LRelation: TTRelationMap;
   LDataset: TFDQuery;
 begin
-  inherited BeforeExecute(AEntity);
+  inherited BeforeExecute(AEntity, AEvent);
   LID := FTableMap.PrimaryKey.Member.GetValue(AEntity).AsType<TTPrimaryKey>();
   for LRelation in FTableMap.Relations do
     if LRelation.IsCascade then

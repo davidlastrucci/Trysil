@@ -23,7 +23,8 @@ uses
   Trysil.Exceptions,
   Trysil.Metadata,
   Trysil.Mapping,
-  Trysil.Data.Columns;
+  Trysil.Data.Columns,
+  Trysil.Events.Abstract;
 
 type
 
@@ -62,7 +63,8 @@ type
     constructor Create(
       const ATableMap: TTTableMap; const ATableMetadata: TTTableMetadata);
 
-    procedure Execute(const AEntity: TObject); virtual; abstract;
+    procedure Execute(
+      const AEntity: TObject; const AEvent: TTEvent); virtual; abstract;
   end;
 
 { TTDataInsertCommand }

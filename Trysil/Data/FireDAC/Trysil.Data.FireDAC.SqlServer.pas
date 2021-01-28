@@ -27,6 +27,7 @@ uses
   Trysil.Metadata,
   Trysil.Mapping,
   Trysil.Data,
+  Trysil.Events.Abstract,
   Trysil.Data.FireDAC.Common,
   Trysil.Data.FireDAC,
   Trysil.Data.FireDAC.SqlServer.SqlSyntax;
@@ -122,7 +123,8 @@ type
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata);
 
-    procedure Execute(const AEntity: TObject); override;
+    procedure Execute(
+      const AEntity: TObject; const AEvent: TTEvent); override;
 end;
 
 { TTDataSqlServerDataUpdateCommand }
@@ -136,7 +138,8 @@ end;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata);
 
-    procedure Execute(const AEntity: TObject); override;
+    procedure Execute(
+      const AEntity: TObject; const AEvent: TTEvent); override;
 end;
 
 { TTDataSqlServerDataDeleteCommand }
@@ -150,7 +153,8 @@ end;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata);
 
-    procedure Execute(const AEntity: TObject); override;
+    procedure Execute(
+      const AEntity: TObject; const AEvent: TTEvent); override;
 end;
 
 { resourcestring }
@@ -373,14 +377,15 @@ begin
   FConnection := AConnection;
 end;
 
-procedure TTDataSqlServerDataInsertCommand.Execute(const AEntity: TObject);
+procedure TTDataSqlServerDataInsertCommand.Execute(
+  const AEntity: TObject; const AEvent: TTEvent);
 var
   LSyntax: TTDataSqlServerInsertSyntax;
 begin
   LSyntax := TTDataSqlServerInsertSyntax.Create(
     FConnection, FTableMap, FTableMetadata);
   try
-    LSyntax.Execute(AEntity);
+    LSyntax.Execute(AEntity, AEvent);
   finally
     LSyntax.Free;
   end;
@@ -397,14 +402,15 @@ begin
   FConnection := AConnection;
 end;
 
-procedure TTDataSqlServerDataUpdateCommand.Execute(const AEntity: TObject);
+procedure TTDataSqlServerDataUpdateCommand.Execute(
+  const AEntity: TObject; const AEvent: TTEvent);
 var
   LSyntax: TTDataSqlServerUpdateSyntax;
 begin
   LSyntax := TTDataSqlServerUpdateSyntax.Create(
     FConnection, FTableMap, FTableMetadata);
   try
-    LSyntax.Execute(AEntity);
+    LSyntax.Execute(AEntity, AEvent);
   finally
     LSyntax.Free;
   end;
@@ -421,14 +427,15 @@ begin
   FConnection := AConnection;
 end;
 
-procedure TTDataSqlServerDataDeleteCommand.Execute(const AEntity: TObject);
+procedure TTDataSqlServerDataDeleteCommand.Execute(
+  const AEntity: TObject; const AEvent: TTEvent);
 var
   LSyntax: TTDataSqlServerDeleteSyntax;
 begin
   LSyntax := TTDataSqlServerDeleteSyntax.Create(
     FConnection, FTableMap, FTableMetadata);
   try
-    LSyntax.Execute(AEntity);
+    LSyntax.Execute(AEntity, AEvent);
   finally
     LSyntax.Free;
   end;
