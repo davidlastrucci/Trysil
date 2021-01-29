@@ -16,6 +16,8 @@ That's why I called **Trysil** my **ORM**.
 
 ***Trysil Operation ORM***
 
+_"The beautiful thing about learning is nobody can take it away from you"_
+
 For further information:
 
 - [Classes](https://github.com/davidlastrucci/Trysil/blob/master/Docs/Classes.md)
