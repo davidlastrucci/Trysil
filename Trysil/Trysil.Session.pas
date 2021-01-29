@@ -35,7 +35,7 @@ type
     FOriginalEntities: TList<T>;
 
     FApplied: Boolean;
-    FClonedEntities: TObjectList<T>;
+    FClonedEntities: TList<T>;
     FAllEntities: TList<T>;
     FEntities: TTList<T>;
     FEntityStates: TDictionary<T, TTSessionState>;
@@ -76,17 +76,22 @@ begin
   FOriginalEntities := AList;
 
   FApplied := False;
-  FClonedEntities := TObjectList<T>.Create(True);
+  FClonedEntities := TList<T>.Create;
   FEntities := TTList<T>.Create;
   FAllEntities := TList<T>.Create;
   FEntityStates := TDictionary<T, TTSessionState>.Create;
 end;
 
 destructor TTSession<T>.Destroy;
+var
+  LClone: T;
 begin
   FEntityStates.Free;
   FAllEntities.Free;
   FEntities.Free;
+  for LClone in FClonedEntities do
+    FContext.FreeClone<T>(LClone);
+
   FClonedEntities.Free;
   inherited Destroy;
 end;
@@ -111,7 +116,7 @@ begin
         FEntityStates.Add(LClone, TTSessionState.Original);
         FClonedEntities.Add(LClone);
       except
-        LClone.Free;
+        FContext.FreeClone<T>(LClone);
         raise;
       end;
     end;

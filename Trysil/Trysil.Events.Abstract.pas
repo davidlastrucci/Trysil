@@ -26,6 +26,10 @@ type
     procedure DoAfter; virtual;
   end;
 
+{ TTEventClass }
+
+  TTEventClass = class of TTEvent;
+
 implementation
 
 { TTEvent }

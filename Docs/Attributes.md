@@ -31,6 +31,24 @@
 
 ------------
 
+### TInsertEventAttribute
+#### Parameters
+- **EventClass**: Event Class
+
+------------
+
+### TUpdateEventAttribute
+#### Parameters
+- **EventClass**: Event Class
+
+------------
+
+### TDeleteEventAttribute
+#### Parameters
+- **EventClass**: Event Class
+
+------------
+
 ## Field attributes
 ### TPrimaryKey
 #### Parameters

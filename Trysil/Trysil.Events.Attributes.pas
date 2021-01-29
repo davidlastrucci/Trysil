@@ -15,7 +15,8 @@ interface
 uses
   System.SysUtils,
   System.Classes,
-  System.TypInfo;
+
+  Trysil.Events.Abstract;
 
 type
 
@@ -23,11 +24,11 @@ type
 
   TEventAttribute = class(TCustomAttribute)
   strict private
-    FEventTypeInfo: PTypeInfo;
+    FEventClass: TTEventClass;
   public
-    constructor Create(const AEventTypeInfo: PTypeInfo);
+    constructor Create(const AEventClass: TTEventClass);
 
-    property EventTypeInfo: PTypeInfo read FEventTypeInfo;
+    property EventClass: TTEventClass read FEventClass;
   end;
 
 { TInsertEventAttribute }
@@ -46,10 +47,10 @@ implementation
 
 { TEventAttribute }
 
-constructor TEventAttribute.Create(const AEventTypeInfo: PTypeInfo);
+constructor TEventAttribute.Create(const AEventClass: TTEventClass);
 begin
   inherited Create;
-  FEventTypeInfo := AEventTypeInfo;
+  FEventClass := AEventClass;
 end;
 
 end.

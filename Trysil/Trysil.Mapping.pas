@@ -21,6 +21,7 @@ uses
 
   Trysil.Exceptions,
   Trysil.Classes,
+  Trysil.Events.Abstract,
   Trysil.Attributes,
   Trysil.Events.Attributes,
   Trysil.Cache,
@@ -138,9 +139,9 @@ type
 
   TTEventsMap = class
   strict private
-    FInsertTypeInfo: PTypeInfo;
-    FUpdateTypeInfo: PTypeInfo;
-    FDeleteTypeInfo: PTypeInfo;
+    FInsertEventClass: TTEventClass;
+    FUpdateEventClass: TTEventClass;
+    FDeleteEventClass: TTEventClass;
 
     procedure SetInsertTypeInfo(const AAttribute: TEventAttribute);
     procedure SetUpdateTypeInfo(const AAttribute: TEventAttribute);
@@ -150,9 +151,9 @@ type
   public
     constructor Create;
 
-    property InsertTypeInfo: PTypeInfo read FInsertTypeInfo;
-    property UpdateTypeInfo: PTypeInfo read FUpdateTypeInfo;
-    property DeleteTypeInfo: PTypeInfo read FDeleteTypeInfo;
+    property InsertEventClass: TTEventClass read FInsertEventClass;
+    property UpdateEventClass: TTEventClass read FUpdateEventClass;
+    property DeleteEventClass: TTEventClass read FDeleteEventClass;
   end;
 
 { TTTableMap }
@@ -386,30 +387,30 @@ end;
 constructor TTEventsMap.Create;
 begin
   inherited Create;
-  FInsertTypeInfo := nil;
-  FUpdateTypeInfo := nil;
-  FDeleteTypeInfo := nil;
+  FInsertEventClass := nil;
+  FUpdateEventClass := nil;
+  FDeleteEventClass := nil;
 end;
 
 procedure TTEventsMap.SetInsertTypeInfo(const AAttribute: TEventAttribute);
 begin
-  if Assigned(FInsertTypeInfo) then
+  if Assigned(FInsertEventClass) then
     raise ETException.Create(SInsertEventAttribute);
-  FInsertTypeInfo := AAttribute.EventTypeInfo;
+  FInsertEventClass := AAttribute.EventClass;
 end;
 
 procedure TTEventsMap.SetUpdateTypeInfo(const AAttribute: TEventAttribute);
 begin
-  if Assigned(FUpdateTypeInfo) then
+  if Assigned(FUpdateEventClass) then
     raise ETException.Create(SUpdateEventAttribute);
-  FUpdateTypeInfo := AAttribute.EventTypeInfo;
+  FUpdateEventClass := AAttribute.EventClass;
 end;
 
 procedure TTEventsMap.SetDeleteTypeInfo(const AAttribute: TEventAttribute);
 begin
-  if Assigned(FDeleteTypeInfo) then
+  if Assigned(FDeleteEventClass) then
     raise ETException.Create(SDeleteEventAttribute);
-  FDeleteTypeInfo := AAttribute.EventTypeInfo;
+  FDeleteEventClass := AAttribute.EventClass;
 end;
 
 procedure TTEventsMap.SetEvent(const AAttribute: TEventAttribute);

@@ -42,7 +42,7 @@ type
     destructor Destroy; override;
 
     function CreateEvent<T: class>(
-      const ATypeInfo: PTypeInfo;
+      const AEventClass: TTEventClass;
       const AContext: TObject;
       const AEntity: T): TTEvent;
 
@@ -108,7 +108,7 @@ begin
 end;
 
 function TTEventFactory.CreateEvent<T>(
-  const ATypeInfo: PTypeInfo;
+  const AEventClass: TTEventClass;
   const AContext: TObject;
   const AEntity: T): TTEvent;
 var
@@ -118,12 +118,12 @@ var
   LResult: TValue;
 begin
   result := nil;
-  if Assigned(ATypeInfo) then
+  if Assigned(AEventClass) then
   begin
-    LRttiType := FContext.GetType(ATypeInfo);
+    LRttiType := FContext.GetType(AEventClass);
     LRttiMethod := SearchMethod(LRttiType, AContext, AEntity);
     if not Assigned(LRttiMethod) then
-      raise ETException.CreateFmt(SNotValidEventClass, [ATypeInfo.Name]);
+      raise ETException.CreateFmt(SNotValidEventClass, [AEventClass.ClassName]);
 
     SetLength(LParams, 2);
     LParams[0] := TValue.From<TObject>(AContext);
@@ -132,7 +132,7 @@ begin
     LResult := LRttiMethod.Invoke(LRttiType.AsInstance.MetaclassType, LParams);
     try
       if not LResult.IsType<TTEvent>(False) then
-        raise ETException.CreateFmt(SNotEventType, [ATypeInfo.Name]);
+        raise ETException.CreateFmt(SNotEventType, [AEventClass.ClassName]);
       result := LResult.AsType<TTEvent>(False);
     except
       LResult.AsObject.Free;

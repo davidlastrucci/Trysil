@@ -63,7 +63,7 @@ begin
     LTableMap, LTableMetadata);
   try
     LEvent := TTEventFactory.Instance.CreateEvent<T>(
-      LTableMap.Events.InsertTypeInfo, FContext, AEntity);
+      LTableMap.Events.InsertEventClass, FContext, AEntity);
     try
       LCommand.Execute(AEntity, LEvent);
     finally
@@ -89,7 +89,7 @@ begin
     LTableMap, LTableMetadata);
   try
     LEvent := TTEventFactory.Instance.CreateEvent<T>(
-      LTableMap.Events.UpdateTypeInfo, FContext, AEntity);
+      LTableMap.Events.UpdateEventClass, FContext, AEntity);
     try
       LCommand.Execute(AEntity, LEvent);
     finally
@@ -118,7 +118,7 @@ begin
     LTableMap, LTableMetadata);
   try
     LEvent := TTEventFactory.Instance.CreateEvent<T>(
-      LTableMap.Events.DeleteTypeInfo, FContext, AEntity);
+      LTableMap.Events.DeleteEventClass, FContext, AEntity);
     try
       LCommand.Execute(AEntity, LEvent);
     finally
