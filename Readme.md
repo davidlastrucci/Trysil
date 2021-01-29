@@ -16,7 +16,7 @@ That's why I called **Trysil** my **ORM**.
 
 ***Trysil Operation ORM***
 
-_"The beautiful thing about learning is nobody can take it away from you"_
+And that's why I decided to write an **ORM**: _"The beautiful thing about learning is nobody can take it away from you"_
 
 For further information:
 
