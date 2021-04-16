@@ -5,7 +5,6 @@ uses
   Trysil.Attributes in '..\..\Trysil\Trysil.Attributes.pas',
   Trysil.Cache in '..\..\Trysil\Trysil.Cache.pas',
   Trysil.Classes in '..\..\Trysil\Trysil.Classes.pas',
-  Trysil.Context.Abstract in '..\..\Trysil\Trysil.Context.Abstract.pas',
   Trysil.Context in '..\..\Trysil\Trysil.Context.pas',
   Trysil.Events.Abstract in '..\..\Trysil\Trysil.Events.Abstract.pas',
   Trysil.Events.Attributes in '..\..\Trysil\Trysil.Events.Attributes.pas',
