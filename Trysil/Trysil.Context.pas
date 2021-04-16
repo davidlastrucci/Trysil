@@ -19,9 +19,9 @@ uses
 
   Trysil.Types,
   Trysil.Filter,
-  Trysil.Context.Abstract,
   Trysil.Generics.Collections,
   Trysil.Data,
+  Trysil.Mapping,
   Trysil.Metadata,
   Trysil.Provider,
   Trysil.Resolver;
@@ -30,15 +30,18 @@ type
 
 { TTContext }
 
-  TTContext = class(TTAbstractContext)
+  TTContext = class
   strict private
+    FConnection: TTDataConnection;
+    FMapper: TTMapper;
+    FMetadata: TTMetadata;
     FProvider: TTProvider;
     FResolver: TTResolver;
     FClonedEntities: TObjectDictionary<TObject, TObject>;
 
     function GetInTransaction: Boolean;
   public
-    constructor Create(const AConnection: TTDataConnection); override;
+    constructor Create(const AConnection: TTDataConnection);
     destructor Destroy; override;
 
     procedure StartTransaction;
@@ -74,9 +77,13 @@ implementation
 
 constructor TTContext.Create(const AConnection: TTDataConnection);
 begin
-  inherited Create(AConnection);
-  FProvider := TTProvider.Create(Self, FConnection, FMetadata);
-  FResolver := TTResolver.Create(Self, FConnection, FMetadata);
+  inherited Create;
+  FConnection := AConnection;
+
+  FMapper := TTMapper.Create;
+  FMetadata := TTMetadata.Create(FMapper, FConnection);
+  FProvider := TTProvider.Create(FConnection, Self, FMetadata, FMapper);
+  FResolver := TTResolver.Create(FConnection, Self, FMetadata, FMapper);
   FClonedEntities := TObjectDictionary<TObject, TObject>.Create([doOwnsKeys]);
 end;
 
@@ -85,6 +92,8 @@ begin
   FClonedEntities.Free;
   FResolver.Free;
   FProvider.Free;
+  FMetadata.Free;
+  FMapper.Free;
   inherited Destroy;
 end;
 

@@ -24,7 +24,6 @@ uses
   Trysil.Metadata,
   Trysil.IdentityMap,
   Trysil.Generics.Collections,
-  Trysil.Context.Abstract,
   Trysil.Data,
   Trysil.Data.Columns,
   Trysil.Rtti;
@@ -35,9 +34,10 @@ type
 
   TTProvider = class
   strict private
-    FContext: TTAbstractContext;
     FConnection: TTDataConnection;
+    FContext: TObject;
     FMetadata: TTMetadata;
+    FMapper: TTMapper;
 
     FIdentityMap: TTIdentityMap;
     FLazyOwner: TObjectList<TObject>;
@@ -78,9 +78,10 @@ type
       const ATablemap: TTTableMap; const AID: TTPrimaryKey): String;
   public
     constructor Create(
-      const AContext: TTAbstractContext;
       const AConnection: TTDataConnection;
-      const AMetadata: TTMetadata);
+      const AContext: TObject;
+      const AMetadata: TTMetadata;
+      const AMapper: TTMapper);
     destructor Destroy; override;
 
     function CreateEntity<T: class, constructor>(): T;
@@ -108,14 +109,16 @@ implementation
 { TTProvider }
 
 constructor TTProvider.Create(
-  const AContext: TTAbstractContext;
   const AConnection: TTDataConnection;
-  const AMetadata: TTMetadata);
+  const AContext: TObject;
+  const AMetadata: TTMetadata;
+  const AMapper: TTMapper);
 begin
   inherited Create;
-  FContext := AContext;
   FConnection := AConnection;
+  FContext := AContext;
   FMetadata := AMetadata;
+  FMapper := AMapper;
 
   FIdentityMap := TTIdentityMap.Create;
   FLazyOwner := TObjectList<TObject>.Create(True);
@@ -134,7 +137,7 @@ var
   LPrimaryKey: TTPrimaryKey;
   LColumnMap: TTColumnMap;
 begin
-  LTableMap := FContext.Mapper.Load<T>();
+  LTableMap := FMapper.Load<T>();
   if not Assigned(LTablemap.PrimaryKey) then
     raise ETException.Create(SNotDefinedPrimaryKey);
   if LTableMap.SequenceName.IsEmpty then
@@ -177,7 +180,7 @@ var
   LColumnMap: TTColumnMap;
   LDetailColumnMap: TTDetailColumnMap;
 begin
-  LTableMap := FContext.Mapper.Load<T>();
+  LTableMap := FMapper.Load<T>();
   result := T.Create;
   try
     MapLazyColumns<T>(LTableMap, nil, result);
@@ -234,7 +237,8 @@ var
   LResult: TObject;
 begin
   LValue := GetValue(AReader, AColumnName);
-  LResult := ARttiMember.CreateObject(AEntity, FContext, AColumnName, LValue);
+  LResult := ARttiMember.CreateObject(
+    AEntity, FContext, FMapper, AColumnName, LValue);
   if Assigned(LResult) then
     FLazyOwner.Add(LResult);
 end;
@@ -302,7 +306,7 @@ var
   LTableMetadata: TTTableMetadata;
   LReader: TTDataReader;
 begin
-  LTableMap := FContext.Mapper.Load<T>();
+  LTableMap := FMapper.Load<T>();
   LTableMetadata := FMetadata.Load<T>();
   LReader := FConnection.CreateReader(LTableMap, LTableMetadata, AFilter);
   try
@@ -325,7 +329,7 @@ var
   LReader: TTDataReader;
 begin
   result := default(T);
-  LTableMap := FContext.Mapper.Load<T>();
+  LTableMap := FMapper.Load<T>();
   LTableMetadata := FMetadata.Load<T>();
   LFilter := TTFilter.Create(GetWhere(LTablemap, AID));
   LReader := FConnection.CreateReader(LTableMap, LTableMetadata, LFilter);
@@ -344,7 +348,7 @@ var
   LFilter: TTFilter;
   LReader: TTDataReader;
 begin
-  LTableMap := FContext.Mapper.Load<T>();
+  LTableMap := FMapper.Load<T>();
   LTableMetadata := FMetadata.Load<T>();
   LFilter := TTFilter.Create(GetWhere(
     LTablemap,

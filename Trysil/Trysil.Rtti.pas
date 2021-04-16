@@ -47,13 +47,16 @@ type
     FRttiType: TRttiType;
 
     function InternalCreateObject(
-      const AContext: TObject; const AColumnName: String): TTValue;
+      const AContext: TObject;
+      const AMapper: TObject;
+      const AColumnName: String): TTValue;
     procedure SetID(const AObject: TTValue; const AID: TTValue);
     function GetIsNullable: Boolean;
   public
     function CreateObject(
       const AInstance: TObject;
       const AContext: TObject;
+      const AMapper: TObject;
       const AColumnName: String;
       const AValue: TTValue): TObject;
 
@@ -135,7 +138,9 @@ end;
 { TTRttiMember }
 
 function TTRttiMember.InternalCreateObject(
-  const AContext: TObject; const AColumnName: String): TTValue;
+  const AContext: TObject;
+  const AMapper: TObject;
+  const AColumnName: String): TTValue;
 var
   LMethod: TRttiMethod;
   LParameters: TArray<TRttiParameter>;
@@ -146,17 +151,19 @@ begin
     if LMethod.IsConstructor then
     begin
       LParameters := LMethod.GetParameters;
-      LIsValid := Length(LParameters) = 2;
+      LIsValid := Length(LParameters) = 3;
       if LIsValid then
         LIsValid :=
           (LParameters[0].ParamType.Handle = AContext.ClassInfo) and
-          (LParameters[1].ParamType.Handle = TypeInfo(String));
+          (LParameters[1].ParamType.Handle = AMapper.ClassInfo) and
+          (LParameters[2].ParamType.Handle = TypeInfo(String));
 
       if LIsValid then
       begin
-        SetLength(LParams, 2);
+        SetLength(LParams, 3);
         LParams[0] := TTValue.From<TObject>(AContext);
-        LParams[1] := TTValue.From<String>(AColumnName);
+        LParams[1] := TTValue.From<TObject>(AMapper);
+        LParams[2] := TTValue.From<String>(AColumnName);
         result := LMethod.Invoke(FRttiType.AsInstance.MetaclassType, LParams);
         Break;
       end;
@@ -185,6 +192,7 @@ end;
 function TTRttiMember.CreateObject(
   const AInstance: TObject;
   const AContext: TObject;
+  const AMapper: TObject;
   const AColumnName: String;
   const AValue: TTValue): TObject;
 var
@@ -194,7 +202,7 @@ begin
   LValue := GetValue(AInstance);
   if LValue.IsEmpty then
   begin
-    LValue := InternalCreateObject(AContext, AColumnName);
+    LValue := InternalCreateObject(AContext, AMapper, AColumnName);
     SetValue(AInstance, LValue);
     if LValue.IsType<TObject>() then
       result := LValue.AsType<TObject>();
