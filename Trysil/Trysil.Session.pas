@@ -19,9 +19,25 @@ uses
 
   Trysil.Exceptions,
   Trysil.Generics.Collections,
-  Trysil.Context;
+  Trysil.Data,
+  Trysil.Provider,
+  Trysil.Resolver;
 
 type
+
+{ TTClonedEntities<T> }
+
+  TTClonedEntities<T: class, constructor> = class
+  strict private
+    FProvider: TTProvider;
+    FEntities: TObjectList<T>;
+  private // internal
+    function CloneEntity(const AEntity: T): T;
+    procedure FreeClone(const AClone: T);
+  public
+    constructor Create(const AProvider: TTProvider);
+    destructor Destroy; override;
+  end;
 
 { TTSessionState }
 
@@ -31,10 +47,13 @@ type
 
   TTSession<T: class, constructor> = class
   strict private
-    FContext: TTContext;
+    FConnection: TTDataConnection;
+    FProvider: TTProvider;
+    FResolver: TTResolver;
     FOriginalEntities: TList<T>;
 
     FApplied: Boolean;
+    FCloned: TTClonedEntities<T>;
     FClonedEntities: TList<T>;
     FAllEntities: TList<T>;
     FEntities: TTList<T>;
@@ -44,7 +63,11 @@ type
     function GetEntityState(const AEntity: T): TTSessionState;
     procedure InternalApplyChanges;
   public
-    constructor Create(const AContext: TTContext; const AList: TList<T>);
+    constructor Create(
+      const AConnection: TTDataConnection;
+      const AProvider: TTProvider;
+      const AResolver: TTResolver;
+      const AList: TList<T>);
     destructor Destroy; override;
 
     procedure AfterConstruction; override;
@@ -66,16 +89,54 @@ resourcestring
 
 implementation
 
+{ TTClonedEntities<T> }
+
+constructor TTClonedEntities<T>.Create(const AProvider: TTProvider);
+begin
+  inherited Create;
+  FProvider := AProvider;
+  FEntities := TObjectList<T>.Create(True);
+end;
+
+destructor TTClonedEntities<T>.Destroy;
+begin
+  FEntities.Free;
+  inherited Destroy;
+end;
+
+function TTClonedEntities<T>.CloneEntity(const AEntity: T): T;
+begin
+  result := FProvider.CloneEntity<T>(AEntity);
+  try
+    FEntities.Add(result);
+  except
+    result.Free;
+    raise;
+  end;
+end;
+
+procedure TTClonedEntities<T>.FreeClone(const AClone: T);
+begin
+  if FEntities.Contains(AClone) then
+    FEntities.Remove(AClone);
+end;
+
 { TTSession<T> }
 
 constructor TTSession<T>.Create(
-  const AContext: TTContext; const AList: TList<T>);
+    const AConnection: TTDataConnection;
+    const AProvider: TTProvider;
+    const AResolver: TTResolver;
+  const AList: TList<T>);
 begin
   inherited Create;
-  FContext := AContext;
+  FConnection := AConnection;
+  FProvider := AProvider;
+  FResolver := AResolver;
   FOriginalEntities := AList;
 
   FApplied := False;
+  FCloned := TTClonedEntities<T>.Create(FProvider);
   FClonedEntities := TList<T>.Create;
   FEntities := TTList<T>.Create;
   FAllEntities := TList<T>.Create;
@@ -83,16 +144,12 @@ begin
 end;
 
 destructor TTSession<T>.Destroy;
-var
-  LClone: T;
 begin
   FEntityStates.Free;
   FAllEntities.Free;
   FEntities.Free;
-  for LClone in FClonedEntities do
-    FContext.FreeClone<T>(LClone);
-
   FClonedEntities.Free;
+  FCloned.Free;
   inherited Destroy;
 end;
 
@@ -109,14 +166,14 @@ begin
   if Assigned(FOriginalEntities) then
     for LEntity in FOriginalEntities do
     begin
-      LClone := FContext.CloneEntity<T>(LEntity);
+      LClone := FCloned.CloneEntity(LEntity);
       try
         FEntities.Add(LClone);
         FAllEntities.Add(LClone);
         FEntityStates.Add(LClone, TTSessionState.Original);
         FClonedEntities.Add(LClone);
       except
-        FContext.FreeClone<T>(LClone);
+        FCloned.FreeClone(LClone);
         raise;
       end;
     end;
@@ -170,13 +227,13 @@ begin
     LState := GetEntityState(LEntity);
     case LState of
       TTSessionState.Inserted:
-        FContext.Insert<T>(LEntity);
+        FResolver.Insert<T>(LEntity);
 
       TTSessionState.Updated:
-        FContext.Update<T>(LEntity);
+        FResolver.Update<T>(LEntity);
 
       TTSessionState.Deleted:
-        FContext.Delete<T>(LEntity);
+        FResolver.Delete<T>(LEntity);
     end;
   end;
 end;
@@ -188,16 +245,16 @@ begin
   if FApplied then
     raise ETException.Create(SSessionNotTwice);
 
-  LLocalTransaction := not FContext.InTransaction;
+  LLocalTransaction := not FConnection.InTransaction;
   if LLocalTransaction then
-    FContext.StartTransaction;
+    FConnection.StartTransaction;
   try
     InternalApplyChanges;
     if LLocalTransaction then
-      FContext.CommitTransaction;
+      FConnection.CommitTransaction;
   except
     if LLocalTransaction then
-      FContext.RollbackTransaction;
+      FConnection.RollbackTransaction;
     raise;
   end;
 

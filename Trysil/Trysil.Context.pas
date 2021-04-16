@@ -24,7 +24,8 @@ uses
   Trysil.Mapping,
   Trysil.Metadata,
   Trysil.Provider,
-  Trysil.Resolver;
+  Trysil.Resolver,
+  Trysil.Session;
 
 type
 
@@ -37,7 +38,6 @@ type
     FMetadata: TTMetadata;
     FProvider: TTProvider;
     FResolver: TTResolver;
-    FClonedEntities: TObjectDictionary<TObject, TObject>;
 
     function GetInTransaction: Boolean;
   public
@@ -49,10 +49,8 @@ type
     procedure RollbackTransaction;
 
     function CreateEntity<T: class, constructor>(): T;
-
-    function CloneEntity<T: class, constructor>(const AEntity: T): T;
-    function GetOriginalEntity<T: class>(const AClone: T): T;
-    procedure FreeClone<T: class, constructor>(const AClone: T);
+    function CreateSession<T: class, constructor>(
+      const AList: TList<T>): TTSession<T>;
 
     function GetMetadata<T: class>(): TTTableMetadata;
 
@@ -84,12 +82,10 @@ begin
   FMetadata := TTMetadata.Create(FMapper, FConnection);
   FProvider := TTProvider.Create(FConnection, Self, FMetadata, FMapper);
   FResolver := TTResolver.Create(FConnection, Self, FMetadata, FMapper);
-  FClonedEntities := TObjectDictionary<TObject, TObject>.Create([doOwnsKeys]);
 end;
 
 destructor TTContext.Destroy;
 begin
-  FClonedEntities.Free;
   FResolver.Free;
   FProvider.Free;
   FMetadata.Free;
@@ -122,31 +118,9 @@ begin
   result := FProvider.CreateEntity<T>();
 end;
 
-function TTContext.CloneEntity<T>(const AEntity: T): T;
+function TTContext.CreateSession<T>(const AList: TList<T>): TTSession<T>;
 begin
-  result := FProvider.CloneEntity<T>(AEntity);
-  try
-    FClonedEntities.Add(result, AEntity);
-  except
-    result.Free;
-    raise;
-  end;
-end;
-
-function TTContext.GetOriginalEntity<T>(const AClone: T): T;
-var
-  LResult: TObject;
-begin
-  result := nil;
-  if FClonedEntities.TryGetValue(AClone, LResult) then
-    if LResult is T then
-      result := T(LResult);
-end;
-
-procedure TTContext.FreeClone<T>(const AClone: T);
-begin
-  if FClonedEntities.ContainsKey(AClone) then
-    FClonedEntities.Remove(AClone);
+  result := TTSession<T>.Create(FConnection, FProvider, FResolver, AList);
 end;
 
 function TTContext.GetMetadata<T>: TTTableMetadata;
