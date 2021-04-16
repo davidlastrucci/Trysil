@@ -41,8 +41,6 @@ type
     constructor Create(
       const AContext: TTContext; const AColumnName: String); virtual;
 
-    procedure AfterConstruction; override;
-
     property ID: TTPrimaryKey read FID write SetID;
   end;
 
@@ -90,12 +88,6 @@ begin
   inherited Create;
   FContext := AContext;
   FColumnName := AColumnName;
-end;
-
-procedure TTAbstractLazy<T>.AfterConstruction;
-begin
-  inherited AfterConstruction;
-  FContext.AddToOwnership<TTAbstractLazy<T>>(Self);
 end;
 
 procedure TTAbstractLazy<T>.SetID(const AID: TTPrimaryKey);

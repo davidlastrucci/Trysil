@@ -1,4 +1,4 @@
-(*
+﻿(*
 
   Trysil
   Copyright © David Lastrucci
@@ -19,30 +19,22 @@ uses
 
   Trysil.Data,
   Trysil.Mapping,
-  Trysil.Metadata,
-  Trysil.IdentityMap;
+  Trysil.Metadata;
 
 type
 
 { TTAbstractContext }
 
   TTAbstractContext = class abstract
-  strict private
+  strict protected
     FConnection: TTDataConnection;
     FMapper: TTMapper;
     FMetadata: TTMetadata;
-    FIdentityMap: TTIdentityMap;
-    FOwnership: TObjectList<TObject>;
   public
     constructor Create(const AConnection: TTDataConnection); virtual;
     destructor Destroy; override;
 
-    procedure AddToOwnership<T: class>(const AObject: T);
-
-    property Connection: TTDataConnection read FConnection;
     property Mapper: TTMapper read FMapper;
-    property Metadata: TTMetadata read FMetadata;
-    property IdentityMap: TTIdentityMap read FIdentityMap;
   end;
 
 implementation
@@ -56,22 +48,13 @@ begin
 
   FMapper := TTMapper.Create;
   FMetadata := TTMetadata.Create(FMapper, FConnection);
-  FIdentityMap := TTIdentityMap.Create;
-  FOwnership := TObjectList<TObject>.Create(True);
 end;
 
 destructor TTAbstractContext.Destroy;
 begin
-  FOwnership.Free;
-  FIdentityMap.Free;
   FMetadata.Free;
   FMapper.Free;
   inherited Destroy;
-end;
-
-procedure TTAbstractContext.AddToOwnership<T>(const AObject: T);
-begin
-  FOwnership.Add(AObject);
 end;
 
 end.

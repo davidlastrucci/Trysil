@@ -51,11 +51,11 @@ type
     procedure SetID(const AObject: TTValue; const AID: TTValue);
     function GetIsNullable: Boolean;
   public
-    procedure CreateObject(
+    function CreateObject(
       const AInstance: TObject;
       const AContext: TObject;
       const AColumnName: String;
-      const AValue: TTValue);
+      const AValue: TTValue): TObject;
 
     function GetValueFromObject(const AInstance: TObject): TTValue;
 
@@ -182,19 +182,22 @@ begin
   end;
 end;
 
-procedure TTRttiMember.CreateObject(
+function TTRttiMember.CreateObject(
   const AInstance: TObject;
   const AContext: TObject;
   const AColumnName: String;
-  const AValue: TTValue);
+  const AValue: TTValue): TObject;
 var
   LValue: TTValue;
 begin
+  result := nil;
   LValue := GetValue(AInstance);
   if LValue.IsEmpty then
   begin
     LValue := InternalCreateObject(AContext, AColumnName);
     SetValue(AInstance, LValue);
+    if LValue.IsType<TObject>() then
+      result := LValue.AsType<TObject>();
   end;
 
   SetID(LValue, AValue);

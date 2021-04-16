@@ -32,7 +32,6 @@ type
 
   TTContext = class(TTAbstractContext)
   strict private
-    FConnection: TTDataConnection;
     FProvider: TTProvider;
     FResolver: TTResolver;
     FClonedEntities: TObjectDictionary<TObject, TObject>;
@@ -76,9 +75,8 @@ implementation
 constructor TTContext.Create(const AConnection: TTDataConnection);
 begin
   inherited Create(AConnection);
-  FConnection := AConnection;
-  FProvider := TTProvider.Create(Self);
-  FResolver := TTResolver.Create(Self);
+  FProvider := TTProvider.Create(Self, FConnection, FMetadata);
+  FResolver := TTResolver.Create(Self, FConnection, FMetadata);
   FClonedEntities := TObjectDictionary<TObject, TObject>.Create([doOwnsKeys]);
 end;
 
