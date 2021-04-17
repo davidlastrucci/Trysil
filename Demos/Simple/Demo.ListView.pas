@@ -43,6 +43,14 @@ type
     property OnDblClick;
   end;
 
+resourcestring
+  SID = 'ID';
+  SFirstName = 'First name';
+  SLastName = 'Last name';
+  SCompany = 'Company';
+  SEmail = 'E-Mail';
+  SPhone = 'Phone';
+
 implementation
 
 { TTMasterDataListView }
@@ -56,12 +64,12 @@ end;
 
 procedure TTMasterDataListView.AddColumns;
 begin
-  AddColumn('ID', taLeftJustify, 50, 'ID');
-  AddColumn('Nome', taLeftJustify, 150, 'FirstName');
-  AddColumn('Cognome', taLeftJustify, 150, 'LastName');
-  AddColumn('Azienda', taLeftJustify, 200, 'Company');
-  AddColumn('EMail', taLeftJustify, 200, 'Email');
-  AddColumn('Telefono', taRightJustify, 120, 'Phone');
+  AddColumn(SID, taLeftJustify, 50, 'ID');
+  AddColumn(SFirstName, taLeftJustify, 150, 'FirstName');
+  AddColumn(SLastName, taLeftJustify, 150, 'LastName');
+  AddColumn(SCompany, taLeftJustify, 200, 'Company');
+  AddColumn(SEmail, taLeftJustify, 200, 'Email');
+  AddColumn(SPhone, taRightJustify, 120, 'Phone');
 
   PrepareColumns;
 end;
