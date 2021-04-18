@@ -33,7 +33,7 @@ object EditDialog: TEditDialog
     Height = 21
     MaxLength = 30
     TabOrder = 1
-    TextHint = 'Firstname'
+    TextHint = 'First name'
   end
   object LastnameTextbox: TEdit
     Left = 8
@@ -42,7 +42,7 @@ object EditDialog: TEditDialog
     Height = 21
     MaxLength = 30
     TabOrder = 2
-    TextHint = 'Lastname'
+    TextHint = 'Last name'
   end
   object CompanyTextbox: TEdit
     Left = 8
@@ -60,7 +60,7 @@ object EditDialog: TEditDialog
     Height = 21
     MaxLength = 255
     TabOrder = 4
-    TextHint = 'Email'
+    TextHint = 'E-Mail'
   end
   object PhoneTextbox: TEdit
     Left = 8
