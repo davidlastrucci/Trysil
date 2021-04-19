@@ -30,10 +30,11 @@ type
   TTClonedEntities<T: class, constructor> = class
   strict private
     FProvider: TTProvider;
-    FEntities: TObjectList<T>;
+    FEntities: TObjectDictionary<T, T>;
   private // internal
     function CloneEntity(const AEntity: T): T;
     procedure FreeClone(const AClone: T);
+    function GetOriginalEntity(const AClone: T): T;
   public
     constructor Create(const AProvider: TTProvider);
     destructor Destroy; override;
@@ -72,6 +73,8 @@ type
 
     procedure AfterConstruction; override;
 
+    function GetOriginalEntity(const AClone: T): T;
+
     procedure Insert(const AEntity: T);
     procedure Update(const AEntity: T);
     procedure Delete(const AEntity: T);
@@ -95,7 +98,7 @@ constructor TTClonedEntities<T>.Create(const AProvider: TTProvider);
 begin
   inherited Create;
   FProvider := AProvider;
-  FEntities := TObjectList<T>.Create(True);
+  FEntities := TObjectDictionary<T, T>.Create([doOwnsKeys]);
 end;
 
 destructor TTClonedEntities<T>.Destroy;
@@ -108,7 +111,7 @@ function TTClonedEntities<T>.CloneEntity(const AEntity: T): T;
 begin
   result := FProvider.CloneEntity<T>(AEntity);
   try
-    FEntities.Add(result);
+    FEntities.Add(result, AEntity);
   except
     result.Free;
     raise;
@@ -117,8 +120,14 @@ end;
 
 procedure TTClonedEntities<T>.FreeClone(const AClone: T);
 begin
-  if FEntities.Contains(AClone) then
+  if FEntities.ContainsKey(AClone) then
     FEntities.Remove(AClone);
+end;
+
+function TTClonedEntities<T>.GetOriginalEntity(const AClone: T): T;
+begin
+  result := nil;
+  FEntities.TryGetValue(AClone, result);
 end;
 
 { TTSession<T> }
@@ -183,6 +192,11 @@ function TTSession<T>.GetEntityState(const AEntity: T): TTSessionState;
 begin
   if not FEntityStates.TryGetValue(AEntity, result) then
     raise ETException.CreateFmt(SNotValidEntity, [AEntity.ToString()]);
+end;
+
+function TTSession<T>.GetOriginalEntity(const AClone: T): T;
+begin
+  result := FCloned.GetOriginalEntity(AClone);
 end;
 
 procedure TTSession<T>.Insert(const AEntity: T);
