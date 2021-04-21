@@ -22,6 +22,7 @@ For further information:
 - [Attributes](https://github.com/davidlastrucci/Trysil/blob/master/Docs/Attributes.md)
 - [Simple sample](https://github.com/davidlastrucci/Trysil/blob/master/Docs/Sample.md)
 - [Getting started](https://github.com/davidlastrucci/Trysil/blob/master/Docs/GettingStarted.md)
+- [Run Simple Demo in Demos/Simple folder](https://github.com/davidlastrucci/Trysil/blob/master/Docs/RunSimpleDemo.md)
 
 ---
 <p>
