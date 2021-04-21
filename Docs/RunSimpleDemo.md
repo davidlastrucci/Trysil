@@ -18,7 +18,7 @@ For run demo project in **Demos/Simple** folder, you have to do:
 
 - Create a SQL Server database and execute the script Demo.sql in **Demos/Simple/Sql** folder
 - Edit the Demo.config.json file in **Demos/Simple** folder for change connection to SQL Server database
-- Copy the Demo.config.json in **$(Platform)/$(Config)** folder
+- Copy the Demo.config.json in **$(Platform)/$(Config)** folder (the executable folder)
 
 **Demo.config.json (OS authentication)**
 <pre>
