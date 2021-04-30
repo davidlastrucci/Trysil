@@ -184,7 +184,13 @@ begin
   begin
     FList := TTList<T>.Create;
     try
-      LFilter := TTFilter.Create(Format('[%s] = %d', [FColumnName, FID]));
+      if TTQuotedPrimaryKey then
+        LFilter := TTFilter.Create(Format('%s = %s', [
+          FColumnName, QuotedStr(FID.ToString)]))
+      else
+        LFilter := TTFilter.Create(Format('%s = %s', [
+          FColumnName, FID.ToString]));
+
       FContext.Select<T>(FList, LFilter);
     except
       FList.Free;

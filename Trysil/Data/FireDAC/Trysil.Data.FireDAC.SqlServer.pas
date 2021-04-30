@@ -169,30 +169,30 @@ implementation
 
 constructor TTDataSqlServerConnection.Create(const AConnectionName: String);
 begin
-    inherited Create;
-    FConnectionName := AConnectionName;
+  inherited Create;
+  FConnectionName := AConnectionName;
 
-    FWaitCursor := TFDGUIxWaitCursor.Create(nil);
-    FMSSQLDriverLink := TFDPhysMSSQLDriverLink.Create(nil);
-    FConnection := TFDConnection.Create(nil);
+  FWaitCursor := TFDGUIxWaitCursor.Create(nil);
+  FMSSQLDriverLink := TFDPhysMSSQLDriverLink.Create(nil);
+  FConnection := TFDConnection.Create(nil);
 end;
 
 destructor TTDataSqlServerConnection.Destroy;
 begin
-    FConnection.Free;
-    FMSSQLDriverLink.Free;
-    FWaitCursor.Free;
-    inherited Destroy;
+  FConnection.Free;
+  FMSSQLDriverLink.Free;
+  FWaitCursor.Free;
+  inherited Destroy;
 end;
 
 procedure TTDataSqlServerConnection.AfterConstruction;
 begin
-    inherited AfterConstruction;
-    FWaitCursor.Provider := 'Console';
-    FWaitCursor.ScreenCursor := TFDGUIxScreenCursor.gcrNone;
+  inherited AfterConstruction;
+  FWaitCursor.Provider := 'Console';
+  FWaitCursor.ScreenCursor := TFDGUIxScreenCursor.gcrNone;
 
-    FConnection.ConnectionDefName := FConnectionName;
-    FConnection.Open;
+  FConnection.ConnectionDefName := FConnectionName;
+  FConnection.Open;
 end;
 
 procedure TTDataSqlServerConnection.StartTransaction;

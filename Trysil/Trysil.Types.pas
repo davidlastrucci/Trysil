@@ -19,6 +19,12 @@ uses
 
   Trysil.Exceptions;
 
+const
+
+{ TTQuotedPrimaryKey }
+
+  TTQuotedPrimaryKey: Boolean = False;
+
 type
 
 { TTPrimaryKey }

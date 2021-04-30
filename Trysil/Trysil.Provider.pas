@@ -302,7 +302,11 @@ function TTProvider.GetWhere(
 begin
   if not Assigned(ATablemap.PrimaryKey) then
     raise ETException.Create(SNotDefinedPrimaryKey);
-  result := Format('%s = %d', [ATablemap.PrimaryKey.Name, AID]);
+  if TTQuotedPrimaryKey then
+    result := Format('%s = %s', [
+      ATablemap.PrimaryKey.Name, QuotedStr(AID.ToString)])
+  else
+    result := Format('%s = %s', [ATablemap.PrimaryKey.Name, AID.ToString]);
 end;
 
 procedure TTProvider.Select<T>(
