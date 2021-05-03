@@ -369,6 +369,7 @@ begin
   LInstance.RegisterColumnClass<TLargeintField, TTDataLargeIntegerColumn>();
 
   // TTDataDoubleColumn
+  LInstance.RegisterColumnClass<TFMTBCDField, TTDataDoubleColumn>();
   LInstance.RegisterColumnClass<TBCDField, TTDataDoubleColumn>();
   LInstance.RegisterColumnClass<TFloatField, TTDataDoubleColumn>();
   LInstance.RegisterColumnClass<TSingleField, TTDataDoubleColumn>();
