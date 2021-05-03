@@ -187,7 +187,8 @@ begin
   if not Assigned(result) then
   begin
     result := T.Create;
-    FIdentityMap.AddEntity<T>(LPrimaryKey, result);
+    if Assigned(FIdentityMap) then
+      FIdentityMap.AddEntity<T>(LPrimaryKey, result);
   end;
 
   MapEntity(ATableMap, AReader, result);
