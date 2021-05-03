@@ -53,7 +53,6 @@ type
       const AList: TList<T>): TTSession<T>;
 
     function GetMetadata<T: class>(): TTTableMetadata;
-    procedure ClearIdentityMap;
 
     procedure SelectAll<T: class, constructor>(const AResult: TTList<T>);
     procedure Select<T: class, constructor>(
@@ -127,11 +126,6 @@ end;
 function TTContext.GetMetadata<T>: TTTableMetadata;
 begin
   result := FProvider.GetMetadata<T>();
-end;
-
-procedure TTContext.ClearIdentityMap;
-begin
-  FProvider.ClearIdentityMap;
 end;
 
 procedure TTContext.SelectAll<T>(const AResult: TTList<T>);

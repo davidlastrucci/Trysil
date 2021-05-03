@@ -88,7 +88,6 @@ type
     function CloneEntity<T: class, constructor>(const AEntity: T): T;
 
     function GetMetadata<T: class>(): TTTableMetadata;
-    procedure ClearIdentityMap;
 
     procedure Select<T: class, constructor>(
       const AResult: TTList<T>; const AFilter: TTFilter);
@@ -275,11 +274,6 @@ end;
 function TTProvider.GetMetadata<T>: TTTableMetadata;
 begin
   result := FMetadata.Load<T>();
-end;
-
-procedure TTProvider.ClearIdentityMap;
-begin
-  FIdentityMap.Clear;
 end;
 
 function TTProvider.GetPrimaryKey(
