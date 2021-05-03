@@ -337,7 +337,8 @@ begin
     LTableMap := FMapper.Load(LGenericList.GenericTypeInfo);
     LTableMetadata := FMetadata.Load(LGenericList.GenericTypeInfo);
     LFilter := TTFilter.Create(GetWhere(AColumnName, AID));
-    LReader := FConnection.CreateReader(LTableMap, LTableMetadata, LFilter);
+    LReader := FConnection.CreateReader(
+      FMapper, LTableMap, LTableMetadata, LFilter);
     try
       LGenericList.Clear;
       while not LReader.Eof do
@@ -371,7 +372,8 @@ begin
   LTableMap := FMapper.Load(AObject.ClassInfo);
   LTableMetadata := FMetadata.Load(AObject.ClassInfo);
   LFilter := TTFilter.Create(GetWhere(LTablemap, AID));
-  LReader := FConnection.CreateReader(LTableMap, LTableMetadata, LFilter);
+  LReader := FConnection.CreateReader(
+    FMapper, LTableMap, LTableMetadata, LFilter);
   try
     if not LReader.IsEmpty then
       MapEntity(LTableMap, LReader, AObject);
@@ -426,7 +428,8 @@ var
 begin
   LTableMap := FMapper.Load<T>();
   LTableMetadata := FMetadata.Load<T>();
-  LReader := FConnection.CreateReader(LTableMap, LTableMetadata, AFilter);
+  LReader := FConnection.CreateReader(
+    FMapper, LTableMap, LTableMetadata, AFilter);
   try
     AResult.Clear;
     while not LReader.Eof do
@@ -450,7 +453,8 @@ begin
   LTableMap := FMapper.Load<T>();
   LTableMetadata := FMetadata.Load<T>();
   LFilter := TTFilter.Create(GetWhere(LTablemap, AID));
-  LReader := FConnection.CreateReader(LTableMap, LTableMetadata, LFilter);
+  LReader := FConnection.CreateReader(
+    FMapper, LTableMap, LTableMetadata, LFilter);
   try
     if not LReader.IsEmpty then
       result := InternalCreateEntity<T>(LTableMap, LReader);
@@ -471,7 +475,8 @@ begin
   LFilter := TTFilter.Create(GetWhere(
     LTablemap,
     LTablemap.PrimaryKey.Member.GetValue(AEntity).AsType<TTPrimaryKey>()));
-  LReader := FConnection.CreateReader(LTableMap, LTableMetadata, LFilter);
+  LReader := FConnection.CreateReader(
+    FMapper, LTableMap, LTableMetadata, LFilter);
   try
       MapEntity(LTableMap, LReader, AEntity);
   finally

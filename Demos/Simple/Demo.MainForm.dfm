@@ -55,7 +55,6 @@ object MainForm: TMainForm
       Caption = 'Open'
       TabOrder = 0
       OnClick = OpenButtonClick
-      ExplicitTop = 1
     end
     object InsertButton: TButton
       AlignWithMargins = True
@@ -71,8 +70,6 @@ object MainForm: TMainForm
       Caption = 'Insert'
       TabOrder = 1
       OnClick = InsertButtonClick
-      ExplicitLeft = 411
-      ExplicitTop = 4
     end
     object EditButton: TButton
       AlignWithMargins = True
@@ -89,8 +86,6 @@ object MainForm: TMainForm
       Enabled = False
       TabOrder = 2
       OnClick = EditButtonClick
-      ExplicitLeft = 339
-      ExplicitTop = -8
     end
     object DeleteButton: TButton
       AlignWithMargins = True
@@ -107,8 +102,6 @@ object MainForm: TMainForm
       Enabled = False
       TabOrder = 3
       OnClick = DeleteButtonClick
-      ExplicitLeft = 359
-      ExplicitTop = -4
     end
   end
   object SearchTextbox: TSearchBox

@@ -57,11 +57,14 @@ type
 
   TTDataAbstractCommand = class abstract
   strict protected
+    FMapper: TTMapper;
     FTableMap: TTTableMap;
     FTableMetadata: TTTableMetadata;
   public
     constructor Create(
-      const ATableMap: TTTableMap; const ATableMetadata: TTTableMetadata);
+    const AMapper: TTMapper;
+    const ATableMap: TTTableMap;
+    const ATableMetadata: TTTableMetadata);
 
     procedure Execute(
       const AEntity: TObject; const AEvent: TTEvent); virtual; abstract;
@@ -101,19 +104,23 @@ type
       const ATableMap: TTTableMap; const AEntity: TObject);
 
     function CreateReader(
+      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
       const AFilter: TTFilter): TTDataReader; virtual; abstract;
 
     function CreateInsertCommand(
+      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata): TTDataInsertCommand; virtual; abstract;
 
     function CreateUpdateCommand(
+      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata): TTDataUpdateCommand; virtual; abstract;
 
     function CreateDeleteCommand(
+      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata): TTDataDeleteCommand; virtual; abstract;
 
@@ -181,9 +188,12 @@ end;
 { TTDataAbstractCommand }
 
 constructor TTDataAbstractCommand.Create(
-  const ATableMap: TTTableMap; const ATableMetadata: TTTableMetadata);
+  const AMapper: TTMapper;
+  const ATableMap: TTTableMap;
+  const ATableMetadata: TTTableMetadata);
 begin
   inherited Create;
+  FMapper := AMapper;
   FTableMap := ATableMap;
   FTableMetadata := ATableMetadata;
 end;

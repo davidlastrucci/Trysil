@@ -72,7 +72,8 @@ var
 begin
   LTableMap := FMapper.Load<T>();
   LTableMetadata := FMetadata.Load<T>();
-  LCommand := FConnection.CreateInsertCommand(LTableMap, LTableMetadata);
+  LCommand := FConnection.CreateInsertCommand(
+    FMapper, LTableMap, LTableMetadata);
   try
     LEvent := TTEventFactory.Instance.CreateEvent<T>(
       LTableMap.Events.InsertEventClass, FContext, AEntity);
@@ -97,7 +98,8 @@ var
 begin
   LTableMap := FMapper.Load<T>();
   LTableMetadata := FMetadata.Load<T>();
-  LCommand := FConnection.CreateUpdateCommand(LTableMap, LTableMetadata);
+  LCommand := FConnection.CreateUpdateCommand(
+    FMapper, LTableMap, LTableMetadata);
   try
     LEvent := TTEventFactory.Instance.CreateEvent<T>(
       LTableMap.Events.UpdateEventClass, FContext, AEntity);
@@ -125,7 +127,8 @@ begin
   LTableMap := FMapper.Load<T>();
   FConnection.CheckRelations(LTableMap, AEntity);
   LTableMetadata := FMetadata.Load<T>();
-  LCommand := FConnection.CreateDeleteCommand(LTableMap, LTableMetadata);
+  LCommand := FConnection.CreateDeleteCommand(
+    FMapper, LTableMap, LTableMetadata);
   try
     LEvent := TTEventFactory.Instance.CreateEvent<T>(
       LTableMap.Events.DeleteEventClass, FContext, AEntity);

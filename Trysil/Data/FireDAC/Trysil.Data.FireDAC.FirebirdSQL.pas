@@ -64,25 +64,30 @@ type
     procedure RollbackTransaction; override;
 
     procedure GetMetadata(
+      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata); override;
 
     function GetSequenceID(const ASequenceName: String): TTPrimaryKey; override;
 
     function CreateReader(
+      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
       const AFilter: TTFilter): TTDataReader; override;
 
     function CreateInsertCommand(
+      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata): TTDataInsertCommand; override;
 
     function CreateUpdateCommand(
+      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata): TTDataUpdateCommand; override;
 
     function CreateDeleteCommand(
+      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata): TTDataDeleteCommand; override;
   public
@@ -117,6 +122,7 @@ type
   public
     constructor Create(
       const AConnection: TFDConnection;
+      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
       const AFilter: TTFilter);
@@ -131,6 +137,7 @@ type
   public
     constructor Create(
       const AConnection: TFDConnection;
+      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata);
 
@@ -146,6 +153,7 @@ end;
   public
     constructor Create(
       const AConnection: TFDConnection;
+      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata);
 
@@ -161,6 +169,7 @@ end;
   public
     constructor Create(
       const AConnection: TFDConnection;
+      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata);
 
@@ -279,13 +288,15 @@ begin
 end;
 
 procedure TTDataFirebirdSQLConnection.GetMetadata(
-  const ATableMap: TTTableMap; const ATableMetadata: TTTableMetadata);
+  const AMapper: TTMapper;
+  const ATableMap: TTTableMap;
+  const ATableMetadata: TTTableMetadata);
 var
   LSyntax: TTDataFirebirdSQLMetadataSyntax;
   LIndex: Integer;
 begin
   LSyntax := TTDataFirebirdSQLMetadataSyntax.Create(
-    FConnection, ATableMap, ATableMetadata);
+    FConnection, AMapper, ATableMap, ATableMetadata);
   try
     for LIndex := 0 to LSyntax.Dataset.FieldDefs.Count - 1 do
       ATableMetadata.Columns.Add(
@@ -311,36 +322,40 @@ begin
 end;
 
 function TTDataFirebirdSQLConnection.CreateReader(
+  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata;
   const AFilter: TTFilter): TTDataReader;
 begin
   result := TTDataFirebirdSQLDataReader.Create(
-    FConnection, ATableMap, ATableMetadata, AFilter);
+    FConnection, AMapper, ATableMap, ATableMetadata, AFilter);
 end;
 
 function TTDataFirebirdSQLConnection.CreateInsertCommand(
+  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata): TTDataInsertCommand;
 begin
   result := TTDataFirebirdSQLDataInsertCommand.Create(
-    FConnection, ATableMap, ATableMetadata);
+    FConnection, AMapper, ATableMap, ATableMetadata);
 end;
 
 function TTDataFirebirdSQLConnection.CreateUpdateCommand(
+  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata): TTDataUpdateCommand;
 begin
   result := TTDataFirebirdSQLDataUpdateCommand.Create(
-    FConnection, ATableMap, ATableMetadata);
+    FConnection, AMapper, ATableMap, ATableMetadata);
 end;
 
 function TTDataFirebirdSQLConnection.CreateDeleteCommand(
+  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata): TTDataDeleteCommand;
 begin
   result := TTDataFirebirdSQLDataDeleteCommand.Create(
-    FConnection, ATableMap, ATableMetadata);
+    FConnection, AMapper, ATableMap, ATableMetadata);
 end;
 
 class procedure TTDataFirebirdSQLConnection.RegisterConnection(
@@ -366,13 +381,14 @@ end;
 
 constructor TTDataFirebirdSQLDataReader.Create(
   const AConnection: TFDConnection;
+  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata;
   const AFilter: TTFilter);
 begin
   inherited Create(ATableMap);
   FSyntax := TTDataFirebirdSQLSelectSyntax.Create(
-    AConnection, ATableMap, ATableMetadata, AFilter);
+    AConnection, AMapper, ATableMap, ATableMetadata, AFilter);
 end;
 
 destructor TTDataFirebirdSQLDataReader.Destroy;
@@ -390,10 +406,11 @@ end;
 
 constructor TTDataFirebirdSQLDataInsertCommand.Create(
   const AConnection: TFDConnection;
+  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata);
 begin
-  inherited Create(ATableMap, ATableMetadata);
+  inherited Create(AMapper, ATableMap, ATableMetadata);
   FConnection := AConnection;
 end;
 
@@ -403,7 +420,7 @@ var
   LSyntax: TTDataFirebirdSQLInsertSyntax;
 begin
   LSyntax := TTDataFirebirdSQLInsertSyntax.Create(
-    FConnection, FTableMap, FTableMetadata);
+    FConnection, FMapper, FTableMap, FTableMetadata);
   try
     LSyntax.Execute(AEntity, AEvent);
   finally
@@ -415,10 +432,11 @@ end;
 
 constructor TTDataFirebirdSQLDataUpdateCommand.Create(
   const AConnection: TFDConnection;
+  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata);
 begin
-  inherited Create(ATableMap, ATableMetadata);
+  inherited Create(AMapper, ATableMap, ATableMetadata);
   FConnection := AConnection;
 end;
 
@@ -428,7 +446,7 @@ var
   LSyntax: TTDataFirebirdSQLUpdateSyntax;
 begin
   LSyntax := TTDataFirebirdSQLUpdateSyntax.Create(
-    FConnection, FTableMap, FTableMetadata);
+    FConnection, FMapper, FTableMap, FTableMetadata);
   try
     LSyntax.Execute(AEntity, AEvent);
   finally
@@ -440,10 +458,11 @@ end;
 
 constructor TTDataFirebirdSQLDataDeleteCommand.Create(
   const AConnection: TFDConnection;
+  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata);
 begin
-  inherited Create(ATableMap, ATableMetadata);
+  inherited Create(AMapper, ATableMap, ATableMetadata);
   FConnection := AConnection;
 end;
 
@@ -453,7 +472,7 @@ var
   LSyntax: TTDataFirebirdSQLDeleteSyntax;
 begin
   LSyntax := TTDataFirebirdSQLDeleteSyntax.Create(
-    FConnection, FTableMap, FTableMetadata);
+    FConnection, FMapper, FTableMap, FTableMetadata);
   try
     LSyntax.Execute(AEntity, AEvent);
   finally

@@ -61,7 +61,9 @@ type
       const AColumnName: String;
       const AValue: TTValue): TObject;
 
-    function GetValueFromObject(const AInstance: TObject): TTValue;
+    function GetValueFromLazyObject(const AInstance: TObject): TTValue;
+    function GetValueFromNotLazyObject(
+      const AInstance: TObject; const ARttiMember: TTRttiMember): TTValue;
 
     function GetValue(const AInstance: TObject): TTValue; virtual; abstract;
     procedure SetValue(
@@ -265,7 +267,7 @@ begin
     result := LValue.AsType<TObject>();
 end;
 
-function TTRttiMember.GetValueFromObject(const AInstance: TObject): TTValue;
+function TTRttiMember.GetValueFromLazyObject(const AInstance: TObject): TTValue;
 var
   LPropertyID: TRttiProperty;
 begin
@@ -273,6 +275,12 @@ begin
   if not Assigned(LPropertyID) then
     raise ETException.Create(SPropertyIDNotFound);
   result := LPropertyID.GetValue(AInstance);
+end;
+
+function TTRttiMember.GetValueFromNotLazyObject(
+  const AInstance: TObject; const ARttiMember: TTRttiMember): TTValue;
+begin
+  result := ARttiMember.GetValue(AInstance);
 end;
 
 function TTRttiMember.GetIsNullable: Boolean;

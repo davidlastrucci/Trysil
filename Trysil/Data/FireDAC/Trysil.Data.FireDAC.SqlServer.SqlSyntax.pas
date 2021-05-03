@@ -75,6 +75,7 @@ type
     function GetDataset: TDataset;
   strict protected
     FConnection: TFDConnection;
+    FMapper: TTMapper;
     FTableMap: TTTableMap;
     FTableMetadata: TTTableMetadata;
     FDataset: TFDQuery;
@@ -83,6 +84,7 @@ type
   public
     constructor Create(
       const AConnection: TFDConnection;
+      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata);
     destructor Destroy; override;
@@ -105,6 +107,7 @@ type
   public
     constructor Create(
       const AConnection: TFDConnection;
+      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
       const AFilter: TTFilter);
@@ -118,13 +121,14 @@ type
   public
     constructor Create(
       const AConnection: TFDConnection;
+      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata);
   end;
 
 { TTDataSqlServerCommandSyntax }
 
-  TTDataSqlServerCommandSyntax = class abstract (TTDataSqlServerAbstractSyntax)
+  TTDataSqlServerCommandSyntax = class abstract(TTDataSqlServerAbstractSyntax)
   strict private
     FParameters: TObjectList<TTDataParameter>;
 
@@ -141,6 +145,7 @@ type
   public
     constructor Create(
       const AConnection: TFDConnection;
+      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata);
     destructor Destroy; override;
@@ -250,11 +255,13 @@ end;
 
 constructor TTDataSqlServerAbstractSyntax.Create(
   const AConnection: TFDConnection;
+  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata);
 begin
   inherited Create;
   FConnection := AConnection;
+  FMapper := AMapper;
   FTableMap := ATableMap;
   FTableMetadata := ATableMetadata;
 
@@ -283,11 +290,12 @@ end;
 
 constructor TTDataSqlServerSelectSyntax.Create(
   const AConnection: TFDConnection;
+  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata;
   const AFilter: TTFilter);
 begin
-  inherited Create(AConnection, ATableMap, ATableMetadata);
+  inherited Create(AConnection, AMapper, ATableMap, ATableMetadata);
   FFilter := AFilter;
 end;
 
@@ -359,21 +367,23 @@ end;
 
 constructor TTDataSqlServerMetadataSyntax.Create(
   const AConnection: TFDConnection;
+      const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata);
 begin
   inherited Create(
-    AConnection, ATableMap, ATableMetadata, TTFilter.Create('0 = 1'));
+    AConnection, AMapper, ATableMap, ATableMetadata, TTFilter.Create('0 = 1'));
 end;
 
 { TTDataSqlServerCommandSyntax }
 
 constructor TTDataSqlServerCommandSyntax.Create(
   const AConnection: TFDConnection;
+  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata);
 begin
-  inherited Create(AConnection, ATableMap, ATableMetadata);
+  inherited Create(AConnection, AMapper, ATableMap, ATableMetadata);
   FParameters := TObjectList<TTDataParameter>.Create(True);
 end;
 
@@ -430,7 +440,7 @@ begin
 
       FParameters.Add(
         TTDataParameterFactory.Instance.CreateParameter(
-          LColumn.DataType, LParam, GetColumnMap(LColumn.ColumnName)));
+          LColumn.DataType, LParam, FMapper, GetColumnMap(LColumn.ColumnName)));
     end;
   end;
 end;

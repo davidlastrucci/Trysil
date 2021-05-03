@@ -75,6 +75,7 @@ type
     function GetDataset: TDataset;
   strict protected
     FConnection: TFDConnection;
+    FMapper: TTMapper;
     FTableMap: TTTableMap;
     FTableMetadata: TTTableMetadata;
     FDataset: TFDQuery;
@@ -83,6 +84,7 @@ type
   public
     constructor Create(
       const AConnection: TFDConnection;
+      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata);
     destructor Destroy; override;
@@ -105,6 +107,7 @@ type
   public
     constructor Create(
       const AConnection: TFDConnection;
+      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
       const AFilter: TTFilter);
@@ -118,13 +121,15 @@ type
   public
     constructor Create(
       const AConnection: TFDConnection;
+      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata);
   end;
 
 { TTDataFirebirdSQLCommandSyntax }
 
-  TTDataFirebirdSQLCommandSyntax = class abstract (TTDataFirebirdSQLAbstractSyntax)
+  TTDataFirebirdSQLCommandSyntax =
+    class abstract(TTDataFirebirdSQLAbstractSyntax)
   strict private
     FParameters: TObjectList<TTDataParameter>;
 
@@ -141,6 +146,7 @@ type
   public
     constructor Create(
       const AConnection: TFDConnection;
+      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata);
     destructor Destroy; override;
@@ -206,7 +212,8 @@ begin
   try
     LDataset.Connection := FConnection;
 
-    LDataset.Open(Format('SELECT GEN_ID(%s, 1) ID FROM RDB$DATABASE', [FSequenceName]));
+    LDataset.Open(
+      Format('SELECT GEN_ID(%s, 1) ID FROM RDB$DATABASE', [FSequenceName]));
     result := LDataset.Fields[0].AsInteger;
   finally
     LDataset.Free;
@@ -250,11 +257,13 @@ end;
 
 constructor TTDataFirebirdSQLAbstractSyntax.Create(
   const AConnection: TFDConnection;
+  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata);
 begin
   inherited Create;
   FConnection := AConnection;
+  FMapper := AMapper;
   FTableMap := ATableMap;
   FTableMetadata := ATableMetadata;
 
@@ -283,11 +292,12 @@ end;
 
 constructor TTDataFirebirdSQLSelectSyntax.Create(
   const AConnection: TFDConnection;
+  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata;
   const AFilter: TTFilter);
 begin
-  inherited Create(AConnection, ATableMap, ATableMetadata);
+  inherited Create(AConnection, AMapper, ATableMap, ATableMetadata);
   FFilter := AFilter;
 end;
 
@@ -359,21 +369,23 @@ end;
 
 constructor TTDataFirebirdSQLMetadataSyntax.Create(
   const AConnection: TFDConnection;
+  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata);
 begin
   inherited Create(
-    AConnection, ATableMap, ATableMetadata, TTFilter.Create('0 = 1'));
+    AConnection, AMapper, ATableMap, ATableMetadata, TTFilter.Create('0 = 1'));
 end;
 
 { TTDataFirebirdSQLCommandSyntax }
 
 constructor TTDataFirebirdSQLCommandSyntax.Create(
   const AConnection: TFDConnection;
+  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata);
 begin
-  inherited Create(AConnection, ATableMap, ATableMetadata);
+  inherited Create(AConnection, AMapper, ATableMap, ATableMetadata);
   FParameters := TObjectList<TTDataParameter>.Create(True);
 end;
 
@@ -430,7 +442,7 @@ begin
 
       FParameters.Add(
         TTDataParameterFactory.Instance.CreateParameter(
-          LColumn.DataType, LParam, GetColumnMap(LColumn.ColumnName)));
+          LColumn.DataType, LParam, {FMapper}nil, GetColumnMap(LColumn.ColumnName)));
     end;
   end;
 end;

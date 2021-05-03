@@ -32,10 +32,13 @@ type
   TTDataParameter = class abstract
   strict protected
     FParam: TFDParam;
+    FMapper: TTMapper;
     FColumnMap: TTColumnMap;
   public
     constructor Create(
-      const AParam: TFDParam; const AColumnMap: TTColumnMap);
+      const AParam: TFDParam;
+      const AMapper: TTMapper;
+      const AColumnMap: TTColumnMap);
 
     procedure SetValue(const AEntity: TObject); virtual; abstract;
   end;
@@ -117,6 +120,7 @@ type
     function CreateParameter(
       const AFieldType: TFieldType;
       const AParam: TFDParam;
+      const AMapper: TTMapper;
       const AColumnMap: TTColumnMap): TTDataParameter;
 
     class property Instance: TTDataParameterFactory read FInstance;
@@ -140,10 +144,13 @@ implementation
 { TTDataParameter }
 
 constructor TTDataParameter.Create(
-  const AParam: TFDParam; const AColumnMap: TTColumnMap);
+  const AParam: TFDParam;
+  const AMapper: TTMapper;
+  const AColumnMap: TTColumnMap);
 begin
   inherited Create;
   FParam := AParam;
+  FMapper := AMapper;
   FColumnMap := AColumnMap;
 end;
 
@@ -173,6 +180,8 @@ procedure TTDataIntegerParameter.SetValue(const AEntity: TObject);
 var
   LValue: TTValue;
   LNullable: TTNullable<Integer>;
+  LObject: TObject;
+  LTableMap: TTTableMap;
 begin
   LValue := FColumnMap.Member.GetValue(AEntity);
   if FColumnMap.Member.IsNullable then
@@ -185,7 +194,15 @@ begin
   end
   else if FColumnMap.Member.IsClass then
   begin
-    LValue := FColumnMap.Member.GetValueFromObject(LValue.AsObject);
+    LObject := LValue.AsObject;
+    if TRttiLazy.IsLazy(LObject) then
+      LValue := FColumnMap.Member.GetValueFromLazyObject(LObject)
+    else
+    begin
+      LTableMap := FMapper.Load(LObject.ClassInfo);
+      LValue := FColumnMap.Member.GetValueFromNotLazyObject(
+        LObject, LTableMap.PrimaryKey.Member);
+    end;
     FParam.AsInteger := LValue.AsType<Integer>();
   end
   else
@@ -333,6 +350,7 @@ end;
 function TTDataParameterFactory.CreateParameter(
   const AFieldType: TFieldType;
   const AParam: TFDParam;
+  const AMapper: TTMapper;
   const AColumnMap: TTColumnMap): TTDataParameter;
 var
   LClass: TClass;
@@ -340,7 +358,7 @@ begin
   if not FDataParameterTypes.TryGetValue(AFieldType, LClass) then
     raise ETException.CreateFmt(SParameterTypeError, [
       GetEnumName(TypeInfo(TFieldType), Ord(AFieldType))]);
-  result := TTDataParameterClass(LClass).Create(AParam, AColumnMap);
+  result := TTDataParameterClass(LClass).Create(AParam, AMapper, AColumnMap);
 end;
 
 { TTDataParameterRegister }
