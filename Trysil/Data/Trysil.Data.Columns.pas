@@ -293,14 +293,18 @@ end;
 
 function TTDataBlobColumn.GetValue: TTValue;
 begin
-  // TODO: Da implementare
-  raise ETException.Create(SBlobDataColumnValue);
+  result := TTValue.From<TBytes>(TBlobField(FField).AsBytes);
 end;
 
 function TTDataBlobColumn.GetNullableValue: TTValue;
+var
+  LValue: TTNullable<TBytes>;
 begin
-  // TODO: Da implementare
-  raise ETException.Create(SBlobDataColumnValue);
+  if FField.IsNull then
+    LValue := nil
+  else
+    LValue := TBlobField(FField).AsBytes;
+  result := TTValue.From<TTNullable<TBytes>>(LValue);
 end;
 
 { TTDataColumnFactory }
