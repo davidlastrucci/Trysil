@@ -90,7 +90,8 @@ type
       const AConnection: TTDataConnection;
       const AContext: TObject;
       const AMetadata: TTMetadata;
-      const AMapper: TTMapper);
+      const AMapper: TTMapper;
+      const AUseIdentityMap: Boolean);
     destructor Destroy; override;
 
     function CreateEntity<T: class, constructor>(): T;
@@ -121,7 +122,8 @@ constructor TTProvider.Create(
   const AConnection: TTDataConnection;
   const AContext: TObject;
   const AMetadata: TTMetadata;
-  const AMapper: TTMapper);
+  const AMapper: TTMapper;
+  const AUseIdentityMap: Boolean);
 begin
   inherited Create;
   FConnection := AConnection;
@@ -129,14 +131,18 @@ begin
   FMetadata := AMetadata;
   FMapper := AMapper;
 
-  FIdentityMap := TTIdentityMap.Create;
+  FIdentityMap := nil;
+  if AUseIdentityMap then
+    FIdentityMap := TTIdentityMap.Create;
+
   FLazyOwner := TObjectList<TObject>.Create(True);
 end;
 
 destructor TTProvider.Destroy;
 begin
   FLazyOwner.Free;
-  FIdentityMap.Free;
+  if Assigned(FIdentityMap) then
+    FIdentityMap.Free;
   inherited Destroy;
 end;
 
@@ -160,7 +166,8 @@ begin
     MapLazyColumns(LTableMap, nil, result);
     MapLazyListColumns(LTableMap, nil, result);
 
-    FIdentityMap.AddEntity<T>(LPrimaryKey, result);
+    if Assigned(FIdentityMap) then
+      FIdentityMap.AddEntity<T>(LPrimaryKey, result);
   except
     result.Free;
     raise;
@@ -173,7 +180,10 @@ var
   LPrimaryKey: TTPrimaryKey;
 begin
   LPrimaryKey := GetPrimaryKey(ATableMap, AReader);
-  result := FIdentityMap.GetEntity<T>(LPrimaryKey);
+  result := nil;
+  if Assigned(FIdentityMap) then
+    result := FIdentityMap.GetEntity<T>(LPrimaryKey);
+
   if not Assigned(result) then
   begin
     result := T.Create;

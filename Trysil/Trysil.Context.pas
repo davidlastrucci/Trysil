@@ -41,7 +41,10 @@ type
 
     function GetInTransaction: Boolean;
   public
-    constructor Create(const AConnection: TTDataConnection);
+    constructor Create(const AConnection: TTDataConnection); overload;
+    constructor Create(
+      const AConnection: TTDataConnection;
+      const AUseIdentityMap: Boolean); overload;
     destructor Destroy; override;
 
     procedure StartTransaction;
@@ -75,12 +78,20 @@ implementation
 
 constructor TTContext.Create(const AConnection: TTDataConnection);
 begin
+  Create(AConnection, True);
+end;
+
+constructor TTContext.Create(
+  const AConnection: TTDataConnection;
+  const AUseIdentityMap: Boolean);
+begin
   inherited Create;
   FConnection := AConnection;
 
   FMapper := TTMapper.Create;
   FMetadata := TTMetadata.Create(FMapper, FConnection);
-  FProvider := TTProvider.Create(FConnection, Self, FMetadata, FMapper);
+  FProvider := TTProvider.Create(
+    FConnection, Self, FMetadata, FMapper, AUseIdentityMap);
   FResolver := TTResolver.Create(FConnection, Self, FMetadata, FMapper);
 end;
 
