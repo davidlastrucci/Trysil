@@ -98,7 +98,8 @@ type
       const AMapper: TTMapper;
       const AMetadataProvider: TTMetadataProvider);
 
-    function Load<T: class>(): TTTableMetaData;
+    function Load<T: class>(): TTTableMetaData; overload;
+    function Load(const ATypeInfo: PTypeInfo): TTTableMetaData; overload;
   end;
 
 implementation
@@ -184,7 +185,12 @@ end;
 
 function TTMetadata.Load<T>: TTTableMetaData;
 begin
-  result := GetValueOrCreate(TypeInfo(T));
+  result := Load(TypeInfo(T));
+end;
+
+function TTMetadata.Load(const ATypeInfo: PTypeInfo): TTTableMetaData;
+begin
+  result := GetValueOrCreate(ATypeInfo);
 end;
 
 end.

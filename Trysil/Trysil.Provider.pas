@@ -42,40 +42,49 @@ type
     FIdentityMap: TTIdentityMap;
     FLazyOwner: TObjectList<TObject>;
 
-
     function InternalCreateEntity<T: class, constructor>(
       const ATableMap: TTTAbleMap; const AReader: TTDataReader): T;
 
     function GetValue(
       const AReader: TTDataReader; const AColumnName: String): TTValue;
 
-    procedure MapColumns<T: class>(
+    procedure MapColumns(
       const ATableMap: TTTAbleMap;
       const AReader: TTDataReader;
-      const AEntity: T);
-    procedure MapLazyColumn<T: class>(
+      const AEntity: TObject);
+    procedure MapLazyColumn(
       const AReader: TTDataReader;
       const AColumnName: String;
+      const ADetailColumnName: String;
       const ARttiMember: TTRttiMember;
-      const AEntity: T);
-    procedure MapLazyColumns<T: class>(
+      const AEntity: TObject;
+      const AIsDetail: Boolean);
+    procedure MapLazyColumns(
       const ATableMap: TTTAbleMap;
       const AReader: TTDataReader;
-      const AEntity: T);
-    procedure MapLazyListColumns<T: class>(
+      const AEntity: TObject);
+    procedure MapLazyListColumns(
       const ATableMap: TTTAbleMap;
       const AReader: TTDataReader;
-      const AEntity: T);
+      const AEntity: TObject);
 
-    procedure MapEntity<T: class>(
+    procedure MapEntity(
       const ATableMap: TTTAbleMap;
       const AReader: TTDataReader;
-      const AEntity: T);
+      const AEntity: TObject);
+
+    procedure SelectAndMapList(
+      const AObject: TObject;
+      const AColumnName: String;
+      const AID: TTPrimaryKey);
+    procedure GetAndMapObject(const AObject: TObject; const AID: TTPrimaryKey);
 
     function GetPrimaryKey(
       const ATablemap: TTTableMap; const AReader: TTDataReader): TTPrimaryKey;
     function GetWhere(
-      const ATablemap: TTTableMap; const AID: TTPrimaryKey): String;
+      const AColumnName: String; const AID: TTPrimaryKey): String; overload;
+    function GetWhere(
+      const ATablemap: TTTableMap; const AID: TTPrimaryKey): String; overload;
   public
     constructor Create(
       const AConnection: TTDataConnection;
@@ -148,8 +157,8 @@ begin
     LPrimaryKey := FConnection.GetSequenceID(LTableMap.SequenceName);
     LTableMap.PrimaryKey.Member.SetValue(result, LPrimaryKey);
 
-    MapLazyColumns<T>(LTableMap, nil, result);
-    MapLazyListColumns<T>(LTableMap, nil, result);
+    MapLazyColumns(LTableMap, nil, result);
+    MapLazyListColumns(LTableMap, nil, result);
 
     FIdentityMap.AddEntity<T>(LPrimaryKey, result);
   except
@@ -171,7 +180,7 @@ begin
     FIdentityMap.AddEntity<T>(LPrimaryKey, result);
   end;
 
-  MapEntity<T>(ATableMap, AReader, result);
+  MapEntity(ATableMap, AReader, result);
 end;
 
 function TTProvider.CloneEntity<T>(const AEntity: T): T;
@@ -183,8 +192,8 @@ begin
   LTableMap := FMapper.Load<T>();
   result := T.Create;
   try
-    MapLazyColumns<T>(LTableMap, nil, result);
-    MapLazyListColumns<T>(LTableMap, nil, result);
+    MapLazyColumns(LTableMap, nil, result);
+    MapLazyListColumns(LTableMap, nil, result);
     for LColumnMap in LTableMap.Columns do
       LColumnMap.Member.SetValue(result, LColumnMap.Member.GetValue(AEntity));
     for LDetailColumnMap in LTableMap.DetailColums do
@@ -210,12 +219,13 @@ begin
       result := 0;
 end;
 
-procedure TTProvider.MapColumns<T>(
-  const ATableMap: TTTAbleMap; const AReader: TTDataReader; const AEntity: T);
+procedure TTProvider.MapColumns(
+  const ATableMap: TTTAbleMap;
+  const AReader: TTDataReader;
+  const AEntity: TObject);
 var
   LColumnMap: TTColumnMap;
   LDataColumn: TTDataColumn;
-  LValue: TTValue;
 begin
   for LColumnMap in ATableMap.Columns do
   begin
@@ -227,48 +237,135 @@ begin
   end;
 end;
 
-procedure TTProvider.MapLazyColumn<T>(
+procedure TTProvider.MapLazyColumn(
   const AReader: TTDataReader;
   const AColumnName: String;
+  const ADetailColumnName: String;
   const ARttiMember: TTRttiMember;
-  const AEntity: T);
+  const AEntity: TObject;
+  const AIsDetail: Boolean);
 var
   LValue: TTValue;
   LResult: TObject;
+  LCreated: Boolean;
 begin
   LValue := GetValue(AReader, AColumnName);
   LResult := ARttiMember.CreateObject(
-    AEntity, FContext, FMapper, AColumnName, LValue);
-  if Assigned(LResult) then
+    AEntity, FContext, FMapper, ADetailColumnName, LValue, LCreated);
+  if Assigned(LResult) and LCreated then
     FLazyOwner.Add(LResult);
+
+  if (not LCreated) and (not TRttiLazy.IsLazy(LResult)) then
+    if AIsDetail then
+      SelectAndMapList(
+        LResult, ADetailColumnName, LValue.AsType<TTPrimaryKey>())
+    else
+      GetAndMapObject(LResult, LValue.AsType<TTPrimaryKey>());
 end;
 
-procedure TTProvider.MapLazyColumns<T>(
-  const ATableMap: TTTAbleMap; const AReader: TTDataReader; const AEntity: T);
+procedure TTProvider.MapLazyColumns(
+  const ATableMap: TTTAbleMap;
+  const AReader: TTDataReader;
+  const AEntity: TObject);
 var
   LColumnMap: TTColumnMap;
 begin
   for LColumnMap in ATableMap.Columns do
     if LColumnMap.Member.IsClass then
-      MapLazyColumn<T>(AReader, LColumnMap.Name, LColumnMap.Member, AEntity);
+      MapLazyColumn(
+        AReader,
+        LColumnMap.Name,
+        LColumnMap.Name,
+        LColumnMap.Member,
+        AEntity, False);
 end;
 
-procedure TTProvider.MapLazyListColumns<T>(
-  const ATableMap: TTTAbleMap; const AReader: TTDataReader; const AEntity: T);
+procedure TTProvider.MapLazyListColumns(
+  const ATableMap: TTTAbleMap;
+  const AReader: TTDataReader;
+  const AEntity: TObject);
 var
   LColumnMap: TTDetailColumnMap;
 begin
   for LColumnMap in ATableMap.DetailColums do
     if LColumnMap.Member.IsClass then
-      MapLazyColumn<T>(AReader, LColumnMap.Name, LColumnMap.Member, AEntity);
+      MapLazyColumn(
+        AReader,
+        LColumnMap.Name,
+        LColumnMap.DetailName,
+        LColumnMap.Member,
+        AEntity,
+        True);
 end;
 
-procedure TTProvider.MapEntity<T>(
-  const ATableMap: TTTAbleMap; const AReader: TTDataReader; const AEntity: T);
+procedure TTProvider.MapEntity(
+  const ATableMap: TTTAbleMap;
+  const AReader: TTDataReader;
+  const AEntity: TObject);
 begin
-  MapColumns<T>(ATableMap, AReader, AEntity);
-  MapLazyColumns<T>(ATableMap, AReader, AEntity);
-  MapLazyListColumns<T>(ATableMap, AReader, AEntity);
+  MapColumns(ATableMap, AReader, AEntity);
+  MapLazyColumns(ATableMap, AReader, AEntity);
+  MapLazyListColumns(ATableMap, AReader, AEntity);
+end;
+
+procedure TTProvider.SelectAndMapList(
+  const AObject: TObject;
+  const AColumnName: String;
+  const AID: TTPrimaryKey);
+var
+  LGenericList: TRttiGenericList;
+  LTableMap: TTTableMap;
+  LTableMetadata: TTTableMetadata;
+  LFilter: TTFilter;
+  LReader: TTDataReader;
+  LObject: TObject;
+begin
+  LGenericList := TRttiGenericList.Create(AObject);
+  try
+    LTableMap := FMapper.Load(LGenericList.GenericTypeInfo);
+    LTableMetadata := FMetadata.Load(LGenericList.GenericTypeInfo);
+    LFilter := TTFilter.Create(GetWhere(AColumnName, AID));
+    LReader := FConnection.CreateReader(LTableMap, LTableMetadata, LFilter);
+    try
+      LGenericList.Clear;
+      while not LReader.Eof do
+      begin
+        LObject := LGenericList.CreateObject;
+        try
+          MapEntity(LTableMap, LReader, LObject);
+          LGenericList.Add(LObject);
+        except
+          LObject.Free;
+          raise;
+        end;
+        LReader.Next;
+      end;
+    finally
+        LReader.Free;
+    end;
+  finally
+    LGenericList.Free;
+  end;
+end;
+
+procedure TTProvider.GetAndMapObject(
+  const AObject: TObject; const AID: TTPrimaryKey);
+var
+  LTableMap: TTTableMap;
+  LTableMetadata: TTTableMetadata;
+  LFilter: TTFilter;
+  LReader: TTDataReader;
+begin
+  LTableMap := FMapper.Load(AObject.ClassInfo);
+  LTableMetadata := FMetadata.Load(AObject.ClassInfo);
+  LFilter := TTFilter.Create(GetWhere(LTablemap, AID));
+  LReader := FConnection.CreateReader(LTableMap, LTableMetadata, LFilter);
+  try
+    if not LReader.IsEmpty then
+      MapEntity(LTableMap, LReader, AObject);
+  finally
+    LReader.Free;
+  end;
 end;
 
 function TTProvider.GetMetadata<T>: TTTableMetadata;
@@ -292,15 +389,20 @@ begin
 end;
 
 function TTProvider.GetWhere(
+  const AColumnName: String; const AID: TTPrimaryKey): String;
+begin
+  if TTQuotedPrimaryKey then
+    result := Format('%s = %s', [AColumnName, QuotedStr(AID.ToString)])
+  else
+    result := Format('%s = %s', [AColumnName, AID.ToString]);
+end;
+
+function TTProvider.GetWhere(
   const ATablemap: TTTableMap; const AID: TTPrimaryKey): String;
 begin
   if not Assigned(ATablemap.PrimaryKey) then
     raise ETException.Create(SNotDefinedPrimaryKey);
-  if TTQuotedPrimaryKey then
-    result := Format('%s = %s', [
-      ATablemap.PrimaryKey.Name, QuotedStr(AID.ToString)])
-  else
-    result := Format('%s = %s', [ATablemap.PrimaryKey.Name, AID.ToString]);
+  result := GetWhere(ATablemap.PrimaryKey.Name, AID);
 end;
 
 procedure TTProvider.Select<T>(
@@ -359,7 +461,7 @@ begin
     LTablemap.PrimaryKey.Member.GetValue(AEntity).AsType<TTPrimaryKey>()));
   LReader := FConnection.CreateReader(LTableMap, LTableMetadata, LFilter);
   try
-      MapEntity<T>(LTableMap, LReader, AEntity);
+      MapEntity(LTableMap, LReader, AEntity);
   finally
     LReader.Free;
   end;
