@@ -257,20 +257,21 @@ procedure TTProvider.MapLazyColumn(
 var
   LValue: TTValue;
   LResult: TObject;
-  LCreated: Boolean;
 begin
   LValue := GetValue(AReader, AColumnName);
   LResult := ARttiMember.CreateObject(
-    AEntity, FContext, FMapper, ADetailColumnName, LValue, LCreated);
-  if Assigned(LResult) and LCreated then
-    FLazyOwner.Add(LResult);
+    AEntity, FContext, FMapper, ADetailColumnName, LValue);
 
-  if (not LCreated) and (not TRttiLazy.IsLazy(LResult)) then
-    if AIsDetail then
+  if Assigned(LResult) then
+  begin
+    if TRttiLazy.IsLazy(LResult) then
+      FLazyOwner.Add(LResult)
+    else if AIsDetail then
       SelectAndMapList(
         LResult, ADetailColumnName, LValue.AsType<TTPrimaryKey>())
     else
       GetAndMapObject(LResult, LValue.AsType<TTPrimaryKey>());
+  end;
 end;
 
 procedure TTProvider.MapLazyColumns(

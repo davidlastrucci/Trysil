@@ -53,13 +53,13 @@ type
     procedure SetID(const AObject: TObject; const AID: TTValue);
     function GetIsNullable: Boolean;
   public
+    function NeedCreateObject(const AValue: TTValue): Boolean;
     function CreateObject(
       const AInstance: TObject;
       const AContext: TObject;
       const AMapper: TObject;
       const AColumnName: String;
-      const AValue: TTValue;
-      out ACreated: Boolean): TObject;
+      const AValue: TTValue): TObject;
 
     function GetValueFromObject(const AInstance: TObject): TTValue;
 
@@ -102,9 +102,9 @@ type
   TRttiLazy = class
   strict private
     class function CheckTypeName(const AType: TRttiType): Boolean;
-    class function IsLazyType(const AType: TRttiType): Boolean;
   public
     class function IsLazy(const AObject: TObject): Boolean;
+    class function IsLazyType(const AType: TRttiType): Boolean;
   end;
 
 { TRttiGenericList }
@@ -230,35 +230,39 @@ begin
   end;
 end;
 
+function TTRttiMember.NeedCreateObject(const AValue: TTValue): Boolean;
+begin
+  result := AValue.IsEmpty;
+  if result then
+    result := TRttiLazy.IsLazyType(FRttiType);
+end;
+
 function TTRttiMember.CreateObject(
   const AInstance: TObject;
   const AContext: TObject;
   const AMapper: TObject;
   const AColumnName: String;
-  const AValue: TTValue;
-  out ACreated: Boolean): TObject;
+  const AValue: TTValue): TObject;
 var
+  LIsLazy: Boolean;
   LValue: TTValue;
 begin
-  ACreated := False;
   result := nil;
+  LIsLazy := TRttiLazy.IsLazyType(FRttiType);
   LValue := GetValue(AInstance);
-  if LValue.IsEmpty then
+  if NeedCreateObject(LValue) then
   begin
     LValue := InternalCreateObject(AContext, AMapper, AColumnName);
     SetValue(AInstance, LValue);
     if LValue.IsType<TObject>() then
     begin
       result := LValue.AsType<TObject>();
-      ACreated := True;
+      SetID(result, AValue);
     end;
   end;
 
-  if (not Assigned(result)) and LValue.IsType<TObject>() then
+  if (not LIsLazy) and (not Assigned(result)) and LValue.IsType<TObject>() then
     result := LValue.AsType<TObject>();
-
-  if Assigned(result) then
-    SetID(result, AValue);
 end;
 
 function TTRttiMember.GetValueFromObject(const AInstance: TObject): TTValue;
@@ -347,11 +351,6 @@ begin
   end;
 end;
 
-class function TRttiLazy.CheckTypeName(const AType: TRttiType): Boolean;
-begin
-  result := Assigned(AType) and AType.Name.StartsWith('TTAbstractLazy<');
-end;
-
 class function TRttiLazy.IsLazyType(const AType: TRttiType): Boolean;
 var
   LType: TRttiType;
@@ -365,6 +364,11 @@ begin
   end;
 
   result := CheckTypeName(LType);
+end;
+
+class function TRttiLazy.CheckTypeName(const AType: TRttiType): Boolean;
+begin
+  result := Assigned(AType) and AType.Name.StartsWith('TTAbstractLazy<');
 end;
 
 { TRttiGenericList }
