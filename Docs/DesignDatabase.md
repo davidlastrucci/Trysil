@@ -10,7 +10,7 @@
 > *Trysil* - Operation ORM (World War II)<br>
 > http://codenames.info/operation/orm/
 
-## Design database
+## Design database (Microsoft SQL Server)
 ### Sequence
 <pre>
 CREATE SEQUENCE [dbo].[PersonalDataID] 
