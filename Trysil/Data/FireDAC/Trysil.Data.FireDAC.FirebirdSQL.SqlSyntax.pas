@@ -442,7 +442,7 @@ begin
 
       FParameters.Add(
         TTDataParameterFactory.Instance.CreateParameter(
-          LColumn.DataType, LParam, {FMapper}nil, GetColumnMap(LColumn.ColumnName)));
+          LColumn.DataType, LParam, FMapper, GetColumnMap(LColumn.ColumnName)));
     end;
   end;
 end;

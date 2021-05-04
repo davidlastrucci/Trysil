@@ -55,6 +55,8 @@ type
 { TTDataIntegerParameter }
 
   TTDataIntegerParameter = class(TTDataParameter)
+  strict private
+    procedure SetValueFromObject(const AObject: TObject);
   public
     procedure SetValue(const AEntity: TObject); override;
   end;
@@ -138,6 +140,8 @@ type
 resourcestring
   SBlobDataParameterValue = 'Value for blob Parameter is not accessible.';
   SParameterTypeError = 'Parameter non registered for type %s.';
+  STableMapNotFound = 'TableMap for class %s not found';
+  SPrimaryKeyNotDefined = 'Primary key not defined for class %s';
 
 implementation
 
@@ -180,8 +184,6 @@ procedure TTDataIntegerParameter.SetValue(const AEntity: TObject);
 var
   LValue: TTValue;
   LNullable: TTNullable<Integer>;
-  LObject: TObject;
-  LTableMap: TTTableMap;
 begin
   LValue := FColumnMap.Member.GetValue(AEntity);
   if FColumnMap.Member.IsNullable then
@@ -193,20 +195,28 @@ begin
       FParam.AsInteger := LNullable;
   end
   else if FColumnMap.Member.IsClass then
-  begin
-    LObject := LValue.AsObject;
-    if TRttiLazy.IsLazy(LObject) then
-      LValue := FColumnMap.Member.GetValueFromLazyObject(LObject)
-    else
-    begin
-      LTableMap := FMapper.Load(LObject.ClassInfo);
-      LValue := FColumnMap.Member.GetValueFromNotLazyObject(
-        LObject, LTableMap.PrimaryKey.Member);
-    end;
-    FParam.AsInteger := LValue.AsType<Integer>();
-  end
+    SetValueFromObject(LValue.AsObject)
   else
     FParam.AsInteger := LValue.AsType<Integer>();
+end;
+
+procedure TTDataIntegerParameter.SetValueFromObject(const AObject: TObject);
+var
+  LTableMap: TTTableMap;
+  LValue: TTValue;
+begin
+  if TRttiLazy.IsLazy(AObject) then
+    LValue := FColumnMap.Member.GetValueFromObject(AObject)
+  else
+  begin
+    LTableMap := FMapper.Load(AObject.ClassInfo);
+    if not Assigned(LTableMap) then
+      raise ETException.Create(STableMapNotFound);
+    if not Assigned(LTableMap.PrimaryKey) then
+      raise ETException.Create(SPrimaryKeyNotDefined);
+    LValue := LTableMap.PrimaryKey.Member.GetValue(AObject);
+  end;
+  FParam.AsInteger := LValue.AsType<Integer>();
 end;
 
 { TTDataLargeIntegerParameter }
