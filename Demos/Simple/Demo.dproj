@@ -140,6 +140,8 @@
             <Form>EditDialog</Form>
         </DCCReference>
         <DCCReference Include="Demo.ListView.pas"/>
+        <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.FirebirdSQL.pas"/>
+        <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.FirebirdSQL.SqlSyntax.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

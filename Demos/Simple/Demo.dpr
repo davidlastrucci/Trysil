@@ -35,7 +35,9 @@ uses
   Demo.Model in 'Demo.Model.pas',
   Demo.MainForm in 'Demo.MainForm.pas' {MainForm},
   Demo.EditDialog in 'Demo.EditDialog.pas' {EditDialog},
-  Demo.ListView in 'Demo.ListView.pas';
+  Demo.ListView in 'Demo.ListView.pas',
+  Trysil.Data.FireDAC.FirebirdSQL in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.FirebirdSQL.pas',
+  Trysil.Data.FireDAC.FirebirdSQL.SqlSyntax in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.FirebirdSQL.SqlSyntax.pas';
 
 {$R *.res}
 
