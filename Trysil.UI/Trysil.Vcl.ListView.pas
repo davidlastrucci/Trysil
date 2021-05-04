@@ -189,6 +189,11 @@ type
       var Compare: Integer);
 
     function GetSelectedEntity: T;
+
+    procedure AddItems(
+      const AItems: TTList<T>;
+      const APredicate: TTPredicate<T>;
+      const ASelectedEntity: T);
   private // internal
     procedure BindItem(const AItem: TTListItem<T>);
   public
@@ -312,6 +317,8 @@ begin
   FListView.Items.BeginUpdate;
   try
     FListView.AlphaSort;
+    if Assigned(FListView.Selected) then
+      FListView.Selected.MakeVisible(True);
   finally
     FListView.Items.EndUpdate;
   end;
@@ -644,6 +651,24 @@ begin
     result := TTListItem<T>(Selected).Entity;
 end;
 
+procedure TTListView<T>.AddItems(
+  const AItems: TTList<T>;
+  const APredicate: TTPredicate<T>;
+  const ASelectedEntity: T);
+var
+  LEntityItem: T;
+  LListItem: TListItem;
+begin
+  Items.Clear;
+  for LEntityItem in AItems.Where(APredicate) do
+  begin
+    LListItem := Items.Add;
+    TTListItem<T>(LListItem).Entity := LEntityItem;
+    if Assigned(ASelectedEntity) and (ASelectedEntity = LEntityItem) then
+      LListItem.Selected := True;
+  end;
+end;
+
 procedure TTListView<T>.BindData(const AItems: TTList<T>);
 begin
   BindData(AItems, nil);
@@ -665,21 +690,11 @@ begin
   try
     if FColumnsChanged then
       PrepareColumns;
-
-    Items.Clear;
-    for LEntityItem in AItems.Where(APredicate) do
-    begin
-      LListItem := Items.Add;
-      TTListItem<T>(LListItem).Entity := LEntityItem;
-      if Assigned(LSelectedEntity) and (LSelectedEntity = LEntityItem) then
-        LListItem.Selected := True;
-    end;
-
+    AddItems(AItems, APredicate, LSelectedEntity);
     FHelper.SortListView;
 
     if (not Assigned(SelectedEntity)) and (Items.Count > 0) then
       Selected := Items[0];
-
     if Assigned(Selected) then
       Selected.MakeVisible(True);
   finally
