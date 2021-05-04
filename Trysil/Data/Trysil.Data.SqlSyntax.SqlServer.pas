@@ -8,7 +8,7 @@
   http://codenames.info/operation/orm/
 
 *)
-unit Trysil.Data.FireDAC.FirebirdSQL.SqlSyntax;
+unit Trysil.Data.SqlSyntax.SqlServer;
 
 interface
 
@@ -17,40 +17,39 @@ uses
   System.SysUtils,
   System.Generics.Collections,
   Data.DB,
-  FireDAC.Stan.Param,
-  FireDAC.Comp.Client,
 
   Trysil.Types,
+  Trysil.Data,
   Trysil.Filter,
   Trysil.Exceptions,
   Trysil.Rtti,
   Trysil.Metadata,
   Trysil.Mapping,
   Trysil.Events.Abstract,
-  Trysil.Data.FireDAC.Parameters;
+  Trysil.Data.Parameters;
 
 type
 
-{ TTDataFirebirdSQLSequenceSyntax }
+{ TTDataSqlServerSequenceSyntax }
 
-  TTDataFirebirdSQLSequenceSyntax = class
+  TTDataSqlServerSequenceSyntax = class
   strict private
-    FConnection: TFDConnection;
+    FConnection: TTDataConnection;
     FSequenceName: String;
 
     function GetID: TTPrimaryKey;
   public
     constructor Create(
-      const AConnection: TFDConnection; const ASequenceName: String);
+      const AConnection: TTDataConnection; const ASequenceName: String);
 
     property ID: TTPrimaryKey read GetID;
   end;
 
-{ TTDataFirebirdSQLSelectCountSyntax }
+{ TTDataSqlServerSelectCountSyntax }
 
-  TTDataFirebirdSQLSelectCountSyntax = class
+  TTDataSqlServerSelectCountSyntax = class
   strict private
-    FConnection: TFDConnection;
+    FConnection: TTDataConnection;
     FTableMap: TTTableMap;
     FTableName: String;
     FColumnName: String;
@@ -59,7 +58,7 @@ type
     function GetCount: Integer;
   public
     constructor Create(
-      const AConnection: TFDConnection;
+      const AConnection: TTDataConnection;
       const ATableMap: TTTableMap;
       const ATableName: String;
       const AColumnName: String;
@@ -68,25 +67,44 @@ type
     property Count: Integer read GetCount;
   end;
 
-{ TTDataFirebirdSQLAbstractSqlSyntax }
+{ TTDataSqlServerAbstractSqlSyntax }
 
-  TTDataFirebirdSQLAbstractSyntax = class abstract
-  strict private
-    function GetDataset: TDataset;
+  TTDataSqlServerAbstractSyntax = class abstract
   strict protected
-    FConnection: TFDConnection;
+    FConnection: TTDataConnection;
     FMapper: TTMapper;
     FTableMap: TTTableMap;
     FTableMetadata: TTTableMetadata;
-    FDataset: TFDQuery;
 
     function GetSqlSyntax: String; virtual; abstract;
   public
     constructor Create(
-      const AConnection: TFDConnection;
+      const AConnection: TTDataConnection;
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata);
+
+  end;
+
+{ TTDataSqlServerSelectSyntax }
+
+  TTDataSqlServerSelectSyntax = class(TTDataSqlServerAbstractSyntax)
+  strict private
+    FFilter: TTFilter;
+    FDataset: TDataSet;
+
+    function GetDataset: TDataset;
+    function GetColumns: String;
+    function GetOrderBy: String;
+  strict protected
+    function GetSqlSyntax: String; override;
+  public
+    constructor Create(
+      const AConnection: TTDataConnection;
+      const AMapper: TTMapper;
+      const ATableMap: TTTableMap;
+      const ATableMetadata: TTTableMetadata;
+      const AFilter: TTFilter);
     destructor Destroy; override;
 
     procedure AfterConstruction; override;
@@ -94,50 +112,23 @@ type
     property Dataset: TDataset read GetDataset;
   end;
 
-{ TTDataFirebirdSQLSelectSyntax }
+{ TTDataSqlServerMetadataSyntax }
 
-  TTDataFirebirdSQLSelectSyntax = class(TTDataFirebirdSQLAbstractSyntax)
-  strict private
-    FFilter: TTFilter;
-
-    function GetColumns: String;
-    function GetOrderBy: String;
-  strict protected
-    function GetSqlSyntax: String; override;
+  TTDataSqlServerMetadataSyntax = class(TTDataSqlServerSelectSyntax)
   public
     constructor Create(
-      const AConnection: TFDConnection;
-      const AMapper: TTMapper;
-      const ATableMap: TTTableMap;
-      const ATableMetadata: TTTableMetadata;
-      const AFilter: TTFilter);
-
-    procedure AfterConstruction; override;
-  end;
-
-{ TTDataFirebirdSQLMetadataSyntax }
-
-  TTDataFirebirdSQLMetadataSyntax = class(TTDataFirebirdSQLSelectSyntax)
-  public
-    constructor Create(
-      const AConnection: TFDConnection;
+      const AConnection: TTDataConnection;
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata);
   end;
 
-{ TTDataFirebirdSQLCommandSyntax }
+{ TTDataSqlServerCommandSyntax }
 
-  TTDataFirebirdSQLCommandSyntax =
-    class abstract(TTDataFirebirdSQLAbstractSyntax)
+  TTDataSqlServerCommandSyntax =
+    class abstract(TTDataSqlServerAbstractSyntax)
   strict private
-    FParameters: TObjectList<TTDataParameter>;
-
-    function GetColumnMap(const AColumnName: String): TTColumnMap;
-
     procedure CheckReadWrite;
-    procedure InitializeParameters;
-    procedure AssignParameterValues(const AEntity: TObject);
   strict protected
     procedure BeforeExecute(
       const AEntity: TObject; const AEvent: TTEvent); virtual;
@@ -145,7 +136,7 @@ type
       const AEntity: TObject; const AEvent: TTEvent); virtual;
   public
     constructor Create(
-      const AConnection: TFDConnection;
+      const AConnection: TTDataConnection;
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata);
@@ -156,9 +147,9 @@ type
     procedure Execute(const AEntity: TObject; const AEvent: TTEvent);
   end;
 
-{ TTDataFirebirdSQLInsertSyntax }
+{ TTDataSqlServerInsertSyntax }
 
-  TTDataFirebirdSQLInsertSyntax = class(TTDataFirebirdSQLCommandSyntax)
+  TTDataSqlServerInsertSyntax = class(TTDataSqlServerCommandSyntax)
   strict private
     function GetColumns: String;
     function GetParameters: String;
@@ -166,18 +157,18 @@ type
     function GetSqlSyntax: String; override;
   end;
 
-{ TTDataFirebirdSQLUpdateSyntax }
+{ TTDataSqlServerUpdateSyntax }
 
-  TTDataFirebirdSQLUpdateSyntax = class(TTDataFirebirdSQLCommandSyntax)
+  TTDataSqlServerUpdateSyntax = class(TTDataSqlServerCommandSyntax)
   strict private
     function GetColumns: String;
   strict protected
     function GetSqlSyntax: String; override;
   end;
 
-{ TTDataFirebirdSQLDeleteSyntax }
+{ TTDataSqlServerDeleteSyntax }
 
-  TTDataFirebirdSQLDeleteSyntax = class(TTDataFirebirdSQLCommandSyntax)
+  TTDataSqlServerDeleteSyntax = class(TTDataSqlServerCommandSyntax)
   strict protected
     procedure BeforeExecute(
       const AEntity: TObject; const AEvent: TTEvent); override;
@@ -194,36 +185,34 @@ resourcestring
 
 implementation
 
-{ TTDataFirebirdSQLSequenceSyntax }
+{ TTDataSqlServerSequenceSyntax }
 
-constructor TTDataFirebirdSQLSequenceSyntax.Create(
-  const AConnection: TFDConnection; const ASequenceName: String);
+constructor TTDataSqlServerSequenceSyntax.Create(
+  const AConnection: TTDataConnection; const ASequenceName: String);
 begin
   inherited Create;
   FConnection := AConnection;
   FSequenceName := ASequenceName;
 end;
 
-function TTDataFirebirdSQLSequenceSyntax.GetID: TTPrimaryKey;
+function TTDataSqlServerSequenceSyntax.GetID: TTPrimaryKey;
 var
-  LDataset: TFDQuery;
+  LDataset: TDataSet;
 begin
-  LDataset := TFDQuery.Create(nil);
+  LDataset := FConnection.CreateDataSet(
+    Format('SELECT NEXT VALUE FOR %s AS ID', [FSequenceName]));
   try
-    LDataset.Connection := FConnection;
-
-    LDataset.Open(
-      Format('SELECT GEN_ID(%s, 1) ID FROM RDB$DATABASE', [FSequenceName]));
+    LDataset.Open;
     result := LDataset.Fields[0].AsInteger;
   finally
     LDataset.Free;
   end;
 end;
 
-{ TTDataFirebirdSQLSelectCountSyntax }
+{ TTDataSqlServerSelectCountSyntax }
 
-constructor TTDataFirebirdSQLSelectCountSyntax.Create(
-  const AConnection: TFDConnection;
+constructor TTDataSqlServerSelectCountSyntax.Create(
+  const AConnection: TTDataConnection;
   const ATableMap: TTTableMap;
   const ATableName: String;
   const AColumnName: String;
@@ -237,26 +226,25 @@ begin
   FID := AID;
 end;
 
-function TTDataFirebirdSQLSelectCountSyntax.GetCount: Integer;
+function TTDataSqlServerSelectCountSyntax.GetCount: Integer;
 var
-  LDataset: TFDQuery;
+  LDataset: TDataSet;
 begin
-  LDataset := TFDQuery.Create(nil);
-  try
-    LDataset.Connection := FConnection;
-
-    LDataset.Open(Format('SELECT COUNT(*) FROM %0:s WHERE %1:s = %2:d', [
+  LDataset := FConnection.CreateDataSet(
+    Format('SELECT COUNT(*) FROM [%0:s] WHERE [%1:s] = %2:d', [
       FTableName, FColumnName, FID]));
+  try
+    LDataset.Open;
     result := LDataset.Fields[0].AsInteger;
   finally
     LDataset.Free;
   end;
 end;
 
-{ TTDataFirebirdSQLAbstractSyntax }
+{ TTDataSqlServerAbstractSyntax }
 
-constructor TTDataFirebirdSQLAbstractSyntax.Create(
-  const AConnection: TFDConnection;
+constructor TTDataSqlServerAbstractSyntax.Create(
+  const AConnection: TTDataConnection;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata);
@@ -266,32 +254,12 @@ begin
   FMapper := AMapper;
   FTableMap := ATableMap;
   FTableMetadata := ATableMetadata;
-
-  FDataset := TFDQuery.Create(nil);
 end;
 
-destructor TTDataFirebirdSQLAbstractSyntax.Destroy;
-begin
-  FDataset.Free;
-  inherited Destroy;
-end;
+{ TTDataSqlServerSelectSyntax }
 
-procedure TTDataFirebirdSQLAbstractSyntax.AfterConstruction;
-begin
-  inherited AfterConstruction;
-  FDataset.Connection := FConnection;
-  FDataset.SQL.Text := GetSqlSyntax;
-end;
-
-function TTDataFirebirdSQLAbstractSyntax.GetDataset: TDataset;
-begin
-  result := FDataset;
-end;
-
-{ TTDataFirebirdSQLSelectSyntax }
-
-constructor TTDataFirebirdSQLSelectSyntax.Create(
-  const AConnection: TFDConnection;
+constructor TTDataSqlServerSelectSyntax.Create(
+  const AConnection: TTDataConnection;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata;
@@ -301,13 +269,20 @@ begin
   FFilter := AFilter;
 end;
 
-procedure TTDataFirebirdSQLSelectSyntax.AfterConstruction;
+destructor TTDataSqlServerSelectSyntax.Destroy;
+begin
+  FDataset.Free;
+  inherited;
+end;
+
+procedure TTDataSqlServerSelectSyntax.AfterConstruction;
 begin
   inherited AfterConstruction;
+  FDataset := FConnection.CreateDataSet(GetSqlSyntax);
   FDataset.Open;
 end;
 
-function TTDataFirebirdSQLSelectSyntax.GetColumns: String;
+function TTDataSqlServerSelectSyntax.GetColumns: String;
 var
   LResult: TStringBuilder;
   LColumnMap: TTColumnMap;
@@ -315,7 +290,7 @@ begin
   LResult := TStringBuilder.Create;
   try
     for LColumnMap in FTableMap.Columns do
-      LResult.AppendFormat('%s, ', [LColumnMap.Name]);
+      LResult.AppendFormat('[%s], ', [LColumnMap.Name]);
 
     result := LResult.ToString();
     if not result.IsEmpty then
@@ -325,7 +300,12 @@ begin
   end;
 end;
 
-function TTDataFirebirdSQLSelectSyntax.GetOrderBy: String;
+function TTDataSqlServerSelectSyntax.GetDataset: TDataset;
+begin
+  Result := FDataset;
+end;
+
+function TTDataSqlServerSelectSyntax.GetOrderBy: String;
 var
   LResult: TStringBuilder;
 begin
@@ -334,7 +314,7 @@ begin
     if (not FFilter.Top.OrderBy.IsEmpty) then
       LResult.AppendFormat(' ORDER BY %s, ', [FFilter.Top.OrderBy])
     else if Assigned(FTableMap.PrimaryKey) then
-      LResult.AppendFormat(' ORDER BY %s, ', [FTableMap.PrimaryKey.Name]);
+      LResult.AppendFormat(' ORDER BY [%s], ', [FTableMap.PrimaryKey.Name]);
 
     result := LResult.ToString();
     if not result.IsEmpty then
@@ -344,7 +324,7 @@ begin
   end;
 end;
 
-function TTDataFirebirdSQLSelectSyntax.GetSqlSyntax: String;
+function TTDataSqlServerSelectSyntax.GetSqlSyntax: String;
 var
   LResult: TStringBuilder;
 begin
@@ -354,7 +334,7 @@ begin
     if FFilter.Top.MaxRecord > 0 then
       LResult.AppendFormat('FIRST %d ', [FFilter.Top.MaxRecord]);
     LResult.Append(GetColumns());
-    LResult.AppendFormat(' FROM %s', [FTableMap.Name]);
+    LResult.AppendFormat(' FROM [%s]', [FTableMap.Name]);
     if not FFilter.Where.IsEmpty then
       LResult.AppendFormat(' WHERE %s', [FFilter.Where]);
     LResult.Append(GetOrderBy());
@@ -365,10 +345,10 @@ begin
   end;
 end;
 
-{ TTDataFirebirdSQLMetadataSyntax }
+{ TTDataSqlServerMetadataSyntax }
 
-constructor TTDataFirebirdSQLMetadataSyntax.Create(
-  const AConnection: TFDConnection;
+constructor TTDataSqlServerMetadataSyntax.Create(
+  const AConnection: TTDataConnection;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata);
@@ -377,103 +357,54 @@ begin
     AConnection, AMapper, ATableMap, ATableMetadata, TTFilter.Create('0 = 1'));
 end;
 
-{ TTDataFirebirdSQLCommandSyntax }
+{ TTDataSqlServerCommandSyntax }
 
-constructor TTDataFirebirdSQLCommandSyntax.Create(
-  const AConnection: TFDConnection;
+constructor TTDataSqlServerCommandSyntax.Create(
+  const AConnection: TTDataConnection;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata);
 begin
   inherited Create(AConnection, AMapper, ATableMap, ATableMetadata);
-  FParameters := TObjectList<TTDataParameter>.Create(True);
 end;
 
-destructor TTDataFirebirdSQLCommandSyntax.Destroy;
+destructor TTDataSqlServerCommandSyntax.Destroy;
 begin
-  FParameters.Free;
   inherited Destroy;
 end;
 
-procedure TTDataFirebirdSQLCommandSyntax.AfterConstruction;
+procedure TTDataSqlServerCommandSyntax.AfterConstruction;
 begin
   CheckReadWrite;
   inherited AfterConstruction;
-  InitializeParameters;
+  //InitializeParameters;
 end;
 
-procedure TTDataFirebirdSQLCommandSyntax.CheckReadWrite;
+procedure TTDataSqlServerCommandSyntax.CheckReadWrite;
 begin
-  if (not Assigned(FTableMap.PrimaryKey)) or
-    (not Assigned(FTableMap.VersionColumn)) then
+  if (not Assigned(FTableMap.PrimaryKey)) then
     raise ETException.Create(SReadOnly);
 end;
 
-function TTDataFirebirdSQLCommandSyntax.GetColumnMap(
-  const AColumnName: String): TTColumnMap;
-var
-  LColumn: TTColumnMap;
-begin
-  result := nil;
-  for LColumn in FTableMap.Columns do
-    if LColumn.Name.Equals(AColumnName) then
-    begin
-      result := LColumn;
-      Break;
-    end;
-
-  if not Assigned(result) then
-    raise ETException.CreateFmt(SColumnNotFound, [AColumnName]);
-end;
-
-procedure TTDataFirebirdSQLCommandSyntax.InitializeParameters;
-var
-  LColumn: TTColumnMetadata;
-  LParam: TFDParam;
-begin
-  for LColumn in FTableMetadata.Columns do
-  begin
-    LParam := FDataset.Params.FindParam(LColumn.ColumnName);
-    if Assigned(LParam) then
-    begin
-      LParam.ParamType := TParamType.ptInput;
-      LParam.DataType := LColumn.DataType;
-      LParam.Size := LColumn.DataSize;
-
-      FParameters.Add(
-        TTDataParameterFactory.Instance.CreateParameter(
-          LColumn.DataType, LParam, FMapper, GetColumnMap(LColumn.ColumnName)));
-    end;
-  end;
-end;
-
-procedure TTDataFirebirdSQLCommandSyntax.AssignParameterValues(
-  const AEntity: TObject);
-var
-  LParameter: TTDataParameter;
-begin
-  for LParameter in FParameters do
-    LParameter.SetValue(AEntity);
-end;
-
-procedure TTDataFirebirdSQLCommandSyntax.BeforeExecute(
+procedure TTDataSqlServerCommandSyntax.BeforeExecute(
   const AEntity: TObject; const AEvent: TTEvent);
 begin
   if Assigned(AEvent) then
     AEvent.DoBefore;
 end;
 
-procedure TTDataFirebirdSQLCommandSyntax.AfterExecute(
+procedure TTDataSqlServerCommandSyntax.AfterExecute(
   const AEntity: TObject; const AEvent: TTEvent);
 begin
   if Assigned(AEvent) then
     AEvent.DoAfter;
 end;
 
-procedure TTDataFirebirdSQLCommandSyntax.Execute(
+procedure TTDataSqlServerCommandSyntax.Execute(
   const AEntity: TObject; const AEvent: TTEvent);
 var
   LLocalTransaction: Boolean;
+  LRowsAffected: Integer;
 begin
   LLocalTransaction := not FConnection.InTransaction;
   if LLocalTransaction then
@@ -481,27 +412,27 @@ begin
   try
     BeforeExecute(AEntity, AEvent);
 
-    AssignParameterValues(AEntity);
-    FDataset.ExecSQL();
-    if FDataset.RowsAffected = 0 then
+    LRowsAffected := FConnection.Execute(GetSqlSyntax, FMapper, FTableMap, FTableMetadata, AEntity);
+
+    if LRowsAffected = 0 then
       raise ETException.Create(SRecordChanged)
-    else if FDataset.RowsAffected > 1 then
+    else if LRowsAffected > 1 then
       raise ETException.Create(SSyntaxError);
 
     AfterExecute(AEntity, AEvent);
 
     if LLocalTransaction then
-      FConnection.Commit;
+      FConnection.CommitTransaction;
   except
     if LLocalTransaction then
-      FConnection.Rollback;
+      FConnection.RollbackTransaction;
     raise;
   end;
 end;
 
-{ TTDataFirebirdSQLInsertSyntax }
+{ TTDataSqlServerInsertSyntax }
 
-function TTDataFirebirdSQLInsertSyntax.GetColumns: String;
+function TTDataSqlServerInsertSyntax.GetColumns: String;
 var
   LResult: TStringBuilder;
   LColumnMap: TTColumnMap;
@@ -509,7 +440,7 @@ begin
   LResult := TStringBuilder.Create;
   try
     for LColumnMap in FTableMap.Columns do
-      LResult.AppendFormat('%s, ', [LColumnMap.Name]);
+      LResult.AppendFormat('[%s], ', [LColumnMap.Name]);
 
     result := LResult.ToString();
     if not result.IsEmpty then
@@ -519,7 +450,7 @@ begin
   end;
 end;
 
-function TTDataFirebirdSQLInsertSyntax.GetParameters: String;
+function TTDataSqlServerInsertSyntax.GetParameters: String;
 var
   LResult: TStringBuilder;
   LColumnMap: TTColumnMap;
@@ -539,13 +470,13 @@ begin
   end;
 end;
 
-function TTDataFirebirdSQLInsertSyntax.GetSqlSyntax: String;
+function TTDataSqlServerInsertSyntax.GetSqlSyntax: String;
 var
   LResult: TStringBuilder;
 begin
   LResult := TStringBuilder.Create;
   try
-    LResult.AppendFormat('INSERT INTO %s (', [FTableMap.Name]);
+    LResult.AppendFormat('INSERT INTO [%s] (', [FTableMap.Name]);
     LResult.Append(GetColumns());
     LResult.Append(') VALUES (');
     LResult.Append(GetParameters());
@@ -557,9 +488,9 @@ begin
   end;
 end;
 
-{ TTDataFirebirdSQLUpdateSyntax }
+{ TTDataSqlServerUpdateSyntax }
 
-function TTDataFirebirdSQLUpdateSyntax.GetColumns: String;
+function TTDataSqlServerUpdateSyntax.GetColumns: String;
 var
   LResult: TStringBuilder;
   LColumnMap: TTColumnMap;
@@ -570,9 +501,9 @@ begin
     begin
       if LColumnMap = FTableMap.PrimaryKey then
       else if LColumnMap = FTableMap.VersionColumn then
-        LResult.AppendFormat('%0:s = %0:s + 1, ', [LColumnMap.Name])
+        LResult.AppendFormat('[%0:s] = [%0:s] + 1, ', [LColumnMap.Name])
       else
-        LResult.AppendFormat('%0:s = :%0:s, ', [LColumnMap.Name])
+        LResult.AppendFormat('[%0:s] = :%0:s, ', [LColumnMap.Name])
     end;
 
     result := LResult.ToString();
@@ -583,16 +514,19 @@ begin
   end;
 end;
 
-function TTDataFirebirdSQLUpdateSyntax.GetSqlSyntax: String;
+function TTDataSqlServerUpdateSyntax.GetSqlSyntax: String;
 var
   LResult: TStringBuilder;
 begin
   LResult := TStringBuilder.Create;
   try
-    LResult.AppendFormat('UPDATE %s SET ', [FTableMap.Name]);
+    LResult.AppendFormat('UPDATE [%s] SET ', [FTableMap.Name]);
     LResult.Append(GetColumns());
-    LResult.AppendFormat(' WHERE %0:s = :%0:s AND %1:s = :%1:s', [
-      FTableMap.PrimaryKey.Name, FTableMap.VersionColumn.Name]);
+    LResult.AppendFormat(' WHERE [%0:s] = :%0:s', [
+      FTableMap.PrimaryKey.Name]);
+    if Assigned(FTableMap.VersionColumn) then
+      LResult.AppendFormat(' AND [%0:s] = :%0:s', [
+        FTableMap.VersionColumn.Name]);
 
     result := LResult.ToString();
   finally
@@ -600,36 +534,37 @@ begin
   end;
 end;
 
-{ TTDataFirebirdSQLDeleteSyntax }
+{ TTDataSqlServerDeleteSyntax }
 
-procedure TTDataFirebirdSQLDeleteSyntax.BeforeExecute(
+procedure TTDataSqlServerDeleteSyntax.BeforeExecute(
   const AEntity: TObject; const AEvent: TTEvent);
 var
   LID: TTPrimaryKey;
   LRelation: TTRelationMap;
-  LDataset: TFDQuery;
 begin
   inherited BeforeExecute(AEntity, AEvent);
   LID := FTableMap.PrimaryKey.Member.GetValue(AEntity).AsType<TTPrimaryKey>();
   for LRelation in FTableMap.Relations do
     if LRelation.IsCascade then
     begin
-      LDataset := TFDQuery.Create(nil);
-      try
-        LDataset.Connection := FConnection;
-        LDataset.ExecSQL(Format('DELETE FROM %0:s WHERE %1:s = %1:d', [
-          LRelation.TableName, LRelation.ColumnName, LID]));
-      finally
-        LDataset.Free;
-      end;
+      FConnection.Execute(Format('DELETE FROM [%0:s] WHERE [%1:s] = %1:d', [
+        LRelation.TableName, LRelation.ColumnName, LID]));
     end;
 end;
 
-function TTDataFirebirdSQLDeleteSyntax.GetSqlSyntax: String;
+function TTDataSqlServerDeleteSyntax.GetSqlSyntax: String;
 begin
   result := Format(
-    'DELETE FROM %0:s WHERE %1:s = :%1:s AND %2:s = :%2:s', [
-    FTableMap.Name, FTableMap.PrimaryKey.Name, FTableMap.VersionColumn.Name]);
+    'DELETE FROM [%0:s] WHERE [%1:s] = :%1:s', [
+    FTableMap.Name, FTableMap.PrimaryKey.Name]);
+
+  if Assigned(FTableMap.VersionColumn) then
+  begin
+    result := result + Format(
+      ' AND [%0:s] = :%0:s', [
+      FTableMap.VersionColumn.Name]);
+
+  end;
 end;
 
 end.

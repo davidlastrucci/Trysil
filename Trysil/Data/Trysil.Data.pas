@@ -27,6 +27,33 @@ uses
   Trysil.Events.Abstract;
 
 type
+  ITDataSetParam = interface
+  ['{75B98CB8-FA42-458E-9B2F-332568091302}']
+    function GetAsBoolean: Boolean;
+    procedure SetAsBoolean(const Value: Boolean);
+    function GetAsDateTime: TDateTime;
+    procedure SetAsDateTime(const Value: TDateTime);
+    function GetAsGuid: TGUID;
+    procedure SetAsGuid(const Value: TGUID);
+    function GetAsFloat: Double;
+    procedure SetAsFloat(const Value: Double);
+    function GetAsLargeInt: Int64;
+    procedure SetAsLargeInt(const Value: Int64);
+    function GetAsInteger: Integer;
+    procedure SetAsInteger(const Value: Integer);
+    function GetAsString: string;
+    procedure SetAsString(const Value: string);
+
+    procedure Clear;
+
+    property AsString: string read GetAsString write SetAsString;
+    property AsInteger: Integer read GetAsInteger write SetAsInteger;
+    property AsLargeInt: Int64 read GetAsLargeInt write SetAsLargeInt;
+    property AsFloat: Double read GetAsFloat write SetAsFloat;
+    property AsBoolean: Boolean read GetAsBoolean write SetAsBoolean;
+    property AsDateTime: TDateTime read GetAsDateTime write SetAsDateTime;
+    property AsGuid: TGUID read GetAsGuid write SetAsGuid;
+  end;
 
 { TTDataReader }
 
@@ -102,6 +129,16 @@ type
 
     procedure CheckRelations(
       const ATableMap: TTTableMap; const AEntity: TObject);
+
+    function CreateDataSet(const ASQL: string): TDataSet; virtual; abstract;
+
+    function Execute(const ASQL: string;
+      const AMapper: TTMapper;
+      const ATableMap: TTTableMap;
+      const ATableMetadata: TTTableMetadata;
+      const AEntity: TObject): Integer; overload; virtual; abstract;
+
+    function Execute(const ASQL: string): Integer; overload; virtual;
 
     function CreateReader(
       const AMapper: TTMapper;
@@ -210,6 +247,11 @@ begin
       if SelectCount(
         ATableMap, LRelation.TableName, LRelation.ColumnName, AEntity) > 0 then
         raise ETException.CreateFmt(SRelationError, [AEntity.ToString()]);
+end;
+
+function TTDataConnection.Execute(const ASQL: string): Integer;
+begin
+  Result := Execute(ASQL, nil, nil, nil, nil);
 end;
 
 end.
