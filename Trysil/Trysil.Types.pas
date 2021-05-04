@@ -38,11 +38,18 @@ type
 { TTNullable<T> }
 
   TTNullable<T> = record
+{$IFDEF VER340}
+{$ELSE}
   strict private
     const NotNullValue = '@';
+{$ENDIF}
   strict private
     FValue: T;
+{$IFDEF VER340}
+    FIsNull: Boolean;
+{$ELSE}
     FIsNull: String;
+{$ENDIF}
 
     procedure Clear;
 
@@ -56,6 +63,11 @@ type
     function GetValueOrDefault(const ADefaultValue: T): T; overload;
 
     function Equals(const AOther: TTNullable<T>): Boolean;
+
+{$IFDEF VER340}
+    class operator Initialize(out ANullable: TTNullable<T>);
+{$ELSE}
+{$ENDIF}
 
     class operator Implicit(const AValue: TTNullable<T>): T;
     class operator Implicit(const AValue: T): TTNullable<T>;
@@ -82,7 +94,11 @@ implementation
 
 constructor TTNullable<T>.Create(const AValue: T);
 begin
+{$IFDEF VER340}
+  FIsNull := False;
+{$ELSE}
   FIsNull := NotNullValue;
+{$ENDIF}
   FValue := AValue;
 end;
 
@@ -96,7 +112,11 @@ end;
 
 procedure TTNullable<T>.Clear;
 begin
+{$IFDEF VER340}
+  FIsNull := True;
+{$ELSE}
   FIsNull := '';
+{$ENDIF}
   FValue := Default(T);
 end;
 
@@ -130,6 +150,14 @@ begin
   else
     result := (IsNull = AOther.IsNull);
 end;
+
+{$IFDEF VER340}
+class operator TTNullable<T>.Initialize(out ANullable: TTNullable<T>);
+begin
+  ANullable.FIsNull := True;
+  ANullable.FValue := default(T);
+end;
+{$ENDIF}
 
 class operator TTNullable<T>.Implicit(const AValue: TTNullable<T>): T;
 begin
@@ -168,7 +196,11 @@ end;
 
 function TTNullable<T>.GetIsNull: Boolean;
 begin
+{$IFDEF VER340}
+  result := FIsNull;
+{$ELSE}
   result := (FIsNull.Length = 0);
+{$ENDIF}
 end;
 
 end.
