@@ -140,7 +140,6 @@ type
 { resourcestring }
 
 resourcestring
-  SBlobDataColumnValue = 'Value for blob column is not accessible.';
   SColumnTypeError = 'Column non registered for type %0:s.';
 
 implementation
