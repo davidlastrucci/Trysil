@@ -28,6 +28,7 @@ uses
   Vcl.ExtCtrls,
   Vcl.ImgList,
   Vcl.WinXCtrls,
+  FireDAC.ConsoleUI.Wait,
   FireDAC.VCLUI.Wait,
   Trysil.Filter,
   Trysil.Data,

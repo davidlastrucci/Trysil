@@ -21,8 +21,7 @@ uses
   FireDAC.Stan.Intf,
   FireDAC.Stan.Pool,
   FireDAC.DApt,
-  FireDAC.Stan.Async,
-  FireDAC.ConsoleUI.Wait;
+  FireDAC.Stan.Async;
 
 implementation
 
