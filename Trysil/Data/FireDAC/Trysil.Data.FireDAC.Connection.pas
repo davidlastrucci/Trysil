@@ -71,7 +71,10 @@ type
   strict protected
     function GetDataSetParam(AParam: TFDParam): ITDataSetParam;
 
-    procedure InitializeParameters(ADataSet: TFDQuery;
+    function GetColumnMap(
+      const ATableMap: TTTableMap; const AColumnName: String): TTColumnMap;
+    procedure InitializeParameters(
+      const ADataSet: TFDQuery;
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
@@ -206,7 +209,8 @@ begin
     inherited Destroy;
 end;
 
-function TTDataFireDACConnection.Execute(const ASQL: string;
+function TTDataFireDACConnection.Execute(
+  const ASQL: string;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata;
@@ -220,9 +224,10 @@ begin
     LDataSet.SQL.Text := ASQL;
 
     if Assigned(AEntity) then
-      InitializeParameters(LDataSet, AMapper, ATableMap, ATableMetadata, AEntity);
+      InitializeParameters(
+        LDataSet, AMapper, ATableMap, ATableMetadata, AEntity);
 
-    LDataSet.Execute;
+    LDataSet.ExecSQL;
     Result := LDataSet.RowsAffected;
   except
     LDataSet.Free;
@@ -272,29 +277,29 @@ begin
   result := FConnection.InTransaction;
 end;
 
-procedure TTDataFireDACConnection.InitializeParameters(ADataSet: TFDQuery;
+function TTDataFireDACConnection.GetColumnMap(
+  const ATableMap: TTTableMap; const AColumnName: String): TTColumnMap;
+var
+  LColumn: TTColumnMap;
+begin
+  result := nil;
+  for LColumn in ATableMap.Columns do
+    if LColumn.Name.Equals(AColumnName) then
+    begin
+      result := LColumn;
+      Break;
+    end;
+
+  if not Assigned(result) then
+    raise ETException.CreateFmt(SColumnNotFound, [AColumnName]);
+end;
+
+procedure TTDataFireDACConnection.InitializeParameters(
+  const ADataSet: TFDQuery;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata;
   const AEntity: TObject);
-
-  function GetColumnMap(
-    const AColumnName: String): TTColumnMap;
-  var
-    LColumn: TTColumnMap;
-  begin
-    result := nil;
-    for LColumn in ATableMap.Columns do
-      if LColumn.Name.Equals(AColumnName) then
-      begin
-        result := LColumn;
-        Break;
-      end;
-
-    if not Assigned(result) then
-      raise ETException.CreateFmt(SColumnNotFound, [AColumnName]);
-  end;
-
 var
   LColumn: TTColumnMetadata;
   LParam: TTDataParameter;
@@ -310,7 +315,10 @@ begin
       LFireDACParam.Size := LColumn.DataSize;
 
       LParam := TTDataParameterFactory.Instance.CreateParameter(
-          LColumn.DataType, GetDataSetParam(LFireDACParam), AMapper, GetColumnMap(LColumn.ColumnName));
+        LColumn.DataType,
+        GetDataSetParam(LFireDACParam),
+        AMapper,
+        GetColumnMap(ATableMap, LColumn.ColumnName));
       try
         LParam.SetValue(AEntity);
       finally

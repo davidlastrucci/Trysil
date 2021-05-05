@@ -135,7 +135,8 @@ type
 
     function CreateDataSet(const ASQL: string): TDataSet; virtual; abstract;
 
-    function Execute(const ASQL: string;
+    function Execute(
+      const ASQL: string;
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
