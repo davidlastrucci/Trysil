@@ -12,7 +12,7 @@
 
 ### Run Simple Demo
 
-Trysil it's an ORM for Delphi (for now only for **Microsoft SQL Server** and **Firebird**).
+Trysil it's an ORM for Delphi (for **Microsoft SQL Server**, **Firebird** and **SQLite**).
 
 For run demo project in **Demos/Simple** folder, you have to do:
 
