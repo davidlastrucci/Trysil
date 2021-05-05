@@ -244,7 +244,7 @@ end;
 function TTDataFirebirdSQLConnection.GetDataSetParam(
   AParam: TFDParam): ITDataSetParam;
 begin
-  Result := TTFDDataSetParam.Create(AParam);
+  result := TTFDDataSetParam.Create(AParam);
 end;
 
 procedure TTDataFirebirdSQLConnection.GetMetadata(

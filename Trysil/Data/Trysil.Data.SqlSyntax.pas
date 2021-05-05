@@ -234,7 +234,9 @@ var
 begin
   LDataset := FConnection.CreateDataSet(
     Format('SELECT COUNT(*) FROM %0:s WHERE %1:s = %2:d', [
-    FTableName, FColumnName, FID]));
+      FConnection.GetDatabaseObjectName(FTableName),
+      FConnection.GetDatabaseObjectName(FColumnName),
+      FID]));
   try
     LDataset.Open;
     result := LDataset.Fields[0].AsInteger;
@@ -292,7 +294,8 @@ begin
   LResult := TStringBuilder.Create;
   try
     for LColumnMap in FTableMap.Columns do
-      LResult.AppendFormat('%s, ', [LColumnMap.Name]);
+      LResult.AppendFormat('%s, ', [
+        FConnection.GetDatabaseObjectName(LColumnMap.Name)]);
 
     result := LResult.ToString();
     if not result.IsEmpty then
@@ -304,7 +307,7 @@ end;
 
 function TTDataSelectSyntax.GetDataset: TDataset;
 begin
-  Result := FDataset;
+  result := FDataset;
 end;
 
 function TTDataSelectSyntax.GetOrderBy: String;
@@ -316,7 +319,8 @@ begin
     if (not FFilter.Top.OrderBy.IsEmpty) then
       LResult.AppendFormat(' ORDER BY %s, ', [FFilter.Top.OrderBy])
     else if Assigned(FTableMap.PrimaryKey) then
-      LResult.AppendFormat(' ORDER BY %s, ', [FTableMap.PrimaryKey.Name]);
+      LResult.AppendFormat(' ORDER BY %s, ', [
+        FConnection.GetDatabaseObjectName(FTableMap.PrimaryKey.Name)]);
 
     result := LResult.ToString();
     if not result.IsEmpty then
@@ -336,7 +340,8 @@ begin
     if FFilter.Top.MaxRecord > 0 then
       LResult.AppendFormat('%s ', [GetFilterTopSyntax]);
     LResult.Append(GetColumns());
-    LResult.AppendFormat(' FROM %s', [FTableMap.Name]);
+    LResult.AppendFormat(' FROM %s', [
+      FConnection.GetDatabaseObjectName(FTableMap.Name)]);
     if not FFilter.Where.IsEmpty then
       LResult.AppendFormat(' WHERE %s', [FFilter.Where]);
     LResult.Append(GetOrderBy());
@@ -447,7 +452,8 @@ begin
   LResult := TStringBuilder.Create;
   try
     for LColumnMap in FTableMap.Columns do
-      LResult.AppendFormat('%s, ', [LColumnMap.Name]);
+      LResult.AppendFormat('%s, ', [
+        FConnection.GetDatabaseObjectName(LColumnMap.Name)]);
 
     result := LResult.ToString();
     if not result.IsEmpty then
@@ -483,7 +489,8 @@ var
 begin
   LResult := TStringBuilder.Create;
   try
-    LResult.AppendFormat('INSERT INTO %s (', [FTableMap.Name]);
+    LResult.AppendFormat('INSERT INTO %s (', [
+      FConnection.GetDatabaseObjectName(FTableMap.Name)]);
     LResult.Append(GetColumns());
     LResult.Append(') VALUES (');
     LResult.Append(GetParameters());
@@ -508,9 +515,11 @@ begin
     begin
       if LColumnMap = FTableMap.PrimaryKey then
       else if LColumnMap = FTableMap.VersionColumn then
-        LResult.AppendFormat('%0:s = %0:s + 1, ', [LColumnMap.Name])
+        LResult.AppendFormat('%0:s = %0:s + 1, ', [
+          FConnection.GetDatabaseObjectName(LColumnMap.Name)])
       else
-        LResult.AppendFormat('%0:s = :%0:s, ', [LColumnMap.Name])
+        LResult.AppendFormat('%0:s = :%1:s, ', [
+          FConnection.GetDatabaseObjectName(LColumnMap.Name), LColumnMap.Name]);
     end;
 
     result := LResult.ToString();
@@ -527,11 +536,16 @@ var
 begin
   LResult := TStringBuilder.Create;
   try
-    LResult.AppendFormat('UPDATE %s SET ', [FTableMap.Name]);
+    LResult.AppendFormat('UPDATE %s SET ', [
+      FConnection.GetDatabaseObjectName(FTableMap.Name)]);
     LResult.Append(GetColumns());
-    LResult.AppendFormat(' WHERE %0:s = :%0:s', [FTableMap.PrimaryKey.Name]);
+    LResult.AppendFormat(' WHERE %0:s = :%1:s', [
+      FConnection.GetDatabaseObjectName(FTableMap.PrimaryKey.Name),
+      FTableMap.PrimaryKey.Name]);
     if Assigned(FTableMap.VersionColumn) then
-      LResult.AppendFormat(' AND %0:s = :%0:s', [FTableMap.VersionColumn.Name]);
+      LResult.AppendFormat(' AND %0:s = :%0:s', [
+        FConnection.GetDatabaseObjectName(FTableMap.VersionColumn.Name),
+        FTableMap.VersionColumn.Name]);
     result := LResult.ToString();
   finally
     LResult.Free;
@@ -552,16 +566,21 @@ begin
     if LRelation.IsCascade then
     begin
       FConnection.Execute(Format('DELETE FROM %0:s WHERE %1:s = %1:d', [
-        LRelation.TableName, LRelation.ColumnName, LID]));
+        FConnection.GetDatabaseObjectName(LRelation.TableName),
+        FConnection.GetDatabaseObjectName(LRelation.ColumnName),
+        LID]));
     end;
 end;
 
 function TTDataDeleteSyntax.GetSqlSyntax: String;
 begin
-  result := Format('DELETE FROM %0:s WHERE %1:s = :%1:s', [
-    FTableMap.Name, FTableMap.PrimaryKey.Name]);
+  result := Format('DELETE FROM %0:s WHERE %1:s = :%2:s', [
+    FConnection.GetDatabaseObjectName(FTableMap.Name),
+    FConnection.GetDatabaseObjectName(FTableMap.PrimaryKey.Name),
+    FTableMap.PrimaryKey.Name]);
   if Assigned(FTableMap.VersionColumn) then
-    result := result + Format(' AND %0:s = :%0:s', [
+    result := result + Format(' AND %0:s = :%1:s', [
+      FConnection.GetDatabaseObjectName(FTableMap.VersionColumn.Name),
       FTableMap.VersionColumn.Name]);
 end;
 

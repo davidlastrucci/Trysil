@@ -44,12 +44,12 @@ type
     procedure SetAsLargeInt(const Value: Int64);
     function GetAsInteger: Integer;
     procedure SetAsInteger(const Value: Integer);
-    function GetAsString: string;
-    procedure SetAsString(const Value: string);
+    function GetAsString: String;
+    procedure SetAsString(const Value: String);
 
     procedure Clear;
 
-    property AsString: string read GetAsString write SetAsString;
+    property AsString: String read GetAsString write SetAsString;
     property AsInteger: Integer read GetAsInteger write SetAsInteger;
     property AsLargeInt: Int64 read GetAsLargeInt write SetAsLargeInt;
     property AsFloat: Double read GetAsFloat write SetAsFloat;
@@ -127,22 +127,25 @@ type
     procedure CommitTransaction; virtual; abstract;
     procedure RollbackTransaction; virtual; abstract;
 
+    function GetDatabaseObjectName(
+      const ADatabaseObjectName: String): String; virtual;
+
     function GetSequenceID(
       const ASequenceName: String): TTPrimaryKey; virtual; abstract;
 
     procedure CheckRelations(
       const ATableMap: TTTableMap; const AEntity: TObject);
 
-    function CreateDataSet(const ASQL: string): TDataSet; virtual; abstract;
+    function CreateDataSet(const ASQL: String): TDataSet; virtual; abstract;
 
     function Execute(
-      const ASQL: string;
+      const ASQL: String;
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
       const AEntity: TObject): Integer; overload; virtual; abstract;
 
-    function Execute(const ASQL: string): Integer; overload; virtual;
+    function Execute(const ASQL: String): Integer; overload; virtual;
 
     function CreateReader(
       const AMapper: TTMapper;
@@ -253,9 +256,15 @@ begin
         raise ETException.CreateFmt(SRelationError, [AEntity.ToString()]);
 end;
 
-function TTDataConnection.Execute(const ASQL: string): Integer;
+function TTDataConnection.Execute(const ASQL: String): Integer;
 begin
-  Result := Execute(ASQL, nil, nil, nil, nil);
+  result := Execute(ASQL, nil, nil, nil, nil);
+end;
+
+function TTDataConnection.GetDatabaseObjectName(
+  const ADatabaseObjectName: String): String;
+begin
+  result := ADatabaseObjectName;
 end;
 
 end.

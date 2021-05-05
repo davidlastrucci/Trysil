@@ -52,8 +52,8 @@ type
     procedure SetAsLargeInt(const Value: Int64);
     function GetAsInteger: Integer;
     procedure SetAsInteger(const Value: Integer);
-    function GetAsString: string;
-    procedure SetAsString(const Value: string);
+    function GetAsString: String;
+    procedure SetAsString(const Value: String);
 
     procedure Clear;
 
@@ -81,7 +81,6 @@ type
       const AEntity: TObject);
 
     function GetInTransaction: Boolean; override;
-
   public
     constructor Create(const AConnectionName: String);
     destructor Destroy; override;
@@ -92,8 +91,9 @@ type
     procedure CommitTransaction; override;
     procedure RollbackTransaction; override;
 
-    function CreateDataSet(const ASQL: string): TDataSet; override;
-    function Execute(const ASQL: string;
+    function CreateDataSet(const ASQL: String): TDataSet; override;
+    function Execute(
+      const ASQL: String;
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
@@ -123,37 +123,37 @@ end;
 
 function TTFDDataSetParam.GetAsBoolean: Boolean;
 begin
-  Result := FParam.AsBoolean;
+  result := FParam.AsBoolean;
 end;
 
 function TTFDDataSetParam.GetAsDateTime: TDateTime;
 begin
-  Result := FParam.AsDateTime;
+  result := FParam.AsDateTime;
 end;
 
 function TTFDDataSetParam.GetAsFloat: Double;
 begin
-  Result := FParam.AsFloat;
+  result := FParam.AsFloat;
 end;
 
 function TTFDDataSetParam.GetAsGuid: TGUID;
 begin
-  Result := FParam.AsGUID;
+  result := FParam.AsGUID;
 end;
 
 function TTFDDataSetParam.GetAsInteger: Integer;
 begin
-  Result := FParam.AsInteger;
+  result := FParam.AsInteger;
 end;
 
 function TTFDDataSetParam.GetAsLargeInt: Int64;
 begin
-  Result := FParam.AsLargeInt;
+  result := FParam.AsLargeInt;
 end;
 
-function TTFDDataSetParam.GetAsString: string;
+function TTFDDataSetParam.GetAsString: String;
 begin
-  Result := FParam.AsString;
+  result := FParam.AsString;
 end;
 
 procedure TTFDDataSetParam.SetAsBoolean(const Value: Boolean);
@@ -186,7 +186,7 @@ begin
   FParam.AsLargeInt := Value;
 end;
 
-procedure TTFDDataSetParam.SetAsString(const Value: string);
+procedure TTFDDataSetParam.SetAsString(const Value: String);
 begin
   FParam.AsString := Value;
 end;
@@ -210,7 +210,7 @@ begin
 end;
 
 function TTDataFireDACConnection.Execute(
-  const ASQL: string;
+  const ASQL: String;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata;
@@ -228,7 +228,7 @@ begin
         LDataSet, AMapper, ATableMap, ATableMetadata, AEntity);
 
     LDataSet.ExecSQL;
-    Result := LDataSet.RowsAffected;
+    result := LDataSet.RowsAffected;
   except
     LDataSet.Free;
     raise;
@@ -269,7 +269,7 @@ end;
 function TTDataFireDACConnection.GetDataSetParam(
   AParam: TFDParam): ITDataSetParam;
 begin
-  Result := TTFDDataSetParam.Create(AParam);
+  result := TTFDDataSetParam.Create(AParam);
 end;
 
 function TTDataFireDACConnection.GetInTransaction: Boolean;
@@ -328,8 +328,7 @@ begin
   end;
 end;
 
-function TTDataFireDACConnection.CreateDataSet(
-  const ASQL: string): TDataSet;
+function TTDataFireDACConnection.CreateDataSet(const ASQL: String): TDataSet;
 var
   LDataSet: TFDQuery;
 begin
@@ -341,7 +340,7 @@ begin
     LDataSet.Free;
     raise;
   end;
-  Result := LDataSet;
+  result := LDataSet;
 end;
 
 end.

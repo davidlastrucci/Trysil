@@ -49,6 +49,9 @@ type
       const AColumnName: String;
       const AEntity: TObject): Integer; override;
   public
+    function GetDatabaseObjectName(
+      const ADatabaseObjectName: String): String; override;
+
     procedure GetMetadata(
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
@@ -203,10 +206,16 @@ begin
   end;
 end;
 
+function TTDataSqlServerConnection.GetDatabaseObjectName(
+  const ADatabaseObjectName: String): String;
+begin
+   result := Format('[%s]', [ADatabaseObjectName]);
+end;
+
 function TTDataSqlServerConnection.GetDataSetParam(
   AParam: TFDParam): ITDataSetParam;
 begin
-  Result := TTFDDataSetParam.Create(AParam);
+  result := TTFDDataSetParam.Create(AParam);
 end;
 
 procedure TTDataSqlServerConnection.GetMetadata(
