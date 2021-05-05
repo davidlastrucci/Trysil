@@ -17,9 +17,9 @@ uses
 
 type
 
-{ TTDataSyntaxConnection }
+{ TTDataGenericConnection }
 
-  TTDataSyntaxConnection = class abstract(TTDataConnection)
+  TTDataGenericConnection = class abstract(TTDataConnection)
   strict private
     FSyntaxClasses: TTDataSyntaxClasses;
   strict protected
@@ -65,16 +65,16 @@ type
     property SyntaxClasses: TTDataSyntaxClasses read FSyntaxClasses;
   end;
 
-{ TTDataSyntaxDataReader }
+{ TTDataGenericReader }
 
-  TTDataSyntaxDataReader = class(TTDataReader)
+  TTDataGenericReader = class(TTDataReader)
   strict private
     FSyntax: TTDataSelectSyntax;
   strict protected
     function GetDataset: TDataset; override;
   public
     constructor Create(
-      const AConnection: TTDataSyntaxConnection;
+      const AConnection: TTDataGenericConnection;
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
@@ -82,14 +82,14 @@ type
     destructor Destroy; override;
   end;
 
-{ TTDataSyntaxDataInsertCommand }
+{ TTDataGenericInsertCommand }
 
-  TTDataSyntaxDataInsertCommand = class(TTDataInsertCommand)
+  TTDataGenericInsertCommand = class(TTDataInsertCommand)
   strict private
-    FConnection: TTDataSyntaxConnection;
+    FConnection: TTDataGenericConnection;
   public
     constructor Create(
-      const AConnection: TTDataSyntaxConnection;
+      const AConnection: TTDataGenericConnection;
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
@@ -99,14 +99,14 @@ type
       const AEntity: TObject; const AEvent: TTEvent); override;
 end;
 
-{ TTDataSyntaxDataUpdateCommand }
+{ TTDataGenericUpdateCommand }
 
-  TTDataSyntaxDataUpdateCommand = class(TTDataUpdateCommand)
+  TTDataGenericUpdateCommand = class(TTDataUpdateCommand)
   strict private
-    FConnection: TTDataSyntaxConnection;
+    FConnection: TTDataGenericConnection;
   public
     constructor Create(
-      const AConnection: TTDataSyntaxConnection;
+      const AConnection: TTDataGenericConnection;
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
@@ -116,14 +116,14 @@ end;
       const AEntity: TObject; const AEvent: TTEvent); override;
 end;
 
-{ TTDataSyntaxDataDeleteCommand }
+{ TTDataGenericDeleteCommand }
 
-  TTDataSyntaxDataDeleteCommand = class(TTDataDeleteCommand)
+  TTDataGenericDeleteCommand = class(TTDataDeleteCommand)
   strict private
-    FConnection: TTDataSyntaxConnection;
+    FConnection: TTDataGenericConnection;
   public
     constructor Create(
-      const AConnection: TTDataSyntaxConnection;
+      const AConnection: TTDataGenericConnection;
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
@@ -135,58 +135,58 @@ end;
 
 implementation
 
-{ TTDataSyntaxesConnection }
+{ TTDataGenericConnection }
 
-constructor TTDataSyntaxConnection.Create;
+constructor TTDataGenericConnection.Create;
 begin
   inherited Create;
   FSyntaxClasses := CreateSyntaxClasses;
 end;
 
-destructor TTDataSyntaxConnection.Destroy;
+destructor TTDataGenericConnection.Destroy;
 begin
   FSyntaxClasses.Free;
   inherited Destroy;
 end;
 
-function TTDataSyntaxConnection.CreateReader(
+function TTDataGenericConnection.CreateReader(
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata;
   const AFilter: TTFilter): TTDataReader;
 begin
-  result := TTDataSyntaxDataReader.Create(
+  result := TTDataGenericReader.Create(
     Self, AMapper, ATableMap, ATableMetadata, AFilter);
 end;
 
-function TTDataSyntaxConnection.CreateInsertCommand(
+function TTDataGenericConnection.CreateInsertCommand(
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata): TTDataInsertCommand;
 begin
-  result := TTDataSyntaxDataInsertCommand.Create(
+  result := TTDataGenericInsertCommand.Create(
     Self, AMapper, ATableMap, ATableMetadata, FUpdateMode);
 end;
 
-function TTDataSyntaxConnection.CreateUpdateCommand(
+function TTDataGenericConnection.CreateUpdateCommand(
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata): TTDataUpdateCommand;
 begin
-  result := TTDataSyntaxDataUpdateCommand.Create(
+  result := TTDataGenericUpdateCommand.Create(
     Self, AMapper, ATableMap, ATableMetadata, FUpdateMode);
 end;
 
-function TTDataSyntaxConnection.CreateDeleteCommand(
+function TTDataGenericConnection.CreateDeleteCommand(
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata): TTDataDeleteCommand;
 begin
-  result := TTDataSyntaxDataDeleteCommand.Create(
+  result := TTDataGenericDeleteCommand.Create(
     Self, AMapper, ATableMap, ATableMetadata, FUpdateMode);
 end;
 
-procedure TTDataSyntaxConnection.GetMetadata(
+procedure TTDataGenericConnection.GetMetadata(
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata);
@@ -207,7 +207,7 @@ begin
   end;
 end;
 
-function TTDataSyntaxConnection.GetSequenceID(
+function TTDataGenericConnection.GetSequenceID(
   const ASequenceName: String): TTPrimaryKey;
 var
   LSyntax: TTDataSequenceSyntax;
@@ -220,7 +220,7 @@ begin
   end;
 end;
 
-function TTDataSyntaxConnection.SelectCount(
+function TTDataGenericConnection.SelectCount(
   const ATableMap: TTTableMap;
   const ATableName: String;
   const AColumnName: String;
@@ -239,10 +239,10 @@ begin
   end;
 end;
 
-{ TTDataSyntaxDataReader }
+{ TTDataGenericReader }
 
-constructor TTDataSyntaxDataReader.Create(
-  const AConnection: TTDataSyntaxConnection;
+constructor TTDataGenericReader.Create(
+  const AConnection: TTDataGenericConnection;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata;
@@ -253,21 +253,21 @@ begin
     AConnection, AMapper, ATableMap, ATableMetadata, AFilter);
 end;
 
-destructor TTDataSyntaxDataReader.Destroy;
+destructor TTDataGenericReader.Destroy;
 begin
   FSyntax.Free;
   inherited Destroy;
 end;
 
-function TTDataSyntaxDataReader.GetDataset: TDataset;
+function TTDataGenericReader.GetDataset: TDataset;
 begin
   result := FSyntax.Dataset;
 end;
 
-{ TTDataSyntaxDataInsertCommand }
+{ TTDataGenericInsertCommand }
 
-constructor TTDataSyntaxDataInsertCommand.Create(
-  const AConnection: TTDataSyntaxConnection;
+constructor TTDataGenericInsertCommand.Create(
+  const AConnection: TTDataGenericConnection;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata;
@@ -277,7 +277,7 @@ begin
   FConnection := AConnection;
 end;
 
-procedure TTDataSyntaxDataInsertCommand.Execute(
+procedure TTDataGenericInsertCommand.Execute(
   const AEntity: TObject; const AEvent: TTEvent);
 var
   LSyntax: TTDataCommandSyntax;
@@ -291,10 +291,10 @@ begin
   end;
 end;
 
-{ TTDataSyntaxDataUpdateCommand }
+{ TTDataGenericUpdateCommand }
 
-constructor TTDataSyntaxDataUpdateCommand.Create(
-  const AConnection: TTDataSyntaxConnection;
+constructor TTDataGenericUpdateCommand.Create(
+  const AConnection: TTDataGenericConnection;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata;
@@ -304,7 +304,7 @@ begin
   FConnection := AConnection;
 end;
 
-procedure TTDataSyntaxDataUpdateCommand.Execute(
+procedure TTDataGenericUpdateCommand.Execute(
   const AEntity: TObject; const AEvent: TTEvent);
 var
   LSyntax: TTDataCommandSyntax;
@@ -318,10 +318,10 @@ begin
   end;
 end;
 
-{ TTDataSyntaxDataDeleteCommand }
+{ TTDataGenericDeleteCommand }
 
-constructor TTDataSyntaxDataDeleteCommand.Create(
-  const AConnection: TTDataSyntaxConnection;
+constructor TTDataGenericDeleteCommand.Create(
+  const AConnection: TTDataGenericConnection;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata;
@@ -331,7 +331,7 @@ begin
   FConnection := AConnection;
 end;
 
-procedure TTDataSyntaxDataDeleteCommand.Execute(
+procedure TTDataGenericDeleteCommand.Execute(
   const AEntity: TObject; const AEvent: TTEvent);
 var
   LSyntax: TTDataCommandSyntax;

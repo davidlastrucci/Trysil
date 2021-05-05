@@ -64,7 +64,7 @@ type
 
 { TTDataFireDACConnection }
 
-  TTDataFireDACConnection = class abstract(TTDataSyntaxConnection)
+  TTDataFireDACConnection = class abstract(TTDataGenericConnection)
   strict private
     FConnectionName: String;
 
