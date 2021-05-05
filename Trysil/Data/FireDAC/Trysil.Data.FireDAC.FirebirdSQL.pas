@@ -37,6 +37,7 @@ uses
   Trysil.Data.SqlSyntax.FirebirdSQL;
 
 type
+
 { TTDataFirebirdSQLConnection }
 
   TTDataFirebirdSQLConnection = class(TTDataFireDACConnection)
@@ -242,7 +243,7 @@ end;
 function TTDataFirebirdSQLConnection.GetDataSetParam(
   AParam: TFDParam): ITDataSetParam;
 begin
-  Result := TFDDataSetParam.Create(AParam);
+  Result := TTFDDataSetParam.Create(AParam);
 end;
 
 procedure TTDataFirebirdSQLConnection.GetMetadata(

@@ -83,7 +83,8 @@ begin
       if Assigned(LEvent) then
         LEvent.Free;
     end;
-    LTableMap.VersionColumn.Member.SetValue(AEntity, 0);
+    if Assigned(LTableMap.VersionColumn) then
+      LTableMap.VersionColumn.Member.SetValue(AEntity, 0);
   finally
     LCommand.Free;
   end;

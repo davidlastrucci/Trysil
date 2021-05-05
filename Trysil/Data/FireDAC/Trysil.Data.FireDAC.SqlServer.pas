@@ -205,7 +205,7 @@ end;
 function TTDataSqlServerConnection.GetDataSetParam(
   AParam: TFDParam): ITDataSetParam;
 begin
-  Result := TFDDataSetParam.Create(AParam);
+  Result := TTFDDataSetParam.Create(AParam);
 end;
 
 procedure TTDataSqlServerConnection.GetMetadata(

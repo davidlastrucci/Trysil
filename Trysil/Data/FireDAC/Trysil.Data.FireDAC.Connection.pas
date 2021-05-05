@@ -33,7 +33,10 @@ uses
   Trysil.Data.FireDAC;
 
 type
-  TFDDataSetParam = class(TInterfacedObject, ITDataSetParam)
+
+{ TTFDDataSetParam }
+
+  TTFDDataSetParam = class(TInterfacedObject, ITDataSetParam)
   private
     FParam: TFDParam;
   public
@@ -101,6 +104,89 @@ resourcestring
   SNotInTransaction = '%s: Transaction not yet started.';
 
 implementation
+
+{ TTFDDataSetParam }
+
+procedure TTFDDataSetParam.Clear;
+begin
+  FParam.Clear;
+end;
+
+constructor TTFDDataSetParam.Create(AParam: TFDParam);
+begin
+  inherited Create;
+  FParam := AParam;
+end;
+
+function TTFDDataSetParam.GetAsBoolean: Boolean;
+begin
+  Result := FParam.AsBoolean;
+end;
+
+function TTFDDataSetParam.GetAsDateTime: TDateTime;
+begin
+  Result := FParam.AsDateTime;
+end;
+
+function TTFDDataSetParam.GetAsFloat: Double;
+begin
+  Result := FParam.AsFloat;
+end;
+
+function TTFDDataSetParam.GetAsGuid: TGUID;
+begin
+  Result := FParam.AsGUID;
+end;
+
+function TTFDDataSetParam.GetAsInteger: Integer;
+begin
+  Result := FParam.AsInteger;
+end;
+
+function TTFDDataSetParam.GetAsLargeInt: Int64;
+begin
+  Result := FParam.AsLargeInt;
+end;
+
+function TTFDDataSetParam.GetAsString: string;
+begin
+  Result := FParam.AsString;
+end;
+
+procedure TTFDDataSetParam.SetAsBoolean(const Value: Boolean);
+begin
+  FParam.AsBoolean := Value;
+end;
+
+procedure TTFDDataSetParam.SetAsDateTime(const Value: TDateTime);
+begin
+  FParam.AsDateTime := Value;
+end;
+
+procedure TTFDDataSetParam.SetAsFloat(const Value: Double);
+begin
+  FParam.AsFloat := Value;
+end;
+
+procedure TTFDDataSetParam.SetAsGuid(const Value: TGUID);
+begin
+  FParam.AsGUID := Value;
+end;
+
+procedure TTFDDataSetParam.SetAsInteger(const Value: Integer);
+begin
+  FParam.AsInteger := Value;
+end;
+
+procedure TTFDDataSetParam.SetAsLargeInt(const Value: Int64);
+begin
+  FParam.AsLargeInt := Value;
+end;
+
+procedure TTFDDataSetParam.SetAsString(const Value: string);
+begin
+  FParam.AsString := Value;
+end;
 
 { TTDataFireDACConnection }
 
@@ -178,7 +264,7 @@ end;
 function TTDataFireDACConnection.GetDataSetParam(
   AParam: TFDParam): ITDataSetParam;
 begin
-  Result := TFDDataSetParam.Create(AParam);
+  Result := TTFDDataSetParam.Create(AParam);
 end;
 
 function TTDataFireDACConnection.GetInTransaction: Boolean;
@@ -248,89 +334,6 @@ begin
     raise;
   end;
   Result := LDataSet;
-end;
-
-{ TFDDataSetParam }
-
-procedure TFDDataSetParam.Clear;
-begin
-  FParam.Clear;
-end;
-
-constructor TFDDataSetParam.Create(AParam: TFDParam);
-begin
-  inherited Create;
-  FParam := AParam;
-end;
-
-function TFDDataSetParam.GetAsBoolean: Boolean;
-begin
-  Result := FParam.AsBoolean;
-end;
-
-function TFDDataSetParam.GetAsDateTime: TDateTime;
-begin
-  Result := FParam.AsDateTime;
-end;
-
-function TFDDataSetParam.GetAsFloat: Double;
-begin
-  Result := FParam.AsFloat;
-end;
-
-function TFDDataSetParam.GetAsGuid: TGUID;
-begin
-  Result := FParam.AsGUID;
-end;
-
-function TFDDataSetParam.GetAsInteger: Integer;
-begin
-  Result := FParam.AsInteger;
-end;
-
-function TFDDataSetParam.GetAsLargeInt: Int64;
-begin
-  Result := FParam.AsLargeInt;
-end;
-
-function TFDDataSetParam.GetAsString: string;
-begin
-  Result := FParam.AsString;
-end;
-
-procedure TFDDataSetParam.SetAsBoolean(const Value: Boolean);
-begin
-  FParam.AsBoolean := Value;
-end;
-
-procedure TFDDataSetParam.SetAsDateTime(const Value: TDateTime);
-begin
-  FParam.AsDateTime := Value;
-end;
-
-procedure TFDDataSetParam.SetAsFloat(const Value: Double);
-begin
-  FParam.AsFloat := Value;
-end;
-
-procedure TFDDataSetParam.SetAsGuid(const Value: TGUID);
-begin
-  FParam.AsGUID := Value;
-end;
-
-procedure TFDDataSetParam.SetAsInteger(const Value: Integer);
-begin
-  FParam.AsInteger := Value;
-end;
-
-procedure TFDDataSetParam.SetAsLargeInt(const Value: Int64);
-begin
-  FParam.AsLargeInt := Value;
-end;
-
-procedure TFDDataSetParam.SetAsString(const Value: string);
-begin
-  FParam.AsString := Value;
 end;
 
 end.

@@ -2,7 +2,6 @@ program Demo;
 
 uses
   Vcl.Forms,
-  Trysil.Attributes in '..\..\Trysil\Trysil.Attributes.pas',
   Trysil.Cache in '..\..\Trysil\Trysil.Cache.pas',
   Trysil.Classes in '..\..\Trysil\Trysil.Classes.pas',
   Trysil.Context in '..\..\Trysil\Trysil.Context.pas',
@@ -36,7 +35,10 @@ uses
   Trysil.Data.Parameters in '..\..\Trysil\Data\Trysil.Data.Parameters.pas',
   Trysil.Data.FireDAC.Connection in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.Connection.pas',
   Trysil.Data.FireDAC.Common in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.Common.pas',
-  Trysil.Data.SqlSyntax.SqlServer in '..\..\Trysil\Data\Trysil.Data.SqlSyntax.SqlServer.pas';
+  Trysil.Data.SqlSyntax.SqlServer in '..\..\Trysil\Data\Trysil.Data.SqlSyntax.SqlServer.pas',
+  Trysil.Attributes in '..\..\Trysil\Trysil.Attributes.pas',
+  Trysil.Data.SqlSyntax.FirebirdSQL in '..\..\Trysil\Data\Trysil.Data.SqlSyntax.FirebirdSQL.pas',
+  Trysil.Data.FireDAC.FirebirdSQL in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.FirebirdSQL.pas';
 
 {$R *.res}
 

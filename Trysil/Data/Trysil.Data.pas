@@ -27,6 +27,9 @@ uses
   Trysil.Events.Abstract;
 
 type
+
+{ ITDataSetParam }
+
   ITDataSetParam = interface
   ['{75B98CB8-FA42-458E-9B2F-332568091302}']
     function GetAsBoolean: Boolean;

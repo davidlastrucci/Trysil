@@ -522,12 +522,10 @@ begin
   try
     LResult.AppendFormat('UPDATE [%s] SET ', [FTableMap.Name]);
     LResult.Append(GetColumns());
-    LResult.AppendFormat(' WHERE [%0:s] = :%0:s', [
-      FTableMap.PrimaryKey.Name]);
+    LResult.AppendFormat(' WHERE [%0:s] = :%0:s', [FTableMap.PrimaryKey.Name]);
     if Assigned(FTableMap.VersionColumn) then
       LResult.AppendFormat(' AND [%0:s] = :%0:s', [
         FTableMap.VersionColumn.Name]);
-
     result := LResult.ToString();
   finally
     LResult.Free;
@@ -557,14 +555,9 @@ begin
   result := Format(
     'DELETE FROM [%0:s] WHERE [%1:s] = :%1:s', [
     FTableMap.Name, FTableMap.PrimaryKey.Name]);
-
   if Assigned(FTableMap.VersionColumn) then
-  begin
-    result := result + Format(
-      ' AND [%0:s] = :%0:s', [
+    result := result + Format(' AND [%0:s] = :%0:s', [
       FTableMap.VersionColumn.Name]);
-
-  end;
 end;
 
 end.
