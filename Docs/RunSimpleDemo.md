@@ -48,7 +48,7 @@ For run demo project in **Demos/Simple** folder, you have to do:
 }
 </pre>
 
-## Alternatively you can use the sample project located in the **Demos/Simple.SQLite** folder.
+Alternatively you can use the sample project located in the **Demos/Simple.SQLite** folder.
 
 ---
 <p>
