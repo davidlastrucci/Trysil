@@ -472,7 +472,8 @@ begin
   try
     for LColumnMap in FTableMap.Columns do
       if (LColumnMap <> FTableMap.VersionColumn) then
-        LResult.AppendFormat(':%s, ', [LColumnMap.Name])
+        LResult.AppendFormat(':%s, ', [
+          FConnection.GetParameterName(LColumnMap.Name)])
       else
         LResult.Append('0, ');
 
@@ -519,7 +520,8 @@ begin
           FConnection.GetDatabaseObjectName(LColumnMap.Name)])
       else
         LResult.AppendFormat('%0:s = :%1:s, ', [
-          FConnection.GetDatabaseObjectName(LColumnMap.Name), LColumnMap.Name]);
+          FConnection.GetDatabaseObjectName(LColumnMap.Name),
+          FConnection.GetParameterName(LColumnMap.Name)]);
     end;
 
     result := LResult.ToString();
@@ -541,11 +543,11 @@ begin
     LResult.Append(GetColumns());
     LResult.AppendFormat(' WHERE %0:s = :%1:s', [
       FConnection.GetDatabaseObjectName(FTableMap.PrimaryKey.Name),
-      FTableMap.PrimaryKey.Name]);
+      FConnection.GetParameterName(FTableMap.PrimaryKey.Name)]);
     if Assigned(FTableMap.VersionColumn) then
-      LResult.AppendFormat(' AND %0:s = :%0:s', [
+      LResult.AppendFormat(' AND %0:s = :%1:s', [
         FConnection.GetDatabaseObjectName(FTableMap.VersionColumn.Name),
-        FTableMap.VersionColumn.Name]);
+        FConnection.GetParameterName(FTableMap.VersionColumn.Name)]);
     result := LResult.ToString();
   finally
     LResult.Free;
@@ -577,11 +579,11 @@ begin
   result := Format('DELETE FROM %0:s WHERE %1:s = :%2:s', [
     FConnection.GetDatabaseObjectName(FTableMap.Name),
     FConnection.GetDatabaseObjectName(FTableMap.PrimaryKey.Name),
-    FTableMap.PrimaryKey.Name]);
+    FConnection.GetParameterName(FTableMap.PrimaryKey.Name)]);
   if Assigned(FTableMap.VersionColumn) then
     result := result + Format(' AND %0:s = :%1:s', [
       FConnection.GetDatabaseObjectName(FTableMap.VersionColumn.Name),
-      FTableMap.VersionColumn.Name]);
+      FConnection.GetParameterName(FTableMap.VersionColumn.Name)]);
 end;
 
 end.

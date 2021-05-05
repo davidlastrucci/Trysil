@@ -307,7 +307,8 @@ var
 begin
   for LColumn in ATableMetadata.Columns do
   begin
-    LFireDACParam := ADataset.Params.FindParam(LColumn.ColumnName);
+    LFireDACParam := ADataset.Params.FindParam(
+      GetParameterName(LColumn.ColumnName));
     if Assigned(LFireDACParam) then
     begin
       LFireDACParam.ParamType := TParamType.ptInput;

@@ -91,7 +91,6 @@ type
       const AUsername: String;
       const APassword: String;
       const ADatabaseName: String); overload;
-
   end;
 
 { TTDataSqlServerDataReader }

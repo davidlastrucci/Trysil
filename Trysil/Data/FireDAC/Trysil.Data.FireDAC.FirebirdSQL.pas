@@ -196,32 +196,6 @@ begin
     inherited AfterConstruction;
 end;
 
-class procedure TTDataFirebirdSQLConnection.RegisterConnection(const AName,
-  AServer, AUsername, APassword, ADatabaseName, AVendorLib: String);
-var
-  LParameters: TStrings;
-begin
-  LParameters := TStringList.Create;
-  try
-    LParameters.Add(Format('Server=%s', [AServer]));
-    LParameters.Add(Format('Database=%s', [ADatabaseName]));
-    if AUsername.IsEmpty then
-        LParameters.Add('OSAuthent=Yes')
-    else
-    begin
-        LParameters.Add(Format('User_Name=%s', [AUserName]));
-        LParameters.Add(Format('Password=%s', [APassword]));
-    end;
-
-    VendorLib := AVendorLib;
-
-    TTDataFireDACConnectionPool.Instance.RegisterConnection(
-      AName, 'FB', LParameters);
-  finally
-    LParameters.Free;
-  end;
-end;
-
 function TTDataFirebirdSQLConnection.SelectCount(
   const ATableMap: TTTableMap;
   const ATableName: String;
@@ -335,6 +309,37 @@ class procedure TTDataFirebirdSQLConnection.RegisterConnection(
   const ADatabaseName: String);
 begin
   RegisterConnection(AName, AServer, AUsername, APassword, ADatabaseName, '');
+end;
+
+class procedure TTDataFirebirdSQLConnection.RegisterConnection(
+  const AName: String;
+  const AServer: String;
+  const AUsername: String;
+  const APassword: String;
+  const ADatabaseName: String;
+  const AVendorLib: String);
+var
+  LParameters: TStrings;
+begin
+  LParameters := TStringList.Create;
+  try
+    LParameters.Add(Format('Server=%s', [AServer]));
+    LParameters.Add(Format('Database=%s', [ADatabaseName]));
+    if AUsername.IsEmpty then
+        LParameters.Add('OSAuthent=Yes')
+    else
+    begin
+        LParameters.Add(Format('User_Name=%s', [AUserName]));
+        LParameters.Add(Format('Password=%s', [APassword]));
+    end;
+
+    VendorLib := AVendorLib;
+
+    TTDataFireDACConnectionPool.Instance.RegisterConnection(
+      AName, 'FB', LParameters);
+  finally
+    LParameters.Free;
+  end;
 end;
 
 { TTDataFirebirdSQLDataReader }

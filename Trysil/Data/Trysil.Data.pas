@@ -129,6 +129,8 @@ type
 
     function GetDatabaseObjectName(
       const ADatabaseObjectName: String): String; virtual;
+    function GetParameterName(
+      const AParameterName: String): String;
 
     function GetSequenceID(
       const ASequenceName: String): TTPrimaryKey; virtual; abstract;
@@ -265,6 +267,12 @@ function TTDataConnection.GetDatabaseObjectName(
   const ADatabaseObjectName: String): String;
 begin
   result := ADatabaseObjectName;
+end;
+
+function TTDataConnection.GetParameterName(
+  const AParameterName: String): String;
+begin
+  result := AParameterName.Replace(' ', '_', [rfReplaceAll]);
 end;
 
 end.
