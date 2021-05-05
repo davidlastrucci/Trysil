@@ -48,6 +48,10 @@ type
       const AUsername: String;
       const APassword: String;
       const ADatabaseName: String); overload;
+
+    class procedure RegisterConnection(
+      const AName: String;
+      const AParameters: TStrings); overload;
   end;
 
 implementation
@@ -94,12 +98,17 @@ begin
         LParameters.Add(Format('User_Name=%s', [AUserName]));
         LParameters.Add(Format('Password=%s', [APassword]));
     end;
-
-    TTDataFireDACConnectionPool.Instance.RegisterConnection(
-      AName, 'MSSQL', LParameters);
+    RegisterConnection(AName, LParameters);
   finally
     LParameters.Free;
   end;
+end;
+
+class procedure TTDataSqlServerConnection.RegisterConnection(
+  const AName: String; const AParameters: TStrings);
+begin
+  TTDataFireDACConnectionPool.Instance.RegisterConnection(
+    AName, 'MSSQL', AParameters);
 end;
 
 end.

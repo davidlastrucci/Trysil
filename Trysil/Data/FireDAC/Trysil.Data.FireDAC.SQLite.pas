@@ -36,14 +36,16 @@ type
     function CreateSyntaxClasses: TTDataSyntaxClasses; override;
   public
     class procedure RegisterConnection(
-      const AName: String;
-      const ADatabaseName: String); overload;
+      const AName: String; const ADatabaseName: String); overload;
 
     class procedure RegisterConnection(
       const AName: String;
       const AUsername: String;
       const APassword: String;
       const ADatabaseName: String); overload;
+
+    class procedure RegisterConnection(
+      const AName: String; const AParameters: TStrings); overload;
   end;
 
 implementation
@@ -77,14 +79,17 @@ begin
       LParameters.Add(Format('User_Name=%s', [AUserName]));
       LParameters.Add(Format('Password=%s', [APassword]));
     end;
-    LParameters.Add('SharedCache=False');
-    LParameters.Add('LockingMode=Normal');
-
-    TTDataFireDACConnectionPool.Instance.RegisterConnection(
-      AName, 'SQLite', LParameters);
+    RegisterConnection(AName, LParameters);
   finally
     LParameters.Free;
   end;
+end;
+
+class procedure TTDataSQLiteConnection.RegisterConnection(
+  const AName: String; const AParameters: TStrings);
+begin
+  TTDataFireDACConnectionPool.Instance.RegisterConnection(
+    AName, 'SQLite', AParameters);
 end;
 
 end.

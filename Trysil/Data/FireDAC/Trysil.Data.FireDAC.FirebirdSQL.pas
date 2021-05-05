@@ -64,6 +64,15 @@ type
       const APassword: String;
       const ADatabaseName: String;
       const AVendorLib: String); overload;
+
+    class procedure RegisterConnection(
+      const AName: String;
+      const AParameters: TStrings); overload;
+
+    class procedure RegisterConnection(
+      const AName: String;
+      const AVendorLib: String;
+      const AParameters: TStrings);overload;
   end;
 
 implementation
@@ -133,14 +142,24 @@ begin
         LParameters.Add(Format('User_Name=%s', [AUserName]));
         LParameters.Add(Format('Password=%s', [APassword]));
     end;
-
-    VendorLib := AVendorLib;
-
-    TTDataFireDACConnectionPool.Instance.RegisterConnection(
-      AName, 'FB', LParameters);
+    RegisterConnection(AName, VendorLib, LParameters);
   finally
     LParameters.Free;
   end;
+end;
+
+class procedure TTDataFirebirdSQLConnection.RegisterConnection(
+  const AName: String; const AParameters: TStrings);
+begin
+  RegisterConnection(AName, VendorLib, AParameters);
+end;
+
+class procedure TTDataFirebirdSQLConnection.RegisterConnection(
+  const AName: String; const AVendorLib: String; const AParameters: TStrings);
+begin
+  VendorLib := AVendorLib;
+  TTDataFireDACConnectionPool.Instance.RegisterConnection(
+    AName, 'FB', AParameters);
 end;
 
 end.

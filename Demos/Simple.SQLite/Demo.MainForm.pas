@@ -97,11 +97,21 @@ implementation
 constructor TMainForm.Create(AOwner: TComponent);
 const
   DatabaseName: String = 'Test.db';
-
+var
+  LParameters: TStrings;
 begin
   inherited Create(AOwner);
   FCreateDatabase := not TFile.Exists(DatabaseName);
-  TTDataSQLiteConnection.RegisterConnection('Test', Databasename);
+
+  LParameters := TStringList.Create;
+  try
+    LParameters.Add(Format('Database=%s', [DatabaseName]));
+    LParameters.Add('SharedCache=False');
+    LParameters.Add('LockingMode=Normal');
+    TTDataSQLiteConnection.RegisterConnection('Test', LParameters);
+  finally
+    LParameters.Free;
+  end;
   FConnection := TTDataSQLiteConnection.Create('Test');
   FContext := TTContext.Create(FConnection);
 

@@ -39,9 +39,7 @@ type
     procedure AfterConstruction; override;
 
     procedure RegisterConnection(
-      const AName: String;
-      const ADriver: String;
-      const AParameters: TStrings);
+      const AName: String; const ADriver: String; const AParameters: TStrings);
 
     class property Instance: TTDataFireDACConnectionPool read GetInstance;
   end;
