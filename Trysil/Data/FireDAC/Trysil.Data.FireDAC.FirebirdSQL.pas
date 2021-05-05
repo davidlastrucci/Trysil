@@ -34,6 +34,7 @@ uses
   Trysil.Data.FireDAC.Connection,
   Trysil.Data.FireDAC.Common,
   Trysil.Data.FireDAC,
+  Trysil.Data.SqlSyntax,
   Trysil.Data.SqlSyntax.FirebirdSQL;
 
 type
@@ -228,10 +229,10 @@ function TTDataFirebirdSQLConnection.SelectCount(
   const AEntity: TObject): Integer;
 var
   LID: TTPrimaryKey;
-  LSyntax: TTDataFirebirdSQLSelectCountSyntax;
+  LSyntax: TTDataSelectCountSyntax;
 begin
   LID := ATableMap.PrimaryKey.Member.GetValue(AEntity).AsType<TTPrimaryKey>();
-  LSyntax := TTDataFirebirdSQLSelectCountSyntax.Create(
+  LSyntax := TTDataSelectCountSyntax.Create(
     Self, ATableMap, ATableName, AColumnName, LID);
   try
     result := LSyntax.Count;
@@ -251,10 +252,10 @@ procedure TTDataFirebirdSQLConnection.GetMetadata(
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata);
 var
-  LSyntax: TTDataFirebirdSQLMetadataSyntax;
+  LSyntax: TTDataMetadataSyntax;
   LIndex: Integer;
 begin
-  LSyntax := TTDataFirebirdSQLMetadataSyntax.Create(
+  LSyntax := TTDataMetadataSyntax.Create(
     Self, AMapper, ATableMap, ATableMetadata);
   try
     for LIndex := 0 to LSyntax.Dataset.FieldDefs.Count - 1 do
@@ -376,9 +377,9 @@ end;
 procedure TTDataFirebirdSQLDataInsertCommand.Execute(
   const AEntity: TObject; const AEvent: TTEvent);
 var
-  LSyntax: TTDataFirebirdSQLInsertSyntax;
+  LSyntax: TTDataInsertSyntax;
 begin
-  LSyntax := TTDataFirebirdSQLInsertSyntax.Create(
+  LSyntax := TTDataInsertSyntax.Create(
     FConnection, FMapper, FTableMap, FTableMetadata);
   try
     LSyntax.Execute(AEntity, AEvent);
@@ -402,9 +403,9 @@ end;
 procedure TTDataFirebirdSQLDataUpdateCommand.Execute(
   const AEntity: TObject; const AEvent: TTEvent);
 var
-  LSyntax: TTDataFirebirdSQLUpdateSyntax;
+  LSyntax: TTDataUpdateSyntax;
 begin
-  LSyntax := TTDataFirebirdSQLUpdateSyntax.Create(
+  LSyntax := TTDataUpdateSyntax.Create(
     FConnection, FMapper, FTableMap, FTableMetadata);
   try
     LSyntax.Execute(AEntity, AEvent);
@@ -428,9 +429,9 @@ end;
 procedure TTDataFirebirdSQLDataDeleteCommand.Execute(
   const AEntity: TObject; const AEvent: TTEvent);
 var
-  LSyntax: TTDataFirebirdSQLDeleteSyntax;
+  LSyntax: TTDataDeleteSyntax;
 begin
-  LSyntax := TTDataFirebirdSQLDeleteSyntax.Create(
+  LSyntax := TTDataDeleteSyntax.Create(
     FConnection, FMapper, FTableMap, FTableMetadata);
   try
     LSyntax.Execute(AEntity, AEvent);

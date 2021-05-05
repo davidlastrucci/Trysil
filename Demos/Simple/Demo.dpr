@@ -38,7 +38,8 @@ uses
   Trysil.Data.SqlSyntax.SqlServer in '..\..\Trysil\Data\Trysil.Data.SqlSyntax.SqlServer.pas',
   Trysil.Attributes in '..\..\Trysil\Trysil.Attributes.pas',
   Trysil.Data.SqlSyntax.FirebirdSQL in '..\..\Trysil\Data\Trysil.Data.SqlSyntax.FirebirdSQL.pas',
-  Trysil.Data.FireDAC.FirebirdSQL in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.FirebirdSQL.pas';
+  Trysil.Data.FireDAC.FirebirdSQL in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.FirebirdSQL.pas',
+  Trysil.Data.SqlSyntax in '..\..\Trysil\Data\Trysil.Data.SqlSyntax.pas';
 
 {$R *.res}
 
