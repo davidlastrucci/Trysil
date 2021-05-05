@@ -46,6 +46,8 @@ type
     property ID: TTPrimaryKey read GetID;
   end;
 
+  TTDataSequenceSyntaxClass = class of TTDataSequenceSyntax;
+
 { TTDataSelectCountSyntax }
 
   TTDataSelectCountSyntax = class
@@ -67,6 +69,8 @@ type
 
     property Count: Integer read GetCount;
   end;
+
+  TTDataSelectCountSyntaxClass = class of TTDataSelectCountSyntax;
 
 { TTDataAbstractSqlSyntax }
 
@@ -117,6 +121,8 @@ type
     property Dataset: TDataset read GetDataset;
   end;
 
+  TTDataSelectSyntaxClass = class of TTDataSelectSyntax;
+
 { TTDataMetadataSyntax }
 
   TTDataMetadataSyntax = class(TTDataSelectSyntax)
@@ -129,6 +135,8 @@ type
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata);
   end;
+
+  TTDataMetadataSyntaxClass = class of TTDataMetadataSyntax;
 
 { TTDataCommandSyntax }
 
@@ -151,6 +159,8 @@ type
       const AEvent: TTEvent;
       const AWhereColumns: TArray<TTColumnMap>);
   end;
+
+  TTDataCommandSyntaxClass = class of TTDataCommandSyntax;
 
 { TTDataInsertSyntax }
 
@@ -179,6 +189,19 @@ type
       const AEntity: TObject; const AEvent: TTEvent); override;
     function GetSqlSyntax(
       const AWhereColumns: TArray<TTColumnMap>): String; override;
+  end;
+
+{ TTDataSyntaxClasses }
+
+  TTDataSyntaxClasses = class abstract
+  public
+    function Sequence: TTDataSequenceSyntaxClass; virtual; abstract;
+    function SelectCount: TTDataSelectCountSyntaxClass; virtual; abstract;
+    function Select: TTDataSelectSyntaxClass; virtual; abstract;
+    function Metadata: TTDataMetadataSyntaxClass; virtual; abstract;
+    function Insert: TTDataCommandSyntaxClass; virtual; abstract;
+    function Update: TTDataCommandSyntaxClass; virtual; abstract;
+    function Delete: TTDataCommandSyntaxClass; virtual; abstract;
   end;
 
 { resourcestring }

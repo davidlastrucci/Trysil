@@ -34,6 +34,19 @@ type
     function GetFilterTopSyntax: String; override;
   end;
 
+{ TTDataFirebirdSQLSyntaxClasses }
+
+  TTDataFirebirdSQLSyntaxClasses = class(TTDataSyntaxClasses)
+  public
+    function Sequence: TTDataSequenceSyntaxClass; override;
+    function SelectCount: TTDataSelectCountSyntaxClass; override;
+    function Select: TTDataSelectSyntaxClass; override;
+    function Metadata: TTDataMetadataSyntaxClass; override;
+    function Insert: TTDataCommandSyntaxClass; override;
+    function Update: TTDataCommandSyntaxClass; override;
+    function Delete: TTDataCommandSyntaxClass; override;
+  end;
+
 implementation
 
 { TTDataFirebirdSQLSequenceSyntax }
@@ -49,6 +62,44 @@ end;
 function TTDataFirebirdSQLSelectSyntax.GetFilterTopSyntax: String;
 begin
   result := Format('FIRST %d', [FFilter.Top.MaxRecord]);
+end;
+
+{ TTDataFirebirdSQLSyntaxClasses }
+
+function TTDataFirebirdSQLSyntaxClasses.Sequence: TTDataSequenceSyntaxClass;
+begin
+  result := TTDataFirebirdSQLSequenceSyntax;
+end;
+
+function TTDataFirebirdSQLSyntaxClasses.SelectCount:
+  TTDataSelectCountSyntaxClass;
+begin
+  result := TTDataSelectCountSyntax;
+end;
+
+function TTDataFirebirdSQLSyntaxClasses.Select: TTDataSelectSyntaxClass;
+begin
+  result := TTDataFirebirdSQLSelectSyntax;
+end;
+
+function TTDataFirebirdSQLSyntaxClasses.Metadata: TTDataMetadataSyntaxClass;
+begin
+  result := TTDataMetadataSyntax;
+end;
+
+function TTDataFirebirdSQLSyntaxClasses.Insert: TTDataCommandSyntaxClass;
+begin
+  result := TTDataInsertSyntax;
+end;
+
+function TTDataFirebirdSQLSyntaxClasses.Update: TTDataCommandSyntaxClass;
+begin
+  result := TTDataUpdateSyntax;
+end;
+
+function TTDataFirebirdSQLSyntaxClasses.Delete: TTDataCommandSyntaxClass;
+begin
+  result := TTDataDeleteSyntax;
 end;
 
 end.

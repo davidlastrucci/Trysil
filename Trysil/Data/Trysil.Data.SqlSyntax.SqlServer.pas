@@ -34,6 +34,19 @@ type
     function GetFilterTopSyntax: String; override;
   end;
 
+{ TTDataSqlServerSyntaxClasses }
+
+  TTDataSqlServerSyntaxClasses = class(TTDataSyntaxClasses)
+  public
+    function Sequence: TTDataSequenceSyntaxClass; override;
+    function SelectCount: TTDataSelectCountSyntaxClass; override;
+    function Select: TTDataSelectSyntaxClass; override;
+    function Metadata: TTDataMetadataSyntaxClass; override;
+    function Insert: TTDataCommandSyntaxClass; override;
+    function Update: TTDataCommandSyntaxClass; override;
+    function Delete: TTDataCommandSyntaxClass; override;
+  end;
+
 implementation
 
 { TTDataSqlServerSequenceSyntax }
@@ -48,6 +61,43 @@ end;
 function TTDataSqlServerSelectSyntax.GetFilterTopSyntax: String;
 begin
   result := Format('TOP %d', [FFilter.Top.MaxRecord]);
+end;
+
+{ TTDataSqlServerSyntaxClasses }
+
+function TTDataSqlServerSyntaxClasses.Sequence: TTDataSequenceSyntaxClass;
+begin
+  result := TTDataSqlServerSequenceSyntax;
+end;
+
+function TTDataSqlServerSyntaxClasses.SelectCount: TTDataSelectCountSyntaxClass;
+begin
+  result := TTDataSelectCountSyntax;
+end;
+
+function TTDataSqlServerSyntaxClasses.Select: TTDataSelectSyntaxClass;
+begin
+  result := TTDataSqlServerSelectSyntax;
+end;
+
+function TTDataSqlServerSyntaxClasses.Metadata: TTDataMetadataSyntaxClass;
+begin
+  result := TTDataMetadataSyntax;
+end;
+
+function TTDataSqlServerSyntaxClasses.Insert: TTDataCommandSyntaxClass;
+begin
+  result := TTDataInsertSyntax;
+end;
+
+function TTDataSqlServerSyntaxClasses.Update: TTDataCommandSyntaxClass;
+begin
+  result := TTDataUpdateSyntax;
+end;
+
+function TTDataSqlServerSyntaxClasses.Delete: TTDataCommandSyntaxClass;
+begin
+  result := TTDataDeleteSyntax;
 end;
 
 end.

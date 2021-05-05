@@ -27,6 +27,8 @@ uses
   Trysil.Metadata,
   Trysil.Mapping,
   Trysil.Data,
+  Trysil.Data.SqlSyntax,
+  Trysil.Data.Connection,
   Trysil.Data.Parameters,
   Trysil.Events.Abstract,
   Trysil.Data.FireDAC.Common,
@@ -62,7 +64,7 @@ type
 
 { TTDataFireDACConnection }
 
-  TTDataFireDACConnection = class(TTDataConnection)
+  TTDataFireDACConnection = class abstract(TTDataSyntaxConnection)
   strict private
     FConnectionName: String;
 
@@ -237,12 +239,12 @@ end;
 
 procedure TTDataFireDACConnection.AfterConstruction;
 begin
-    inherited AfterConstruction;
-    FWaitCursor.Provider := 'Console';
-    FWaitCursor.ScreenCursor := TFDGUIxScreenCursor.gcrNone;
+  inherited AfterConstruction;
+  FWaitCursor.Provider := 'Console';
+  FWaitCursor.ScreenCursor := TFDGUIxScreenCursor.gcrNone;
 
-    FConnection.ConnectionDefName := FConnectionName;
-    FConnection.Open;
+  FConnection.ConnectionDefName := FConnectionName;
+  FConnection.Open;
 end;
 
 procedure TTDataFireDACConnection.StartTransaction;
