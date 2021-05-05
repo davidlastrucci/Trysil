@@ -109,9 +109,12 @@ begin
       if Assigned(LEvent) then
         LEvent.Free;
     end;
-    LTableMap.VersionColumn.Member.SetValue(
-      AEntity,
-      LTableMap.VersionColumn.Member.GetValue(AEntity).AsType<TTVersion>() + 1);
+    if Assigned(LTableMap.VersionColumn) then
+    begin
+      LTableMap.VersionColumn.Member.SetValue(
+        AEntity,
+        LTableMap.VersionColumn.Member.GetValue(AEntity).AsType<TTVersion>() + 1);
+    end;
   finally
     LCommand.Free;
   end;

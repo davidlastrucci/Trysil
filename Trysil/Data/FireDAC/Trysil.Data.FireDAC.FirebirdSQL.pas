@@ -18,8 +18,9 @@ uses
   Data.DB,
   FireDAC.UI.Intf,
   FireDAC.Comp.UI,
-  FireDAC.Phys.IBBase, 
+  FireDAC.Phys.IBBase,
   FireDAC.Phys.FB,
+  FireDAC.Stan.Param,
   FireDAC.Comp.Client,
 
   Trysil.Types,
@@ -28,26 +29,24 @@ uses
   Trysil.Metadata,
   Trysil.Mapping,
   Trysil.Data,
+  Trysil.Data.Parameters,
   Trysil.Events.Abstract,
+  Trysil.Data.FireDAC.Connection,
   Trysil.Data.FireDAC.Common,
   Trysil.Data.FireDAC,
-  Trysil.Data.FireDAC.FirebirdSQL.SqlSyntax;
+  Trysil.Data.SqlSyntax.FirebirdSQL;
 
 type
-
 { TTDataFirebirdSQLConnection }
 
-  TTDataFirebirdSQLConnection = class(TTDataConnection)
+  TTDataFirebirdSQLConnection = class(TTDataFireDACConnection)
   strict private
     class var VendorLib: String;
   strict private
-    FConnectionName: String;
-
-    FWaitCursor: TFDGUIxWaitCursor;
     FFBDriverLink: TFDPhysFBDriverLink;
-    FConnection: TFDConnection;
   strict protected
-    function GetInTransaction: Boolean; override;
+    function GetDataSetParam(AParam: TFDParam): ITDataSetParam;
+
     function SelectCount(
       const ATableMap: TTTableMap;
       const ATableName: String;
@@ -58,10 +57,6 @@ type
     destructor Destroy; override;
 
     procedure AfterConstruction; override;
-
-    procedure StartTransaction; override;
-    procedure CommitTransaction; override;
-    procedure RollbackTransaction; override;
 
     procedure GetMetadata(
       const AMapper: TTMapper;
@@ -121,7 +116,7 @@ type
     function GetDataset: TDataset; override;
   public
     constructor Create(
-      const AConnection: TFDConnection;
+      const AConnection: TTDataConnection;
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
@@ -133,10 +128,10 @@ type
 
   TTDataFirebirdSQLDataInsertCommand = class(TTDataInsertCommand)
   strict private
-    FConnection: TFDConnection;
+    FConnection: TTDataConnection;
   public
     constructor Create(
-      const AConnection: TFDConnection;
+      const AConnection: TTDataConnection;
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata);
@@ -149,10 +144,10 @@ end;
 
   TTDataFirebirdSQLDataUpdateCommand = class(TTDataUpdateCommand)
   strict private
-    FConnection: TFDConnection;
+    FConnection: TTDataConnection;
   public
     constructor Create(
-      const AConnection: TFDConnection;
+      const AConnection: TTDataConnection;
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata);
@@ -165,10 +160,10 @@ end;
 
   TTDataFirebirdSQLDataDeleteCommand = class(TTDataDeleteCommand)
   strict private
-    FConnection: TFDConnection;
+    FConnection: TTDataConnection;
   public
     constructor Create(
-      const AConnection: TFDConnection;
+      const AConnection: TTDataConnection;
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata);
@@ -177,57 +172,26 @@ end;
       const AEntity: TObject; const AEvent: TTEvent); override;
 end;
 
-{ resourcestring }
-
-resourcestring
-  SInTransaction = '%s: Transaction already started.';
-  SNotInTransaction = '%s: Transaction not yet started.';
-
 implementation
 
 { TTDataFirebirdSQLConnection }
 
 constructor TTDataFirebirdSQLConnection.Create(const AConnectionName: String);
 begin
-    inherited Create;
-    FConnectionName := AConnectionName;
-
-    FWaitCursor := TFDGUIxWaitCursor.Create(nil);
+    inherited Create(AConnectionName);
     FFBDriverLink := TFDPhysFBDriverLink.Create(nil);
-    FConnection := TFDConnection.Create(nil);
 end;
 
 destructor TTDataFirebirdSQLConnection.Destroy;
 begin
-    FConnection.Free;
     FFBDriverLink.Free;
-    FWaitCursor.Free;
     inherited Destroy;
 end;
 
 procedure TTDataFirebirdSQLConnection.AfterConstruction;
 begin
-    inherited AfterConstruction;
-    FWaitCursor.Provider := 'Console';
-    FWaitCursor.ScreenCursor := TFDGUIxScreenCursor.gcrNone;
     FFBDriverLink.VendorLib := VendorLib;
-
-    FConnection.ConnectionDefName := FConnectionName;
-    FConnection.Open;
-end;
-
-procedure TTDataFirebirdSQLConnection.StartTransaction;
-begin
-  if FConnection.InTransaction then
-    raise ETException.CreateFmt(SInTransaction, ['StartTransaction']);
-  FConnection.StartTransaction;
-end;
-
-procedure TTDataFirebirdSQLConnection.CommitTransaction;
-begin
-  if not FConnection.InTransaction then
-    raise ETException.CreateFmt(SNotInTransaction, ['CommitTransaction']);
-  FConnection.Commit;
+    inherited AfterConstruction;
 end;
 
 class procedure TTDataFirebirdSQLConnection.RegisterConnection(const AName,
@@ -256,13 +220,6 @@ begin
   end;
 end;
 
-procedure TTDataFirebirdSQLConnection.RollbackTransaction;
-begin
-  if not FConnection.InTransaction then
-    raise ETException.CreateFmt(SNotInTransaction, ['RollbackTransaction']);
-  FConnection.Rollback;
-end;
-
 function TTDataFirebirdSQLConnection.SelectCount(
   const ATableMap: TTTableMap;
   const ATableName: String;
@@ -274,7 +231,7 @@ var
 begin
   LID := ATableMap.PrimaryKey.Member.GetValue(AEntity).AsType<TTPrimaryKey>();
   LSyntax := TTDataFirebirdSQLSelectCountSyntax.Create(
-    FConnection, ATableMap, ATableName, AColumnName, LID);
+    Self, ATableMap, ATableName, AColumnName, LID);
   try
     result := LSyntax.Count;
   finally
@@ -282,9 +239,10 @@ begin
   end;
 end;
 
-function TTDataFirebirdSQLConnection.GetInTransaction: Boolean;
+function TTDataFirebirdSQLConnection.GetDataSetParam(
+  AParam: TFDParam): ITDataSetParam;
 begin
-  result := FConnection.InTransaction;
+  Result := TFDDataSetParam.Create(AParam);
 end;
 
 procedure TTDataFirebirdSQLConnection.GetMetadata(
@@ -296,7 +254,7 @@ var
   LIndex: Integer;
 begin
   LSyntax := TTDataFirebirdSQLMetadataSyntax.Create(
-    FConnection, AMapper, ATableMap, ATableMetadata);
+    Self, AMapper, ATableMap, ATableMetadata);
   try
     for LIndex := 0 to LSyntax.Dataset.FieldDefs.Count - 1 do
       ATableMetadata.Columns.Add(
@@ -313,7 +271,7 @@ function TTDataFirebirdSQLConnection.GetSequenceID(
 var
   LSyntax: TTDataFirebirdSQLSequenceSyntax;
 begin
-  LSyntax := TTDataFirebirdSQLSequenceSyntax.Create(FConnection, ASequenceName);
+  LSyntax := TTDataFirebirdSQLSequenceSyntax.Create(Self, ASequenceName);
   try
     result := LSyntax.ID;
   finally
@@ -328,7 +286,7 @@ function TTDataFirebirdSQLConnection.CreateReader(
   const AFilter: TTFilter): TTDataReader;
 begin
   result := TTDataFirebirdSQLDataReader.Create(
-    FConnection, AMapper, ATableMap, ATableMetadata, AFilter);
+    Self, AMapper, ATableMap, ATableMetadata, AFilter);
 end;
 
 function TTDataFirebirdSQLConnection.CreateInsertCommand(
@@ -337,7 +295,7 @@ function TTDataFirebirdSQLConnection.CreateInsertCommand(
   const ATableMetadata: TTTableMetadata): TTDataInsertCommand;
 begin
   result := TTDataFirebirdSQLDataInsertCommand.Create(
-    FConnection, AMapper, ATableMap, ATableMetadata);
+    Self, AMapper, ATableMap, ATableMetadata);
 end;
 
 function TTDataFirebirdSQLConnection.CreateUpdateCommand(
@@ -346,7 +304,7 @@ function TTDataFirebirdSQLConnection.CreateUpdateCommand(
   const ATableMetadata: TTTableMetadata): TTDataUpdateCommand;
 begin
   result := TTDataFirebirdSQLDataUpdateCommand.Create(
-    FConnection, AMapper, ATableMap, ATableMetadata);
+    Self, AMapper, ATableMap, ATableMetadata);
 end;
 
 function TTDataFirebirdSQLConnection.CreateDeleteCommand(
@@ -355,7 +313,7 @@ function TTDataFirebirdSQLConnection.CreateDeleteCommand(
   const ATableMetadata: TTTableMetadata): TTDataDeleteCommand;
 begin
   result := TTDataFirebirdSQLDataDeleteCommand.Create(
-    FConnection, AMapper, ATableMap, ATableMetadata);
+    Self, AMapper, ATableMap, ATableMetadata);
 end;
 
 class procedure TTDataFirebirdSQLConnection.RegisterConnection(
@@ -380,7 +338,7 @@ end;
 { TTDataFirebirdSQLDataReader }
 
 constructor TTDataFirebirdSQLDataReader.Create(
-  const AConnection: TFDConnection;
+  const AConnection: TTDataConnection;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata;
@@ -405,7 +363,7 @@ end;
 { TTDataFirebirdSQLDataInsertCommand }
 
 constructor TTDataFirebirdSQLDataInsertCommand.Create(
-  const AConnection: TFDConnection;
+  const AConnection: TTDataConnection;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata);
@@ -431,7 +389,7 @@ end;
 { TTDataFirebirdSQLDataUpdateCommand }
 
 constructor TTDataFirebirdSQLDataUpdateCommand.Create(
-  const AConnection: TFDConnection;
+  const AConnection: TTDataConnection;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata);
@@ -457,7 +415,7 @@ end;
 { TTDataFirebirdSQLDataDeleteCommand }
 
 constructor TTDataFirebirdSQLDataDeleteCommand.Create(
-  const AConnection: TFDConnection;
+  const AConnection: TTDataConnection;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata);

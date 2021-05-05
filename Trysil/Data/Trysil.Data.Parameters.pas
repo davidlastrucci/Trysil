@@ -8,7 +8,7 @@
   http://codenames.info/operation/orm/
 
 *)
-unit Trysil.Data.FireDAC.Parameters;
+unit Trysil.Data.Parameters;
 
 interface
 
@@ -18,8 +18,8 @@ uses
   System.Generics.Collections,
   System.TypInfo,
   Data.DB,
-  FireDAC.Stan.Param,
 
+  Trysil.Data,
   Trysil.Types,
   Trysil.Exceptions,
   Trysil.Mapping,
@@ -31,12 +31,12 @@ type
 
   TTDataParameter = class abstract
   strict protected
-    FParam: TFDParam;
+    FParam: ITDataSetParam;
     FMapper: TTMapper;
     FColumnMap: TTColumnMap;
   public
     constructor Create(
-      const AParam: TFDParam;
+      const AParam: ITDataSetParam;
       const AMapper: TTMapper;
       const AColumnMap: TTColumnMap);
 
@@ -121,7 +121,7 @@ type
 
     function CreateParameter(
       const AFieldType: TFieldType;
-      const AParam: TFDParam;
+      const AParam: ITDataSetParam;
       const AMapper: TTMapper;
       const AColumnMap: TTColumnMap): TTDataParameter;
 
@@ -148,7 +148,7 @@ implementation
 { TTDataParameter }
 
 constructor TTDataParameter.Create(
-  const AParam: TFDParam;
+  const AParam: ITDataSetParam;
   const AMapper: TTMapper;
   const AColumnMap: TTColumnMap);
 begin
@@ -359,7 +359,7 @@ end;
 
 function TTDataParameterFactory.CreateParameter(
   const AFieldType: TFieldType;
-  const AParam: TFDParam;
+  const AParam: ITDataSetParam;
   const AMapper: TTMapper;
   const AColumnMap: TTColumnMap): TTDataParameter;
 var

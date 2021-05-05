@@ -25,19 +25,18 @@ uses
   Trysil.Types in '..\..\Trysil\Trysil.Types.pas',
   Trysil.Data.Columns in '..\..\Trysil\Data\Trysil.Data.Columns.pas',
   Trysil.Data in '..\..\Trysil\Data\Trysil.Data.pas',
-  Trysil.Data.FireDAC.Common in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.Common.pas',
-  Trysil.Data.FireDAC.Parameters in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.Parameters.pas',
   Trysil.Data.FireDAC in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.pas',
   Trysil.Data.FireDAC.SqlServer in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.SqlServer.pas',
-  Trysil.Data.FireDAC.SqlServer.SqlSyntax in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.SqlServer.SqlSyntax.pas',
   Trysil.Vcl.ListView in '..\..\Trysil.UI\Trysil.Vcl.ListView.pas',
   Demo.Config in 'Demo.Config.pas',
   Demo.Model in 'Demo.Model.pas',
   Demo.MainForm in 'Demo.MainForm.pas' {MainForm},
   Demo.EditDialog in 'Demo.EditDialog.pas' {EditDialog},
   Demo.ListView in 'Demo.ListView.pas',
-  Trysil.Data.FireDAC.FirebirdSQL in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.FirebirdSQL.pas',
-  Trysil.Data.FireDAC.FirebirdSQL.SqlSyntax in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.FirebirdSQL.SqlSyntax.pas';
+  Trysil.Data.Parameters in '..\..\Trysil\Data\Trysil.Data.Parameters.pas',
+  Trysil.Data.FireDAC.Connection in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.Connection.pas',
+  Trysil.Data.FireDAC.Common in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.Common.pas',
+  Trysil.Data.SqlSyntax.SqlServer in '..\..\Trysil\Data\Trysil.Data.SqlSyntax.SqlServer.pas';
 
 {$R *.res}
 
