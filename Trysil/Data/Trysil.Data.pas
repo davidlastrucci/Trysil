@@ -83,6 +83,10 @@ type
     property IsEmpty: Boolean read GetIsEmpty;
   end;
 
+{ TTUpdateMode }
+
+  TTUpdateMode = (KeyAndVersionColumn, KeyOnly);
+
 { TTDataAbstractCommand }
 
   TTDataAbstractCommand = class abstract
@@ -90,11 +94,15 @@ type
     FMapper: TTMapper;
     FTableMap: TTTableMap;
     FTableMetadata: TTTableMetadata;
+    FUpdateMode: TTUpdateMode;
+
+    function GetWhereColumns: TArray<TTColumnMap>;
   public
     constructor Create(
-    const AMapper: TTMapper;
-    const ATableMap: TTTableMap;
-    const ATableMetadata: TTTableMetadata);
+      const AMapper: TTMapper;
+      const ATableMap: TTTableMap;
+      const ATableMetadata: TTTableMetadata;
+      const AUpdateMode: TTUpdateMode);
 
     procedure Execute(
       const AEntity: TObject; const AEvent: TTEvent); virtual; abstract;
@@ -116,6 +124,8 @@ type
 
   TTDataConnection = class abstract(TTMetadataProvider)
   strict protected
+    FUpdateMode: TTUpdateMode;
+
     function GetInTransaction: Boolean; virtual; abstract;
     function SelectCount(
       const ATableMap: TTTableMap;
@@ -123,6 +133,8 @@ type
       const AColumnName: String;
       const AEntity: TObject): Integer; virtual; abstract;
   public
+    constructor Create;
+
     procedure StartTransaction; virtual; abstract;
     procedure CommitTransaction; virtual; abstract;
     procedure RollbackTransaction; virtual; abstract;
@@ -171,6 +183,7 @@ type
       const ATableMetadata: TTTableMetadata): TTDataDeleteCommand; virtual; abstract;
 
     property InTransaction: Boolean read GetInTransaction;
+    property UpdateMode: TTUpdateMode read FUpdateMode write FUpdateMode;
   end;
 
 { resourcestring }
@@ -236,15 +249,36 @@ end;
 constructor TTDataAbstractCommand.Create(
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
-  const ATableMetadata: TTTableMetadata);
+  const ATableMetadata: TTTableMetadata;
+  const AUpdateMode: TTUpdateMode);
 begin
   inherited Create;
   FMapper := AMapper;
   FTableMap := ATableMap;
   FTableMetadata := ATableMetadata;
+  FUpdateMode := AUpdateMode;
+end;
+
+function TTDataAbstractCommand.GetWhereColumns: TArray<TTColumnMap>;
+var
+  LLength: Integer;
+begin
+  LLength := 1;
+  if FUpdateMode = TTUpdateMode.KeyAndVersionColumn then
+    Inc(LLength);
+  SetLength(result, LLength);
+  result[0] := FTableMap.PrimaryKey;
+  if FUpdateMode = TTUpdateMode.KeyAndVersionColumn then
+    result[1] := FTableMap.VersionColumn;
 end;
 
 { TTDataConnection }
+
+constructor TTDataConnection.Create;
+begin
+  inherited Create;
+  FUpdateMode := TTUpdateMode.KeyAndVersionColumn;
+end;
 
 procedure TTDataConnection.CheckRelations(
   const ATableMap: TTTableMap; const AEntity: TObject);

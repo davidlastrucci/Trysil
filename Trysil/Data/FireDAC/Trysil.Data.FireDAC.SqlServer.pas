@@ -120,7 +120,8 @@ type
       const AConnection: TTDataConnection;
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
-      const ATableMetadata: TTTableMetadata);
+      const ATableMetadata: TTTableMetadata;
+      const AUpdateMode: TTUpdateMode);
 
     procedure Execute(
       const AEntity: TObject; const AEvent: TTEvent); override;
@@ -136,7 +137,8 @@ end;
       const AConnection: TTDataConnection;
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
-      const ATableMetadata: TTTableMetadata);
+      const ATableMetadata: TTTableMetadata;
+      const AUpdateMode: TTUpdateMode);
 
     procedure Execute(
       const AEntity: TObject; const AEvent: TTEvent); override;
@@ -152,7 +154,8 @@ end;
       const AConnection: TTDataConnection;
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
-      const ATableMetadata: TTTableMetadata);
+      const ATableMetadata: TTTableMetadata;
+      const AUpdateMode: TTUpdateMode);
 
     procedure Execute(
       const AEntity: TObject; const AEvent: TTEvent); override;
@@ -267,7 +270,7 @@ function TTDataSqlServerConnection.CreateInsertCommand(
   const ATableMetadata: TTTableMetadata): TTDataInsertCommand;
 begin
   result := TTDataSqlServerDataInsertCommand.Create(
-    Self, AMapper, ATableMap, ATableMetadata);
+    Self, AMapper, ATableMap, ATableMetadata, FUpdateMode);
 end;
 
 function TTDataSqlServerConnection.CreateUpdateCommand(
@@ -276,7 +279,7 @@ function TTDataSqlServerConnection.CreateUpdateCommand(
   const ATableMetadata: TTTableMetadata): TTDataUpdateCommand;
 begin
   result := TTDataSqlServerDataUpdateCommand.Create(
-    Self, AMapper, ATableMap, ATableMetadata);
+    Self, AMapper, ATableMap, ATableMetadata, FUpdateMode);
 end;
 
 function TTDataSqlServerConnection.CreateDeleteCommand(
@@ -285,7 +288,7 @@ function TTDataSqlServerConnection.CreateDeleteCommand(
   const ATableMetadata: TTTableMetadata): TTDataDeleteCommand;
 begin
   result := TTDataSqlServerDataDeleteCommand.Create(
-    Self, AMapper, ATableMap, ATableMetadata);
+    Self, AMapper, ATableMap, ATableMetadata, FUpdateMode);
 end;
 
 class procedure TTDataSqlServerConnection.RegisterConnection(
@@ -328,9 +331,10 @@ constructor TTDataSqlServerDataInsertCommand.Create(
   const AConnection: TTDataConnection;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
-  const ATableMetadata: TTTableMetadata);
+  const ATableMetadata: TTTableMetadata;
+  const AUpdateMode: TTUpdateMode);
 begin
-  inherited Create(AMapper, ATableMap, ATableMetadata);
+  inherited Create(AMapper, ATableMap, ATableMetadata, AUpdateMode);
   FConnection := AConnection;
 end;
 
@@ -342,7 +346,7 @@ begin
   LSyntax := TTDataInsertSyntax.Create(
     FConnection, FMapper, FTableMap, FTableMetadata);
   try
-    LSyntax.Execute(AEntity, AEvent);
+    LSyntax.Execute(AEntity, AEvent, []);
   finally
     LSyntax.Free;
   end;
@@ -354,9 +358,10 @@ constructor TTDataSqlServerDataUpdateCommand.Create(
   const AConnection: TTDataConnection;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
-  const ATableMetadata: TTTableMetadata);
+  const ATableMetadata: TTTableMetadata;
+  const AUpdateMode: TTUpdateMode);
 begin
-  inherited Create(AMapper, ATableMap, ATableMetadata);
+  inherited Create(AMapper, ATableMap, ATableMetadata, AUpdateMode);
   FConnection := AConnection;
 end;
 
@@ -368,7 +373,7 @@ begin
   LSyntax := TTDataUpdateSyntax.Create(
     FConnection, FMapper, FTableMap, FTableMetadata);
   try
-    LSyntax.Execute(AEntity, AEvent);
+    LSyntax.Execute(AEntity, AEvent, GetWhereColumns);
   finally
     LSyntax.Free;
   end;
@@ -380,9 +385,10 @@ constructor TTDataSqlServerDataDeleteCommand.Create(
   const AConnection: TTDataConnection;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
-  const ATableMetadata: TTTableMetadata);
+  const ATableMetadata: TTTableMetadata;
+  const AUpdateMode: TTUpdateMode);
 begin
-  inherited Create(AMapper, ATableMap, ATableMetadata);
+  inherited Create(AMapper, ATableMap, ATableMetadata, AUpdateMode);
   FConnection := AConnection;
 end;
 
@@ -394,7 +400,7 @@ begin
   LSyntax := TTDataDeleteSyntax.Create(
     FConnection, FMapper, FTableMap, FTableMetadata);
   try
-    LSyntax.Execute(AEntity, AEvent);
+    LSyntax.Execute(AEntity, AEvent, GetWhereColumns);
   finally
     LSyntax.Free;
   end;

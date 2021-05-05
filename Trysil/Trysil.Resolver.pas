@@ -17,6 +17,7 @@ uses
   System.Classes,
 
   Trysil.Types,
+  Trysil.Exceptions,
   Trysil.Rtti,
   Trysil.Mapping,
   Trysil.Metadata,
@@ -34,6 +35,9 @@ type
     FContext: TObject;
     FMetadata: TTMetadata;
     FMapper: TTMapper;
+    FUpdateMode: TTUpdateMode;
+
+    procedure CheckReadWrite(const ATableMap: TTTableMap);
   public
     constructor Create(
       const AConnection: TTDataConnection;
@@ -45,6 +49,10 @@ type
     procedure Update<T: class>(const AEntity: T);
     procedure Delete<T: class>(const AEntity: T);
   end;
+
+resourcestring
+  SReadOnly = '"Primary Key" or "Version Column" are not defined.';
+  SReadOnlyPrimaryKey = '"Primary Key" is not defined.';
 
 implementation
 
@@ -61,6 +69,21 @@ begin
   FContext := AContext;
   FMetadata := AMetadata;
   FMapper := AMapper;
+  FUpdateMode := TTUpdateMode.KeyAndVersionColumn;
+end;
+
+procedure TTResolver.CheckReadWrite(const ATableMap: TTTableMap);
+begin
+  case FConnection.UpdateMode of
+    TTUpdateMode.KeyAndVersionColumn:
+      if (not Assigned(ATableMap.PrimaryKey)) or
+        (not Assigned(ATableMap.VersionColumn)) then
+        raise ETException.Create(SReadOnly);
+
+    TTUpdateMode.KeyOnly:
+      if not Assigned(ATableMap.PrimaryKey) then
+        raise ETException.Create(SReadOnlyPrimaryKey);
+  end;
 end;
 
 procedure TTResolver.Insert<T>(const AEntity: T);
@@ -71,6 +94,7 @@ var
   LEvent: TTEvent;
 begin
   LTableMap := FMapper.Load<T>();
+  CheckReadWrite(LTableMap);
   LTableMetadata := FMetadata.Load<T>();
   LCommand := FConnection.CreateInsertCommand(
     FMapper, LTableMap, LTableMetadata);
@@ -98,6 +122,7 @@ var
   LEvent: TTEvent;
 begin
   LTableMap := FMapper.Load<T>();
+  CheckReadWrite(LTableMap);
   LTableMetadata := FMetadata.Load<T>();
   LCommand := FConnection.CreateUpdateCommand(
     FMapper, LTableMap, LTableMetadata);
@@ -129,6 +154,7 @@ var
   LEvent: TTEvent;
 begin
   LTableMap := FMapper.Load<T>();
+  CheckReadWrite(LTableMap);
   FConnection.CheckRelations(LTableMap, AEntity);
   LTableMetadata := FMetadata.Load<T>();
   LCommand := FConnection.CreateDeleteCommand(

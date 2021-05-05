@@ -77,7 +77,8 @@ type
     FTableMap: TTTableMap;
     FTableMetadata: TTTableMetadata;
 
-    function GetSqlSyntax: String; virtual; abstract;
+    function GetSqlSyntax(
+      const AWhereColumns: TArray<TTColumnMap>): String; virtual; abstract;
   public
     constructor Create(
       const AConnection: TTDataConnection;
@@ -98,7 +99,8 @@ type
 
     function GetColumns: String; virtual;
     function GetOrderBy: String; virtual;
-    function GetSqlSyntax: String; override;
+    function GetSqlSyntax(
+      const AWhereColumns: TArray<TTColumnMap>): String; override;
 
     function GetFilterTopSyntax: String; virtual; abstract;
   public
@@ -132,8 +134,6 @@ type
 
   TTDataCommandSyntax =
     class abstract(TTDataAbstractSyntax)
-  strict private
-    procedure CheckReadWrite;
   strict protected
     procedure BeforeExecute(
       const AEntity: TObject; const AEvent: TTEvent); virtual;
@@ -145,11 +145,11 @@ type
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata);
-    destructor Destroy; override;
 
-    procedure AfterConstruction; override;
-
-    procedure Execute(const AEntity: TObject; const AEvent: TTEvent);
+    procedure Execute(
+      const AEntity: TObject;
+      const AEvent: TTEvent;
+      const AWhereColumns: TArray<TTColumnMap>);
   end;
 
 { TTDataInsertSyntax }
@@ -158,7 +158,8 @@ type
   strict protected
     function GetColumns: String; virtual;
     function GetParameters: String; virtual;
-    function GetSqlSyntax: String; override;
+    function GetSqlSyntax(
+      const AWhereColumns: TArray<TTColumnMap>): String; override;
   end;
 
 { TTDataUpdateSyntax }
@@ -166,7 +167,8 @@ type
   TTDataUpdateSyntax = class(TTDataCommandSyntax)
   strict protected
     function GetColumns: String; virtual;
-    function GetSqlSyntax: String; override;
+    function GetSqlSyntax(
+      const AWhereColumns: TArray<TTColumnMap>): String; override;
   end;
 
 { TTDataDeleteSyntax }
@@ -175,13 +177,13 @@ type
   strict protected
     procedure BeforeExecute(
       const AEntity: TObject; const AEvent: TTEvent); override;
-    function GetSqlSyntax: String; override;
+    function GetSqlSyntax(
+      const AWhereColumns: TArray<TTColumnMap>): String; override;
   end;
 
 { resourcestring }
 
 resourcestring
-  SReadOnly = '"Primary Key" is not defined.';
   SColumnNotFound = 'Column %s not found.';
   SRecordChanged = 'Entity modified by another user.';
   SSyntaxError = 'Incorrect syntax: too many records affected.';
@@ -282,7 +284,7 @@ end;
 procedure TTDataSelectSyntax.AfterConstruction;
 begin
   inherited AfterConstruction;
-  FDataset := FConnection.CreateDataSet(GetSqlSyntax);
+  FDataset := FConnection.CreateDataSet(GetSqlSyntax([]));
   FDataset.Open;
 end;
 
@@ -330,7 +332,8 @@ begin
   end;
 end;
 
-function TTDataSelectSyntax.GetSqlSyntax: String;
+function TTDataSelectSyntax.GetSqlSyntax(
+  const AWhereColumns: TArray<TTColumnMap>): String;
 var
   LResult: TStringBuilder;
 begin
@@ -380,23 +383,6 @@ begin
   inherited Create(AConnection, AMapper, ATableMap, ATableMetadata);
 end;
 
-destructor TTDataCommandSyntax.Destroy;
-begin
-  inherited Destroy;
-end;
-
-procedure TTDataCommandSyntax.AfterConstruction;
-begin
-  CheckReadWrite;
-  inherited AfterConstruction;
-end;
-
-procedure TTDataCommandSyntax.CheckReadWrite;
-begin
-  if not Assigned(FTableMap.PrimaryKey) then
-    raise ETException.Create(SReadOnly);
-end;
-
 procedure TTDataCommandSyntax.BeforeExecute(
   const AEntity: TObject; const AEvent: TTEvent);
 begin
@@ -412,7 +398,9 @@ begin
 end;
 
 procedure TTDataCommandSyntax.Execute(
-  const AEntity: TObject; const AEvent: TTEvent);
+  const AEntity: TObject;
+  const AEvent: TTEvent;
+  const AWhereColumns: TArray<TTColumnMap>);
 var
   LLocalTransaction: Boolean;
   LRowsAffected: Integer;
@@ -424,7 +412,11 @@ begin
     BeforeExecute(AEntity, AEvent);
 
     LRowsAffected := FConnection.Execute(
-      GetSqlSyntax, FMapper, FTableMap, FTableMetadata, AEntity);
+      GetSqlSyntax(AWhereColumns),
+      FMapper,
+      FTableMap,
+      FTableMetadata,
+      AEntity);
 
     if LRowsAffected = 0 then
       raise ETException.Create(SRecordChanged)
@@ -484,7 +476,8 @@ begin
   end;
 end;
 
-function TTDataInsertSyntax.GetSqlSyntax: String;
+function TTDataInsertSyntax.GetSqlSyntax(
+  const AWhereColumns: TArray<TTColumnMap>): String;
 var
   LResult: TStringBuilder;
 begin
@@ -532,22 +525,32 @@ begin
   end;
 end;
 
-function TTDataUpdateSyntax.GetSqlSyntax: String;
+function TTDataUpdateSyntax.GetSqlSyntax(
+  const AWhereColumns: TArray<TTColumnMap>): String;
 var
   LResult: TStringBuilder;
+  LFirst: Boolean;
+  LColumnMap: TTColumnMap;
 begin
   LResult := TStringBuilder.Create;
   try
     LResult.AppendFormat('UPDATE %s SET ', [
       FConnection.GetDatabaseObjectName(FTableMap.Name)]);
     LResult.Append(GetColumns());
-    LResult.AppendFormat(' WHERE %0:s = :%1:s', [
-      FConnection.GetDatabaseObjectName(FTableMap.PrimaryKey.Name),
-      FConnection.GetParameterName(FTableMap.PrimaryKey.Name)]);
-    if Assigned(FTableMap.VersionColumn) then
-      LResult.AppendFormat(' AND %0:s = :%1:s', [
-        FConnection.GetDatabaseObjectName(FTableMap.VersionColumn.Name),
-        FConnection.GetParameterName(FTableMap.VersionColumn.Name)]);
+    LFirst := True;
+    for LColumnMap in AWhereColumns do
+    begin
+      if LFirst then
+        LResult.Append(' WHERE ')
+      else
+        LResult.Append(' AND ');
+
+      LResult.AppendFormat('%0:s = :%1:s', [
+        FConnection.GetDatabaseObjectName(LColumnMap.Name),
+        FConnection.GetParameterName(LColumnMap.Name)]);
+
+      LFirst := False;
+    end;
     result := LResult.ToString();
   finally
     LResult.Free;
@@ -574,16 +577,35 @@ begin
     end;
 end;
 
-function TTDataDeleteSyntax.GetSqlSyntax: String;
+function TTDataDeleteSyntax.GetSqlSyntax(
+  const AWhereColumns: TArray<TTColumnMap>): String;
+var
+  LResult: TStringBuilder;
+  LFirst: Boolean;
+  LColumnMap: TTColumnMap;
 begin
-  result := Format('DELETE FROM %0:s WHERE %1:s = :%2:s', [
-    FConnection.GetDatabaseObjectName(FTableMap.Name),
-    FConnection.GetDatabaseObjectName(FTableMap.PrimaryKey.Name),
-    FConnection.GetParameterName(FTableMap.PrimaryKey.Name)]);
-  if Assigned(FTableMap.VersionColumn) then
-    result := result + Format(' AND %0:s = :%1:s', [
-      FConnection.GetDatabaseObjectName(FTableMap.VersionColumn.Name),
-      FConnection.GetParameterName(FTableMap.VersionColumn.Name)]);
+  LResult := TStringBuilder.Create;
+  try
+    LResult.AppendFormat('DELETE FROM %s', [
+      FConnection.GetDatabaseObjectName(FTableMap.Name)]);
+    LFirst := True;
+    for LColumnMap in AWhereColumns do
+    begin
+      if LFirst then
+        LResult.Append(' WHERE ')
+      else
+        LResult.Append(' AND ');
+
+      LResult.AppendFormat('%0:s = :%1:s', [
+        FConnection.GetDatabaseObjectName(LColumnMap.Name),
+        FConnection.GetParameterName(LColumnMap.Name)]);
+
+      LFirst := False;
+    end;
+    result := LResult.ToString();
+  finally
+    LResult.Free;
+  end;
 end;
 
 end.
