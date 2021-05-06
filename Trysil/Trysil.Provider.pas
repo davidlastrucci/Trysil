@@ -405,10 +405,7 @@ end;
 function TTProvider.GetWhere(
   const AColumnName: String; const AID: TTPrimaryKey): String;
 begin
-  if TTQuotedPrimaryKey then
-    result := Format('%s = %s', [AColumnName, QuotedStr(AID.ToString)])
-  else
-    result := Format('%s = %s', [AColumnName, AID.ToString]);
+  result := Format('%s = %s', [AColumnName, TTPrimaryKeyHelper.SqlValue(AID)]);
 end;
 
 function TTProvider.GetWhere(
