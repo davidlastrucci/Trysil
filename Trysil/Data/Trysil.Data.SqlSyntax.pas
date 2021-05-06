@@ -140,8 +140,7 @@ type
 
 { TTDataCommandSyntax }
 
-  TTDataCommandSyntax =
-    class abstract(TTDataAbstractSyntax)
+  TTDataCommandSyntax = class abstract(TTDataAbstractSyntax)
   strict protected
     procedure BeforeExecute(
       const AEntity: TObject; const AEvent: TTEvent); virtual;
@@ -196,12 +195,12 @@ type
   TTDataSyntaxClasses = class abstract
   public
     function Sequence: TTDataSequenceSyntaxClass; virtual; abstract;
-    function SelectCount: TTDataSelectCountSyntaxClass; virtual; abstract;
+    function SelectCount: TTDataSelectCountSyntaxClass; virtual;
     function Select: TTDataSelectSyntaxClass; virtual; abstract;
-    function Metadata: TTDataMetadataSyntaxClass; virtual; abstract;
-    function Insert: TTDataCommandSyntaxClass; virtual; abstract;
-    function Update: TTDataCommandSyntaxClass; virtual; abstract;
-    function Delete: TTDataCommandSyntaxClass; virtual; abstract;
+    function Metadata: TTDataMetadataSyntaxClass; virtual;
+    function Insert: TTDataCommandSyntaxClass; virtual;
+    function Update: TTDataCommandSyntaxClass; virtual;
+    function Delete: TTDataCommandSyntaxClass; virtual;
   end;
 
 { resourcestring }
@@ -629,6 +628,33 @@ begin
   finally
     LResult.Free;
   end;
+end;
+
+{ TTDataSyntaxClasses }
+
+function TTDataSyntaxClasses.SelectCount: TTDataSelectCountSyntaxClass;
+begin
+  result := TTDataSelectCountSyntax;
+end;
+
+function TTDataSyntaxClasses.Metadata: TTDataMetadataSyntaxClass;
+begin
+  result := TTDataMetadataSyntax;
+end;
+
+function TTDataSyntaxClasses.Insert: TTDataCommandSyntaxClass;
+begin
+  result := TTDataInsertSyntax;
+end;
+
+function TTDataSyntaxClasses.Update: TTDataCommandSyntaxClass;
+begin
+  result := TTDataUpdateSyntax;
+end;
+
+function TTDataSyntaxClasses.Delete: TTDataCommandSyntaxClass;
+begin
+  result := TTDataDeleteSyntax;
 end;
 
 end.

@@ -282,7 +282,7 @@ procedure TTDataGenericInsertCommand.Execute(
 var
   LSyntax: TTDataCommandSyntax;
 begin
-  LSyntax := FConnection.SyntaxClasses. Insert.Create(
+  LSyntax := FConnection.SyntaxClasses.Insert.Create(
     FConnection, FMapper, FTableMap, FTableMetadata);
   try
     LSyntax.Execute(AEntity, AEvent, []);

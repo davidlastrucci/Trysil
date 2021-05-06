@@ -43,12 +43,7 @@ type
   TTDataSQLiteSyntaxClasses = class(TTDataSyntaxClasses)
   public
     function Sequence: TTDataSequenceSyntaxClass; override;
-    function SelectCount: TTDataSelectCountSyntaxClass; override;
     function Select: TTDataSelectSyntaxClass; override;
-    function Metadata: TTDataMetadataSyntaxClass; override;
-    function Insert: TTDataCommandSyntaxClass; override;
-    function Update: TTDataCommandSyntaxClass; override;
-    function Delete: TTDataCommandSyntaxClass; override;
   end;
 
 implementation
@@ -57,8 +52,7 @@ implementation
 
 function TTDataSQLiteSequenceSyntax.GetSequenceSyntax: String;
 begin
-  result :=
-    Format('SELECT MAX(ROWID) + 1 FROM %s', [FSequenceName]);
+  result := Format('SELECT MAX(ROWID) + 1 FROM %s', [FSequenceName]);
 end;
 
 { TTDataSQLiteSelectSyntax }
@@ -98,34 +92,9 @@ begin
   result := TTDataSQLiteSequenceSyntax;
 end;
 
-function TTDataSQLiteSyntaxClasses.SelectCount: TTDataSelectCountSyntaxClass;
-begin
-  result := TTDataSelectCountSyntax;
-end;
-
 function TTDataSQLiteSyntaxClasses.Select: TTDataSelectSyntaxClass;
 begin
   result := TTDataSQLiteSelectSyntax;
-end;
-
-function TTDataSQLiteSyntaxClasses.Metadata: TTDataMetadataSyntaxClass;
-begin
-  result := TTDataMetadataSyntax;
-end;
-
-function TTDataSQLiteSyntaxClasses.Insert: TTDataCommandSyntaxClass;
-begin
-  result := TTDataInsertSyntax;
-end;
-
-function TTDataSQLiteSyntaxClasses.Update: TTDataCommandSyntaxClass;
-begin
-  result := TTDataUpdateSyntax;
-end;
-
-function TTDataSQLiteSyntaxClasses.Delete: TTDataCommandSyntaxClass;
-begin
-  result := TTDataDeleteSyntax;
 end;
 
 end.

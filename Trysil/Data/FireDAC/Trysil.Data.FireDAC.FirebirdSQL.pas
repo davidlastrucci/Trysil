@@ -72,7 +72,7 @@ type
     class procedure RegisterConnection(
       const AName: String;
       const AVendorLib: String;
-      const AParameters: TStrings);overload;
+      const AParameters: TStrings); overload;
   end;
 
 implementation

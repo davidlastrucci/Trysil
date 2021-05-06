@@ -39,12 +39,7 @@ type
   TTDataFirebirdSQLSyntaxClasses = class(TTDataSyntaxClasses)
   public
     function Sequence: TTDataSequenceSyntaxClass; override;
-    function SelectCount: TTDataSelectCountSyntaxClass; override;
     function Select: TTDataSelectSyntaxClass; override;
-    function Metadata: TTDataMetadataSyntaxClass; override;
-    function Insert: TTDataCommandSyntaxClass; override;
-    function Update: TTDataCommandSyntaxClass; override;
-    function Delete: TTDataCommandSyntaxClass; override;
   end;
 
 implementation
@@ -71,35 +66,9 @@ begin
   result := TTDataFirebirdSQLSequenceSyntax;
 end;
 
-function TTDataFirebirdSQLSyntaxClasses.SelectCount:
-  TTDataSelectCountSyntaxClass;
-begin
-  result := TTDataSelectCountSyntax;
-end;
-
 function TTDataFirebirdSQLSyntaxClasses.Select: TTDataSelectSyntaxClass;
 begin
   result := TTDataFirebirdSQLSelectSyntax;
-end;
-
-function TTDataFirebirdSQLSyntaxClasses.Metadata: TTDataMetadataSyntaxClass;
-begin
-  result := TTDataMetadataSyntax;
-end;
-
-function TTDataFirebirdSQLSyntaxClasses.Insert: TTDataCommandSyntaxClass;
-begin
-  result := TTDataInsertSyntax;
-end;
-
-function TTDataFirebirdSQLSyntaxClasses.Update: TTDataCommandSyntaxClass;
-begin
-  result := TTDataUpdateSyntax;
-end;
-
-function TTDataFirebirdSQLSyntaxClasses.Delete: TTDataCommandSyntaxClass;
-begin
-  result := TTDataDeleteSyntax;
 end;
 
 end.
