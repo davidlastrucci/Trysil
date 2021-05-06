@@ -36,30 +36,30 @@ uses
 
 type
 
-{ TTFDDataSetParam }
+{ TTFDDatasetParam }
 
-  TTFDDataSetParam = class(TInterfacedObject, ITDataSetParam)
-  private
+  TTFDDatasetParam = class(TTDatasetParam)
+  strict private
     FParam: TFDParam;
+  strict protected
+    function GetAsString: String; override;
+    procedure SetAsString(const AValue: String); override;
+    function GetAsInteger: Integer; override;
+    procedure SetAsInteger(const AValue: Integer); override;
+    function GetAsLargeInt: Int64; override;
+    procedure SetAsLargeInt(const AValue: Int64); override;
+    function GetAsDouble: Double; override;
+    procedure SetAsDouble(const AValue: Double); override;
+    function GetAsBoolean: Boolean; override;
+    procedure SetAsBoolean(const AValue: Boolean); override;
+    function GetAsDateTime: TDateTime; override;
+    procedure SetAsDateTime(const AValue: TDateTime); override;
+    function GetAsGuid: TGUID; override;
+    procedure SetAsGuid(const AValue: TGUID); override;
   public
-    function GetAsBoolean: Boolean;
-    procedure SetAsBoolean(const Value: Boolean);
-    function GetAsDateTime: TDateTime;
-    procedure SetAsDateTime(const Value: TDateTime);
-    function GetAsGuid: TGUID;
-    procedure SetAsGuid(const Value: TGUID);
-    function GetAsFloat: Double;
-    procedure SetAsFloat(const Value: Double);
-    function GetAsLargeInt: Int64;
-    procedure SetAsLargeInt(const Value: Int64);
-    function GetAsInteger: Integer;
-    procedure SetAsInteger(const Value: Integer);
-    function GetAsString: String;
-    procedure SetAsString(const Value: String);
+    constructor Create(const AParam: TFDParam);
 
-    procedure Clear;
-
-    constructor Create(AParam: TFDParam);
+    procedure Clear; override;
   end;
 
 { TTDataFireDACConnection }
@@ -70,9 +70,9 @@ type
 
     FWaitCursor: TFDGUIxWaitCursor;
     FConnection: TFDConnection;
-  strict protected
-    function GetDataSetParam(AParam: TFDParam): ITDataSetParam;
 
+    function CreateDatasetParam(const AParam: TFDParam): TTDatasetParam;
+  strict protected
     function GetColumnMap(
       const ATableMap: TTTableMap; const AColumnName: String): TTColumnMap;
     procedure InitializeParameters(
@@ -110,87 +110,87 @@ resourcestring
 
 implementation
 
-{ TTFDDataSetParam }
+{ TTFDDatasetParam }
 
-procedure TTFDDataSetParam.Clear;
-begin
-  FParam.Clear;
-end;
-
-constructor TTFDDataSetParam.Create(AParam: TFDParam);
+constructor TTFDDatasetParam.Create(const AParam: TFDParam);
 begin
   inherited Create;
   FParam := AParam;
 end;
 
-function TTFDDataSetParam.GetAsBoolean: Boolean;
+procedure TTFDDatasetParam.Clear;
 begin
-  result := FParam.AsBoolean;
+  FParam.Clear;
 end;
 
-function TTFDDataSetParam.GetAsDateTime: TDateTime;
-begin
-  result := FParam.AsDateTime;
-end;
-
-function TTFDDataSetParam.GetAsFloat: Double;
-begin
-  result := FParam.AsFloat;
-end;
-
-function TTFDDataSetParam.GetAsGuid: TGUID;
-begin
-  result := FParam.AsGUID;
-end;
-
-function TTFDDataSetParam.GetAsInteger: Integer;
-begin
-  result := FParam.AsInteger;
-end;
-
-function TTFDDataSetParam.GetAsLargeInt: Int64;
-begin
-  result := FParam.AsLargeInt;
-end;
-
-function TTFDDataSetParam.GetAsString: String;
+function TTFDDatasetParam.GetAsString: String;
 begin
   result := FParam.AsString;
 end;
 
-procedure TTFDDataSetParam.SetAsBoolean(const Value: Boolean);
+procedure TTFDDatasetParam.SetAsString(const AValue: String);
 begin
-  FParam.AsBoolean := Value;
+  FParam.AsString := AValue;
 end;
 
-procedure TTFDDataSetParam.SetAsDateTime(const Value: TDateTime);
+function TTFDDatasetParam.GetAsInteger: Integer;
 begin
-  FParam.AsDateTime := Value;
+  result := FParam.AsInteger;
 end;
 
-procedure TTFDDataSetParam.SetAsFloat(const Value: Double);
+procedure TTFDDatasetParam.SetAsInteger(const AValue: Integer);
 begin
-  FParam.AsFloat := Value;
+  FParam.AsInteger := AValue;
 end;
 
-procedure TTFDDataSetParam.SetAsGuid(const Value: TGUID);
+function TTFDDatasetParam.GetAsLargeInt: Int64;
 begin
-  FParam.AsGUID := Value;
+  result := FParam.AsLargeInt;
 end;
 
-procedure TTFDDataSetParam.SetAsInteger(const Value: Integer);
+procedure TTFDDatasetParam.SetAsLargeInt(const AValue: Int64);
 begin
-  FParam.AsInteger := Value;
+  FParam.AsLargeInt := AValue;
 end;
 
-procedure TTFDDataSetParam.SetAsLargeInt(const Value: Int64);
+function TTFDDatasetParam.GetAsDouble: Double;
 begin
-  FParam.AsLargeInt := Value;
+  result := FParam.AsFloat;
 end;
 
-procedure TTFDDataSetParam.SetAsString(const Value: String);
+procedure TTFDDatasetParam.SetAsDouble(const AValue: Double);
 begin
-  FParam.AsString := Value;
+  FParam.AsFloat := AValue;
+end;
+
+function TTFDDatasetParam.GetAsBoolean: Boolean;
+begin
+  result := FParam.AsBoolean;
+end;
+
+procedure TTFDDatasetParam.SetAsBoolean(const AValue: Boolean);
+begin
+  FParam.AsBoolean := AValue;
+end;
+
+function TTFDDatasetParam.GetAsDateTime: TDateTime;
+begin
+  result := FParam.AsDateTime;
+end;
+
+procedure TTFDDatasetParam.SetAsDateTime(const AValue: TDateTime);
+begin
+  FParam.AsDateTime := AValue;
+end;
+
+function TTFDDatasetParam.GetAsGuid: TGUID;
+begin
+  result := FParam.AsGUID;
+end;
+
+procedure TTFDDatasetParam.SetAsGuid(const AValue: TGUID);
+begin
+  FParam.AsGUID := AValue;
 end;
 
 { TTDataFireDACConnection }
@@ -268,10 +268,10 @@ begin
   FConnection.Rollback;
 end;
 
-function TTDataFireDACConnection.GetDataSetParam(
-  AParam: TFDParam): ITDataSetParam;
+function TTDataFireDACConnection.CreateDatasetParam(
+  const AParam: TFDParam): TTDatasetParam;
 begin
-  result := TTFDDataSetParam.Create(AParam);
+  result := TTFDDatasetParam.Create(AParam);
 end;
 
 function TTDataFireDACConnection.GetInTransaction: Boolean;
@@ -304,6 +304,7 @@ procedure TTDataFireDACConnection.InitializeParameters(
   const AEntity: TObject);
 var
   LColumn: TTColumnMetadata;
+  LDatasetParam: TTDatasetParam;
   LParam: TTDataParameter;
   LFireDACParam: TFDParam;
 begin
@@ -317,15 +318,20 @@ begin
       LFireDACParam.DataType := LColumn.DataType;
       LFireDACParam.Size := LColumn.DataSize;
 
-      LParam := TTDataParameterFactory.Instance.CreateParameter(
-        LColumn.DataType,
-        GetDataSetParam(LFireDACParam),
-        AMapper,
-        GetColumnMap(ATableMap, LColumn.ColumnName));
+      LDatasetParam := CreateDatasetParam(LFireDACParam);
       try
-        LParam.SetValue(AEntity);
+        LParam := TTDataParameterFactory.Instance.CreateParameter(
+          LColumn.DataType,
+          LDatasetParam,
+          AMapper,
+          GetColumnMap(ATableMap, LColumn.ColumnName));
+        try
+          LParam.SetValue(AEntity);
+        finally
+          LParam.Free;
+        end;
       finally
-        LParam.Free;
+        LDatasetParam.Free;
       end;
     end;
   end;

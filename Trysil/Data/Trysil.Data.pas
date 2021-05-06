@@ -28,31 +28,31 @@ uses
 
 type
 
-{ ITDataSetParam }
+{ TTDatasetParam }
 
-  ITDataSetParam = interface
-  ['{75B98CB8-FA42-458E-9B2F-332568091302}']
-    function GetAsBoolean: Boolean;
-    procedure SetAsBoolean(const Value: Boolean);
-    function GetAsDateTime: TDateTime;
-    procedure SetAsDateTime(const Value: TDateTime);
-    function GetAsGuid: TGUID;
-    procedure SetAsGuid(const Value: TGUID);
-    function GetAsFloat: Double;
-    procedure SetAsFloat(const Value: Double);
-    function GetAsLargeInt: Int64;
-    procedure SetAsLargeInt(const Value: Int64);
-    function GetAsInteger: Integer;
-    procedure SetAsInteger(const Value: Integer);
-    function GetAsString: String;
-    procedure SetAsString(const Value: String);
-
-    procedure Clear;
+  TTDatasetParam = class abstract
+  strict protected
+    function GetAsString: String; virtual; abstract;
+    procedure SetAsString(const Value: String); virtual; abstract;
+    function GetAsInteger: Integer; virtual; abstract;
+    procedure SetAsInteger(const Value: Integer); virtual; abstract;
+    function GetAsLargeInt: Int64; virtual; abstract;
+    procedure SetAsLargeInt(const Value: Int64); virtual; abstract;
+    function GetAsDouble: Double; virtual; abstract;
+    procedure SetAsDouble(const Value: Double); virtual; abstract;
+    function GetAsBoolean: Boolean; virtual; abstract;
+    procedure SetAsBoolean(const Value: Boolean); virtual; abstract;
+    function GetAsDateTime: TDateTime; virtual; abstract;
+    procedure SetAsDateTime(const Value: TDateTime); virtual; abstract;
+    function GetAsGuid: TGUID; virtual; abstract;
+    procedure SetAsGuid(const Value: TGUID); virtual; abstract;
+  public
+    procedure Clear; virtual; abstract;
 
     property AsString: String read GetAsString write SetAsString;
     property AsInteger: Integer read GetAsInteger write SetAsInteger;
     property AsLargeInt: Int64 read GetAsLargeInt write SetAsLargeInt;
-    property AsFloat: Double read GetAsFloat write SetAsFloat;
+    property AsDouble: Double read GetAsDouble write SetAsDouble;
     property AsBoolean: Boolean read GetAsBoolean write SetAsBoolean;
     property AsDateTime: TDateTime read GetAsDateTime write SetAsDateTime;
     property AsGuid: TGUID read GetAsGuid write SetAsGuid;
