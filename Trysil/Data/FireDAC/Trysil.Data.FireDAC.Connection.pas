@@ -72,16 +72,17 @@ type
     FConnection: TFDConnection;
 
     function CreateDatasetParam(const AParam: TFDParam): TTDatasetParam;
-  strict protected
+
     function GetColumnMap(
       const ATableMap: TTTableMap; const AColumnName: String): TTColumnMap;
-    procedure InitializeParameters(
+
+    procedure SetDatasetParameters(
       const ADataSet: TFDQuery;
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
       const AEntity: TObject);
-
+  strict protected
     function GetInTransaction: Boolean; override;
   public
     constructor Create(const AConnectionName: String);
@@ -225,8 +226,9 @@ begin
     LDataSet.Connection := FConnection;
     LDataSet.SQL.Text := ASQL;
 
-    if Assigned(AEntity) then
-      InitializeParameters(
+    if Assigned(AMapper) and Assigned(ATableMap) and
+      Assigned(ATableMetadata) and Assigned(AEntity) then
+      SetDatasetParameters(
         LDataSet, AMapper, ATableMap, ATableMetadata, AEntity);
 
     LDataSet.ExecSQL;
@@ -296,7 +298,7 @@ begin
     raise ETException.CreateFmt(SColumnNotFound, [AColumnName]);
 end;
 
-procedure TTDataFireDACConnection.InitializeParameters(
+procedure TTDataFireDACConnection.SetDatasetParameters(
   const ADataSet: TFDQuery;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
@@ -305,7 +307,7 @@ procedure TTDataFireDACConnection.InitializeParameters(
 var
   LColumn: TTColumnMetadata;
   LDatasetParam: TTDatasetParam;
-  LParam: TTDataParameter;
+  LParameter: TTDataParameter;
   LFireDACParam: TFDParam;
 begin
   for LColumn in ATableMetadata.Columns do
@@ -320,15 +322,15 @@ begin
 
       LDatasetParam := CreateDatasetParam(LFireDACParam);
       try
-        LParam := TTDataParameterFactory.Instance.CreateParameter(
+        LParameter := TTDataParameterFactory.Instance.CreateParameter(
           LColumn.DataType,
           LDatasetParam,
           AMapper,
           GetColumnMap(ATableMap, LColumn.ColumnName));
         try
-          LParam.SetValue(AEntity);
+          LParameter.SetValue(AEntity);
         finally
-          LParam.Free;
+          LParameter.Free;
         end;
       finally
         LDatasetParam.Free;

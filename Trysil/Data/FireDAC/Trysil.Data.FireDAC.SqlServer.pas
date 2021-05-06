@@ -28,6 +28,7 @@ uses
   Trysil.Data.SqlSyntax.SqlServer;
 
 type
+
 { TTDataSqlServerConnection }
 
   TTDataSqlServerConnection = class(TTDataFireDACConnection)
