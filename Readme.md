@@ -16,6 +16,12 @@ That's why I called **Trysil** my **ORM**.
 
 ***Trysil Operation ORM***
 
+Database drivers:
+
+- Microsoft SQL Server (FireDAC)
+- FirebirdSQL (FireDAC)
+- SQLite (FireDAC)
+
 For further information:
 
 - [Simple sample](https://github.com/davidlastrucci/Trysil/blob/master/Docs/Sample.md)
