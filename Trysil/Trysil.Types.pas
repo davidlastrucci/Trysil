@@ -17,6 +17,7 @@ uses
   System.Classes,
   System.Generics.Defaults,
 
+  Trysil.Consts,
   Trysil.Exceptions;
 
 type
@@ -87,12 +88,6 @@ type
     property Value: T read GetValue;
     property IsNull: Boolean read GetIsNull;
   end;
-
-{ resourcestring }
-
-resourcestring
-  SNullableTypeHasNoValue = 'Nullable type has no value: invalid operation.';
-  SCannotAssignPointerToNullable = 'Cannot assign non-null pointer to nullable type.';
 
 implementation
 

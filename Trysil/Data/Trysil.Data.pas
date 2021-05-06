@@ -18,6 +18,7 @@ uses
   System.Generics.Collections,
   Data.DB,
 
+  Trysil.Consts,
   Trysil.Types,
   Trysil.Filter,
   Trysil.Exceptions,
@@ -185,12 +186,6 @@ type
     property InTransaction: Boolean read GetInTransaction;
     property UpdateMode: TTUpdateMode read FUpdateMode write FUpdateMode;
   end;
-
-{ resourcestring }
-
-resourcestring
-  SColumnNotFound = 'Column %0:s not found.';
-  SRelationError = '"%s" is currently in use, unable to delete.';
 
 implementation
 

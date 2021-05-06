@@ -19,6 +19,7 @@ uses
   System.Rtti,
   Data.DB,
 
+  Trysil.Consts,
   Trysil.Exceptions,
   Trysil.Classes,
   Trysil.Events.Abstract,
@@ -221,18 +222,6 @@ type
   end;
 
 implementation
-
-{ resourcestring }
-
-resourcestring
-  SInvalidRttiObjectType = 'TRttiObject type is not valid.';
-  SDuplicateTableAttribute = 'Duplicate TTable Attribute.';
-  SDuplicateSequenceAttribute = 'Duplicate TSequence Attribute.';
-  SDuplicatePrimaryKeyAttribute = 'Duplicate TPrimaryKey Attribute.';
-  SDuplicateVersionColumnAttribute = 'Duplicate TVersionColumn Attribute.';
-  SInsertEventAttribute = 'Duplicate TInsertEventAttribute Attribute.';
-  SUpdateEventAttribute = 'Duplicate TUpdateEventAttribute Attribute.';
-  SDeleteEventAttribute = 'Duplicate TDeleteEventAttribute Attribute.';
 
 { TTColumnMap }
 

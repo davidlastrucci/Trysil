@@ -17,6 +17,7 @@ uses
   System.Classes,
   System.Generics.Collections,
 
+  Trysil.Consts,
   Trysil.Exceptions,
   Trysil.Generics.Collections,
   Trysil.Data,
@@ -83,12 +84,6 @@ type
 
     property Entities: TTList<T> read FEntities;
   end;
-
-resourcestring
-  SClonedEntity = 'Can not insert a cloned entity: "%s".';
-  SNotValidEntity = 'Not valid cloned entity: "%s".';
-  SDeletedEntity = 'Cloned entity "%s" was deleted.';
-  SSessionNotTwice = 'Session can not be used twice.';
 
 implementation
 

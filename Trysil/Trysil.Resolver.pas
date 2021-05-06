@@ -16,6 +16,7 @@ uses
   System.SysUtils,
   System.Classes,
 
+  Trysil.Consts,
   Trysil.Types,
   Trysil.Exceptions,
   Trysil.Rtti,
@@ -49,10 +50,6 @@ type
     procedure Update<T: class>(const AEntity: T);
     procedure Delete<T: class>(const AEntity: T);
   end;
-
-resourcestring
-  SReadOnly = '"Primary Key" or "Version Column" are not defined.';
-  SReadOnlyPrimaryKey = '"Primary Key" is not defined.';
 
 implementation
 

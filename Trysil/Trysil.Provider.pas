@@ -17,6 +17,7 @@ uses
   System.Classes,
   System.Generics.Collections,
 
+  Trysil.Consts,
   Trysil.Types,
   Trysil.Exceptions,
   Trysil.Filter,
@@ -106,13 +107,6 @@ type
 
     procedure Refresh<T: class>(const AEntity: T);
   end;
-
-{ resourcestring }
-
-resourcestring
-  SNotDefinedPrimaryKey = 'Primary key: not defined.';
-  SNotValidPrimaryKeyType = 'Primary key: not valid type.';
-  SNotDefinedSequence = 'Sequence: not defined.';
 
 implementation
 

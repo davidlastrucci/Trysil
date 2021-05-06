@@ -19,6 +19,7 @@ uses
   System.TypInfo,
   Data.DB,
 
+  Trysil.Consts,
   Trysil.Data,
   Trysil.Types,
   Trysil.Exceptions,
@@ -134,14 +135,6 @@ type
   public
     class procedure RegisterParameterClasses;
   end;
-
-{ resourcestring }
-
-resourcestring
-  SBlobDataParameterValue = 'Value for blob Parameter is not accessible.';
-  SParameterTypeError = 'Parameter non registered for type %s.';
-  STableMapNotFound = 'TableMap for class %s not found';
-  SPrimaryKeyNotDefined = 'Primary key not defined for class %s';
 
 implementation
 

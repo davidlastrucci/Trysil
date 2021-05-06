@@ -18,6 +18,7 @@ uses
   System.Generics.Collections,
   Data.DB,
 
+  Trysil.Consts,
   Trysil.Types,
   Trysil.Data,
   Trysil.Filter,
@@ -202,13 +203,6 @@ type
     function Update: TTDataCommandSyntaxClass; virtual;
     function Delete: TTDataCommandSyntaxClass; virtual;
   end;
-
-{ resourcestring }
-
-resourcestring
-  SColumnNotFound = 'Column %s not found.';
-  SRecordChanged = 'Entity modified by another user.';
-  SSyntaxError = 'Incorrect syntax: too many records affected.';
 
 implementation
 

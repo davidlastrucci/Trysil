@@ -21,6 +21,7 @@ uses
   FireDAC.Stan.Param,
   FireDAC.Comp.Client,
 
+  Trysil.Consts,
   Trysil.Types,
   Trysil.Filter,
   Trysil.Exceptions,
@@ -102,12 +103,6 @@ type
       const ATableMetadata: TTTableMetadata;
       const AEntity: TObject): Integer; override;
   end;
-
-{ resourcestring }
-
-resourcestring
-  SInTransaction = '%s: Transaction already started.';
-  SNotInTransaction = '%s: Transaction not yet started.';
 
 implementation
 

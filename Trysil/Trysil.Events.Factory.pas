@@ -18,6 +18,7 @@ uses
   System.TypInfo,
   System.Rtti,
 
+  Trysil.Consts,
   Trysil.Exceptions,
   Trysil.Events.Abstract;
 
@@ -48,10 +49,6 @@ type
 
     class property Instance: TTEventFactory read FInstance;
   end;
-
-resourcestring
-  SNotValidEventClass = 'Not valid constructor in TTEvent class: %s.';
-  SNotEventType = 'Not valid TTEvent type: %s.';
 
 implementation
 

@@ -18,6 +18,7 @@ uses
   System.Generics.Collections,
   Data.DB,
 
+  Trysil.Consts,
   Trysil.Types,
   Trysil.Exceptions,
   Trysil.Mapping,
@@ -136,11 +137,6 @@ type
   public
     class procedure RegisterColumnClasses;
   end;
-
-{ resourcestring }
-
-resourcestring
-  SColumnTypeError = 'Column non registered for type %0:s.';
 
 implementation
 

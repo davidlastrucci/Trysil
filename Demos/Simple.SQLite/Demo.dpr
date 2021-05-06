@@ -6,6 +6,7 @@ uses
   Trysil.Cache in '..\..\Trysil\Trysil.Cache.pas',
   Trysil.Classes in '..\..\Trysil\Trysil.Classes.pas',
   Trysil.Context in '..\..\Trysil\Trysil.Context.pas',
+  Trysil.Consts in '..\..\Trysil\Trysil.Consts.pas',
   Trysil.Events.Abstract in '..\..\Trysil\Trysil.Events.Abstract.pas',
   Trysil.Events.Attributes in '..\..\Trysil\Trysil.Events.Attributes.pas',
   Trysil.Events.Factory in '..\..\Trysil\Trysil.Events.Factory.pas',

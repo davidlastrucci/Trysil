@@ -130,6 +130,7 @@
         <DCCReference Include="..\..\Trysil\Trysil.Cache.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Classes.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Context.pas"/>
+        <DCCReference Include="..\..\Trysil\Trysil.Consts.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Events.Abstract.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Events.Attributes.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Events.Factory.pas"/>

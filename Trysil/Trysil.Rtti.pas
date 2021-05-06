@@ -18,6 +18,7 @@ uses
   System.TypInfo,
   System.Rtti,
 
+  Trysil.Consts,
   Trysil.Types,
   Trysil.Exceptions;
 
@@ -138,10 +139,6 @@ type
 
     property GenericTypeInfo: PTypeInfo read GetGenericTypeInfo;
   end;
-
-resourcestring
-  SPropertyIDNotFound = 'Property ID not found';
-  STypeIsNotAList = 'Type %s is not a generic list.';
 
 implementation
 
