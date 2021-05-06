@@ -53,7 +53,8 @@ type
     procedure SetID(const AObject: TObject; const AID: TTValue);
     function GetIsNullable: Boolean;
   public
-    function NeedCreateObject(const AValue: TTValue): Boolean;
+    function NeedCreateObject(
+      const AValue: TTValue; const AIsLazy: Boolean): Boolean;
     function CreateObject(
       const AInstance: TObject;
       const AContext: TObject;
@@ -230,11 +231,12 @@ begin
   end;
 end;
 
-function TTRttiMember.NeedCreateObject(const AValue: TTValue): Boolean;
+function TTRttiMember.NeedCreateObject(
+  const AValue: TTValue; const AIsLazy: Boolean): Boolean;
 begin
   result := AValue.IsEmpty;
   if result then
-    result := TRttiLazy.IsLazyType(FRttiType);
+    result := AIsLazy;
 end;
 
 function TTRttiMember.CreateObject(
@@ -250,7 +252,7 @@ begin
   result := nil;
   LIsLazy := TRttiLazy.IsLazyType(FRttiType);
   LValue := GetValue(AInstance);
-  if NeedCreateObject(LValue) then
+  if NeedCreateObject(LValue, LIsLazy) then
   begin
     LValue := InternalCreateObject(AContext, AMapper, AColumnName);
     SetValue(AInstance, LValue);
@@ -368,7 +370,10 @@ end;
 
 class function TRttiLazy.CheckTypeName(const AType: TRttiType): Boolean;
 begin
-  result := Assigned(AType) and AType.Name.StartsWith('TTAbstractLazy<');
+  result := Assigned(AType) and (
+    (AType.Name.StartsWith('TTAbstractLazy<')) or
+    (AType.Name.StartsWith('TTLazy<')) or
+    (AType.Name.StartsWith('TTLazyList<')));
 end;
 
 { TRttiGenericList }
