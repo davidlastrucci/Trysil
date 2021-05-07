@@ -198,7 +198,7 @@ var
   LTableMap: TTTableMap;
   LValue: TTValue;
 begin
-  if TRttiLazy.IsLazy(AObject) then
+  if TTRttiLazy.IsLazy(AObject) then
     LValue := FColumnMap.Member.GetValueFromObject(AObject)
   else
   begin

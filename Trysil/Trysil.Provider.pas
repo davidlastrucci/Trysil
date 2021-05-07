@@ -259,7 +259,7 @@ begin
 
   if Assigned(LResult) then
   begin
-    if TRttiLazy.IsLazy(LResult) then
+    if TTRttiLazy.IsLazy(LResult) then
       FLazyOwner.Add(LResult)
     else if AIsDetail then
       SelectAndMapList(
@@ -319,14 +319,14 @@ procedure TTProvider.SelectAndMapList(
   const AColumnName: String;
   const AID: TTPrimaryKey);
 var
-  LGenericList: TRttiGenericList;
+  LGenericList: TTRttiGenericList;
   LTableMap: TTTableMap;
   LTableMetadata: TTTableMetadata;
   LFilter: TTFilter;
   LReader: TTDataReader;
   LObject: TObject;
 begin
-  LGenericList := TRttiGenericList.Create(AObject);
+  LGenericList := TTRttiGenericList.Create(AObject);
   try
     LTableMap := FMapper.Load(LGenericList.GenericTypeInfo);
     LTableMetadata := FMetadata.Load(LGenericList.GenericTypeInfo);

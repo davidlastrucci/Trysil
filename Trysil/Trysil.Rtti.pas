@@ -99,9 +99,9 @@ type
       const AInstance: TObject; const AValue: TTValue); override;
   end;
 
-{ TRttiLazy }
+{ TTRttiLazy }
 
-  TRttiLazy = class
+  TTRttiLazy = class
   strict private
     class function CheckTypeName(const AType: TRttiType): Boolean;
   public
@@ -109,9 +109,9 @@ type
     class function IsLazyType(const AType: TRttiType): Boolean;
   end;
 
-{ TRttiGenericList }
+{ TTRttiGenericList }
 
-  TRttiGenericList = class
+  TTRttiGenericList = class
   strict private
     FObject: TObject;
     FContext: TRttiContext;
@@ -121,6 +121,8 @@ type
     FGenericConstructor: TRttiMethod;
     FClear: TRttiMethod;
     FAdd: TRttiMethod;
+
+    procedure RaiseNotAList;
 
     procedure SearchGenericType;
     procedure SearchGenericConstructor;
@@ -247,7 +249,7 @@ var
   LValue: TTValue;
 begin
   result := nil;
-  LIsLazy := TRttiLazy.IsLazyType(FRttiType);
+  LIsLazy := TTRttiLazy.IsLazyType(FRttiType);
   LValue := GetValue(AInstance);
   if NeedCreateObject(LValue, LIsLazy) then
   begin
@@ -331,9 +333,9 @@ begin
   FRttiProperty.SetValue(AInstance, AValue);
 end;
 
-{ TRttiLazy }
+{ TTRttiLazy }
 
-class function TRttiLazy.IsLazy(const AObject: TObject): Boolean;
+class function TTRttiLazy.IsLazy(const AObject: TObject): Boolean;
 var
   LContext: TRttiContext;
   LType: TRttiType;
@@ -350,7 +352,7 @@ begin
   end;
 end;
 
-class function TRttiLazy.IsLazyType(const AType: TRttiType): Boolean;
+class function TTRttiLazy.IsLazyType(const AType: TRttiType): Boolean;
 var
   LType: TRttiType;
 begin
@@ -365,7 +367,7 @@ begin
   result := CheckTypeName(LType);
 end;
 
-class function TRttiLazy.CheckTypeName(const AType: TRttiType): Boolean;
+class function TTRttiLazy.CheckTypeName(const AType: TRttiType): Boolean;
 begin
   result := Assigned(AType) and (
     (AType.Name.StartsWith('TTAbstractLazy<')) or
@@ -373,9 +375,9 @@ begin
     (AType.Name.StartsWith('TTLazyList<')));
 end;
 
-{ TRttiGenericList }
+{ TTRttiGenericList }
 
-constructor TRttiGenericList.Create(const AObject: TObject);
+constructor TTRttiGenericList.Create(const AObject: TObject);
 begin
   inherited Create;
   FObject := AObject;
@@ -387,13 +389,13 @@ begin
   FAdd := nil;
 end;
 
-destructor TRttiGenericList.Destroy;
+destructor TTRttiGenericList.Destroy;
 begin
   FContext.Free;
   inherited Destroy;
 end;
 
-procedure TRttiGenericList.AfterConstruction;
+procedure TTRttiGenericList.AfterConstruction;
 begin
   inherited AfterConstruction;
   FType := FContext.GetType(FObject.ClassInfo);
@@ -403,7 +405,12 @@ begin
   SearchAddMethod;
 end;
 
-procedure TRttiGenericList.SearchGenericType;
+procedure TTRttiGenericList.RaiseNotAList;
+begin
+  raise ETException.CreateFmt(STypeIsNotAList, [FObject.ClassName]);
+end;
+
+procedure TTRttiGenericList.SearchGenericType;
 var
   LType: TRttiType;
   LNames: TArray<String>;
@@ -417,18 +424,18 @@ begin
   end;
 
   if not Assigned(LType) then
-    raise ETException.CreateFmt(STypeIsNotAList, [FObject.ClassName]);
+    RaiseNotALIst;
 
   LNames := LType.Name.Split(['<', '>']);
   if Length(LNames) <> 3 then
-    raise ETException.CreateFmt(STypeIsNotAList, [FObject.ClassName]);
+    RaiseNotAList;
 
   FGenericType := FContext.FindType(LNames[1]);
   if not Assigned(FGenericType) then
-    raise ETException.CreateFmt(STypeIsNotAList, [FObject.ClassName]);
+    RaiseNotAList;
 end;
 
-procedure TRttiGenericList.SearchGenericConstructor;
+procedure TTRttiGenericList.SearchGenericConstructor;
 var
   LMethod: TRttiMethod;
   LParameters: TArray<TRttiParameter>;
@@ -445,29 +452,29 @@ begin
     end;
 
   if not Assigned(FGenericConstructor) then
-    raise ETException.CreateFmt(STypeIsNotAList, [FObject.ClassName]);
+    RaiseNotAList;
 end;
 
-procedure TRttiGenericList.SearchClearMethod;
+procedure TTRttiGenericList.SearchClearMethod;
 begin
   FClear := FType.GetMethod('Clear');
   if not Assigned(FClear) then
-    raise ETException.CreateFmt(STypeIsNotAList, [FObject.ClassName]);
+    RaiseNotAList;
 end;
 
-procedure TRttiGenericList.SearchAddMethod;
+procedure TTRttiGenericList.SearchAddMethod;
 begin
   FAdd := FType.GetMethod('Add');
   if not Assigned(FAdd) then
-    raise ETException.CreateFmt(STypeIsNotAList, [FObject.ClassName]);
+    RaiseNotAList;
 end;
 
-function TRttiGenericList.GetGenericTypeInfo: PTypeInfo;
+function TTRttiGenericList.GetGenericTypeInfo: PTypeInfo;
 begin
   result := FGenericType.Handle;
 end;
 
-function TRttiGenericList.CreateObject: TObject;
+function TTRttiGenericList.CreateObject: TObject;
 var
   LValue: TTValue;
 begin
@@ -478,12 +485,12 @@ begin
     result := LValue.AsObject;
 end;
 
-procedure TRttiGenericList.Clear;
+procedure TTRttiGenericList.Clear;
 begin
   FClear.Invoke(FObject, []);
 end;
 
-procedure TRttiGenericList.Add(const AObject: TObject);
+procedure TTRttiGenericList.Add(const AObject: TObject);
 begin
   FAdd.Invoke(FObject, [AObject]);
 end;

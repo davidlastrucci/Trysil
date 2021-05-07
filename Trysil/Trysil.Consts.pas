@@ -43,14 +43,14 @@ resourcestring
   SColumnNotFound = 'Column %0:s not found.';
   SRelationError = '"%0:s" is currently in use, unable to delete.';
   SColumnTypeError = 'Column non registered for type %0:s.';
-  SBlobDataParameterValue = 'Value for blob Parameter is not accessible.';
+  SBlobDataParameterValue = 'Value for blob parameter is not accessible.';
   SParameterTypeError = 'Parameter non registered for type %0:s.';
   STableMapNotFound = 'TableMap for class %0:s not found';
   SPrimaryKeyNotDefined = 'Primary key not defined for class %0:s';
   SRecordChanged = 'Entity modified by another user.';
   SSyntaxError = 'Incorrect syntax: too many records affected.';
-  SInTransaction = '%0:s: Transaction already started.';
-  SNotInTransaction = '%0:s: Transaction not yet started.';
+  SInTransaction = '%0:s: transaction already started.';
+  SNotInTransaction = '%0:s: transaction not yet started.';
 
 implementation
 
