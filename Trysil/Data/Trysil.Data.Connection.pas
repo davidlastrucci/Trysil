@@ -7,7 +7,9 @@ uses
   System.SysUtils,
   Data.DB,
 
+  Trysil.Consts,
   Trysil.Types,
+  Trysil.Exceptions,
   Trysil.Data,
   Trysil.Metadata,
   Trysil.Mapping,
@@ -24,6 +26,9 @@ type
     FSyntaxClasses: TTDataSyntaxClasses;
   strict protected
     function CreateSyntaxClasses: TTDataSyntaxClasses; virtual; abstract;
+
+    function GetColumnMap(
+      const ATableMap: TTTableMap; const AColumnName: String): TTColumnMap;
 
     function SelectCount(
       const ATableMap: TTTableMap;
@@ -184,6 +189,23 @@ function TTDataGenericConnection.CreateDeleteCommand(
 begin
   result := TTDataGenericDeleteCommand.Create(
     Self, AMapper, ATableMap, ATableMetadata, FUpdateMode);
+end;
+
+function TTDataGenericConnection.GetColumnMap(
+  const ATableMap: TTTableMap; const AColumnName: String): TTColumnMap;
+var
+  LColumn: TTColumnMap;
+begin
+  result := nil;
+  for LColumn in ATableMap.Columns do
+    if LColumn.Name.Equals(AColumnName) then
+    begin
+      result := LColumn;
+      Break;
+    end;
+
+  if not Assigned(result) then
+    raise ETException.CreateFmt(SColumnNotFound, [AColumnName]);
 end;
 
 procedure TTDataGenericConnection.GetMetadata(

@@ -74,9 +74,6 @@ type
 
     function CreateDatasetParam(const AParam: TFDParam): TTDatasetParam;
 
-    function GetColumnMap(
-      const ATableMap: TTTableMap; const AColumnName: String): TTColumnMap;
-
     procedure SetDatasetParameters(
       const ADataSet: TFDQuery;
       const AMapper: TTMapper;
@@ -216,7 +213,7 @@ function TTDataFireDACConnection.Execute(
 var
   LDataSet: TFDQuery;
 begin
-  LDataSet := TFDQuery.Create(FConnection);
+  LDataSet := TFDQuery.Create(nil);
   try
     LDataSet.Connection := FConnection;
     LDataSet.SQL.Text := ASQL;
@@ -276,23 +273,6 @@ begin
   result := FConnection.InTransaction;
 end;
 
-function TTDataFireDACConnection.GetColumnMap(
-  const ATableMap: TTTableMap; const AColumnName: String): TTColumnMap;
-var
-  LColumn: TTColumnMap;
-begin
-  result := nil;
-  for LColumn in ATableMap.Columns do
-    if LColumn.Name.Equals(AColumnName) then
-    begin
-      result := LColumn;
-      Break;
-    end;
-
-  if not Assigned(result) then
-    raise ETException.CreateFmt(SColumnNotFound, [AColumnName]);
-end;
-
 procedure TTDataFireDACConnection.SetDatasetParameters(
   const ADataSet: TFDQuery;
   const AMapper: TTMapper;
@@ -338,7 +318,7 @@ function TTDataFireDACConnection.CreateDataSet(const ASQL: String): TDataSet;
 var
   LDataSet: TFDQuery;
 begin
-  LDataSet := TFDQuery.Create(FConnection);
+  LDataSet := TFDQuery.Create(nil);
   try
     LDataSet.Connection := FConnection;
     LDataSet.SQL.Text := ASQL;
