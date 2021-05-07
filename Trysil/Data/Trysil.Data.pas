@@ -146,7 +146,7 @@ type
       const AParameterName: String): String;
 
     function GetSequenceID(
-      const ASequenceName: String): TTPrimaryKey; virtual; abstract;
+      const ATableMap: TTTableMap): TTPrimaryKey; virtual; abstract;
 
     procedure CheckRelations(
       const ATableMap: TTTableMap; const AEntity: TObject);

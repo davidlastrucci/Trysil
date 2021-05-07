@@ -48,8 +48,8 @@ implementation
 
 function TTDataFirebirdSQLSequenceSyntax.GetSequenceSyntax: String;
 begin
-  result :=
-    Format('SELECT GEN_ID(%s, 1) ID FROM RDB$DATABASE', [FSequenceName]);
+  result := Format(
+    'SELECT GEN_ID(%s, 1) ID FROM RDB$DATABASE', [FTableMap.SequenceName]);
 end;
 
 { TTDataFirebirdSQLSelectSyntax }

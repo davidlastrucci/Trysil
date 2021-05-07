@@ -154,7 +154,7 @@ begin
 
   result := T.Create;
   try
-    LPrimaryKey := FConnection.GetSequenceID(LTableMap.SequenceName);
+    LPrimaryKey := FConnection.GetSequenceID(LTableMap);
     LTableMap.PrimaryKey.Member.SetValue(result, LPrimaryKey);
 
     MapLazyColumns(LTableMap, nil, result);

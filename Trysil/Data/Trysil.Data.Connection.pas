@@ -57,7 +57,7 @@ type
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata); override;
 
-    function GetSequenceID(const ASequenceName: String): TTPrimaryKey; override;
+    function GetSequenceID(const ATableMap: TTTableMap): TTPrimaryKey; override;
   public
     constructor Create;
     destructor Destroy; override;
@@ -208,11 +208,11 @@ begin
 end;
 
 function TTDataGenericConnection.GetSequenceID(
-  const ASequenceName: String): TTPrimaryKey;
+  const ATableMap: TTTableMap): TTPrimaryKey;
 var
   LSyntax: TTDataSequenceSyntax;
 begin
-  LSyntax := FSyntaxClasses.Sequence.Create(Self, ASequenceName);
+  LSyntax := FSyntaxClasses.Sequence.Create(Self, ATableMap);
   try
     result := LSyntax.ID;
   finally

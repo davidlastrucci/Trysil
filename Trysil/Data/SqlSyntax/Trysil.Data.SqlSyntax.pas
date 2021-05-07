@@ -36,13 +36,13 @@ type
   TTDataSequenceSyntax = class abstract
   strict protected
     FConnection: TTDataConnection;
-    FSequenceName: String;
+    FTableMap: TTTableMap;
 
     function GetID: TTPrimaryKey; virtual;
     function GetSequenceSyntax: String; virtual; abstract;
   public
     constructor Create(
-      const AConnection: TTDataConnection; const ASequenceName: String);
+      const AConnection: TTDataConnection; const ATableMap: TTTableMap);
 
     property ID: TTPrimaryKey read GetID;
   end;
@@ -209,11 +209,11 @@ implementation
 { TTDataSequenceSyntax }
 
 constructor TTDataSequenceSyntax.Create(
-  const AConnection: TTDataConnection; const ASequenceName: String);
+  const AConnection: TTDataConnection; const ATableMap: TTTableMap);
 begin
   inherited Create;
   FConnection := AConnection;
-  FSequenceName := ASequenceName;
+  FTableMap := ATableMap;
 end;
 
 function TTDataSequenceSyntax.GetID: TTPrimaryKey;

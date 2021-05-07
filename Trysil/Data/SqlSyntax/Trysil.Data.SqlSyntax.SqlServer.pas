@@ -48,7 +48,8 @@ implementation
 
 function TTDataSqlServerSequenceSyntax.GetSequenceSyntax: String;
 begin
-  result := Format('SELECT NEXT VALUE FOR [%s] AS ID', [FSequenceName]);
+  result := Format(
+    'SELECT NEXT VALUE FOR [%s] AS ID', [FTableMap.SequenceName]);
 end;
 
 { TTDataSqlServerSelectSyntax }
