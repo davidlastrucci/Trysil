@@ -289,6 +289,7 @@ constructor TTDataSelectSyntax.Create(
 begin
   inherited Create(AConnection, AMapper, ATableMap, ATableMetadata);
   FFilter := AFilter;
+  FDataset := FConnection.CreateDataSet(GetSqlSyntax([]));
 end;
 
 destructor TTDataSelectSyntax.Destroy;
@@ -300,7 +301,6 @@ end;
 procedure TTDataSelectSyntax.AfterConstruction;
 begin
   inherited AfterConstruction;
-  FDataset := FConnection.CreateDataSet(GetSqlSyntax([]));
   FDataset.Open;
 end;
 

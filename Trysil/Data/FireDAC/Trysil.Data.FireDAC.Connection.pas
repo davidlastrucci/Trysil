@@ -93,6 +93,7 @@ type
     procedure RollbackTransaction; override;
 
     function CreateDataSet(const ASQL: String): TDataSet; override;
+
     function Execute(
       const ASQL: String;
       const AMapper: TTMapper;
@@ -225,9 +226,8 @@ begin
 
     LDataSet.ExecSQL;
     result := LDataSet.RowsAffected;
-  except
+  finally
     LDataSet.Free;
-    raise;
   end;
 end;
 
