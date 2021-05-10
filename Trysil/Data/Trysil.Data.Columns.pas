@@ -118,7 +118,7 @@ type
     class constructor ClassCreate;
     class destructor ClassDestroy;
   strict private
-    FDataColumnTypes: TDictionary<TClass, TClass>;
+    FColumnTypes: TDictionary<TClass, TClass>;
   public
     constructor Create;
     destructor Destroy; override;
@@ -318,18 +318,18 @@ end;
 constructor TTColumnFactory.Create;
 begin
   inherited Create;
-  FDataColumnTypes := TDictionary<TClass, TClass>.Create;
+  FColumnTypes := TDictionary<TClass, TClass>.Create;
 end;
 
 destructor TTColumnFactory.Destroy;
 begin
-  FDataColumnTypes.Free;
+  FColumnTypes.Free;
   inherited Destroy;
 end;
 
 procedure TTColumnFactory.RegisterColumnClass<T, C>;
 begin
-  FDataColumnTypes.Add(T, C);
+  FColumnTypes.Add(T, C);
 end;
 
 function TTColumnFactory.CreateColumn(
@@ -337,7 +337,7 @@ function TTColumnFactory.CreateColumn(
 var
   LClass: TClass;
 begin
-  if not FDataColumnTypes.TryGetValue(AField.ClassType, LClass) then
+  if not FColumnTypes.TryGetValue(AField.ClassType, LClass) then
     raise ETException.CreateFmt(SColumnTypeError, [AField.ClassName]);
   result := TTColumnClass(LClass).Create(AField, AColumnMap);
 end;

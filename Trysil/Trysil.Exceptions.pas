@@ -1,4 +1,4 @@
-(*
+﻿(*
 
   Trysil
   Copyright © David Lastrucci
@@ -18,17 +18,9 @@ uses
 
 type
 
-{ ETInvalidOperationException }
-
-  ETInvalidOperationException = class(EInvalidOpException);
-
 { ETException }
 
   ETException = class(Exception);
-
-{ ETDataTypeException }
-
-  ETDataTypeException = class(ETException);
 
 implementation
 

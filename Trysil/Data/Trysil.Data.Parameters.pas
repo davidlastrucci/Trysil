@@ -112,7 +112,7 @@ type
     class constructor ClassCreate;
     class destructor ClassDestroy;
   strict private
-    FDataParameterTypes: TDictionary<TFieldType, TClass>;
+    FParameterTypes: TDictionary<TFieldType, TClass>;
   public
     constructor Create;
     destructor Destroy; override;
@@ -316,7 +316,7 @@ end;
 
 procedure TTBlobParameter.SetValue(const AEntity: TObject);
 begin
-  raise ETException.Create(SBlobDataParameterValue);
+  raise ETException.Create(SBlobParameterValue);
 end;
 
 { TTParameterFactory }
@@ -335,19 +335,19 @@ end;
 constructor TTParameterFactory.Create;
 begin
   inherited Create;
-  FDataParameterTypes := TDictionary<TFieldType, TClass>.Create;
+  FParameterTypes := TDictionary<TFieldType, TClass>.Create;
 end;
 
 destructor TTParameterFactory.Destroy;
 begin
-  FDataParameterTypes.Free;
+  FParameterTypes.Free;
   inherited Destroy;
 end;
 
 procedure TTParameterFactory.RegisterParameterClass<C>(
   const AFieldType: TFieldType);
 begin
-  FDataParameterTypes.Add(AFieldType, C);
+  FParameterTypes.Add(AFieldType, C);
 end;
 
 function TTParameterFactory.CreateParameter(
@@ -358,7 +358,7 @@ function TTParameterFactory.CreateParameter(
 var
   LClass: TClass;
 begin
-  if not FDataParameterTypes.TryGetValue(AFieldType, LClass) then
+  if not FParameterTypes.TryGetValue(AFieldType, LClass) then
     raise ETException.CreateFmt(SParameterTypeError, [
       GetEnumName(TypeInfo(TFieldType), Ord(AFieldType))]);
   result := TTParameterClass(LClass).Create(

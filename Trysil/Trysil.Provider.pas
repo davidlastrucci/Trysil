@@ -213,12 +213,12 @@ end;
 function TTProvider.GetValue(
   const AReader: TTReader; const AColumnName: String): TTValue;
 var
-  LDataColumn: TTColumn;
+  LColumn: TTColumn;
 begin
     if Assigned(AReader) then
     begin
-      LDataColumn := AReader.ColumnByName(AColumnName);
-      result := LDataColumn.Value;
+      LColumn := AReader.ColumnByName(AColumnName);
+      result := LColumn.Value;
     end
     else
       result := 0;
@@ -230,14 +230,14 @@ procedure TTProvider.MapColumns(
   const AEntity: TObject);
 var
   LColumnMap: TTColumnMap;
-  LDataColumn: TTColumn;
+  LColumn: TTColumn;
 begin
   for LColumnMap in ATableMap.Columns do
   begin
     if not LColumnMap.Member.IsClass then
     begin
-      LDataColumn := AReader.ColumnByName(LColumnMap.Name);
-      LDataColumn.SetValue(AEntity);
+      LColumn := AReader.ColumnByName(LColumnMap.Name);
+      LColumn.SetValue(AEntity);
     end;
   end;
 end;
@@ -384,13 +384,13 @@ end;
 function TTProvider.GetPrimaryKey(
   const ATablemap: TTTableMap; const AReader: TTReader): TTPrimaryKey;
 var
-  LDataColumn: TTColumn;
+  LColumn: TTColumn;
   LResult: TTValue;
 begin
   if not Assigned(ATablemap.PrimaryKey) then
     raise ETException.Create(SNotDefinedPrimaryKey);
-  LDataColumn := AReader.ColumnByName(ATablemap.PrimaryKey.Name);
-  LResult := LDataColumn.Value;
+  LColumn := AReader.ColumnByName(ATablemap.PrimaryKey.Name);
+  LResult := LColumn.Value;
   if not LResult.IsType<TTPrimaryKey>() then
     raise ETException.Create(SNotValidPrimaryKeyType);
   result := LResult.AsType<TTPrimaryKey>();
