@@ -32,7 +32,7 @@ type
 
   TTSQLiteSelectSyntax = class(TTSelectSyntax)
   strict protected
-    function GetSqlSyntax(
+    function InternalGetSqlSyntax(
       const AWhereColumns: TArray<TTColumnMap>): String; override;
 
     function GetFilterTopSyntax: String; override;
@@ -58,7 +58,7 @@ end;
 
 { TTSQLiteSelectSyntax }
 
-function TTSQLiteSelectSyntax.GetSqlSyntax(
+function TTSQLiteSelectSyntax.InternalGetSqlSyntax(
   const AWhereColumns: TArray<TTColumnMap>): String;
 var
   LResult: TStringBuilder;

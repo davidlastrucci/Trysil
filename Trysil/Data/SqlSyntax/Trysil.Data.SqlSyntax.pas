@@ -82,7 +82,7 @@ type
     FTableMap: TTTableMap;
     FTableMetadata: TTTableMetadata;
 
-    function GetSqlSyntax(
+    function InternalGetSqlSyntax(
       const AWhereColumns: TArray<TTColumnMap>): String; virtual; abstract;
   public
     constructor Create(
@@ -104,7 +104,7 @@ type
 
     function GetColumns: String; virtual;
     function GetOrderBy: String; virtual;
-    function GetSqlSyntax(
+    function InternalGetSqlSyntax(
       const AWhereColumns: TArray<TTColumnMap>): String; override;
 
     function GetFilterTopSyntax: String; virtual; abstract;
@@ -142,11 +142,6 @@ type
 { TTCommandSyntax }
 
   TTCommandSyntax = class abstract(TTAbstractSyntax)
-  strict protected
-    procedure BeforeExecute(
-      const AEntity: TObject; const AEvent: TTEvent); virtual;
-    procedure AfterExecute(
-      const AEntity: TObject; const AEvent: TTEvent); virtual;
   public
     constructor Create(
       const AConnection: TTConnection;
@@ -154,10 +149,7 @@ type
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata);
 
-    procedure Execute(
-      const AEntity: TObject;
-      const AEvent: TTEvent;
-      const AWhereColumns: TArray<TTColumnMap>);
+    function GetSqlSyntax(const AWhereColumns: TArray<TTColumnMap>): String;
   end;
 
   TTCommandSyntaxClass = class of TTCommandSyntax;
@@ -168,7 +160,7 @@ type
   strict protected
     function GetColumns: String; virtual;
     function GetParameters: String; virtual;
-    function GetSqlSyntax(
+    function InternalGetSqlSyntax(
       const AWhereColumns: TArray<TTColumnMap>): String; override;
   end;
 
@@ -177,7 +169,7 @@ type
   TTUpdateSyntax = class(TTCommandSyntax)
   strict protected
     function GetColumns: String; virtual;
-    function GetSqlSyntax(
+    function InternalGetSqlSyntax(
       const AWhereColumns: TArray<TTColumnMap>): String; override;
   end;
 
@@ -185,9 +177,7 @@ type
 
   TTDeleteSyntax = class(TTCommandSyntax)
   strict protected
-    procedure BeforeExecute(
-      const AEntity: TObject; const AEvent: TTEvent); override;
-    function GetSqlSyntax(
+    function InternalGetSqlSyntax(
       const AWhereColumns: TArray<TTColumnMap>): String; override;
   end;
 
@@ -289,7 +279,7 @@ constructor TTSelectSyntax.Create(
 begin
   inherited Create(AConnection, AMapper, ATableMap, ATableMetadata);
   FFilter := AFilter;
-  FDataset := FConnection.CreateDataSet(GetSqlSyntax([]));
+  FDataset := FConnection.CreateDataSet(InternalGetSqlSyntax([]));
 end;
 
 destructor TTSelectSyntax.Destroy;
@@ -348,7 +338,7 @@ begin
   end;
 end;
 
-function TTSelectSyntax.GetSqlSyntax(
+function TTSelectSyntax.InternalGetSqlSyntax(
   const AWhereColumns: TArray<TTColumnMap>): String;
 var
   LResult: TStringBuilder;
@@ -399,55 +389,10 @@ begin
   inherited Create(AConnection, AMapper, ATableMap, ATableMetadata);
 end;
 
-procedure TTCommandSyntax.BeforeExecute(
-  const AEntity: TObject; const AEvent: TTEvent);
+function TTCommandSyntax.GetSqlSyntax(
+  const AWhereColumns: TArray<TTColumnMap>): String;
 begin
-  if Assigned(AEvent) then
-    AEvent.DoBefore;
-end;
-
-procedure TTCommandSyntax.AfterExecute(
-  const AEntity: TObject; const AEvent: TTEvent);
-begin
-  if Assigned(AEvent) then
-    AEvent.DoAfter;
-end;
-
-procedure TTCommandSyntax.Execute(
-  const AEntity: TObject;
-  const AEvent: TTEvent;
-  const AWhereColumns: TArray<TTColumnMap>);
-var
-  LLocalTransaction: Boolean;
-  LRowsAffected: Integer;
-begin
-  LLocalTransaction := not FConnection.InTransaction;
-  if LLocalTransaction then
-    FConnection.StartTransaction;
-  try
-    BeforeExecute(AEntity, AEvent);
-
-    LRowsAffected := FConnection.Execute(
-      GetSqlSyntax(AWhereColumns),
-      FMapper,
-      FTableMap,
-      FTableMetadata,
-      AEntity);
-
-    if LRowsAffected = 0 then
-      raise ETException.Create(SRecordChanged)
-    else if LRowsAffected > 1 then
-      raise ETException.Create(SSyntaxError);
-
-    AfterExecute(AEntity, AEvent);
-
-    if LLocalTransaction then
-      FConnection.CommitTransaction;
-  except
-    if LLocalTransaction then
-      FConnection.RollbackTransaction;
-    raise;
-  end;
+  result := InternalGetSqlSyntax(AWhereColumns);
 end;
 
 { TTInsertSyntax }
@@ -492,7 +437,7 @@ begin
   end;
 end;
 
-function TTInsertSyntax.GetSqlSyntax(
+function TTInsertSyntax.InternalGetSqlSyntax(
   const AWhereColumns: TArray<TTColumnMap>): String;
 var
   LResult: TStringBuilder;
@@ -541,7 +486,7 @@ begin
   end;
 end;
 
-function TTUpdateSyntax.GetSqlSyntax(
+function TTUpdateSyntax.InternalGetSqlSyntax(
   const AWhereColumns: TArray<TTColumnMap>): String;
 var
   LResult: TStringBuilder;
@@ -575,25 +520,7 @@ end;
 
 { TTDeleteSyntax }
 
-procedure TTDeleteSyntax.BeforeExecute(
-  const AEntity: TObject; const AEvent: TTEvent);
-var
-  LID: TTPrimaryKey;
-  LRelation: TTRelationMap;
-begin
-  inherited BeforeExecute(AEntity, AEvent);
-  LID := FTableMap.PrimaryKey.Member.GetValue(AEntity).AsType<TTPrimaryKey>();
-  for LRelation in FTableMap.Relations do
-    if LRelation.IsCascade then
-    begin
-      FConnection.Execute(Format('DELETE FROM %0:s WHERE %1:s = %1:d', [
-        FConnection.GetDatabaseObjectName(LRelation.TableName),
-        FConnection.GetDatabaseObjectName(LRelation.ColumnName),
-        LID]));
-    end;
-end;
-
-function TTDeleteSyntax.GetSqlSyntax(
+function TTDeleteSyntax.InternalGetSqlSyntax(
   const AWhereColumns: TArray<TTColumnMap>): String;
 var
   LResult: TStringBuilder;

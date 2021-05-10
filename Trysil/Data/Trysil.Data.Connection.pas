@@ -45,17 +45,17 @@ type
     function CreateInsertCommand(
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
-      const ATableMetadata: TTTableMetadata): TTInsertCommand; override;
+      const ATableMetadata: TTTableMetadata): TTAbstractCommand; override;
 
     function CreateUpdateCommand(
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
-      const ATableMetadata: TTTableMetadata): TTUpdateCommand; override;
+      const ATableMetadata: TTTableMetadata): TTAbstractCommand; override;
 
     function CreateDeleteCommand(
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
-      const ATableMetadata: TTTableMetadata): TTDeleteCommand; override;
+      const ATableMetadata: TTTableMetadata): TTAbstractCommand; override;
 
     procedure GetMetadata(
       const AMapper: TTMapper;
@@ -87,11 +87,21 @@ type
     destructor Destroy; override;
   end;
 
-{ TTGenericInsertCommand }
+{ TTGenericCommand }
 
-  TTGenericInsertCommand = class(TTInsertCommand)
-  strict private
+  TTGenericCommand = class(TTAbstractCommand)
+  strict protected
     FConnection: TTGenericConnection;
+
+    procedure BeforeExecute(
+      const AEntity: TObject; const AEvent: TTEvent); virtual;
+    procedure AfterExecute(
+      const AEntity: TObject; const AEvent: TTEvent); virtual;
+
+    procedure ExecuteCommand(
+      const ASQL: String;
+      const AEntity: TObject;
+      const AEvent: TTEvent);
   public
     constructor Create(
       const AConnection: TTGenericConnection;
@@ -99,41 +109,31 @@ type
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
       const AUpdateMode: TTUpdateMode);
+  end;
 
+{ TTGenericInsertCommand }
+
+  TTGenericInsertCommand = class(TTGenericCommand)
+  public
     procedure Execute(
       const AEntity: TObject; const AEvent: TTEvent); override;
 end;
 
 { TTGenericUpdateCommand }
 
-  TTGenericUpdateCommand = class(TTUpdateCommand)
-  strict private
-    FConnection: TTGenericConnection;
+  TTGenericUpdateCommand = class(TTGenericCommand)
   public
-    constructor Create(
-      const AConnection: TTGenericConnection;
-      const AMapper: TTMapper;
-      const ATableMap: TTTableMap;
-      const ATableMetadata: TTTableMetadata;
-      const AUpdateMode: TTUpdateMode);
-
     procedure Execute(
       const AEntity: TObject; const AEvent: TTEvent); override;
 end;
 
 { TTGenericDeleteCommand }
 
-  TTGenericDeleteCommand = class(TTDeleteCommand)
-  strict private
-    FConnection: TTGenericConnection;
+  TTGenericDeleteCommand = class(TTGenericCommand)
+  strict protected
+    procedure BeforeExecute(
+      const AEntity: TObject; const AEvent: TTEvent); override;
   public
-    constructor Create(
-      const AConnection: TTGenericConnection;
-      const AMapper: TTMapper;
-      const ATableMap: TTTableMap;
-      const ATableMetadata: TTTableMetadata;
-      const AUpdateMode: TTUpdateMode);
-
     procedure Execute(
       const AEntity: TObject; const AEvent: TTEvent); override;
 end;
@@ -167,7 +167,7 @@ end;
 function TTGenericConnection.CreateInsertCommand(
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
-  const ATableMetadata: TTTableMetadata): TTInsertCommand;
+  const ATableMetadata: TTTableMetadata): TTAbstractCommand;
 begin
   result := TTGenericInsertCommand.Create(
     Self, AMapper, ATableMap, ATableMetadata, FUpdateMode);
@@ -176,7 +176,7 @@ end;
 function TTGenericConnection.CreateUpdateCommand(
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
-  const ATableMetadata: TTTableMetadata): TTUpdateCommand;
+  const ATableMetadata: TTTableMetadata): TTAbstractCommand;
 begin
   result := TTGenericUpdateCommand.Create(
     Self, AMapper, ATableMap, ATableMetadata, FUpdateMode);
@@ -185,7 +185,7 @@ end;
 function TTGenericConnection.CreateDeleteCommand(
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
-  const ATableMetadata: TTTableMetadata): TTDeleteCommand;
+  const ATableMetadata: TTTableMetadata): TTAbstractCommand;
 begin
   result := TTGenericDeleteCommand.Create(
     Self, AMapper, ATableMap, ATableMetadata, FUpdateMode);
@@ -286,9 +286,9 @@ begin
   result := FSyntax.Dataset;
 end;
 
-{ TTGenericInsertCommand }
+{ TTGenericCommand }
 
-constructor TTGenericInsertCommand.Create(
+constructor TTGenericCommand.Create(
   const AConnection: TTGenericConnection;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
@@ -298,6 +298,59 @@ begin
   inherited Create(AMapper, ATableMap, ATableMetadata, AUpdateMode);
   FConnection := AConnection;
 end;
+
+procedure TTGenericCommand.BeforeExecute(
+  const AEntity: TObject; const AEvent: TTEvent);
+begin
+  if Assigned(AEvent) then
+    AEvent.DoBefore;
+end;
+
+procedure TTGenericCommand.AfterExecute(
+  const AEntity: TObject; const AEvent: TTEvent);
+begin
+  if Assigned(AEvent) then
+    AEvent.DoAfter;
+end;
+
+procedure TTGenericCommand.ExecuteCommand(
+  const ASQL: String;
+  const AEntity: TObject;
+  const AEvent: TTEvent);
+var
+  LLocalTransaction: Boolean;
+  LRowsAffected: Integer;
+begin
+  LLocalTransaction := not FConnection.InTransaction;
+  if LLocalTransaction then
+    FConnection.StartTransaction;
+  try
+    BeforeExecute(AEntity, AEvent);
+
+    LRowsAffected := FConnection.Execute(
+      ASQL,
+      FMapper,
+      FTableMap,
+      FTableMetadata,
+      AEntity);
+
+    if LRowsAffected = 0 then
+      raise ETException.Create(SRecordChanged)
+    else if LRowsAffected > 1 then
+      raise ETException.Create(SSyntaxError);
+
+    AfterExecute(AEntity, AEvent);
+
+    if LLocalTransaction then
+      FConnection.CommitTransaction;
+  except
+    if LLocalTransaction then
+      FConnection.RollbackTransaction;
+    raise;
+  end;
+end;
+
+{ TTGenericInsertCommand }
 
 procedure TTGenericInsertCommand.Execute(
   const AEntity: TObject; const AEvent: TTEvent);
@@ -307,24 +360,13 @@ begin
   LSyntax := FConnection.SyntaxClasses.Insert.Create(
     FConnection, FMapper, FTableMap, FTableMetadata);
   try
-    LSyntax.Execute(AEntity, AEvent, []);
+    ExecuteCommand(LSyntax.GetSqlSyntax([]), AEntity, AEvent);
   finally
     LSyntax.Free;
   end;
 end;
 
 { TTGenericUpdateCommand }
-
-constructor TTGenericUpdateCommand.Create(
-  const AConnection: TTGenericConnection;
-  const AMapper: TTMapper;
-  const ATableMap: TTTableMap;
-  const ATableMetadata: TTTableMetadata;
-  const AUpdateMode: TTUpdateMode);
-begin
-  inherited Create(AMapper, ATableMap, ATableMetadata, AUpdateMode);
-  FConnection := AConnection;
-end;
 
 procedure TTGenericUpdateCommand.Execute(
   const AEntity: TObject; const AEvent: TTEvent);
@@ -334,7 +376,7 @@ begin
   LSyntax := FConnection.SyntaxClasses.Update.Create(
     FConnection, FMapper, FTableMap, FTableMetadata);
   try
-    LSyntax.Execute(AEntity, AEvent, GetWhereColumns);
+    ExecuteCommand(LSyntax.GetSqlSyntax(GetWhereColumns), AEntity, AEvent);
   finally
     LSyntax.Free;
   end;
@@ -342,15 +384,22 @@ end;
 
 { TTGenericDeleteCommand }
 
-constructor TTGenericDeleteCommand.Create(
-  const AConnection: TTGenericConnection;
-  const AMapper: TTMapper;
-  const ATableMap: TTTableMap;
-  const ATableMetadata: TTTableMetadata;
-  const AUpdateMode: TTUpdateMode);
+procedure TTGenericDeleteCommand.BeforeExecute(
+  const AEntity: TObject; const AEvent: TTEvent);
+var
+  LID: TTPrimaryKey;
+  LRelation: TTRelationMap;
 begin
-  inherited Create(AMapper, ATableMap, ATableMetadata, AUpdateMode);
-  FConnection := AConnection;
+  inherited BeforeExecute(AEntity, AEvent);
+  LID := FTableMap.PrimaryKey.Member.GetValue(AEntity).AsType<TTPrimaryKey>();
+  for LRelation in FTableMap.Relations do
+    if LRelation.IsCascade then
+    begin
+      FConnection.Execute(Format('DELETE FROM %0:s WHERE %1:s = %1:d', [
+        FConnection.GetDatabaseObjectName(LRelation.TableName),
+        FConnection.GetDatabaseObjectName(LRelation.ColumnName),
+        LID]));
+    end;
 end;
 
 procedure TTGenericDeleteCommand.Execute(
@@ -361,7 +410,7 @@ begin
   LSyntax := FConnection.SyntaxClasses.Delete.Create(
     FConnection, FMapper, FTableMap, FTableMetadata);
   try
-    LSyntax.Execute(AEntity, AEvent, GetWhereColumns);
+    ExecuteCommand(LSyntax.GetSqlSyntax(GetWhereColumns), AEntity, AEvent);
   finally
     LSyntax.Free;
   end;

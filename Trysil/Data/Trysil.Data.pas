@@ -109,18 +109,6 @@ type
       const AEntity: TObject; const AEvent: TTEvent); virtual; abstract;
   end;
 
-{ TTInsertCommand }
-
-  TTInsertCommand = class abstract(TTAbstractCommand);
-
-{ TTUpdateCommand }
-
-  TTUpdateCommand = class abstract(TTAbstractCommand);
-
-{ TTDeleteCommand }
-
-  TTDeleteCommand = class abstract(TTAbstractCommand);
-
 { TTConnection }
 
   TTConnection = class abstract(TTMetadataProvider)
@@ -171,17 +159,17 @@ type
     function CreateInsertCommand(
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
-      const ATableMetadata: TTTableMetadata): TTInsertCommand; virtual; abstract;
+      const ATableMetadata: TTTableMetadata): TTAbstractCommand; virtual; abstract;
 
     function CreateUpdateCommand(
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
-      const ATableMetadata: TTTableMetadata): TTUpdateCommand; virtual; abstract;
+      const ATableMetadata: TTTableMetadata): TTAbstractCommand; virtual; abstract;
 
     function CreateDeleteCommand(
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
-      const ATableMetadata: TTTableMetadata): TTDeleteCommand; virtual; abstract;
+      const ATableMetadata: TTTableMetadata): TTAbstractCommand; virtual; abstract;
 
     property InTransaction: Boolean read GetInTransaction;
     property UpdateMode: TTUpdateMode read FUpdateMode write FUpdateMode;

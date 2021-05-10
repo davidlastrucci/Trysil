@@ -87,7 +87,7 @@ procedure TTResolver.Insert<T>(const AEntity: T);
 var
   LTableMap: TTTableMap;
   LTableMetadata: TTTableMetadata;
-  LCommand: TTInsertCommand;
+  LCommand: TTAbstractCommand;
   LEvent: TTEvent;
 begin
   LTableMap := FMapper.Load<T>();
@@ -115,7 +115,7 @@ procedure TTResolver.Update<T>(const AEntity: T);
 var
   LTableMap: TTTableMap;
   LTableMetadata: TTTableMetadata;
-  LCommand: TTUpdateCommand;
+  LCommand: TTAbstractCommand;
   LEvent: TTEvent;
 begin
   LTableMap := FMapper.Load<T>();
@@ -147,7 +147,7 @@ procedure TTResolver.Delete<T>(const AEntity: T);
 var
   LTableMap: TTTableMap;
   LTableMetadata: TTTableMetadata;
-  LCommand: TTDeleteCommand;
+  LCommand: TTAbstractCommand;
   LEvent: TTEvent;
 begin
   LTableMap := FMapper.Load<T>();
