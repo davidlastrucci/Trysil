@@ -72,8 +72,6 @@ type
     FWaitCursor: TFDGUIxWaitCursor;
     FConnection: TFDConnection;
 
-    function CreateDatasetParam(const AParam: TFDParam): TTParam;
-
     procedure SetDatasetParameters(
       const ADataSet: TFDQuery;
       const AMapper: TTMapper;
@@ -205,6 +203,17 @@ begin
     inherited Destroy;
 end;
 
+procedure TTFireDACConnection.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  FWaitCursor.Provider := 'Console';
+  FWaitCursor.ScreenCursor := TFDGUIxScreenCursor.gcrNone;
+
+  FConnection.ConnectionDefName := FConnectionName;
+  FConnection.LoginPrompt := False;
+  FConnection.Open;
+end;
+
 function TTFireDACConnection.Execute(
   const ASQL: String;
   const AMapper: TTMapper;
@@ -231,16 +240,6 @@ begin
   end;
 end;
 
-procedure TTFireDACConnection.AfterConstruction;
-begin
-  inherited AfterConstruction;
-  FWaitCursor.Provider := 'Console';
-  FWaitCursor.ScreenCursor := TFDGUIxScreenCursor.gcrNone;
-
-  FConnection.ConnectionDefName := FConnectionName;
-  FConnection.Open;
-end;
-
 procedure TTFireDACConnection.StartTransaction;
 begin
   if FConnection.InTransaction then
@@ -262,12 +261,6 @@ begin
   FConnection.Rollback;
 end;
 
-function TTFireDACConnection.CreateDatasetParam(
-  const AParam: TFDParam): TTParam;
-begin
-  result := TTFDParam.Create(AParam);
-end;
-
 function TTFireDACConnection.GetInTransaction: Boolean;
 begin
   result := FConnection.InTransaction;
@@ -281,7 +274,7 @@ procedure TTFireDACConnection.SetDatasetParameters(
   const AEntity: TObject);
 var
   LColumn: TTColumnMetadata;
-  LDatasetParam: TTParam;
+  LParam: TTParam;
   LParameter: TTParameter;
   LFireDACParam: TFDParam;
 begin
@@ -295,11 +288,11 @@ begin
       LFireDACParam.DataType := LColumn.DataType;
       LFireDACParam.Size := LColumn.DataSize;
 
-      LDatasetParam := CreateDatasetParam(LFireDACParam);
+      LParam := TTFDParam.Create(LFireDACParam);
       try
         LParameter := TTParameterFactory.Instance.CreateParameter(
           LColumn.DataType,
-          LDatasetParam,
+          LParam,
           AMapper,
           GetColumnMap(ATableMap, LColumn.ColumnName));
         try
@@ -308,7 +301,7 @@ begin
           LParameter.Free;
         end;
       finally
-        LDatasetParam.Free;
+        LParam.Free;
       end;
     end;
   end;
