@@ -22,14 +22,14 @@ uses
 
 type
 
-{ TTDataFireDACConnectionPool }
+{ TTFireDACConnectionPool }
 
-  TTDataFireDACConnectionPool = class
+  TTFireDACConnectionPool = class
   strict private
-    class var FInstance: TTDataFireDACConnectionPool;
+    class var FInstance: TTFireDACConnectionPool;
     class constructor ClassCreate;
     class destructor ClassDestroy;
-    class function GetInstance: TTDataFireDACConnectionPool; static;
+    class function GetInstance: TTFireDACConnectionPool; static;
   strict private
     FManager: TFDManager;
   public
@@ -41,52 +41,52 @@ type
     procedure RegisterConnection(
       const AName: String; const ADriver: String; const AParameters: TStrings);
 
-    class property Instance: TTDataFireDACConnectionPool read GetInstance;
+    class property Instance: TTFireDACConnectionPool read GetInstance;
   end;
 
 implementation
 
-{ TTDataFireDACConnectionPool }
+{ TTFireDACConnectionPool }
 
-class constructor TTDataFireDACConnectionPool.ClassCreate;
+class constructor TTFireDACConnectionPool.ClassCreate;
 begin
   FInstance := nil;
 end;
 
-class destructor TTDataFireDACConnectionPool.ClassDestroy;
+class destructor TTFireDACConnectionPool.ClassDestroy;
 begin
   if Assigned(FInstance) then
     FInstance.Free;
 end;
 
-class function TTDataFireDACConnectionPool.GetInstance:
-  TTDataFireDACConnectionPool;
+class function TTFireDACConnectionPool.GetInstance:
+  TTFireDACConnectionPool;
 begin
   if not Assigned(FInstance) then
-    FInstance := TTDataFireDACConnectionPool.Create;
+    FInstance := TTFireDACConnectionPool.Create;
   result := FInstance;
 end;
 
-constructor TTDataFireDACConnectionPool.Create;
+constructor TTFireDACConnectionPool.Create;
 begin
   inherited Create;
   FManager := TFDManager.Create(nil);
 end;
 
-destructor TTDataFireDACConnectionPool.Destroy;
+destructor TTFireDACConnectionPool.Destroy;
 begin
   FManager.Free;
   inherited Destroy;
 end;
 
-procedure TTDataFireDACConnectionPool.AfterConstruction;
+procedure TTFireDACConnectionPool.AfterConstruction;
 begin
   inherited AfterConstruction;
   FManager.WaitCursor := TFDGUIxScreenCursor.gcrNone;
   FManager.Open;
 end;
 
-procedure TTDataFireDACConnectionPool.RegisterConnection(
+procedure TTFireDACConnectionPool.RegisterConnection(
   const AName: String;
   const ADriver: String;
   const AParameters: TStrings);

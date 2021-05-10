@@ -68,7 +68,7 @@ type
     procedure SearchTextboxInvokeSearch(Sender: TObject);
   strict private
     FConfig: TConfig;
-    FConnection: TTDataConnection;
+    FConnection: TTConnection;
     FContext: TTContext;
     FMasterData: TTList<TTMasterData>;
     FMasterDataListView: TTMasterDataListView;
@@ -100,14 +100,14 @@ begin
   inherited Create(AOwner);
   FConfig := TConfig.Create;
   for LConnection in FConfig.Connections do
-    TTDataSqlServerConnection.RegisterConnection(
+    TTSqlServerConnection.RegisterConnection(
       LConnection.Name,
       LConnection.Server,
       LConnection.Username,
       LConnection.Password,
       LConnection.DatabaseName);
 
-  FConnection := TTDataSqlServerConnection.Create('Test');
+  FConnection := TTSqlServerConnection.Create('Test');
   FContext := TTContext.Create(FConnection);
 
   FMasterData := TTList<TTMasterData>.Create;

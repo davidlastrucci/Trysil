@@ -28,7 +28,7 @@ type
   strict private
     function GetScript: String;
   public
-    class procedure BuildDatabase(const AConnection: TTDataConnection);
+    class procedure BuildDatabase(const AConnection: TTConnection);
   end;
 
 implementation
@@ -45,7 +45,7 @@ begin
 end;
 
 class procedure TDatabaseBuilder.BuildDatabase(
-  const AConnection: TTDataConnection);
+  const AConnection: TTConnection);
 var
   LDatabaseBuilder: TDatabaseBuilder;
 begin

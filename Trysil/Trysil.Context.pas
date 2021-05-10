@@ -33,7 +33,7 @@ type
 
   TTContext = class
   strict private
-    FConnection: TTDataConnection;
+    FConnection: TTConnection;
     FMapper: TTMapper;
     FMetadata: TTMetadata;
     FProvider: TTProvider;
@@ -41,9 +41,9 @@ type
 
     function GetInTransaction: Boolean;
   public
-    constructor Create(const AConnection: TTDataConnection); overload;
+    constructor Create(const AConnection: TTConnection); overload;
     constructor Create(
-      const AConnection: TTDataConnection;
+      const AConnection: TTConnection;
       const AUseIdentityMap: Boolean); overload;
     destructor Destroy; override;
 
@@ -76,13 +76,13 @@ implementation
 
 { TTContext }
 
-constructor TTContext.Create(const AConnection: TTDataConnection);
+constructor TTContext.Create(const AConnection: TTConnection);
 begin
   Create(AConnection, True);
 end;
 
 constructor TTContext.Create(
-  const AConnection: TTDataConnection;
+  const AConnection: TTConnection;
   const AUseIdentityMap: Boolean);
 begin
   inherited Create;

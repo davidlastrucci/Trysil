@@ -32,7 +32,7 @@ type
 
   TTResolver = class
   strict private
-    FConnection: TTDataConnection;
+    FConnection: TTConnection;
     FContext: TObject;
     FMetadata: TTMetadata;
     FMapper: TTMapper;
@@ -41,7 +41,7 @@ type
     procedure CheckReadWrite(const ATableMap: TTTableMap);
   public
     constructor Create(
-      const AConnection: TTDataConnection;
+      const AConnection: TTConnection;
       const AContext: TObject;
       const AMetadata: TTMetadata;
       const AMapper: TTMapper);
@@ -56,7 +56,7 @@ implementation
 { TTResolver }
 
 constructor TTResolver.Create(
-  const AConnection: TTDataConnection;
+  const AConnection: TTConnection;
   const AContext: TObject;
   const AMetadata: TTMetadata;
   const AMapper: TTMapper);
@@ -87,7 +87,7 @@ procedure TTResolver.Insert<T>(const AEntity: T);
 var
   LTableMap: TTTableMap;
   LTableMetadata: TTTableMetadata;
-  LCommand: TTDataInsertCommand;
+  LCommand: TTInsertCommand;
   LEvent: TTEvent;
 begin
   LTableMap := FMapper.Load<T>();
@@ -115,7 +115,7 @@ procedure TTResolver.Update<T>(const AEntity: T);
 var
   LTableMap: TTTableMap;
   LTableMetadata: TTTableMetadata;
-  LCommand: TTDataUpdateCommand;
+  LCommand: TTUpdateCommand;
   LEvent: TTEvent;
 begin
   LTableMap := FMapper.Load<T>();
@@ -147,7 +147,7 @@ procedure TTResolver.Delete<T>(const AEntity: T);
 var
   LTableMap: TTTableMap;
   LTableMetadata: TTTableMetadata;
-  LCommand: TTDataDeleteCommand;
+  LCommand: TTDeleteCommand;
   LEvent: TTEvent;
 begin
   LTableMap := FMapper.Load<T>();

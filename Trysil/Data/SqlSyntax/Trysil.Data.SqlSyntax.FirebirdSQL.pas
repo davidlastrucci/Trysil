@@ -20,55 +20,55 @@ uses
 
 type
 
-{ TTDataFirebirdSQLSequenceSyntax }
+{ TTFirebirdSQLSequenceSyntax }
 
-  TTDataFirebirdSQLSequenceSyntax = class(TTDataSequenceSyntax)
+  TTFirebirdSQLSequenceSyntax = class(TTSequenceSyntax)
   strict protected
     function GetSequenceSyntax: String; override;
   end;
 
-{ TTDataFirebirdSQLSelectSyntax }
+{ TTFirebirdSQLSelectSyntax }
 
-  TTDataFirebirdSQLSelectSyntax = class(TTDataSelectSyntax)
+  TTFirebirdSQLSelectSyntax = class(TTSelectSyntax)
   strict protected
     function GetFilterTopSyntax: String; override;
   end;
 
-{ TTDataFirebirdSQLSyntaxClasses }
+{ TTFirebirdSQLSyntaxClasses }
 
-  TTDataFirebirdSQLSyntaxClasses = class(TTDataSyntaxClasses)
+  TTFirebirdSQLSyntaxClasses = class(TTSyntaxClasses)
   public
-    function Sequence: TTDataSequenceSyntaxClass; override;
-    function Select: TTDataSelectSyntaxClass; override;
+    function Sequence: TTSequenceSyntaxClass; override;
+    function Select: TTSelectSyntaxClass; override;
   end;
 
 implementation
 
-{ TTDataFirebirdSQLSequenceSyntax }
+{ TTFirebirdSQLSequenceSyntax }
 
-function TTDataFirebirdSQLSequenceSyntax.GetSequenceSyntax: String;
+function TTFirebirdSQLSequenceSyntax.GetSequenceSyntax: String;
 begin
   result := Format(
     'SELECT GEN_ID(%s, 1) ID FROM RDB$DATABASE', [FTableMap.SequenceName]);
 end;
 
-{ TTDataFirebirdSQLSelectSyntax }
+{ TTFirebirdSQLSelectSyntax }
 
-function TTDataFirebirdSQLSelectSyntax.GetFilterTopSyntax: String;
+function TTFirebirdSQLSelectSyntax.GetFilterTopSyntax: String;
 begin
   result := Format('FIRST %d', [FFilter.Top.MaxRecord]);
 end;
 
-{ TTDataFirebirdSQLSyntaxClasses }
+{ TTFirebirdSQLSyntaxClasses }
 
-function TTDataFirebirdSQLSyntaxClasses.Sequence: TTDataSequenceSyntaxClass;
+function TTFirebirdSQLSyntaxClasses.Sequence: TTSequenceSyntaxClass;
 begin
-  result := TTDataFirebirdSQLSequenceSyntax;
+  result := TTFirebirdSQLSequenceSyntax;
 end;
 
-function TTDataFirebirdSQLSyntaxClasses.Select: TTDataSelectSyntaxClass;
+function TTFirebirdSQLSyntaxClasses.Select: TTSelectSyntaxClass;
 begin
-  result := TTDataFirebirdSQLSelectSyntax;
+  result := TTFirebirdSQLSelectSyntax;
 end;
 
 end.

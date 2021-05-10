@@ -20,55 +20,55 @@ uses
 
 type
 
-{ TTDataSqlServerSequenceSyntax }
+{ TTSqlServerSequenceSyntax }
 
-  TTDataSqlServerSequenceSyntax = class(TTDataSequenceSyntax)
+  TTSqlServerSequenceSyntax = class(TTSequenceSyntax)
   strict protected
     function GetSequenceSyntax: String; override;
   end;
 
-{ TTDataSqlServerSelectSyntax }
+{ TTSqlServerSelectSyntax }
 
-  TTDataSqlServerSelectSyntax = class(TTDataSelectSyntax)
+  TTSqlServerSelectSyntax = class(TTSelectSyntax)
   strict protected
     function GetFilterTopSyntax: String; override;
   end;
 
-{ TTDataSqlServerSyntaxClasses }
+{ TTSqlServerSyntaxClasses }
 
-  TTDataSqlServerSyntaxClasses = class(TTDataSyntaxClasses)
+  TTSqlServerSyntaxClasses = class(TTSyntaxClasses)
   public
-    function Sequence: TTDataSequenceSyntaxClass; override;
-    function Select: TTDataSelectSyntaxClass; override;
+    function Sequence: TTSequenceSyntaxClass; override;
+    function Select: TTSelectSyntaxClass; override;
   end;
 
 implementation
 
-{ TTDataSqlServerSequenceSyntax }
+{ TTSqlServerSequenceSyntax }
 
-function TTDataSqlServerSequenceSyntax.GetSequenceSyntax: String;
+function TTSqlServerSequenceSyntax.GetSequenceSyntax: String;
 begin
   result := Format(
     'SELECT NEXT VALUE FOR [%s] AS ID', [FTableMap.SequenceName]);
 end;
 
-{ TTDataSqlServerSelectSyntax }
+{ TTSqlServerSelectSyntax }
 
-function TTDataSqlServerSelectSyntax.GetFilterTopSyntax: String;
+function TTSqlServerSelectSyntax.GetFilterTopSyntax: String;
 begin
   result := Format('TOP %d', [FFilter.Top.MaxRecord]);
 end;
 
-{ TTDataSqlServerSyntaxClasses }
+{ TTSqlServerSyntaxClasses }
 
-function TTDataSqlServerSyntaxClasses.Sequence: TTDataSequenceSyntaxClass;
+function TTSqlServerSyntaxClasses.Sequence: TTSequenceSyntaxClass;
 begin
-  result := TTDataSqlServerSequenceSyntax;
+  result := TTSqlServerSequenceSyntax;
 end;
 
-function TTDataSqlServerSyntaxClasses.Select: TTDataSelectSyntaxClass;
+function TTSqlServerSyntaxClasses.Select: TTSelectSyntaxClass;
 begin
-  result := TTDataSqlServerSelectSyntax;
+  result := TTSqlServerSelectSyntax;
 end;
 
 end.

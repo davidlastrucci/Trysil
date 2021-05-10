@@ -21,16 +21,16 @@ uses
 
 type
 
-{ TTDataSQLiteSequenceSyntax }
+{ TTSQLiteSequenceSyntax }
 
-  TTDataSQLiteSequenceSyntax = class(TTDataSequenceSyntax)
+  TTSQLiteSequenceSyntax = class(TTSequenceSyntax)
   strict protected
     function GetSequenceSyntax: String; override;
   end;
 
-{ TTDataSQLiteSelectSyntax }
+{ TTSQLiteSelectSyntax }
 
-  TTDataSQLiteSelectSyntax = class(TTDataSelectSyntax)
+  TTSQLiteSelectSyntax = class(TTSelectSyntax)
   strict protected
     function GetSqlSyntax(
       const AWhereColumns: TArray<TTColumnMap>): String; override;
@@ -38,27 +38,27 @@ type
     function GetFilterTopSyntax: String; override;
   end;
 
-{ TTDataSQLiteSyntaxClasses }
+{ TTSQLiteSyntaxClasses }
 
-  TTDataSQLiteSyntaxClasses = class(TTDataSyntaxClasses)
+  TTSQLiteSyntaxClasses = class(TTSyntaxClasses)
   public
-    function Sequence: TTDataSequenceSyntaxClass; override;
-    function Select: TTDataSelectSyntaxClass; override;
+    function Sequence: TTSequenceSyntaxClass; override;
+    function Select: TTSelectSyntaxClass; override;
   end;
 
 implementation
 
-{ TTDataSQLiteSequenceSyntax }
+{ TTSQLiteSequenceSyntax }
 
-function TTDataSQLiteSequenceSyntax.GetSequenceSyntax: String;
+function TTSQLiteSequenceSyntax.GetSequenceSyntax: String;
 begin
   result := Format(
     'SELECT MAX(ROWID) + 1 FROM %s', [FTableMap.Name]);
 end;
 
-{ TTDataSQLiteSelectSyntax }
+{ TTSQLiteSelectSyntax }
 
-function TTDataSQLiteSelectSyntax.GetSqlSyntax(
+function TTSQLiteSelectSyntax.GetSqlSyntax(
   const AWhereColumns: TArray<TTColumnMap>): String;
 var
   LResult: TStringBuilder;
@@ -81,21 +81,21 @@ begin
   end;
 end;
 
-function TTDataSQLiteSelectSyntax.GetFilterTopSyntax: String;
+function TTSQLiteSelectSyntax.GetFilterTopSyntax: String;
 begin
   result := Format('LIMIT %d', [FFilter.Top.MaxRecord]);
 end;
 
-{ TTDataSQLiteSyntaxClasses }
+{ TTSQLiteSyntaxClasses }
 
-function TTDataSQLiteSyntaxClasses.Sequence: TTDataSequenceSyntaxClass;
+function TTSQLiteSyntaxClasses.Sequence: TTSequenceSyntaxClass;
 begin
-  result := TTDataSQLiteSequenceSyntax;
+  result := TTSQLiteSequenceSyntax;
 end;
 
-function TTDataSQLiteSyntaxClasses.Select: TTDataSelectSyntaxClass;
+function TTSQLiteSyntaxClasses.Select: TTSelectSyntaxClass;
 begin
-  result := TTDataSQLiteSelectSyntax;
+  result := TTSQLiteSelectSyntax;
 end;
 
 end.

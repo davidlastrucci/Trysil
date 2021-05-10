@@ -35,7 +35,7 @@ type
 
   TTProvider = class
   strict private
-    FConnection: TTDataConnection;
+    FConnection: TTConnection;
     FContext: TObject;
     FMetadata: TTMetadata;
     FMapper: TTMapper;
@@ -44,17 +44,17 @@ type
     FLazyOwner: TObjectList<TObject>;
 
     function InternalCreateEntity<T: class, constructor>(
-      const ATableMap: TTTAbleMap; const AReader: TTDataReader): T;
+      const ATableMap: TTTAbleMap; const AReader: TTReader): T;
 
     function GetValue(
-      const AReader: TTDataReader; const AColumnName: String): TTValue;
+      const AReader: TTReader; const AColumnName: String): TTValue;
 
     procedure MapColumns(
       const ATableMap: TTTAbleMap;
-      const AReader: TTDataReader;
+      const AReader: TTReader;
       const AEntity: TObject);
     procedure MapLazyColumn(
-      const AReader: TTDataReader;
+      const AReader: TTReader;
       const AColumnName: String;
       const ADetailColumnName: String;
       const ARttiMember: TTRttiMember;
@@ -62,16 +62,16 @@ type
       const AIsDetail: Boolean);
     procedure MapLazyColumns(
       const ATableMap: TTTAbleMap;
-      const AReader: TTDataReader;
+      const AReader: TTReader;
       const AEntity: TObject);
     procedure MapLazyListColumns(
       const ATableMap: TTTAbleMap;
-      const AReader: TTDataReader;
+      const AReader: TTReader;
       const AEntity: TObject);
 
     procedure MapEntity(
       const ATableMap: TTTAbleMap;
-      const AReader: TTDataReader;
+      const AReader: TTReader;
       const AEntity: TObject);
 
     procedure SelectAndMapList(
@@ -81,14 +81,14 @@ type
     procedure GetAndMapObject(const AObject: TObject; const AID: TTPrimaryKey);
 
     function GetPrimaryKey(
-      const ATablemap: TTTableMap; const AReader: TTDataReader): TTPrimaryKey;
+      const ATablemap: TTTableMap; const AReader: TTReader): TTPrimaryKey;
     function GetWhere(
       const AColumnName: String; const AID: TTPrimaryKey): String; overload;
     function GetWhere(
       const ATablemap: TTTableMap; const AID: TTPrimaryKey): String; overload;
   public
     constructor Create(
-      const AConnection: TTDataConnection;
+      const AConnection: TTConnection;
       const AContext: TObject;
       const AMetadata: TTMetadata;
       const AMapper: TTMapper;
@@ -113,7 +113,7 @@ implementation
 { TTProvider }
 
 constructor TTProvider.Create(
-  const AConnection: TTDataConnection;
+  const AConnection: TTConnection;
   const AContext: TObject;
   const AMetadata: TTMetadata;
   const AMapper: TTMapper;
@@ -169,7 +169,7 @@ begin
 end;
 
 function TTProvider.InternalCreateEntity<T>(
-  const ATableMap: TTTAbleMap; const AReader: TTDataReader): T;
+  const ATableMap: TTTAbleMap; const AReader: TTReader): T;
 var
   LPrimaryKey: TTPrimaryKey;
 begin
@@ -211,9 +211,9 @@ begin
 end;
 
 function TTProvider.GetValue(
-  const AReader: TTDataReader; const AColumnName: String): TTValue;
+  const AReader: TTReader; const AColumnName: String): TTValue;
 var
-  LDataColumn: TTDataColumn;
+  LDataColumn: TTColumn;
 begin
     if Assigned(AReader) then
     begin
@@ -226,11 +226,11 @@ end;
 
 procedure TTProvider.MapColumns(
   const ATableMap: TTTAbleMap;
-  const AReader: TTDataReader;
+  const AReader: TTReader;
   const AEntity: TObject);
 var
   LColumnMap: TTColumnMap;
-  LDataColumn: TTDataColumn;
+  LDataColumn: TTColumn;
 begin
   for LColumnMap in ATableMap.Columns do
   begin
@@ -243,7 +243,7 @@ begin
 end;
 
 procedure TTProvider.MapLazyColumn(
-  const AReader: TTDataReader;
+  const AReader: TTReader;
   const AColumnName: String;
   const ADetailColumnName: String;
   const ARttiMember: TTRttiMember;
@@ -271,7 +271,7 @@ end;
 
 procedure TTProvider.MapLazyColumns(
   const ATableMap: TTTAbleMap;
-  const AReader: TTDataReader;
+  const AReader: TTReader;
   const AEntity: TObject);
 var
   LColumnMap: TTColumnMap;
@@ -288,7 +288,7 @@ end;
 
 procedure TTProvider.MapLazyListColumns(
   const ATableMap: TTTAbleMap;
-  const AReader: TTDataReader;
+  const AReader: TTReader;
   const AEntity: TObject);
 var
   LColumnMap: TTDetailColumnMap;
@@ -306,7 +306,7 @@ end;
 
 procedure TTProvider.MapEntity(
   const ATableMap: TTTAbleMap;
-  const AReader: TTDataReader;
+  const AReader: TTReader;
   const AEntity: TObject);
 begin
   MapColumns(ATableMap, AReader, AEntity);
@@ -323,7 +323,7 @@ var
   LTableMap: TTTableMap;
   LTableMetadata: TTTableMetadata;
   LFilter: TTFilter;
-  LReader: TTDataReader;
+  LReader: TTReader;
   LObject: TObject;
 begin
   LGenericList := TTRttiGenericList.Create(AObject);
@@ -361,7 +361,7 @@ var
   LTableMap: TTTableMap;
   LTableMetadata: TTTableMetadata;
   LFilter: TTFilter;
-  LReader: TTDataReader;
+  LReader: TTReader;
 begin
   LTableMap := FMapper.Load(AObject.ClassInfo);
   LTableMetadata := FMetadata.Load(AObject.ClassInfo);
@@ -382,9 +382,9 @@ begin
 end;
 
 function TTProvider.GetPrimaryKey(
-  const ATablemap: TTTableMap; const AReader: TTDataReader): TTPrimaryKey;
+  const ATablemap: TTTableMap; const AReader: TTReader): TTPrimaryKey;
 var
-  LDataColumn: TTDataColumn;
+  LDataColumn: TTColumn;
   LResult: TTValue;
 begin
   if not Assigned(ATablemap.PrimaryKey) then
@@ -415,7 +415,7 @@ procedure TTProvider.Select<T>(
 var
   LTableMap: TTTableMap;
   LTableMetadata: TTTableMetadata;
-  LReader: TTDataReader;
+  LReader: TTReader;
 begin
   LTableMap := FMapper.Load<T>();
   LTableMetadata := FMetadata.Load<T>();
@@ -438,7 +438,7 @@ var
   LTableMap: TTTableMap;
   LTableMetadata: TTTableMetadata;
   LFilter: TTFilter;
-  LReader: TTDataReader;
+  LReader: TTReader;
 begin
   result := default(T);
   LTableMap := FMapper.Load<T>();
@@ -459,7 +459,7 @@ var
   LTableMap: TTTableMap;
   LTableMetadata: TTTableMetadata;
   LFilter: TTFilter;
-  LReader: TTDataReader;
+  LReader: TTReader;
 begin
   LTableMap := FMapper.Load<T>();
   LTableMetadata := FMetadata.Load<T>();

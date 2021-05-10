@@ -19,7 +19,7 @@
 
   TDemo = class
   strict private
-    FConnection: TTDataConnection;
+    FConnection: TTConnection;
     FContext: TTContext;
     
     procedure Insert(const APersonalData: TPersonalData);
@@ -40,9 +40,9 @@
 constructor TDemo.Create;
 begin
   inherited Create;
-  TTDataSqlServerConnection.RegisterConnection(
+  TTSqlServerConnection.RegisterConnection(
     'Test', '127.0.0.1', 'DatabaseName');
-  FConnection := TTDataSqlServerConnection.Create('Test');
+  FConnection := TTSqlServerConnection.Create('Test');
   FContext := TTContext.Create(FConnection);
 end;
 

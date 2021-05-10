@@ -63,9 +63,9 @@ type
     procedure Clear; override;
   end;
 
-{ TTDataFireDACConnection }
+{ TTFireDACConnection }
 
-  TTDataFireDACConnection = class abstract(TTDataGenericConnection)
+  TTFireDACConnection = class abstract(TTGenericConnection)
   strict private
     FConnectionName: String;
 
@@ -187,9 +187,9 @@ begin
   FParam.AsGUID := AValue;
 end;
 
-{ TTDataFireDACConnection }
+{ TTFireDACConnection }
 
-constructor TTDataFireDACConnection.Create(const AConnectionName: String);
+constructor TTFireDACConnection.Create(const AConnectionName: String);
 begin
     inherited Create;
     FConnectionName := AConnectionName;
@@ -198,14 +198,14 @@ begin
     FConnection := TFDConnection.Create(nil);
 end;
 
-destructor TTDataFireDACConnection.Destroy;
+destructor TTFireDACConnection.Destroy;
 begin
     FConnection.Free;
     FWaitCursor.Free;
     inherited Destroy;
 end;
 
-function TTDataFireDACConnection.Execute(
+function TTFireDACConnection.Execute(
   const ASQL: String;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
@@ -231,7 +231,7 @@ begin
   end;
 end;
 
-procedure TTDataFireDACConnection.AfterConstruction;
+procedure TTFireDACConnection.AfterConstruction;
 begin
   inherited AfterConstruction;
   FWaitCursor.Provider := 'Console';
@@ -241,39 +241,39 @@ begin
   FConnection.Open;
 end;
 
-procedure TTDataFireDACConnection.StartTransaction;
+procedure TTFireDACConnection.StartTransaction;
 begin
   if FConnection.InTransaction then
     raise ETException.CreateFmt(SInTransaction, ['StartTransaction']);
   FConnection.StartTransaction;
 end;
 
-procedure TTDataFireDACConnection.CommitTransaction;
+procedure TTFireDACConnection.CommitTransaction;
 begin
   if not FConnection.InTransaction then
     raise ETException.CreateFmt(SNotInTransaction, ['CommitTransaction']);
   FConnection.Commit;
 end;
 
-procedure TTDataFireDACConnection.RollbackTransaction;
+procedure TTFireDACConnection.RollbackTransaction;
 begin
   if not FConnection.InTransaction then
     raise ETException.CreateFmt(SNotInTransaction, ['RollbackTransaction']);
   FConnection.Rollback;
 end;
 
-function TTDataFireDACConnection.CreateDatasetParam(
+function TTFireDACConnection.CreateDatasetParam(
   const AParam: TFDParam): TTDatasetParam;
 begin
   result := TTFDDatasetParam.Create(AParam);
 end;
 
-function TTDataFireDACConnection.GetInTransaction: Boolean;
+function TTFireDACConnection.GetInTransaction: Boolean;
 begin
   result := FConnection.InTransaction;
 end;
 
-procedure TTDataFireDACConnection.SetDatasetParameters(
+procedure TTFireDACConnection.SetDatasetParameters(
   const ADataSet: TFDQuery;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
@@ -282,7 +282,7 @@ procedure TTDataFireDACConnection.SetDatasetParameters(
 var
   LColumn: TTColumnMetadata;
   LDatasetParam: TTDatasetParam;
-  LParameter: TTDataParameter;
+  LParameter: TTParameter;
   LFireDACParam: TFDParam;
 begin
   for LColumn in ATableMetadata.Columns do
@@ -297,7 +297,7 @@ begin
 
       LDatasetParam := CreateDatasetParam(LFireDACParam);
       try
-        LParameter := TTDataParameterFactory.Instance.CreateParameter(
+        LParameter := TTParameterFactory.Instance.CreateParameter(
           LColumn.DataType,
           LDatasetParam,
           AMapper,
@@ -314,7 +314,7 @@ begin
   end;
 end;
 
-function TTDataFireDACConnection.CreateDataSet(const ASQL: String): TDataSet;
+function TTFireDACConnection.CreateDataSet(const ASQL: String): TDataSet;
 var
   LDataSet: TFDQuery;
 begin

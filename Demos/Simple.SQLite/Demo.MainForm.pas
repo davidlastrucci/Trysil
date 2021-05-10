@@ -69,7 +69,7 @@ type
     procedure SearchTextboxInvokeSearch(Sender: TObject);
   strict private
     FCreateDatabase: Boolean;
-    FConnection: TTDataConnection;
+    FConnection: TTConnection;
     FContext: TTContext;
     FMasterData: TTList<TTMasterData>;
     FMasterDataListView: TTMasterDataListView;
@@ -101,8 +101,8 @@ begin
   inherited Create(AOwner);
   FCreateDatabase := not TFile.Exists(DatabaseName);
 
-  TTDataSQLiteConnection.RegisterConnection('Test', DatabaseName);
-  FConnection := TTDataSQLiteConnection.Create('Test');
+  TTSQLiteConnection.RegisterConnection('Test', DatabaseName);
+  FConnection := TTSQLiteConnection.Create('Test');
   FContext := TTContext.Create(FConnection);
 
   FMasterData := TTList<TTMasterData>.Create;

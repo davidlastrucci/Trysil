@@ -26,9 +26,9 @@ uses
 
 type
 
-{ TTDataColumn }
+{ TTColumn }
 
-  TTDataColumn = class abstract
+  TTColumn = class abstract
   strict protected
     FField: TField;
     FColumnMap: TTColumnMap;
@@ -44,77 +44,77 @@ type
     property Value: TTValue read GetValue;
   end;
 
-  TTDataColumnClass = class of TTDataColumn;
+  TTColumnClass = class of TTColumn;
 
-{ TTDataStringColumn }
+{ TTStringColumn }
 
-  TTDataStringColumn = class(TTDataColumn)
+  TTStringColumn = class(TTColumn)
   strict protected
     function GetValue: TTValue; override;
     function GetNullableValue: TTValue; override;
   end;
 
-{ TTDataIntegerColumn }
+{ TTIntegerColumn }
 
-  TTDataIntegerColumn = class(TTDataColumn)
+  TTIntegerColumn = class(TTColumn)
   strict protected
     function GetValue: TTValue; override;
     function GetNullableValue: TTValue; override;
   end;
 
-{ TTDataLargeIntegerColumn }
+{ TTLargeIntegerColumn }
 
-  TTDataLargeIntegerColumn = class(TTDataColumn)
+  TTLargeIntegerColumn = class(TTColumn)
   strict protected
     function GetValue: TTValue; override;
     function GetNullableValue: TTValue; override;
   end;
 
-{ TTDataDoubleColumn }
+{ TTDoubleColumn }
 
-  TTDataDoubleColumn = class(TTDataColumn)
+  TTDoubleColumn = class(TTColumn)
   strict protected
     function GetValue: TTValue; override;
     function GetNullableValue: TTValue; override;
   end;
 
-{ TTDataBooleanColumn }
+{ TTBooleanColumn }
 
-  TTDataBooleanColumn = class(TTDataColumn)
+  TTBooleanColumn = class(TTColumn)
   strict protected
     function GetValue: TTValue; override;
     function GetNullableValue: TTValue; override;
   end;
 
-{ TTDataDateTimeColumn }
+{ TTDateTimeColumn }
 
-  TTDataDateTimeColumn = class(TTDataColumn)
+  TTDateTimeColumn = class(TTColumn)
   strict protected
     function GetValue: TTValue; override;
     function GetNullableValue: TTValue; override;
   end;
 
-{ TTDataGuidColumn }
+{ TTGuidColumn }
 
-  TTDataGuidColumn = class(TTDataColumn)
+  TTGuidColumn = class(TTColumn)
   strict protected
     function GetValue: TTValue; override;
     function GetNullableValue: TTValue; override;
   end;
 
-{ TTDataBlobColumn }
+{ TTBlobColumn }
 
-  TTDataBlobColumn = class(TTDataColumn)
+  TTBlobColumn = class(TTColumn)
   strict protected
     function GetValue: TTValue; override;
     function GetNullableValue: TTValue; override;
   end;
 
-{ TTDataColumnFactory }
+{ TTColumnFactory }
 
-  TTDataColumnFactory = class
+  TTColumnFactory = class
   strict private
-    class var FInstance: TTDataColumnFactory;
+    class var FInstance: TTColumnFactory;
     class constructor ClassCreate;
     class destructor ClassDestroy;
   strict private
@@ -123,26 +123,26 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    procedure RegisterColumnClass<T: TField; C: TTDataColumn>();
+    procedure RegisterColumnClass<T: TField; C: TTColumn>();
 
     function CreateColumn(
-      const AField: TField; const AColumnMap: TTColumnMap): TTDataColumn;
+      const AField: TField; const AColumnMap: TTColumnMap): TTColumn;
 
-    class property Instance: TTDataColumnFactory read FInstance;
+    class property Instance: TTColumnFactory read FInstance;
   end;
 
-{ TTDataColumnRegister }
+{ TTColumnRegister }
 
-  TTDataColumnRegister = class
+  TTColumnRegister = class
   public
     class procedure RegisterColumnClasses;
   end;
 
 implementation
 
-{ TTDataColumn }
+{ TTColumn }
 
-constructor TTDataColumn.Create(
+constructor TTColumn.Create(
   const AField: TField; const AColumnMap: TTColumnMap);
 begin
   inherited Create;
@@ -150,7 +150,7 @@ begin
   FColumnMap := AColumnMap;
 end;
 
-procedure TTDataColumn.SetValue(const AEntity: TObject);
+procedure TTColumn.SetValue(const AEntity: TObject);
 begin
   if FColumnMap.Member.IsNullable then
     FColumnMap.Member.SetValue(AEntity, GetNullableValue())
@@ -158,14 +158,14 @@ begin
     FColumnMap.Member.SetValue(AEntity, GetValue());
 end;
 
-{ TTDataStringColumn }
+{ TTStringColumn }
 
-function TTDataStringColumn.GetValue: TTValue;
+function TTStringColumn.GetValue: TTValue;
 begin
   result := TTValue.From<String>(FField.AsString);
 end;
 
-function TTDataStringColumn.GetNullableValue: TTValue;
+function TTStringColumn.GetNullableValue: TTValue;
 var
   LValue: TTNullable<String>;
 begin
@@ -176,14 +176,14 @@ begin
   result := TTValue.From<TTNullable<String>>(LValue);
 end;
 
-{ TTDataIntegerColumn }
+{ TTIntegerColumn }
 
-function TTDataIntegerColumn.GetValue: TTValue;
+function TTIntegerColumn.GetValue: TTValue;
 begin
   result := TTValue.From<Integer>(FField.AsInteger);
 end;
 
-function TTDataIntegerColumn.GetNullableValue: TTValue;
+function TTIntegerColumn.GetNullableValue: TTValue;
 var
   LValue: TTNullable<Integer>;
 begin
@@ -194,14 +194,14 @@ begin
   result := TTValue.From<TTNullable<Integer>>(LValue);
 end;
 
-{ TTDataLargeIntegerColumn }
+{ TTLargeIntegerColumn }
 
-function TTDataLargeIntegerColumn.GetValue: TTValue;
+function TTLargeIntegerColumn.GetValue: TTValue;
 begin
   result := TTValue.From<Int64>(FField.AsLargeInt);
 end;
 
-function TTDataLargeIntegerColumn.GetNullableValue: TTValue;
+function TTLargeIntegerColumn.GetNullableValue: TTValue;
 var
   LValue: TTNullable<Int64>;
 begin
@@ -212,14 +212,14 @@ begin
   result := TTValue.From<TTNullable<Int64>>(LValue);
 end;
 
-{ TTDataDoubleColumn }
+{ TTDoubleColumn }
 
-function TTDataDoubleColumn.GetValue: TTValue;
+function TTDoubleColumn.GetValue: TTValue;
 begin
   result := TTValue.From<Double>(FField.AsFloat);
 end;
 
-function TTDataDoubleColumn.GetNullableValue: TTValue;
+function TTDoubleColumn.GetNullableValue: TTValue;
 var
   LValue: TTNullable<Double>;
 begin
@@ -230,14 +230,14 @@ begin
   result := TTValue.From<TTNullable<Double>>(LValue);
 end;
 
-{ TTDataBooleanColumn }
+{ TTBooleanColumn }
 
-function TTDataBooleanColumn.GetValue: TTValue;
+function TTBooleanColumn.GetValue: TTValue;
 begin
   result := TTValue.From<Boolean>(FField.AsBoolean);
 end;
 
-function TTDataBooleanColumn.GetNullableValue: TTValue;
+function TTBooleanColumn.GetNullableValue: TTValue;
 var
   LValue: TTNullable<Boolean>;
 begin
@@ -248,14 +248,14 @@ begin
   result := TTValue.From<TTNullable<Boolean>>(LValue);
 end;
 
-{ TTDataDateTimeColumn }
+{ TTDateTimeColumn }
 
-function TTDataDateTimeColumn.GetValue: TTValue;
+function TTDateTimeColumn.GetValue: TTValue;
 begin
   result := TTValue.From<TDateTime>(FField.AsDateTime);
 end;
 
-function TTDataDateTimeColumn.GetNullableValue: TTValue;
+function TTDateTimeColumn.GetNullableValue: TTValue;
 var
   LValue: TTNullable<TDateTime>;
 begin
@@ -266,14 +266,14 @@ begin
   result := TTValue.From<TTNullable<TDateTime>>(LValue);
 end;
 
-{ TTDataGuidColumn }
+{ TTGuidColumn }
 
-function TTDataGuidColumn.GetValue: TTValue;
+function TTGuidColumn.GetValue: TTValue;
 begin
   result := TTValue.From<TGuid>(FField.AsGuid);
 end;
 
-function TTDataGuidColumn.GetNullableValue: TTValue;
+function TTGuidColumn.GetNullableValue: TTValue;
 var
   LValue: TTNullable<TGuid>;
 begin
@@ -284,14 +284,14 @@ begin
   result := TTValue.From<TTNullable<TGuid>>(LValue);
 end;
 
-{ TTDataBlobColumn }
+{ TTBlobColumn }
 
-function TTDataBlobColumn.GetValue: TTValue;
+function TTBlobColumn.GetValue: TTValue;
 begin
   result := TTValue.From<TBytes>(TBlobField(FField).AsBytes);
 end;
 
-function TTDataBlobColumn.GetNullableValue: TTValue;
+function TTBlobColumn.GetNullableValue: TTValue;
 var
   LValue: TTNullable<TBytes>;
 begin
@@ -302,87 +302,87 @@ begin
   result := TTValue.From<TTNullable<TBytes>>(LValue);
 end;
 
-{ TTDataColumnFactory }
+{ TTColumnFactory }
 
-class constructor TTDataColumnFactory.ClassCreate;
+class constructor TTColumnFactory.ClassCreate;
 begin
-  FInstance := TTDataColumnFactory.Create;
-  TTDataColumnRegister.RegisterColumnClasses;
+  FInstance := TTColumnFactory.Create;
+  TTColumnRegister.RegisterColumnClasses;
 end;
 
-class destructor TTDataColumnFactory.ClassDestroy;
+class destructor TTColumnFactory.ClassDestroy;
 begin
   FInstance.Free;
 end;
 
-constructor TTDataColumnFactory.Create;
+constructor TTColumnFactory.Create;
 begin
   inherited Create;
   FDataColumnTypes := TDictionary<TClass, TClass>.Create;
 end;
 
-destructor TTDataColumnFactory.Destroy;
+destructor TTColumnFactory.Destroy;
 begin
   FDataColumnTypes.Free;
   inherited Destroy;
 end;
 
-procedure TTDataColumnFactory.RegisterColumnClass<T, C>;
+procedure TTColumnFactory.RegisterColumnClass<T, C>;
 begin
   FDataColumnTypes.Add(T, C);
 end;
 
-function TTDataColumnFactory.CreateColumn(
-  const AField: TField; const AColumnMap: TTColumnMap): TTDataColumn;
+function TTColumnFactory.CreateColumn(
+  const AField: TField; const AColumnMap: TTColumnMap): TTColumn;
 var
   LClass: TClass;
 begin
   if not FDataColumnTypes.TryGetValue(AField.ClassType, LClass) then
     raise ETException.CreateFmt(SColumnTypeError, [AField.ClassName]);
-  result := TTDataColumnClass(LClass).Create(AField, AColumnMap);
+  result := TTColumnClass(LClass).Create(AField, AColumnMap);
 end;
 
-{ TTDataColumnRegister }
+{ TTColumnRegister }
 
-class procedure TTDataColumnRegister.RegisterColumnClasses;
+class procedure TTColumnRegister.RegisterColumnClasses;
 var
-  LInstance: TTDataColumnFactory;
+  LInstance: TTColumnFactory;
 begin
-  LInstance := TTDataColumnFactory.Instance;
+  LInstance := TTColumnFactory.Instance;
 
-  // TTDataStringColumn
-  LInstance.RegisterColumnClass<TStringField, TTDataStringColumn>();
-  LInstance.RegisterColumnClass<TWideStringField, TTDataStringColumn>();
-  LInstance.RegisterColumnClass<TMemoField, TTDataStringColumn>();
-  LInstance.RegisterColumnClass<TWideMemoField, TTDataStringColumn>();
+  // TTStringColumn
+  LInstance.RegisterColumnClass<TStringField, TTStringColumn>();
+  LInstance.RegisterColumnClass<TWideStringField, TTStringColumn>();
+  LInstance.RegisterColumnClass<TMemoField, TTStringColumn>();
+  LInstance.RegisterColumnClass<TWideMemoField, TTStringColumn>();
 
-  // TTDataIntegerColumn
-  LInstance.RegisterColumnClass<TSmallintField, TTDataIntegerColumn>();
-  LInstance.RegisterColumnClass<TIntegerField, TTDataIntegerColumn>();
+  // TTIntegerColumn
+  LInstance.RegisterColumnClass<TSmallintField, TTIntegerColumn>();
+  LInstance.RegisterColumnClass<TIntegerField, TTIntegerColumn>();
 
-  // TTDataLargeIntegerColumn
-  LInstance.RegisterColumnClass<TLargeintField, TTDataLargeIntegerColumn>();
+  // TTLargeIntegerColumn
+  LInstance.RegisterColumnClass<TLargeintField, TTLargeIntegerColumn>();
 
-  // TTDataDoubleColumn
-  LInstance.RegisterColumnClass<TFMTBCDField, TTDataDoubleColumn>();
-  LInstance.RegisterColumnClass<TBCDField, TTDataDoubleColumn>();
-  LInstance.RegisterColumnClass<TFloatField, TTDataDoubleColumn>();
-  LInstance.RegisterColumnClass<TSingleField, TTDataDoubleColumn>();
-  LInstance.RegisterColumnClass<TCurrencyField, TTDataDoubleColumn>();
+  // TTDoubleColumn
+  LInstance.RegisterColumnClass<TFMTBCDField, TTDoubleColumn>();
+  LInstance.RegisterColumnClass<TBCDField, TTDoubleColumn>();
+  LInstance.RegisterColumnClass<TFloatField, TTDoubleColumn>();
+  LInstance.RegisterColumnClass<TSingleField, TTDoubleColumn>();
+  LInstance.RegisterColumnClass<TCurrencyField, TTDoubleColumn>();
 
-  // TTDataBooleanColumn
-  LInstance.RegisterColumnClass<TBooleanField, TTDataBooleanColumn>();
+  // TTBooleanColumn
+  LInstance.RegisterColumnClass<TBooleanField, TTBooleanColumn>();
 
-  // TTDataDateTimeColumn
-  LInstance.RegisterColumnClass<TDateField, TTDataDateTimeColumn>();
-  LInstance.RegisterColumnClass<TDateTimeField, TTDataDateTimeColumn>();
-  LInstance.RegisterColumnClass<TSQLTimeStampField, TTDataDateTimeColumn>();
+  // TTDateTimeColumn
+  LInstance.RegisterColumnClass<TDateField, TTDateTimeColumn>();
+  LInstance.RegisterColumnClass<TDateTimeField, TTDateTimeColumn>();
+  LInstance.RegisterColumnClass<TSQLTimeStampField, TTDateTimeColumn>();
 
-  // TTDataGuidColumn
-  LInstance.RegisterColumnClass<TGuidField, TTDataGuidColumn>();
+  // TTGuidColumn
+  LInstance.RegisterColumnClass<TGuidField, TTGuidColumn>();
 
-  // TTDataBlobColumn
-  LInstance.RegisterColumnClass<TBlobField, TTDataBlobColumn>();
+  // TTBlobColumn
+  LInstance.RegisterColumnClass<TBlobField, TTBlobColumn>();
 end;
 
 end.

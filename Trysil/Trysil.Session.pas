@@ -49,7 +49,7 @@ type
 
   TTSession<T: class, constructor> = class
   strict private
-    FConnection: TTDataConnection;
+    FConnection: TTConnection;
     FProvider: TTProvider;
     FResolver: TTResolver;
     FOriginalEntities: TList<T>;
@@ -66,7 +66,7 @@ type
     procedure InternalApplyChanges;
   public
     constructor Create(
-      const AConnection: TTDataConnection;
+      const AConnection: TTConnection;
       const AProvider: TTProvider;
       const AResolver: TTResolver;
       const AList: TList<T>);
@@ -128,7 +128,7 @@ end;
 { TTSession<T> }
 
 constructor TTSession<T>.Create(
-  const AConnection: TTDataConnection;
+  const AConnection: TTConnection;
   const AProvider: TTProvider;
   const AResolver: TTResolver;
   const AList: TList<T>);

@@ -29,11 +29,11 @@ uses
 
 type
 
-{ TTDataSqlServerConnection }
+{ TTSqlServerConnection }
 
-  TTDataSqlServerConnection = class(TTDataFireDACConnection)
+  TTSqlServerConnection = class(TTFireDACConnection)
   strict protected
-    function CreateSyntaxClasses: TTDataSyntaxClasses; override;
+    function CreateSyntaxClasses: TTSyntaxClasses; override;
   public
     function GetDatabaseObjectName(
       const ADatabaseObjectName: String): String; override;
@@ -57,20 +57,20 @@ type
 
 implementation
 
-{ TTDataSqlServerConnection }
+{ TTSqlServerConnection }
 
-function TTDataSqlServerConnection.GetDatabaseObjectName(
+function TTSqlServerConnection.GetDatabaseObjectName(
   const ADatabaseObjectName: String): String;
 begin
    result := Format('[%s]', [ADatabaseObjectName]);
 end;
 
-function TTDataSqlServerConnection.CreateSyntaxClasses: TTDataSyntaxClasses;
+function TTSqlServerConnection.CreateSyntaxClasses: TTSyntaxClasses;
 begin
-  result := TTDataSqlServerSyntaxClasses.Create;
+  result := TTSqlServerSyntaxClasses.Create;
 end;
 
-class procedure TTDataSqlServerConnection.RegisterConnection(
+class procedure TTSqlServerConnection.RegisterConnection(
   const AName: String;
   const AServer: String;
   const ADatabaseName: String);
@@ -79,7 +79,7 @@ begin
     AName, AServer, String.Empty, String.Empty, ADatabaseName);
 end;
 
-class procedure TTDataSqlServerConnection.RegisterConnection(
+class procedure TTSqlServerConnection.RegisterConnection(
   const AName: String;
   const AServer: String;
   const AUsername: String;
@@ -105,10 +105,10 @@ begin
   end;
 end;
 
-class procedure TTDataSqlServerConnection.RegisterConnection(
+class procedure TTSqlServerConnection.RegisterConnection(
   const AName: String; const AParameters: TStrings);
 begin
-  TTDataFireDACConnectionPool.Instance.RegisterConnection(
+  TTFireDACConnectionPool.Instance.RegisterConnection(
     AName, 'MSSQL', AParameters);
 end;
 
