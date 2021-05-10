@@ -32,12 +32,12 @@ type
 
   TTParameter = class abstract
   strict protected
-    FDatasetParam: TTDatasetParam;
+    FParam: TTParam;
     FMapper: TTMapper;
     FColumnMap: TTColumnMap;
   public
     constructor Create(
-      const ADatasetParam: TTDatasetParam;
+      const AParam: TTParam;
       const AMapper: TTMapper;
       const AColumnMap: TTColumnMap);
 
@@ -122,7 +122,7 @@ type
 
     function CreateParameter(
       const AFieldType: TFieldType;
-      const ADatasetParam: TTDatasetParam;
+      const ADatasetParam: TTParam;
       const AMapper: TTMapper;
       const AColumnMap: TTColumnMap): TTParameter;
 
@@ -141,12 +141,12 @@ implementation
 { TTParameter }
 
 constructor TTParameter.Create(
-  const ADatasetParam: TTDatasetParam;
+  const AParam: TTParam;
   const AMapper: TTMapper;
   const AColumnMap: TTColumnMap);
 begin
   inherited Create;
-  FDatasetParam := ADatasetParam;
+  FParam := AParam;
   FMapper := AMapper;
   FColumnMap := AColumnMap;
 end;
@@ -163,12 +163,12 @@ begin
   begin
     LNullable := LValue.AsType<TTNullable<String>>();
     if LNullable.IsNull then
-      FDatasetParam.Clear()
+      FParam.Clear()
     else
-      FDatasetParam.AsString := LNullable;
+      FParam.AsString := LNullable;
   end
   else
-    FDatasetParam.AsString := LValue.AsType<String>();
+    FParam.AsString := LValue.AsType<String>();
 end;
 
 { TTIntegerParameter }
@@ -183,14 +183,14 @@ begin
   begin
     LNullable := LValue.AsType<TTNullable<Integer>>();
     if LNullable.IsNull then
-      FDatasetParam.Clear()
+      FParam.Clear()
     else
-      FDatasetParam.AsInteger := LNullable;
+      FParam.AsInteger := LNullable;
   end
   else if FColumnMap.Member.IsClass then
     SetValueFromObject(LValue.AsObject)
   else
-    FDatasetParam.AsInteger := LValue.AsType<Integer>();
+    FParam.AsInteger := LValue.AsType<Integer>();
 end;
 
 procedure TTIntegerParameter.SetValueFromObject(const AObject: TObject);
@@ -209,7 +209,7 @@ begin
       raise ETException.Create(SPrimaryKeyNotDefined);
     LValue := LTableMap.PrimaryKey.Member.GetValue(AObject);
   end;
-  FDatasetParam.AsInteger := LValue.AsType<Integer>();
+  FParam.AsInteger := LValue.AsType<Integer>();
 end;
 
 { TTLargeIntegerParameter }
@@ -224,12 +224,12 @@ begin
   begin
     LNullable := LValue.AsType<TTNullable<Int64>>();
     if LNullable.IsNull then
-      FDatasetParam.Clear()
+      FParam.Clear()
     else
-      FDatasetParam.AsLargeInt := LNullable;
+      FParam.AsLargeInt := LNullable;
   end
   else
-    FDatasetParam.AsLargeInt := LValue.AsType<Int64>();
+    FParam.AsLargeInt := LValue.AsType<Int64>();
 end;
 
 { TTDoubleParameter }
@@ -244,12 +244,12 @@ begin
   begin
     LNullable := LValue.AsType<TTNullable<Double>>();
     if LNullable.IsNull then
-      FDatasetParam.Clear()
+      FParam.Clear()
     else
-      FDatasetParam.AsDouble := LNullable;
+      FParam.AsDouble := LNullable;
   end
   else
-    FDatasetParam.AsDouble := LValue.AsType<Double>();
+    FParam.AsDouble := LValue.AsType<Double>();
 end;
 
 { TTBooleanParameter }
@@ -264,12 +264,12 @@ begin
   begin
     LNullable := LValue.AsType<TTNullable<Boolean>>();
     if LNullable.IsNull then
-      FDatasetParam.Clear()
+      FParam.Clear()
     else
-      FDatasetParam.AsBoolean := LNullable;
+      FParam.AsBoolean := LNullable;
   end
   else
-    FDatasetParam.AsBoolean := LValue.AsType<Boolean>();
+    FParam.AsBoolean := LValue.AsType<Boolean>();
 end;
 
 { TTDateTimeParameter }
@@ -284,12 +284,12 @@ begin
   begin
     LNullable := LValue.AsType<TTNullable<TDateTime>>();
     if LNullable.IsNull then
-      FDatasetParam.Clear()
+      FParam.Clear()
     else
-      FDatasetParam.AsDateTime := LNullable;
+      FParam.AsDateTime := LNullable;
   end
   else
-    FDatasetParam.AsDateTime := LValue.AsType<TDateTime>();
+    FParam.AsDateTime := LValue.AsType<TDateTime>();
 end;
 
 { TTGuidParameter }
@@ -304,12 +304,12 @@ begin
   begin
     LNullable := LValue.AsType<TTNullable<TGuid>>();
     if LNullable.IsNull then
-      FDatasetParam.Clear()
+      FParam.Clear()
     else
-      FDatasetParam.AsGuid := LNullable;
+      FParam.AsGuid := LNullable;
   end
   else
-    FDatasetParam.AsGuid := LValue.AsType<TGuid>();
+    FParam.AsGuid := LValue.AsType<TGuid>();
 end;
 
 { TTBlobParameter }
@@ -352,7 +352,7 @@ end;
 
 function TTParameterFactory.CreateParameter(
   const AFieldType: TFieldType;
-  const ADatasetParam: TTDatasetParam;
+  const ADatasetParam: TTParam;
   const AMapper: TTMapper;
   const AColumnMap: TTColumnMap): TTParameter;
 var

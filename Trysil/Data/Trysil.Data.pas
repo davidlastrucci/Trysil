@@ -29,9 +29,9 @@ uses
 
 type
 
-{ TTDatasetParam }
+{ TTParam }
 
-  TTDatasetParam = class abstract
+  TTParam = class abstract
   strict protected
     function GetAsString: String; virtual; abstract;
     procedure SetAsString(const Value: String); virtual; abstract;

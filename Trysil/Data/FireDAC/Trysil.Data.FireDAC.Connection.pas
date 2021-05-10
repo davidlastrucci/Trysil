@@ -37,9 +37,9 @@ uses
 
 type
 
-{ TTFDDatasetParam }
+{ TTFDParam }
 
-  TTFDDatasetParam = class(TTDatasetParam)
+  TTFDParam = class(TTParam)
   strict private
     FParam: TFDParam;
   strict protected
@@ -72,7 +72,7 @@ type
     FWaitCursor: TFDGUIxWaitCursor;
     FConnection: TFDConnection;
 
-    function CreateDatasetParam(const AParam: TFDParam): TTDatasetParam;
+    function CreateDatasetParam(const AParam: TFDParam): TTParam;
 
     procedure SetDatasetParameters(
       const ADataSet: TFDQuery;
@@ -104,85 +104,85 @@ type
 
 implementation
 
-{ TTFDDatasetParam }
+{ TTFDParam }
 
-constructor TTFDDatasetParam.Create(const AParam: TFDParam);
+constructor TTFDParam.Create(const AParam: TFDParam);
 begin
   inherited Create;
   FParam := AParam;
 end;
 
-procedure TTFDDatasetParam.Clear;
+procedure TTFDParam.Clear;
 begin
   FParam.Clear;
 end;
 
-function TTFDDatasetParam.GetAsString: String;
+function TTFDParam.GetAsString: String;
 begin
   result := FParam.AsString;
 end;
 
-procedure TTFDDatasetParam.SetAsString(const AValue: String);
+procedure TTFDParam.SetAsString(const AValue: String);
 begin
   FParam.AsString := AValue;
 end;
 
-function TTFDDatasetParam.GetAsInteger: Integer;
+function TTFDParam.GetAsInteger: Integer;
 begin
   result := FParam.AsInteger;
 end;
 
-procedure TTFDDatasetParam.SetAsInteger(const AValue: Integer);
+procedure TTFDParam.SetAsInteger(const AValue: Integer);
 begin
   FParam.AsInteger := AValue;
 end;
 
-function TTFDDatasetParam.GetAsLargeInt: Int64;
+function TTFDParam.GetAsLargeInt: Int64;
 begin
   result := FParam.AsLargeInt;
 end;
 
-procedure TTFDDatasetParam.SetAsLargeInt(const AValue: Int64);
+procedure TTFDParam.SetAsLargeInt(const AValue: Int64);
 begin
   FParam.AsLargeInt := AValue;
 end;
 
-function TTFDDatasetParam.GetAsDouble: Double;
+function TTFDParam.GetAsDouble: Double;
 begin
   result := FParam.AsFloat;
 end;
 
-procedure TTFDDatasetParam.SetAsDouble(const AValue: Double);
+procedure TTFDParam.SetAsDouble(const AValue: Double);
 begin
   FParam.AsFloat := AValue;
 end;
 
-function TTFDDatasetParam.GetAsBoolean: Boolean;
+function TTFDParam.GetAsBoolean: Boolean;
 begin
   result := FParam.AsBoolean;
 end;
 
-procedure TTFDDatasetParam.SetAsBoolean(const AValue: Boolean);
+procedure TTFDParam.SetAsBoolean(const AValue: Boolean);
 begin
   FParam.AsBoolean := AValue;
 end;
 
-function TTFDDatasetParam.GetAsDateTime: TDateTime;
+function TTFDParam.GetAsDateTime: TDateTime;
 begin
   result := FParam.AsDateTime;
 end;
 
-procedure TTFDDatasetParam.SetAsDateTime(const AValue: TDateTime);
+procedure TTFDParam.SetAsDateTime(const AValue: TDateTime);
 begin
   FParam.AsDateTime := AValue;
 end;
 
-function TTFDDatasetParam.GetAsGuid: TGUID;
+function TTFDParam.GetAsGuid: TGUID;
 begin
   result := FParam.AsGUID;
 end;
 
-procedure TTFDDatasetParam.SetAsGuid(const AValue: TGUID);
+procedure TTFDParam.SetAsGuid(const AValue: TGUID);
 begin
   FParam.AsGUID := AValue;
 end;
@@ -263,9 +263,9 @@ begin
 end;
 
 function TTFireDACConnection.CreateDatasetParam(
-  const AParam: TFDParam): TTDatasetParam;
+  const AParam: TFDParam): TTParam;
 begin
-  result := TTFDDatasetParam.Create(AParam);
+  result := TTFDParam.Create(AParam);
 end;
 
 function TTFireDACConnection.GetInTransaction: Boolean;
@@ -281,7 +281,7 @@ procedure TTFireDACConnection.SetDatasetParameters(
   const AEntity: TObject);
 var
   LColumn: TTColumnMetadata;
-  LDatasetParam: TTDatasetParam;
+  LDatasetParam: TTParam;
   LParameter: TTParameter;
   LFireDACParam: TFDParam;
 begin
