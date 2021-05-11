@@ -96,7 +96,7 @@ implementation
 class function TTPrimaryKeyHelper.SqlValue(const AValue: TTPrimaryKey): String;
 begin
   if IsQuoted then
-    result := QuotedStr(AValue.ToString())
+    result := AValue.ToString().QuotedString
   else
     result := AValue.ToString();
 end;
