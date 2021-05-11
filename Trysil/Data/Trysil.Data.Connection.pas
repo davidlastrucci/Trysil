@@ -395,10 +395,10 @@ begin
   for LRelation in FTableMap.Relations do
     if LRelation.IsCascade then
     begin
-      FConnection.Execute(Format('DELETE FROM %0:s WHERE %1:s = %1:d', [
+      FConnection.Execute(Format('DELETE FROM %0:s WHERE %1:s = %1:s', [
         FConnection.GetDatabaseObjectName(LRelation.TableName),
         FConnection.GetDatabaseObjectName(LRelation.ColumnName),
-        LID]));
+        TTPrimaryKeyHelper.SqlValue(LID)]));
     end;
 end;
 

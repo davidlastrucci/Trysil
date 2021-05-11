@@ -25,15 +25,16 @@ uses
   Trysil.Sync in '..\..\Trysil\Trysil.Sync.pas',
   Trysil.Types in '..\..\Trysil\Trysil.Types.pas',
   Trysil.Data in '..\..\Trysil\Data\Trysil.Data.pas',
+  Trysil.Data.Connection in '..\..\Trysil\Data\Trysil.Data.Connection.pas',
   Trysil.Data.Columns in '..\..\Trysil\Data\Trysil.Data.Columns.pas',
   Trysil.Data.Parameters in '..\..\Trysil\Data\Trysil.Data.Parameters.pas',
   Trysil.Data.SqlSyntax in '..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.pas',
   Trysil.Data.SqlSyntax.SqlServer in '..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.SqlServer.pas',
   Trysil.Data.SqlSyntax.FirebirdSQL in '..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.FirebirdSQL.pas',
   Trysil.Data.SqlSyntax.SQLite in '..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.SQLite.pas',
-  Trysil.Data.FireDAC in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.pas',
+  Trysil.Data.FireDAC.ConnectionPool in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.ConnectionPool.pas',
   Trysil.Data.FireDAC.Common in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.Common.pas',
-  Trysil.Data.FireDAC.Connection in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.Connection.pas',
+  Trysil.Data.FireDAC in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.pas',
   Trysil.Data.FireDAC.SqlServer in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.SqlServer.pas',
   Trysil.Data.FireDAC.FirebirdSQL in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.FirebirdSQL.pas',
   Trysil.Data.FireDAC.SQLite in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.SQLite.pas',
@@ -42,8 +43,7 @@ uses
   Demo.Model in 'Demo.Model.pas',
   Demo.MainForm in 'Demo.MainForm.pas' {MainForm},
   Demo.EditDialog in 'Demo.EditDialog.pas' {EditDialog},
-  Demo.ListView in 'Demo.ListView.pas',
-  Trysil.Data.Connection in '..\..\Trysil\Data\Trysil.Data.Connection.pas';
+  Demo.ListView in 'Demo.ListView.pas';
 
 {$R *.res}
 

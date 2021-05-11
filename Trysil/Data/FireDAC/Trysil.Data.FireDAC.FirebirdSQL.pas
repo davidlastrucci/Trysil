@@ -23,8 +23,8 @@ uses
   FireDAC.Stan.Param,
   FireDAC.Comp.Client,
 
+  Trysil.Data.FireDAC.ConnectionPool,
   Trysil.Data.FireDAC,
-  Trysil.Data.FireDAC.Connection,
   Trysil.Data.SqlSyntax,
   Trysil.Data.SqlSyntax.FirebirdSQL;
 

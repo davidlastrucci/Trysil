@@ -150,6 +150,7 @@
         <DCCReference Include="..\..\Trysil\Trysil.Types.pas"/>
         <DCCReference Include="..\..\Trysil\Data\Trysil.Data.pas"/>
         <DCCReference Include="..\..\Trysil\Data\Trysil.Data.Columns.pas"/>
+        <DCCReference Include="..\..\Trysil\Data\Trysil.Data.Connection.pas"/>
         <DCCReference Include="..\..\Trysil\Data\Trysil.Data.Parameters.pas"/>
         <DCCReference Include="..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.pas"/>
         <DCCReference Include="..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.SqlServer.pas"/>
@@ -157,7 +158,7 @@
         <DCCReference Include="..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.SQLite.pas"/>
         <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.pas"/>
         <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.Common.pas"/>
-        <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.Connection.pas"/>
+        <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.ConnectionPool.pas"/>
         <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.SqlServer.pas"/>
         <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.FirebirdSQL.pas"/>
         <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.SQLite.pas"/>
@@ -170,7 +171,6 @@
             <Form>EditDialog</Form>
         </DCCReference>
         <DCCReference Include="Demo.ListView.pas"/>
-        <DCCReference Include="..\..\Trysil\Data\Trysil.Data.Connection.pas"/>
         <DCCReference Include="Demo.DatabaseBuilder.pas">
             <Form>DatabaseBuilder</Form>
             <FormType>dfm</FormType>
