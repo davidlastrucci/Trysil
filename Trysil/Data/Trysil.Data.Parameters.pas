@@ -122,7 +122,7 @@ type
 
     function CreateParameter(
       const AFieldType: TFieldType;
-      const ADatasetParam: TTParam;
+      const AParam: TTParam;
       const AMapper: TTMapper;
       const AColumnMap: TTColumnMap): TTParameter;
 
@@ -352,7 +352,7 @@ end;
 
 function TTParameterFactory.CreateParameter(
   const AFieldType: TFieldType;
-  const ADatasetParam: TTParam;
+  const AParam: TTParam;
   const AMapper: TTMapper;
   const AColumnMap: TTColumnMap): TTParameter;
 var
@@ -362,7 +362,7 @@ begin
     raise ETException.CreateFmt(SParameterTypeError, [
       GetEnumName(TypeInfo(TFieldType), Ord(AFieldType))]);
   result := TTParameterClass(LClass).Create(
-    ADatasetParam, AMapper, AColumnMap);
+    AParam, AMapper, AColumnMap);
 end;
 
 { TTParameterRegister }

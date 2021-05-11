@@ -72,7 +72,7 @@ type
     FWaitCursor: TFDGUIxWaitCursor;
     FConnection: TFDConnection;
 
-    procedure SetDatasetParameters(
+    procedure SetParameters(
       const ADataSet: TFDQuery;
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
@@ -230,7 +230,7 @@ begin
 
     if Assigned(AMapper) and Assigned(ATableMap) and
       Assigned(ATableMetadata) and Assigned(AEntity) then
-      SetDatasetParameters(
+      SetParameters(
         LDataSet, AMapper, ATableMap, ATableMetadata, AEntity);
 
     LDataSet.ExecSQL;
@@ -266,7 +266,7 @@ begin
   result := FConnection.InTransaction;
 end;
 
-procedure TTFireDACConnection.SetDatasetParameters(
+procedure TTFireDACConnection.SetParameters(
   const ADataSet: TFDQuery;
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
