@@ -181,6 +181,18 @@ type
       const AWhereColumns: TArray<TTColumnMap>): String; override;
   end;
 
+{ TTDeleteCascadeSyntax }
+
+  TTDeleteCascadeSyntax = class(TTCommandSyntax)
+  strict protected
+    function InternalGetSqlSyntax(
+      const AWhereColumns: TArray<TTColumnMap>): String; override;
+  public
+    function GetSqlSyntax: String;
+  end;
+
+  TTDeleteCascadeSyntaxClass = class of TTDeleteCascadeSyntax;
+
 { TTSyntaxClasses }
 
   TTSyntaxClasses = class abstract
@@ -192,6 +204,7 @@ type
     function Insert: TTCommandSyntaxClass; virtual;
     function Update: TTCommandSyntaxClass; virtual;
     function Delete: TTCommandSyntaxClass; virtual;
+    function DeleteCascade: TTDeleteCascadeSyntaxClass; virtual;
   end;
 
 implementation
@@ -551,6 +564,19 @@ begin
   end;
 end;
 
+{ TTDeleteCascadeSyntax }
+
+function TTDeleteCascadeSyntax.GetSqlSyntax: String;
+begin
+  result := InternalGetSqlSyntax([]);
+end;
+
+function TTDeleteCascadeSyntax.InternalGetSqlSyntax(
+  const AWhereColumns: TArray<TTColumnMap>): String;
+begin
+  result := 'DELETE FROM %0:s WHERE %1:s = %1:s';
+end;
+
 { TTSyntaxClasses }
 
 function TTSyntaxClasses.SelectCount: TTSelectCountSyntaxClass;
@@ -576,6 +602,11 @@ end;
 function TTSyntaxClasses.Delete: TTCommandSyntaxClass;
 begin
   result := TTDeleteSyntax;
+end;
+
+function TTSyntaxClasses.DeleteCascade: TTDeleteCascadeSyntaxClass;
+begin
+  result := TTDeleteCascadeSyntax;
 end;
 
 end.

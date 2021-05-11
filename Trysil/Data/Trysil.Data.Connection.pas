@@ -388,18 +388,26 @@ procedure TTGenericDeleteCommand.BeforeExecute(
   const AEntity: TObject; const AEvent: TTEvent);
 var
   LID: TTPrimaryKey;
+  LSyntax: TTDeleteCascadeSyntax;
+  LSQL: String;
   LRelation: TTRelationMap;
 begin
   inherited BeforeExecute(AEntity, AEvent);
   LID := FTableMap.PrimaryKey.Member.GetValue(AEntity).AsType<TTPrimaryKey>();
-  for LRelation in FTableMap.Relations do
-    if LRelation.IsCascade then
-    begin
-      FConnection.Execute(Format('DELETE FROM %0:s WHERE %1:s = %1:s', [
-        FConnection.GetDatabaseObjectName(LRelation.TableName),
-        FConnection.GetDatabaseObjectName(LRelation.ColumnName),
-        TTPrimaryKeyHelper.SqlValue(LID)]));
-    end;
+  LSyntax := FConnection.SyntaxClasses.DeleteCascade.Create(nil, nil, nil, nil);
+  try
+    LSQL := LSyntax.GetSqlSyntax;
+    for LRelation in FTableMap.Relations do
+      if LRelation.IsCascade then
+      begin
+        FConnection.Execute(Format(LSQL, [
+          FConnection.GetDatabaseObjectName(LRelation.TableName),
+          FConnection.GetDatabaseObjectName(LRelation.ColumnName),
+          TTPrimaryKeyHelper.SqlValue(LID)]));
+      end;
+  finally
+    LSyntax.Free;
+  end;
 end;
 
 procedure TTGenericDeleteCommand.Execute(
