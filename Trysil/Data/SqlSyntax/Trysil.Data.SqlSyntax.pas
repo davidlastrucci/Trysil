@@ -188,6 +188,8 @@ type
     function InternalGetSqlSyntax(
       const AWhereColumns: TArray<TTColumnMap>): String; override;
   public
+    constructor Create;
+
     function GetSqlSyntax: String;
   end;
 
@@ -565,6 +567,11 @@ begin
 end;
 
 { TTDeleteCascadeSyntax }
+
+constructor TTDeleteCascadeSyntax.Create;
+begin
+  inherited Create(nil, nil, nil, nil);
+end;
 
 function TTDeleteCascadeSyntax.GetSqlSyntax: String;
 begin

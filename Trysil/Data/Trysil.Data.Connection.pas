@@ -394,7 +394,7 @@ var
 begin
   inherited BeforeExecute(AEntity, AEvent);
   LID := FTableMap.PrimaryKey.Member.GetValue(AEntity).AsType<TTPrimaryKey>();
-  LSyntax := FConnection.SyntaxClasses.DeleteCascade.Create(nil, nil, nil, nil);
+  LSyntax := FConnection.SyntaxClasses.DeleteCascade.Create;
   try
     LSQL := LSyntax.GetSqlSyntax;
     for LRelation in FTableMap.Relations do
