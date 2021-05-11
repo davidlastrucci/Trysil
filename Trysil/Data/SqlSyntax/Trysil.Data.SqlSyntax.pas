@@ -574,7 +574,7 @@ end;
 function TTDeleteCascadeSyntax.InternalGetSqlSyntax(
   const AWhereColumns: TArray<TTColumnMap>): String;
 begin
-  result := 'DELETE FROM %0:s WHERE %1:s = %1:s';
+  result := 'DELETE FROM %0:s WHERE %1:s = %2:s';
 end;
 
 { TTSyntaxClasses }
