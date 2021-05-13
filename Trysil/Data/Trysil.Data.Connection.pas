@@ -74,6 +74,7 @@ type
 
   TTGenericReader = class(TTReader)
   strict private
+    FConnection: TTGenericConnection;
     FSyntax: TTSelectSyntax;
   strict protected
     function GetDataset: TDataset; override;
@@ -214,16 +215,22 @@ procedure TTGenericConnection.GetMetadata(
   const ATableMetadata: TTTableMetadata);
 var
   LSyntax: TTMetadataSyntax;
+  LDataset: TDataset;
   LIndex: Integer;
 begin
   LSyntax := FSyntaxClasses.Metadata.Create(
     Self, AMapper, ATableMap, ATableMetadata);
   try
-    for LIndex := 0 to LSyntax.Dataset.FieldDefs.Count - 1 do
-      ATableMetadata.Columns.Add(
-        LSyntax.Dataset.FieldDefs[LIndex].Name,
-        LSyntax.Dataset.FieldDefs[LIndex].DataType,
-        LSyntax.Dataset.FieldDefs[LIndex].Size);
+    LDataset := CreateDataSet(LSyntax.SQL);
+    try
+      for LIndex := 0 to LDataset.FieldDefs.Count - 1 do
+        ATableMetadata.Columns.Add(
+          LDataset.FieldDefs[LIndex].Name,
+          LDataset.FieldDefs[LIndex].DataType,
+          LDataset.FieldDefs[LIndex].Size);
+    finally
+      LDataset.Free;
+    end;
   finally
     LSyntax.Free;
   end;
@@ -233,10 +240,17 @@ function TTGenericConnection.GetSequenceID(
   const ATableMap: TTTableMap): TTPrimaryKey;
 var
   LSyntax: TTSequenceSyntax;
+  LDataset: TDataset;
 begin
   LSyntax := FSyntaxClasses.Sequence.Create(Self, ATableMap);
   try
-    result := LSyntax.ID;
+    LDataset := CreateDataSet(LSyntax.SQL);
+    try
+      LDataset.Open;
+      result := LDataset.Fields[0].AsInteger;
+    finally
+      LDataset.Free;
+    end;
   finally
     LSyntax.Free;
   end;
@@ -250,12 +264,19 @@ function TTGenericConnection.SelectCount(
 var
   LID: TTPrimaryKey;
   LSyntax: TTSelectCountSyntax;
+  LDataset: TDataset;
 begin
   LID := ATableMap.PrimaryKey.Member.GetValue(AEntity).AsType<TTPrimaryKey>();
   LSyntax := FSyntaxClasses.SelectCount.Create(
     Self, ATableMap, ATableName, AColumnName, LID);
   try
-    result := LSyntax.Count;
+    LDataset := CreateDataSet(LSyntax.SQL);
+    try
+      LDataset.Open;
+      result := LDataset.Fields[0].AsInteger;
+    finally
+      LDataset.Free;
+    end;
   finally
     LSyntax.Free;
   end;
@@ -271,6 +292,7 @@ constructor TTGenericReader.Create(
   const AFilter: TTFilter);
 begin
   inherited Create(ATableMap);
+  FConnection := AConnection;
   FSyntax := AConnection.SyntaxClasses.Select.Create(
     AConnection, AMapper, ATableMap, ATableMetadata, AFilter);
 end;
@@ -283,7 +305,7 @@ end;
 
 function TTGenericReader.GetDataset: TDataset;
 begin
-  result := FSyntax.Dataset;
+  result := FConnection.CreateDataset(FSyntax.SQL);
 end;
 
 { TTGenericCommand }

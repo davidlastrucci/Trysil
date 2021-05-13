@@ -16,7 +16,6 @@ uses
   System.Classes,
   System.SysUtils,
   System.Generics.Collections,
-  Data.DB,
 
   Trysil.Consts,
   Trysil.Types,
@@ -34,17 +33,18 @@ type
 { TTSequenceSyntax }
 
   TTSequenceSyntax = class abstract
+  strict private
+    function GetSQL: String;
   strict protected
     FConnection: TTConnection;
     FTableMap: TTTableMap;
 
-    function GetID: TTPrimaryKey; virtual;
     function GetSequenceSyntax: String; virtual; abstract;
   public
     constructor Create(
       const AConnection: TTConnection; const ATableMap: TTTableMap);
 
-    property ID: TTPrimaryKey read GetID;
+    property SQL: String read GetSQL;
   end;
 
   TTSequenceSyntaxClass = class of TTSequenceSyntax;
@@ -59,7 +59,7 @@ type
     FColumnName: String;
     FID: TTPrimaryKey;
 
-    function GetCount: Integer; virtual;
+    function GetSQL: String; virtual;
   public
     constructor Create(
       const AConnection: TTConnection;
@@ -68,7 +68,7 @@ type
       const AColumnName: String;
       const AID: TTPrimaryKey);
 
-    property Count: Integer read GetCount;
+    property SQL: String read GetSQL;
   end;
 
   TTSelectCountSyntaxClass = class of TTSelectCountSyntax;
@@ -96,9 +96,7 @@ type
 
   TTSelectSyntax = class abstract(TTAbstractSyntax)
   strict private
-    FDataset: TDataSet;
-
-    function GetDataset: TDataset;
+    function GetSQL: String;
   strict protected
     FFilter: TTFilter;
 
@@ -115,11 +113,8 @@ type
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
       const AFilter: TTFilter);
-    destructor Destroy; override;
 
-    procedure AfterConstruction; override;
-
-    property Dataset: TDataset read GetDataset;
+    property SQL: String read GetSQL;
   end;
 
   TTSelectSyntaxClass = class of TTSelectSyntax;
@@ -221,17 +216,9 @@ begin
   FTableMap := ATableMap;
 end;
 
-function TTSequenceSyntax.GetID: TTPrimaryKey;
-var
-  LDataset: TDataSet;
+function TTSequenceSyntax.GetSQL: String;
 begin
-  LDataset := FConnection.CreateDataSet(GetSequenceSyntax);
-  try
-    LDataset.Open;
-    result := LDataset.Fields[0].AsInteger;
-  finally
-    LDataset.Free;
-  end;
+  result := GetSequenceSyntax;
 end;
 
 { TTSelectCountSyntax }
@@ -251,21 +238,12 @@ begin
   FID := AID;
 end;
 
-function TTSelectCountSyntax.GetCount: Integer;
-var
-  LDataset: TDataSet;
+function TTSelectCountSyntax.GetSQL: String;
 begin
-  LDataset := FConnection.CreateDataSet(
-    Format('SELECT COUNT(*) FROM %0:s WHERE %1:s = %2:d', [
-      FConnection.GetDatabaseObjectName(FTableName),
-      FConnection.GetDatabaseObjectName(FColumnName),
-      FID]));
-  try
-    LDataset.Open;
-    result := LDataset.Fields[0].AsInteger;
-  finally
-    LDataset.Free;
-  end;
+  result := Format('SELECT COUNT(*) FROM %0:s WHERE %1:s = %2:d', [
+    FConnection.GetDatabaseObjectName(FTableName),
+    FConnection.GetDatabaseObjectName(FColumnName),
+    FID]);
 end;
 
 { TTAbstractSyntax }
@@ -294,19 +272,6 @@ constructor TTSelectSyntax.Create(
 begin
   inherited Create(AConnection, AMapper, ATableMap, ATableMetadata);
   FFilter := AFilter;
-  FDataset := FConnection.CreateDataSet(InternalGetSqlSyntax([]));
-end;
-
-destructor TTSelectSyntax.Destroy;
-begin
-  FDataset.Free;
-  inherited;
-end;
-
-procedure TTSelectSyntax.AfterConstruction;
-begin
-  inherited AfterConstruction;
-  FDataset.Open;
 end;
 
 function TTSelectSyntax.GetColumns: String;
@@ -326,11 +291,6 @@ begin
   finally
     LResult.Free;
   end;
-end;
-
-function TTSelectSyntax.GetDataset: TDataset;
-begin
-  result := FDataset;
 end;
 
 function TTSelectSyntax.GetOrderBy: String;
@@ -374,6 +334,11 @@ begin
   finally
     LResult.Free;
   end;
+end;
+
+function TTSelectSyntax.GetSQL: String;
+begin
+  result := InternalGetSqlSyntax([]);
 end;
 
 { TTMetadataSyntax }
