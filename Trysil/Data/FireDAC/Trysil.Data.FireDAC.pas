@@ -79,6 +79,7 @@ type
       const ATableMetadata: TTTableMetadata;
       const AEntity: TObject);
   strict protected
+    function InternalCreateDataSet(const ASQL: String): TDataSet; override;
     function GetInTransaction: Boolean; override;
   public
     constructor Create(const AConnectionName: String);
@@ -89,8 +90,6 @@ type
     procedure StartTransaction; override;
     procedure CommitTransaction; override;
     procedure RollbackTransaction; override;
-
-    function CreateDataSet(const ASQL: String): TDataSet; override;
 
     function Execute(
       const ASQL: String;
@@ -307,7 +306,8 @@ begin
   end;
 end;
 
-function TTFireDACConnection.CreateDataSet(const ASQL: String): TDataSet;
+function TTFireDACConnection.InternalCreateDataSet(
+  const ASQL: String): TDataSet;
 var
   LDataSet: TFDQuery;
 begin

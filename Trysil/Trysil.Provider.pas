@@ -429,7 +429,7 @@ begin
       LReader.Next;
     end;
   finally
-      LReader.Free;
+    LReader.Free;
   end;
 end;
 

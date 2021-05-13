@@ -65,6 +65,7 @@ type
   strict private
     FTableMap: TTTableMap;
     FColumns: TObjectDictionary<String, TTColumn>;
+    FDataset: TDataset;
 
     function GetEof: Boolean;
     function GetIsEmpty: Boolean;
@@ -115,6 +116,8 @@ type
   strict protected
     FUpdateMode: TTUpdateMode;
 
+    function InternalCreateDataSet(
+      const ASQL: String): TDataSet; virtual; abstract;
     function GetInTransaction: Boolean; virtual; abstract;
     function SelectCount(
       const ATableMap: TTTableMap;
@@ -139,7 +142,7 @@ type
     procedure CheckRelations(
       const ATableMap: TTTableMap; const AEntity: TObject);
 
-    function CreateDataSet(const ASQL: String): TDataSet; virtual; abstract;
+    function CreateDataSet(const ASQL: String): TDataSet;
 
     function Execute(
       const ASQL: String;
@@ -184,26 +187,28 @@ begin
   inherited Create;
   FTableMap := ATableMap;
   FColumns := TObjectDictionary<String, TTColumn>.Create([doOwnsValues]);
+  FDataset := nil;
 end;
 
 destructor TTReader.Destroy;
 begin
+  if Assigned(FDataset) then
+    FDataset.Free;
   FColumns.Free;
   inherited Destroy;
 end;
 
 procedure TTReader.AfterConstruction;
 var
-  LDataset: TDataset;
   LColumnMap: TTColumnMap;
 begin
   inherited AfterConstruction;
-  LDataset := GetDataset;
+  FDataset := GetDataset;
   for LColumnMap in FTableMap.Columns do
     FColumns.Add(
       LColumnMap.Name,
       TTColumnFactory.Instance.CreateColumn(
-        LDataset.FieldByName(LColumnMap.Name), LColumnMap));
+        FDataset.FieldByName(LColumnMap.Name), LColumnMap));
 end;
 
 function TTReader.ColumnByName(const AColumnName: String): TTColumn;
@@ -214,17 +219,17 @@ end;
 
 function TTReader.GetEof: Boolean;
 begin
-  result := GetDataset.Eof;
+  result := FDataset.Eof;
 end;
 
 function TTReader.GetIsEmpty: Boolean;
 begin
-  result := GetDataset.IsEmpty;
+  result := FDataset.IsEmpty;
 end;
 
 procedure TTReader.Next;
 begin
-  GetDataset.Next;
+  FDataset.Next;
 end;
 
 { TTAbstractCommand }
@@ -261,6 +266,17 @@ constructor TTConnection.Create;
 begin
   inherited Create;
   FUpdateMode := TTUpdateMode.KeyAndVersionColumn;
+end;
+
+function TTConnection.CreateDataSet(const ASQL: String): TDataSet;
+begin
+  result := InternalCreateDataSet(ASQL);
+  try
+    result.Open;
+  except
+    result.Free;
+    raise;
+  end;
 end;
 
 procedure TTConnection.CheckRelations(
