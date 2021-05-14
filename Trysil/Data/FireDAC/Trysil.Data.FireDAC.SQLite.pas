@@ -34,6 +34,7 @@ type
   TTSQLiteConnection = class(TTFireDACConnection)
   strict protected
     function CreateSyntaxClasses: TTSyntaxClasses; override;
+    function GetDatabaseVersion: String; override;
   public
     class procedure RegisterConnection(
       const AName: String; const ADatabaseName: String); overload;
@@ -55,6 +56,11 @@ implementation
 function TTSQLiteConnection.CreateSyntaxClasses: TTSyntaxClasses;
 begin
   result := TTSQLiteSyntaxClasses.Create;
+end;
+
+function TTSQLiteConnection.GetDatabaseVersion: String;
+begin
+  result := Format('SQLite %s', [inherited GetDatabaseVersion]);
 end;
 
 class procedure TTSQLiteConnection.RegisterConnection(

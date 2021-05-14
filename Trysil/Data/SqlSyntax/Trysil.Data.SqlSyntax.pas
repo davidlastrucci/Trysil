@@ -190,6 +190,17 @@ type
 
   TTDeleteCascadeSyntaxClass = class of TTDeleteCascadeSyntax;
 
+{ TTVersionSyntax }
+
+  TTVersionSyntax = class
+  strict protected
+    function GetSQL: String; virtual; abstract;
+  public
+    property SQL: String read GetSQL;
+  end;
+
+  TTVersionSyntaxClass = class of TTVersionSyntax;
+
 { TTSyntaxClasses }
 
   TTSyntaxClasses = class abstract
@@ -202,6 +213,7 @@ type
     function Update: TTCommandSyntaxClass; virtual;
     function Delete: TTCommandSyntaxClass; virtual;
     function DeleteCascade: TTDeleteCascadeSyntaxClass; virtual;
+    function Version: TTVersionSyntaxClass; virtual; abstract;
   end;
 
 implementation

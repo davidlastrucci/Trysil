@@ -34,12 +34,20 @@ type
     function GetFilterTopSyntax: String; override;
   end;
 
+{ TTFirebirdSQLVersionSyntax }
+
+  TTFirebirdSQLVersionSyntax = class(TTVersionSyntax)
+  strict protected
+    function GetSQL: String; override;
+  end;
+
 { TTFirebirdSQLSyntaxClasses }
 
   TTFirebirdSQLSyntaxClasses = class(TTSyntaxClasses)
   public
     function Sequence: TTSequenceSyntaxClass; override;
     function Select: TTSelectSyntaxClass; override;
+    function Version: TTVersionSyntaxClass; override;
   end;
 
 implementation
@@ -59,6 +67,14 @@ begin
   result := Format('FIRST %d', [FFilter.Top.MaxRecord]);
 end;
 
+{ TTFirebirdSQLVersionSyntax }
+
+function TTFirebirdSQLVersionSyntax.GetSQL: String;
+begin
+  result := 'SELECT rdb$get_context(''SYSTEM'', ''ENGINE_VERSION'') ' +
+    'from rdb$database';
+end;
+
 { TTFirebirdSQLSyntaxClasses }
 
 function TTFirebirdSQLSyntaxClasses.Sequence: TTSequenceSyntaxClass;
@@ -69,6 +85,11 @@ end;
 function TTFirebirdSQLSyntaxClasses.Select: TTSelectSyntaxClass;
 begin
   result := TTFirebirdSQLSelectSyntax;
+end;
+
+function TTFirebirdSQLSyntaxClasses.Version: TTVersionSyntaxClass;
+begin
+  result := TTFirebirdSQLVersionSyntax;
 end;
 
 end.

@@ -38,12 +38,20 @@ type
     function GetFilterTopSyntax: String; override;
   end;
 
+{ TTSQLiteVersionSyntax }
+
+  TTSQLiteVersionSyntax = class(TTVersionSyntax)
+  strict protected
+    function GetSQL: String; override;
+  end;
+
 { TTSQLiteSyntaxClasses }
 
   TTSQLiteSyntaxClasses = class(TTSyntaxClasses)
   public
     function Sequence: TTSequenceSyntaxClass; override;
     function Select: TTSelectSyntaxClass; override;
+    function Version: TTVersionSyntaxClass; override;
   end;
 
 implementation
@@ -86,6 +94,13 @@ begin
   result := Format('LIMIT %d', [FFilter.Top.MaxRecord]);
 end;
 
+{ TTSQLiteVersionSyntax }
+
+function TTSQLiteVersionSyntax.GetSQL: String;
+begin
+  result := 'SELECT sqlite_version();';
+end;
+
 { TTSQLiteSyntaxClasses }
 
 function TTSQLiteSyntaxClasses.Sequence: TTSequenceSyntaxClass;
@@ -96,6 +111,11 @@ end;
 function TTSQLiteSyntaxClasses.Select: TTSelectSyntaxClass;
 begin
   result := TTSQLiteSelectSyntax;
+end;
+
+function TTSQLiteSyntaxClasses.Version: TTVersionSyntaxClass;
+begin
+  result := TTSQLiteVersionSyntax;
 end;
 
 end.

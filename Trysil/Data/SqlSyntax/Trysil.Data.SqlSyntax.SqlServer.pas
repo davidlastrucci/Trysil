@@ -34,12 +34,20 @@ type
     function GetFilterTopSyntax: String; override;
   end;
 
+{ TTSqlServerVersionSyntax }
+
+  TTSqlServerVersionSyntax = class(TTVersionSyntax)
+  strict protected
+    function GetSQL: String; override;
+  end;
+
 { TTSqlServerSyntaxClasses }
 
   TTSqlServerSyntaxClasses = class(TTSyntaxClasses)
   public
     function Sequence: TTSequenceSyntaxClass; override;
     function Select: TTSelectSyntaxClass; override;
+    function Version: TTVersionSyntaxClass; override;
   end;
 
 implementation
@@ -59,6 +67,13 @@ begin
   result := Format('TOP %d', [FFilter.Top.MaxRecord]);
 end;
 
+{ TTSqlServerVersionSyntax }
+
+function TTSqlServerVersionSyntax.GetSQL: String;
+begin
+  result := 'SELECT @@VERSION';
+end;
+
 { TTSqlServerSyntaxClasses }
 
 function TTSqlServerSyntaxClasses.Sequence: TTSequenceSyntaxClass;
@@ -69,6 +84,11 @@ end;
 function TTSqlServerSyntaxClasses.Select: TTSelectSyntaxClass;
 begin
   result := TTSqlServerSelectSyntax;
+end;
+
+function TTSqlServerSyntaxClasses.Version: TTVersionSyntaxClass;
+begin
+  result := TTSqlServerVersionSyntax;
 end;
 
 end.

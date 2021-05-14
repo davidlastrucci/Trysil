@@ -39,6 +39,7 @@ type
     FDriverLink: TFDPhysFBDriverLink;
   strict protected
     function CreateSyntaxClasses: TTSyntaxClasses; override;
+    function GetDatabaseVersion: String; override;
   public
     constructor Create(const AConnectionName: String);
     destructor Destroy; override;
@@ -100,6 +101,11 @@ end;
 function TTFirebirdSQLConnection.CreateSyntaxClasses: TTSyntaxClasses;
 begin
   result := TTFirebirdSQLSyntaxClasses.Create;
+end;
+
+function TTFirebirdSQLConnection.GetDatabaseVersion: String;
+begin
+  result := Format('FirebirdSQL %s', [inherited GetDatabaseVersion]);
 end;
 
 class procedure TTFirebirdSQLConnection.RegisterConnection(

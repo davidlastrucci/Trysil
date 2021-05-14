@@ -116,6 +116,7 @@ type
   strict protected
     FUpdateMode: TTUpdateMode;
 
+    function GetDatabaseVersion: String; virtual; abstract;
     function InternalCreateDataSet(
       const ASQL: String): TDataSet; virtual; abstract;
     function GetInTransaction: Boolean; virtual; abstract;
@@ -174,6 +175,7 @@ type
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata): TTAbstractCommand; virtual; abstract;
 
+    property DatabaseVersion: String read GetDatabaseVersion;
     property InTransaction: Boolean read GetInTransaction;
     property UpdateMode: TTUpdateMode read FUpdateMode write FUpdateMode;
   end;
