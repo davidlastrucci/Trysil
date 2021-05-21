@@ -387,6 +387,7 @@ begin
   LInstance.RegisterParameterClass<TTLargeIntegerParameter>(TFieldType.ftLargeint);
 
   // TTDoubleParameter
+  LInstance.RegisterParameterClass<TTDoubleParameter>(TFieldType.ftFMTBcd);
   LInstance.RegisterParameterClass<TTDoubleParameter>(TFieldType.ftBCD);
   LInstance.RegisterParameterClass<TTDoubleParameter>(TFieldType.ftFloat);
   LInstance.RegisterParameterClass<TTDoubleParameter>(TFieldType.ftSingle);
