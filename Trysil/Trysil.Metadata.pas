@@ -66,12 +66,14 @@ type
   TTTableMetadata = class
   strict private
     FTableName: String;
+    FPrimaryKey: String;
     FColumns: TTColumnsMetadata;
   public
-    constructor Create(const ATableName: String);
+    constructor Create(const ATableMap: TTTableMap);
     destructor Destroy; override;
 
     property TableName: String read FTableName;
+    property PrimaryKey: String read FPrimaryKey;
     property Columns: TTColumnsMetadata read FColumns;
   end;
 
@@ -136,8 +138,16 @@ procedure TTColumnsMetadata.Add(
   const AColumnName: String;
   const ADataType: TFieldType;
   const ADataSize: Integer);
+var
+  LColumnMetadata: TTColumnMetadata;
 begin
-  FColumns.Add(TTColumnMetadata.Create(AColumnName, ADataType, ADataSize));
+  LColumnMetadata := TTColumnMetadata.Create(AColumnName, ADataType, ADataSize);
+  try
+    FColumns.Add(LColumnMetadata);
+  except
+    LColumnMetadata.Free;
+    raise;
+  end;
 end;
 
 function TTColumnsMetadata.GetEnumerator: TTListEnumerator<TTColumnMetadata>;
@@ -147,10 +157,11 @@ end;
 
 { TTTableMetadata }
 
-constructor TTTableMetadata.Create(const ATableName: String);
+constructor TTTableMetadata.Create(const ATableMap: TTTableMap);
 begin
   inherited Create;
-  FTableName := ATableName;
+  FTableName := ATableMap.Name;
+  FPrimaryKey := ATableMap.PrimaryKey.Name;
   FColumns := TTColumnsMetadata.Create;
 end;
 
@@ -175,7 +186,7 @@ var
   LTableMap: TTTableMap;
 begin
   LTableMap := FMapper.Load(ATypeInfo);
-  result := TTTableMetadata.Create(LTableMap.Name);
+  result := TTTableMetadata.Create(LTableMap);
   try
     FMetadataProvider.GetMetadata(FMapper, LTableMap, result);
   except
