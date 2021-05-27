@@ -487,6 +487,7 @@ begin
   LReader := FConnection.CreateReader(
     FMapper, LTableMap, LTableMetadata, LFilter);
   try
+    if not LReader.IsEmpty then
       MapEntity(LTableMap, LReader, AEntity);
   finally
     LReader.Free;
