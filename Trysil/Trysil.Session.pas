@@ -28,7 +28,7 @@ type
 
 { TTClonedEntities<T> }
 
-  TTClonedEntities<T: class, constructor> = class
+  TTClonedEntities<T: class> = class
   strict private
     FProvider: TTProvider;
     FEntities: TObjectDictionary<T, T>;
@@ -47,7 +47,7 @@ type
 
 { TTSession<T> }
 
-  TTSession<T: class, constructor> = class
+  TTSession<T: class> = class
   strict private
     FConnection: TTConnection;
     FProvider: TTProvider;

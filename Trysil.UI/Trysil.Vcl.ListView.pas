@@ -55,7 +55,7 @@ type
 
 { TTListItem<T> }
 
-  TTListItem<T: class, constructor> = class(TListItem)
+  TTListItem<T: class> = class(TListItem)
   strict private
     FEntity: T;
 
@@ -152,12 +152,12 @@ type
 
 { TTListViewOnItemChanged<T> }
 
-  TTListViewOnItemChanged<T: class, constructor> = procedure(
+  TTListViewOnItemChanged<T: class> = procedure(
     const ASelected: T) of object;
 
 { TTListViewOnCompare<T>}
 
-  TTListViewOnCompare<T: class, constructor> = procedure(
+  TTListViewOnCompare<T: class> = procedure(
     const AColumnIndex: Integer;
     const ALeft: T;
     const ARight: T;
@@ -165,7 +165,7 @@ type
 
 { TTListView<T> }
 
-  TTListView<T: class, constructor> = class(TCustomListView)
+  TTListView<T: class> = class(TCustomListView)
   strict private
     FParent: TWinControl;
     FDefaultColumnOrder: Integer;

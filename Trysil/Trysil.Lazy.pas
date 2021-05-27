@@ -28,7 +28,7 @@ type
 
 { TTAbstractLazy<T> }
 
-  TTAbstractLazy<T: class, constructor> = class abstract
+  TTAbstractLazy<T: class> = class abstract
   strict private
     procedure SetID(const AID: TTPrimaryKey);
   strict protected
@@ -49,7 +49,7 @@ type
 
 { TTLazy<T> }
 
-  TTLazy<T: class, constructor> = class(TTAbstractLazy<T>)
+  TTLazy<T: class> = class(TTAbstractLazy<T>)
   strict private
     FEntity: T;
 
@@ -68,7 +68,7 @@ type
 
 { TTLazyList<T> }
 
-  TTLazyList<T: class, constructor> = class(TTAbstractLazy<T>)
+  TTLazyList<T: class> = class(TTAbstractLazy<T>)
   strict private
     FList: TTList<T>;
 

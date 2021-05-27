@@ -27,13 +27,13 @@ type
   strict private
     FContext: TTContext;
     FOldEntity: T;
-    FNewEntity: T;
+    FEntity: T;
 
     function GetOldEntity: T;
   strict protected
     property Context: TTContext read FContext;
     property OldEntity: T read GetOldEntity;
-    property NewEntity: T read FNewEntity;
+    property Entity: T read FEntity;
   public
     constructor Create(const AContext: TTContext; const AEntity: T);
     destructor Destroy; override;
@@ -48,7 +48,7 @@ begin
   inherited Create;
   FContext := AContext;
   FOldEntity := nil;
-  FNewEntity := AEntity;
+  FEntity := AEntity;
 end;
 
 destructor TTEvent<T>.Destroy;
@@ -62,7 +62,7 @@ function TTEvent<T>.GetOldEntity: T;
 begin
   if not Assigned(FOldEntity) then
   begin
-    FOldEntity := FContext.CloneEntity<T>(FNewEntity);
+    FOldEntity := FContext.CloneEntity<T>(FEntity);
     try
       FContext.Refresh<T>(FOldEntity);
     except

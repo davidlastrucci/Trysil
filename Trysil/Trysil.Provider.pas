@@ -43,7 +43,7 @@ type
     FIdentityMap: TTIdentityMap;
     FLazyOwner: TObjectList<TObject>;
 
-    function InternalCreateEntity<T: class, constructor>(
+    function InternalCreateEntity<T: class>(
       const ATableMap: TTTAbleMap; const AReader: TTReader): T;
 
     function GetValue(
@@ -95,15 +95,15 @@ type
       const AUseIdentityMap: Boolean);
     destructor Destroy; override;
 
-    function CreateEntity<T: class, constructor>(): T;
+    function CreateEntity<T: class>(): T;
     function CloneEntity<T: class>(const AEntity: T): T;
 
     function GetMetadata<T: class>(): TTTableMetadata;
 
-    procedure Select<T: class, constructor>(
+    procedure Select<T: class>(
       const AResult: TTList<T>; const AFilter: TTFilter);
 
-    function Get<T: class, constructor>(const AID: TTPrimaryKey): T;
+    function Get<T: class>(const AID: TTPrimaryKey): T;
 
     procedure Refresh<T: class>(const AEntity: T);
   end;
@@ -143,6 +143,7 @@ end;
 function TTProvider.CreateEntity<T>(): T;
 var
   LTableMap: TTTableMap;
+  LRttiEntity: TTRttiEntity<T>;
   LPrimaryKey: TTPrimaryKey;
   LColumnMap: TTColumnMap;
 begin
@@ -152,19 +153,24 @@ begin
   if LTableMap.SequenceName.IsEmpty then
     raise ETException.Create(SNotDefinedSequence);
 
-  result := T.Create;
+  LRttiEntity := TTRttiEntity<T>.Create;
   try
-    LPrimaryKey := FConnection.GetSequenceID(LTableMap);
-    LTableMap.PrimaryKey.Member.SetValue(result, LPrimaryKey);
+    result := LRttiEntity.CreateEntity;
+    try
+      LPrimaryKey := FConnection.GetSequenceID(LTableMap);
+      LTableMap.PrimaryKey.Member.SetValue(result, LPrimaryKey);
 
-    MapLazyColumns(LTableMap, nil, result);
-    MapLazyListColumns(LTableMap, nil, result);
+      MapLazyColumns(LTableMap, nil, result);
+      MapLazyListColumns(LTableMap, nil, result);
 
-    if Assigned(FIdentityMap) then
-      FIdentityMap.AddEntity<T>(LPrimaryKey, result);
-  except
-    result.Free;
-    raise;
+      if Assigned(FIdentityMap) then
+        FIdentityMap.AddEntity<T>(LPrimaryKey, result);
+    except
+      result.Free;
+      raise;
+    end;
+  finally
+    LRttiEntity.Free;
   end;
 end;
 
@@ -172,6 +178,7 @@ function TTProvider.InternalCreateEntity<T>(
   const ATableMap: TTTAbleMap; const AReader: TTReader): T;
 var
   LPrimaryKey: TTPrimaryKey;
+  LRttiEntity: TTRttiEntity<T>;
 begin
   LPrimaryKey := GetPrimaryKey(ATableMap, AReader);
   result := nil;
@@ -180,9 +187,14 @@ begin
 
   if not Assigned(result) then
   begin
-    result := T.Create;
-    if Assigned(FIdentityMap) then
-      FIdentityMap.AddEntity<T>(LPrimaryKey, result);
+    LRttiEntity := TTRttiEntity<T>.Create;
+    try
+      result := LRttiEntity.CreateEntity;
+      if Assigned(FIdentityMap) then
+        FIdentityMap.AddEntity<T>(LPrimaryKey, result);
+    finally
+      LRttiEntity.Free;
+    end;
   end;
 
   MapEntity(ATableMap, AReader, result);
