@@ -52,7 +52,7 @@ type
     procedure RollbackTransaction;
 
     function CreateEntity<T: class, constructor>(): T;
-    function CloneEntity<T: class, constructor>(const AEntity: T): T;
+    function CloneEntity<T: class>(const AEntity: T): T;
     function CreateSession<T: class, constructor>(
       const AList: TList<T>): TTSession<T>;
 

@@ -142,6 +142,21 @@ type
     property GenericTypeInfo: PTypeInfo read GetGenericTypeInfo;
   end;
 
+{ TTRttiEntity<T> }
+
+  TTRttiEntity<T: class> = class
+  strict private
+    FContext: TRttiContext;
+    FType: TRttiType;
+
+    function SearchDefaultConstructor: TRttiMethod;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    function CreateEntity: T;
+  end;
+
 implementation
 
 { TTValueHelper }
@@ -493,6 +508,53 @@ end;
 procedure TTRttiGenericList.Add(const AObject: TObject);
 begin
   FAdd.Invoke(FObject, [AObject]);
+end;
+
+{ TTRttiEntity<T> }
+
+constructor TTRttiEntity<T>.Create;
+begin
+  inherited Create;
+  FContext := TRttiContext.Create;
+  FType := FContext.GetType(TypeInfo(T));
+end;
+
+destructor TTRttiEntity<T>.Destroy;
+begin
+  FContext.Free;
+  inherited Destroy;
+end;
+
+function TTRttiEntity<T>.SearchDefaultConstructor: TRttiMethod;
+var
+  LMethod: TRttiMethod;
+  LParameters: TArray<TRttiParameter>;
+begin
+  for LMethod in FType.GetMethods do
+    if LMethod.IsConstructor then
+    begin
+      LParameters := LMethod.GetParameters;
+      if Length(LParameters) = 0 then
+      begin
+        result := LMethod;
+        Break;
+      end;
+    end;
+
+  if not Assigned(Result) then
+    raise ETException.CreateFmt(STypeHasNotDefaultConstructor, [FType.Name]);
+end;
+
+function TTRttiEntity<T>.CreateEntity: T;
+var
+  LConstructor: TRttiMethod;
+  LValue: TTValue;
+begin
+  LConstructor := SearchDefaultConstructor;
+  result := nil;
+  LValue := LConstructor.Invoke(FType.AsInstance.MetaclassType, []);
+  if LValue.IsType<T>() then
+    result := LValue.AsType<T>();
 end;
 
 end.

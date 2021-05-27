@@ -96,7 +96,7 @@ type
     destructor Destroy; override;
 
     function CreateEntity<T: class, constructor>(): T;
-    function CloneEntity<T: class, constructor>(const AEntity: T): T;
+    function CloneEntity<T: class>(const AEntity: T): T;
 
     function GetMetadata<T: class>(): TTTableMetadata;
 
@@ -191,22 +191,28 @@ end;
 function TTProvider.CloneEntity<T>(const AEntity: T): T;
 var
   LTableMap: TTTableMap;
+  LRttiEntity: TTRttiEntity<T>;
   LColumnMap: TTColumnMap;
   LDetailColumnMap: TTDetailColumnMap;
 begin
   LTableMap := FMapper.Load<T>();
-  result := T.Create;
+  LRttiEntity := TTRttiEntity<T>.Create;
   try
-    MapLazyColumns(LTableMap, nil, result);
-    MapLazyListColumns(LTableMap, nil, result);
-    for LColumnMap in LTableMap.Columns do
-      LColumnMap.Member.SetValue(result, LColumnMap.Member.GetValue(AEntity));
-    for LDetailColumnMap in LTableMap.DetailColums do
-      LDetailColumnMap.Member.SetValue(
-        result, LDetailColumnMap.Member.GetValue(AEntity));
-  except
-    result.Free;
-    raise;
+    result := LRttiEntity.CreateEntity;
+    try
+      MapLazyColumns(LTableMap, nil, result);
+      MapLazyListColumns(LTableMap, nil, result);
+      for LColumnMap in LTableMap.Columns do
+        LColumnMap.Member.SetValue(result, LColumnMap.Member.GetValue(AEntity));
+      for LDetailColumnMap in LTableMap.DetailColums do
+        LDetailColumnMap.Member.SetValue(
+          result, LDetailColumnMap.Member.GetValue(AEntity));
+    except
+      result.Free;
+      raise;
+    end;
+  finally
+    LRttiEntity.Free;
   end;
 end;
 

@@ -34,6 +34,7 @@ resourcestring
   SReadOnlyPrimaryKey = '"Primary Key" is not defined.';
   SPropertyIDNotFound = 'Property ID not found';
   STypeIsNotAList = 'Type %0:s is not a generic list.';
+  STypeHasNotDefaultConstructor = 'Type %0:s has not default constructor.';
   SClonedEntity = 'Can not insert a cloned entity: "%0:s".';
   SNotValidEntity = 'Not valid cloned entity: "%0:s".';
   SDeletedEntity = 'Cloned entity "%0:s" was deleted.';

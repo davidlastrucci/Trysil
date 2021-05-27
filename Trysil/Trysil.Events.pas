@@ -24,11 +24,19 @@ type
 { TTEvent<T> }
 
   TTEvent<T: class> = class(TTEvent)
-  strict protected
+  strict private
     FContext: TTContext;
-    FEntity: T;
+    FOldEntity: T;
+    FNewEntity: T;
+
+    function GetOldEntity: T;
+  strict protected
+    property Context: TTContext read FContext;
+    property OldEntity: T read GetOldEntity;
+    property NewEntity: T read FNewEntity;
   public
     constructor Create(const AContext: TTContext; const AEntity: T);
+    destructor Destroy; override;
   end;
 
 implementation
@@ -39,7 +47,32 @@ constructor TTEvent<T>.Create(const AContext: TTContext; const AEntity: T);
 begin
   inherited Create;
   FContext := AContext;
-  FEntity := AEntity;
+  FOldEntity := nil;
+  FNewEntity := AEntity;
+end;
+
+destructor TTEvent<T>.Destroy;
+begin
+  if Assigned(FOldEntity) then
+    FOldEntity.Free;
+  inherited Destroy;
+end;
+
+function TTEvent<T>.GetOldEntity: T;
+begin
+  if not Assigned(FOldEntity) then
+  begin
+    FOldEntity := FContext.CloneEntity<T>(FNewEntity);
+    try
+      FContext.Refresh<T>(FOldEntity);
+    except
+      FOldEntity.Free;
+      FOldEntity := nil;
+      raise;
+    end;
+  end;
+
+  result := FOldEntity;
 end;
 
 end.
