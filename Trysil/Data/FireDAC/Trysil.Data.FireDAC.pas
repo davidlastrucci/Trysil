@@ -189,18 +189,18 @@ end;
 
 constructor TTFireDACConnection.Create(const AConnectionName: String);
 begin
-    inherited Create;
-    FConnectionName := AConnectionName;
+  inherited Create;
+  FConnectionName := AConnectionName;
 
-    FWaitCursor := TFDGUIxWaitCursor.Create(nil);
-    FConnection := TFDConnection.Create(nil);
+  FWaitCursor := TFDGUIxWaitCursor.Create(nil);
+  FConnection := TFDConnection.Create(nil);
 end;
 
 destructor TTFireDACConnection.Destroy;
 begin
-    FConnection.Free;
-    FWaitCursor.Free;
-    inherited Destroy;
+  FConnection.Free;
+  FWaitCursor.Free;
+  inherited Destroy;
 end;
 
 procedure TTFireDACConnection.AfterConstruction;
