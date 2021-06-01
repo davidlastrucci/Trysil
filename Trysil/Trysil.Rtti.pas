@@ -149,12 +149,16 @@ type
     FContext: TRttiContext;
     FType: TRttiType;
 
-    function SearchDefaultConstructor: TRttiMethod;
+    function SearchConstructor: TRttiMethod; overload;
+    function InternalCreateEntity(): T; overload;
+
+    function SearchConstructor(const AContext: TObject): TRttiMethod; overload;
+    function InternalCreateEntity(const AContext: TObject): T; overload;
   public
     constructor Create;
     destructor Destroy; override;
 
-    function CreateEntity: T;
+    function CreateEntity(const AContext: TObject): T;
   end;
 
 implementation
@@ -525,7 +529,7 @@ begin
   inherited Destroy;
 end;
 
-function TTRttiEntity<T>.SearchDefaultConstructor: TRttiMethod;
+function TTRttiEntity<T>.SearchConstructor: TRttiMethod;
 var
   LMethod: TRttiMethod;
   LParameters: TArray<TRttiParameter>;
@@ -541,20 +545,61 @@ begin
       end;
     end;
 
-  if not Assigned(Result) then
-    raise ETException.CreateFmt(STypeHasNotDefaultConstructor, [FType.Name]);
+  if not Assigned(result) then
+    raise ETException.CreateFmt(STypeHasNotValidConstructor, [FType.Name]);
 end;
 
-function TTRttiEntity<T>.CreateEntity: T;
+function TTRttiEntity<T>.InternalCreateEntity: T;
 var
   LConstructor: TRttiMethod;
   LValue: TTValue;
 begin
-  LConstructor := SearchDefaultConstructor;
   result := nil;
+  LConstructor := SearchConstructor;
   LValue := LConstructor.Invoke(FType.AsInstance.MetaclassType, []);
   if LValue.IsType<T>() then
     result := LValue.AsType<T>();
+end;
+
+function TTRttiEntity<T>.SearchConstructor(
+  const AContext: TObject): TRttiMethod;
+var
+  LMethod: TRttiMethod;
+  LParameters: TArray<TRttiParameter>;
+begin
+  for LMethod in FType.GetMethods do
+    if LMethod.IsConstructor then
+    begin
+      LParameters := LMethod.GetParameters;
+      if (Length(LParameters) = 1) and
+        (LParameters[0].ParamType.Handle = AContext.ClassInfo) then
+      begin
+        result := LMethod;
+        Break;
+      end;
+    end;
+end;
+
+function TTRttiEntity<T>.InternalCreateEntity(const AContext: TObject): T;
+var
+  LConstructor: TRttiMethod;
+  LValue: TTValue;
+begin
+  result := nil;
+  LConstructor := SearchConstructor(AContext);
+  if Assigned(LConstructor) then
+  begin
+    LValue := LConstructor.Invoke(FType.AsInstance.MetaclassType, [AContext]);
+    if LValue.IsType<T>() then
+      result := LValue.AsType<T>();
+  end;
+end;
+
+function TTRttiEntity<T>.CreateEntity(const AContext: TObject): T;
+begin
+  result := InternalCreateEntity(AContext);
+  if not Assigned(result) then
+    result := InternalCreateEntity;
 end;
 
 end.

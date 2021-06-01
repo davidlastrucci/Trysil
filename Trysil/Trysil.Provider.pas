@@ -155,7 +155,7 @@ begin
 
   LRttiEntity := TTRttiEntity<T>.Create;
   try
-    result := LRttiEntity.CreateEntity;
+    result := LRttiEntity.CreateEntity(FContext);
     try
       LPrimaryKey := FConnection.GetSequenceID(LTableMap);
       LTableMap.PrimaryKey.Member.SetValue(result, LPrimaryKey);
@@ -189,7 +189,7 @@ begin
   begin
     LRttiEntity := TTRttiEntity<T>.Create;
     try
-      result := LRttiEntity.CreateEntity;
+      result := LRttiEntity.CreateEntity(FContext);
       if Assigned(FIdentityMap) then
         FIdentityMap.AddEntity<T>(LPrimaryKey, result);
     finally
@@ -210,7 +210,7 @@ begin
   LTableMap := FMapper.Load<T>();
   LRttiEntity := TTRttiEntity<T>.Create;
   try
-    result := LRttiEntity.CreateEntity;
+    result := LRttiEntity.CreateEntity(FContext);
     try
       MapLazyColumns(LTableMap, nil, result);
       MapLazyListColumns(LTableMap, nil, result);
