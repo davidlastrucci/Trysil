@@ -567,6 +567,7 @@ var
   LMethod: TRttiMethod;
   LParameters: TArray<TRttiParameter>;
 begin
+  result := nil;
   for LMethod in FType.GetMethods do
     if LMethod.IsConstructor then
     begin
