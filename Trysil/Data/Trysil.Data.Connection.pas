@@ -199,7 +199,7 @@ var
 begin
   result := nil;
   for LColumn in ATableMap.Columns do
-    if LColumn.Name.Equals(AColumnName) then
+    if String.Compare(LColumn.Name, AColumnName, True) = 0 then
     begin
       result := LColumn;
       Break;
