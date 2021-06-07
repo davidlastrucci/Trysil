@@ -120,11 +120,11 @@ type
     function InternalCreateDataSet(
       const ASQL: String): TDataSet; virtual; abstract;
     function GetInTransaction: Boolean; virtual; abstract;
-    function SelectCount(
+    function CheckExists(
       const ATableMap: TTTableMap;
       const ATableName: String;
       const AColumnName: String;
-      const AEntity: TObject): Integer; virtual; abstract;
+      const AEntity: TObject): Boolean; virtual; abstract;
   public
     constructor Create;
 
@@ -288,8 +288,8 @@ var
 begin
   for LRelation in ATableMap.Relations do
     if not LRelation.IsCascade then
-      if SelectCount(
-        ATableMap, LRelation.TableName, LRelation.ColumnName, AEntity) > 0 then
+      if CheckExists(
+        ATableMap, LRelation.TableName, LRelation.ColumnName, AEntity) then
         raise ETException.CreateFmt(SRelationError, [AEntity.ToString()]);
 end;
 

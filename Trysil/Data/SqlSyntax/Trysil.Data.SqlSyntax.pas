@@ -49,9 +49,9 @@ type
 
   TTSequenceSyntaxClass = class of TTSequenceSyntax;
 
-{ TTSelectCountSyntax }
+{ TTCheckExistsSyntax }
 
-  TTSelectCountSyntax = class
+  TTCheckExistsSyntax = class
   strict protected
     FConnection: TTConnection;
     FTableMap: TTTableMap;
@@ -71,7 +71,7 @@ type
     property SQL: String read GetSQL;
   end;
 
-  TTSelectCountSyntaxClass = class of TTSelectCountSyntax;
+  TTCheckExistsSyntaxClass = class of TTCheckExistsSyntax;
 
 { TTAbstractSqlSyntax }
 
@@ -206,7 +206,7 @@ type
   TTSyntaxClasses = class abstract
   public
     function Sequence: TTSequenceSyntaxClass; virtual; abstract;
-    function SelectCount: TTSelectCountSyntaxClass; virtual;
+    function CheckExists: TTCheckExistsSyntaxClass; virtual;
     function Select: TTSelectSyntaxClass; virtual; abstract;
     function Metadata: TTMetadataSyntaxClass; virtual;
     function Insert: TTCommandSyntaxClass; virtual;
@@ -233,9 +233,9 @@ begin
   result := GetSequenceSyntax;
 end;
 
-{ TTSelectCountSyntax }
+{ TTCheckExistsSyntax }
 
-constructor TTSelectCountSyntax.Create(
+constructor TTCheckExistsSyntax.Create(
   const AConnection: TTConnection;
   const ATableMap: TTTableMap;
   const ATableName: String;
@@ -250,7 +250,7 @@ begin
   FID := AID;
 end;
 
-function TTSelectCountSyntax.GetSQL: String;
+function TTCheckExistsSyntax.GetSQL: String;
 begin
   result := Format('SELECT COUNT(*) FROM %0:s WHERE %1:s = %2:d', [
     FConnection.GetDatabaseObjectName(FTableName),
@@ -563,9 +563,9 @@ end;
 
 { TTSyntaxClasses }
 
-function TTSyntaxClasses.SelectCount: TTSelectCountSyntaxClass;
+function TTSyntaxClasses.CheckExists: TTCheckExistsSyntaxClass;
 begin
-  result := TTSelectCountSyntax;
+  result := TTCheckExistsSyntax;
 end;
 
 function TTSyntaxClasses.Metadata: TTMetadataSyntaxClass;

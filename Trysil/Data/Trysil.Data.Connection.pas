@@ -30,11 +30,11 @@ type
     function GetColumnMap(
       const ATableMap: TTTableMap; const AColumnName: String): TTColumnMap;
 
-    function SelectCount(
+    function CheckExists(
       const ATableMap: TTTableMap;
       const ATableName: String;
       const AColumnName: String;
-      const AEntity: TObject): Integer; override;
+      const AEntity: TObject): Boolean; override;
   public
     function CreateReader(
       const AMapper: TTMapper;
@@ -256,24 +256,24 @@ begin
   end;
 end;
 
-function TTGenericConnection.SelectCount(
+function TTGenericConnection.CheckExists(
   const ATableMap: TTTableMap;
   const ATableName: String;
   const AColumnName: String;
-  const AEntity: TObject): Integer;
+  const AEntity: TObject): Boolean;
 var
   LID: TTPrimaryKey;
-  LSyntax: TTSelectCountSyntax;
+  LSyntax: TTCheckExistsSyntax;
   LDataset: TDataset;
 begin
   LID := ATableMap.PrimaryKey.Member.GetValue(AEntity).AsType<TTPrimaryKey>();
-  LSyntax := FSyntaxClasses.SelectCount.Create(
+  LSyntax := FSyntaxClasses.CheckExists.Create(
     Self, ATableMap, ATableName, AColumnName, LID);
   try
     LDataset := CreateDataSet(LSyntax.SQL);
     try
       LDataset.Open;
-      result := LDataset.Fields[0].AsInteger;
+      result := (LDataset.Fields[0].AsInteger > 0);
     finally
       LDataset.Free;
     end;
