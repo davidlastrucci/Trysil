@@ -207,10 +207,14 @@ begin
   inherited AfterConstruction;
   FDataset := GetDataset;
   for LColumnMap in FTableMap.Columns do
+  begin
+    if FColumns.ContainsKey(LColumnMap.Name) then
+      raise ETException.CreateFmt(SDuplicateColumn, [LColumnMap.Name]);
     FColumns.Add(
       LColumnMap.Name,
       TTColumnFactory.Instance.CreateColumn(
         FDataset.FieldByName(LColumnMap.Name), LColumnMap));
+  end;
 end;
 
 function TTReader.ColumnByName(const AColumnName: String): TTColumn;

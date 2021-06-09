@@ -41,6 +41,7 @@ resourcestring
   SSessionNotTwice = 'Session can not be used twice.';
   SNullableTypeHasNoValue = 'Nullable type has no value: invalid operation.';
   SCannotAssignPointerToNullable = 'Cannot assign non-null pointer to nullable type.';
+  SDuplicateColumn = 'Duplicate column definition: %0:s.';
   SColumnNotFound = 'Column %0:s not found.';
   SRelationError = '"%0:s" is currently in use, unable to delete.';
   SColumnTypeError = 'Column non registered for type %0:s.';
