@@ -174,21 +174,21 @@ procedure TTGenericConnection.StartTransaction;
 begin
   if InTransaction then
     raise ETException.CreateFmt(SInTransaction, ['StartTransaction']);
-  TTLogger.Instance.LogSyntax('StartTransaction');
+  TTLogger.Instance.LogStartTransaction;
 end;
 
 procedure TTGenericConnection.CommitTransaction;
 begin
   if not InTransaction then
     raise ETException.CreateFmt(SNotInTransaction, ['CommitTransaction']);
-  TTLogger.Instance.LogSyntax('Commit');
+  TTLogger.Instance.LogCommit;
 end;
 
 procedure TTGenericConnection.RollbackTransaction;
 begin
   if not InTransaction then
     raise ETException.CreateFmt(SNotInTransaction, ['RollbackTransaction']);
-  TTLogger.Instance.LogSyntax('Rollback');
+  TTLogger.Instance.LogRollback;
 end;
 
 function TTGenericConnection.CreateReader(

@@ -22,20 +22,44 @@ uses
 
 type
 
+{ TTLoggerEvent }
+
+  TTLoggerEvent = (
+    StartTransaction,
+    Commit,
+    Rollback,
+    Parameter,
+    Syntax,
+    Error);
+
+{ TTLoggerItem }
+
+  TTLoggerItem = record
+  strict private
+    FEvent: TTLoggerEvent;
+    FMessage: String;
+  public
+    constructor Create(
+      const AEvent: TTLoggerEvent; const AMessage: String);
+
+    property Event: TTLoggerEvent read FEvent;
+    property Message: String read FMessage;
+  end;
+
 { TTLoggerQueue }
 
   TTLoggerQueue = class
   strict private
     FCriticalSection: TTCriticalSection;
-    FQueue: TQueue<String>;
+    FQueue: TQueue<TTLoggerItem>;
 
     function GetIsEmpty: Boolean;
   public
     constructor Create;
     destructor Destroy; override;
 
-    procedure Enqueue(const AValue: String);
-    function Dequeue: String;
+    procedure Enqueue(const AValue: TTLoggerItem);
+    function Dequeue: TTLoggerItem;
 
     property IsEmpty: Boolean read GetIsEmpty;
   end;
@@ -49,15 +73,14 @@ type
 
     procedure SetTerminated;
   strict protected
-    procedure Log(const AMessage: String); virtual; abstract;
-    procedure LogError(const AMessage: String); virtual; abstract;
+    procedure Log(const AItem: TTLoggerItem); virtual; abstract;
 
     procedure Execute; override;
   public
   	constructor Create;
     destructor Destroy; override;
 
-    procedure AddLog(const AMessage: String);
+    procedure AddLog(const AItem: TTLoggerItem);
   end;
 
   TTLoggerThreadClass = class of TTLoggerThread;
@@ -73,13 +96,16 @@ type
     FLoggerClass: TTLoggerThreadClass;
     FThread: TTLoggerThread;
 
-    procedure Log(const AValue: String);
+    procedure Log(const AItem: TTLoggerItem);
 
     procedure SetLoggerClass(const AValue: TTLoggerThreadClass);
   public
     constructor Create;
     destructor Destroy; override;
 
+    procedure LogStartTransaction;
+    procedure LogCommit;
+    procedure LogRollback;
     procedure LogParameter(const AName: String; const AValue: String);
     procedure LogSyntax(const ASyntax: String);
 
@@ -91,13 +117,22 @@ type
 
 implementation
 
+{ TTLoggerItem }
+
+constructor TTLoggerItem.Create(
+  const AEvent: TTLoggerEvent; const AMessage: String);
+begin
+  FEvent := AEvent;
+  FMessage := AMessage;
+end;
+
 { TTLoggerQueue }
 
 constructor TTLoggerQueue.Create;
 begin
   inherited Create;
   FCriticalSection := TTCriticalSection.Create;
-  FQueue := TQueue<String>.Create;
+  FQueue := TQueue<TTLoggerItem>.Create;
 end;
 
 destructor TTLoggerQueue.Destroy;
@@ -107,7 +142,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TTLoggerQueue.Enqueue(const AValue: String);
+procedure TTLoggerQueue.Enqueue(const AValue: TTLoggerItem);
 begin
   FCriticalSection.Acquire;
   try
@@ -117,7 +152,7 @@ begin
   end;
 end;
 
-function TTLoggerQueue.Dequeue: String;
+function TTLoggerQueue.Dequeue: TTLoggerItem;
 begin
   FCriticalSection.Acquire;
   try
@@ -154,9 +189,9 @@ begin
   inherited Destroy;
 end;
 
-procedure TTLoggerThread.AddLog(const AMessage: String);
+procedure TTLoggerThread.AddLog(const AItem: TTLoggerItem);
 begin
-  FQueue.Enqueue(AMessage);
+  FQueue.Enqueue(AItem);
   FEvent.SetEvent;
 end;
 
@@ -172,7 +207,7 @@ begin
         Log(FQueue.Dequeue);
       except
         on E: Exception do
-          LogError(E.Message);
+          Log(TTLoggerItem.Create(TTLoggerEvent.Error, E.Message));
       end;
     end;
 
@@ -217,28 +252,47 @@ begin
   inherited Destroy;
 end;
 
-procedure TTLogger.Log(const AValue: String);
+procedure TTLogger.Log(const AItem: TTLoggerItem);
 begin
   if Assigned(FThread) then
-    FThread.AddLog(AValue);
+    FThread.AddLog(AItem);
+end;
+
+procedure TTLogger.LogStartTransaction;
+begin
+  Log(TTLoggerItem.Create(TTLoggerEvent.StartTransaction, String.Empty));
+end;
+
+procedure TTLogger.LogCommit;
+begin
+  Log(TTLoggerItem.Create(TTLoggerEvent.Commit, String.Empty));
+end;
+
+procedure TTLogger.LogRollback;
+begin
+  Log(TTLoggerItem.Create(TTLoggerEvent.Rollback, String.Empty));
 end;
 
 procedure TTLogger.LogParameter(const AName: String; const AValue: String);
 begin
-  Log(Format(':%0:s="%1:s"', [AName, AValue]));
+  Log(TTLoggerItem.Create(
+    TTLoggerEvent.Parameter, Format(':%0:s="%1:s"', [AName, AValue])));
 end;
 
 procedure TTLogger.LogSyntax(const ASyntax: String);
 begin
-  Log(ASyntax);
+  Log(TTLoggerItem.Create(TTLoggerEvent.Syntax, ASyntax));
 end;
 
 procedure TTLogger.SetLoggerClass(const AValue: TTLoggerThreadClass);
 begin
-  if Assigned(FThread) then
-    FThread.Free;
-  FLoggerClass := AValue;
-  FThread := FLoggerClass.Create;
+  if FLoggerClass <> AValue then
+  begin
+    if Assigned(FThread) then
+      FThread.Free;
+    FLoggerClass := AValue;
+    FThread := FLoggerClass.Create;
+  end;
 end;
 
 end.
