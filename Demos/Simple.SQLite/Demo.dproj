@@ -140,6 +140,7 @@
         <DCCReference Include="..\..\Trysil\Trysil.Generics.Collections.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.IdentityMap.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Lazy.pas"/>
+        <DCCReference Include="..\..\Trysil\Trysil.Logger.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Mapping.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Metadata.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Provider.pas"/>

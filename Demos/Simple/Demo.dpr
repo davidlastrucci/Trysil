@@ -16,6 +16,7 @@ uses
   Trysil.Generics.Collections in '..\..\Trysil\Trysil.Generics.Collections.pas',
   Trysil.IdentityMap in '..\..\Trysil\Trysil.IdentityMap.pas',
   Trysil.Lazy in '..\..\Trysil\Trysil.Lazy.pas',
+  Trysil.Logger in '..\..\Trysil\Trysil.Logger.pas',
   Trysil.Mapping in '..\..\Trysil\Trysil.Mapping.pas',
   Trysil.Metadata in '..\..\Trysil\Trysil.Metadata.pas',
   Trysil.Provider in '..\..\Trysil\Trysil.Provider.pas',

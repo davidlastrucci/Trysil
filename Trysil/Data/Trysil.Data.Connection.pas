@@ -1,3 +1,13 @@
+(*
+
+  Trysil
+  Copyright © David Lastrucci
+  All rights reserved
+
+  Trysil - Operation ORM (World War II)
+  http://codenames.info/operation/orm/
+
+*)
 unit Trysil.Data.Connection;
 
 interface
@@ -10,6 +20,7 @@ uses
   Trysil.Consts,
   Trysil.Types,
   Trysil.Exceptions,
+  Trysil.Logger,
   Trysil.Data,
   Trysil.Metadata,
   Trysil.Mapping,
@@ -36,6 +47,13 @@ type
       const AColumnName: String;
       const AEntity: TObject): Boolean; override;
   public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure StartTransaction; override;
+    procedure CommitTransaction; override;
+    procedure RollbackTransaction; override;
+
     function CreateReader(
       const AMapper: TTMapper;
       const ATableMap: TTTableMap;
@@ -63,9 +81,6 @@ type
       const ATableMetadata: TTTableMetadata); override;
 
     function GetSequenceID(const ATableMap: TTTableMap): TTPrimaryKey; override;
-  public
-    constructor Create;
-    destructor Destroy; override;
 
     property SyntaxClasses: TTSyntaxClasses read FSyntaxClasses;
   end;
@@ -153,6 +168,27 @@ destructor TTGenericConnection.Destroy;
 begin
   FSyntaxClasses.Free;
   inherited Destroy;
+end;
+
+procedure TTGenericConnection.StartTransaction;
+begin
+  if InTransaction then
+    raise ETException.CreateFmt(SInTransaction, ['StartTransaction']);
+  TTLogger.Instance.LogSyntax('StartTransaction');
+end;
+
+procedure TTGenericConnection.CommitTransaction;
+begin
+  if not InTransaction then
+    raise ETException.CreateFmt(SNotInTransaction, ['CommitTransaction']);
+  TTLogger.Instance.LogSyntax('Commit');
+end;
+
+procedure TTGenericConnection.RollbackTransaction;
+begin
+  if not InTransaction then
+    raise ETException.CreateFmt(SNotInTransaction, ['RollbackTransaction']);
+  TTLogger.Instance.LogSyntax('Rollback');
 end;
 
 function TTGenericConnection.CreateReader(
@@ -306,6 +342,7 @@ end;
 function TTGenericReader.GetDataset: TDataset;
 begin
   result := FConnection.CreateDataset(FSyntax.SQL);
+  TTLogger.Instance.LogSyntax(FSyntax.SQL);
 end;
 
 { TTGenericCommand }
@@ -348,6 +385,8 @@ begin
     FConnection.StartTransaction;
   try
     BeforeExecute(AEntity, AEvent);
+
+    TTLogger.Instance.LogSyntax(ASQL);
 
     LRowsAffected := FConnection.Execute(
       ASQL,

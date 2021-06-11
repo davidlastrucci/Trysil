@@ -21,7 +21,6 @@ uses
   FireDAC.Stan.Param,
   FireDAC.Comp.Client,
 
-  Trysil.Consts,
   Trysil.Types,
   Trysil.Filter,
   Trysil.Exceptions,
@@ -242,22 +241,19 @@ end;
 
 procedure TTFireDACConnection.StartTransaction;
 begin
-  if FConnection.InTransaction then
-    raise ETException.CreateFmt(SInTransaction, ['StartTransaction']);
+  inherited StartTransaction;
   FConnection.StartTransaction;
 end;
 
 procedure TTFireDACConnection.CommitTransaction;
 begin
-  if not FConnection.InTransaction then
-    raise ETException.CreateFmt(SNotInTransaction, ['CommitTransaction']);
+  inherited CommitTransaction;
   FConnection.Commit;
 end;
 
 procedure TTFireDACConnection.RollbackTransaction;
 begin
-  if not FConnection.InTransaction then
-    raise ETException.CreateFmt(SNotInTransaction, ['RollbackTransaction']);
+  inherited RollbackTransaction;
   FConnection.Rollback;
 end;
 

@@ -23,6 +23,7 @@ uses
   Trysil.Data,
   Trysil.Types,
   Trysil.Exceptions,
+  Trysil.Logger,
   Trysil.Mapping,
   Trysil.Rtti;
 
@@ -169,6 +170,8 @@ begin
   end
   else
     FParam.AsString := LValue.AsType<String>();
+
+  TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsString);
 end;
 
 { TTIntegerParameter }
@@ -191,6 +194,8 @@ begin
     SetValueFromObject(LValue.AsObject)
   else
     FParam.AsInteger := LValue.AsType<Integer>();
+
+  TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsInteger.ToString);
 end;
 
 procedure TTIntegerParameter.SetValueFromObject(const AObject: TObject);
@@ -210,6 +215,8 @@ begin
     LValue := LTableMap.PrimaryKey.Member.GetValue(AObject);
   end;
   FParam.AsInteger := LValue.AsType<Integer>();
+
+  TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsInteger.ToString);
 end;
 
 { TTLargeIntegerParameter }
@@ -230,6 +237,8 @@ begin
   end
   else
     FParam.AsLargeInt := LValue.AsType<Int64>();
+
+  TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsLargeInt.ToString);
 end;
 
 { TTDoubleParameter }
@@ -250,6 +259,8 @@ begin
   end
   else
     FParam.AsDouble := LValue.AsType<Double>();
+
+  TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsDouble.ToString);
 end;
 
 { TTBooleanParameter }
@@ -270,6 +281,8 @@ begin
   end
   else
     FParam.AsBoolean := LValue.AsType<Boolean>();
+
+  TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsBoolean.ToString);
 end;
 
 { TTDateTimeParameter }
@@ -290,6 +303,9 @@ begin
   end
   else
     FParam.AsDateTime := LValue.AsType<TDateTime>();
+
+  TTLogger.Instance.LogParameter(
+    FColumnMap.Name, DateTimeToStr(FParam.AsDateTime));
 end;
 
 { TTGuidParameter }
@@ -310,6 +326,8 @@ begin
   end
   else
     FParam.AsGuid := LValue.AsType<TGuid>();
+
+  TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsGuid.ToString);
 end;
 
 { TTBlobParameter }
