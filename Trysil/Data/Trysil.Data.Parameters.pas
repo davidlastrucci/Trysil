@@ -178,9 +178,11 @@ end;
 
 procedure TTIntegerParameter.SetValue(const AEntity: TObject);
 var
+  LIsClass: Boolean;
   LValue: TTValue;
   LNullable: TTNullable<Integer>;
 begin
+  LIsClass := FColumnMap.Member.IsClass;
   LValue := FColumnMap.Member.GetValue(AEntity);
   if FColumnMap.Member.IsNullable then
   begin
@@ -190,12 +192,13 @@ begin
     else
       FParam.AsInteger := LNullable;
   end
-  else if FColumnMap.Member.IsClass then
+  else if LIsClass then
     SetValueFromObject(LValue.AsObject)
   else
     FParam.AsInteger := LValue.AsType<Integer>();
 
-  TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsInteger.ToString);
+  if not LIsClass then
+    TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsInteger.ToString);
 end;
 
 procedure TTIntegerParameter.SetValueFromObject(const AObject: TObject);
