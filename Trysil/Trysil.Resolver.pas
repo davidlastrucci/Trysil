@@ -36,7 +36,6 @@ type
     FContext: TObject;
     FMetadata: TTMetadata;
     FMapper: TTMapper;
-    FUpdateMode: TTUpdateMode;
 
     procedure CheckReadWrite(const ATableMap: TTTableMap);
   public
@@ -66,7 +65,6 @@ begin
   FContext := AContext;
   FMetadata := AMetadata;
   FMapper := AMapper;
-  FUpdateMode := TTUpdateMode.KeyAndVersionColumn;
 end;
 
 procedure TTResolver.CheckReadWrite(const ATableMap: TTTableMap);
