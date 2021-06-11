@@ -79,7 +79,6 @@ type
       const AEntity: TObject);
   strict protected
     function InternalCreateDataSet(const ASQL: String): TDataSet; override;
-    function GetDatabaseVersion: String; override;
     function GetInTransaction: Boolean; override;
   public
     constructor Create(const AConnectionName: String);
@@ -260,28 +259,6 @@ end;
 function TTFireDACConnection.GetInTransaction: Boolean;
 begin
   result := FConnection.InTransaction;
-end;
-
-function TTFireDACConnection.GetDatabaseVersion: String;
-var
-  LSyntax: TTVersionSyntax;
-  LDataSet: TFDQuery;
-begin
-  result := string.Empty;
-  LSyntax := SyntaxClasses.Version.Create;
-  try
-    LDataSet := TFDQuery.Create(nil);
-    try
-      LDataSet.Connection := FConnection;
-      LDataSet.Open(LSyntax.SQL);
-      if not LDataSet.IsEmpty then
-        result := LDataSet.Fields[0].AsString;
-    finally
-      LDataSet.Free;
-    end;
-  finally
-    LSyntax.Free;
-  end;
 end;
 
 procedure TTFireDACConnection.SetParameters(

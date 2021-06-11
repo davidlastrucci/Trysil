@@ -41,6 +41,8 @@ type
     function GetColumnMap(
       const ATableMap: TTTableMap; const AColumnName: String): TTColumnMap;
 
+    function GetDatabaseVersion: String; override;
+
     function CheckExists(
       const ATableMap: TTTableMap;
       const ATableName: String;
@@ -245,6 +247,27 @@ begin
     raise ETException.CreateFmt(SColumnNotFound, [AColumnName]);
 end;
 
+function TTGenericConnection.GetDatabaseVersion: String;
+var
+  LSyntax: TTVersionSyntax;
+  LDataSet: TDataset;
+begin
+  result := string.Empty;
+  LSyntax := SyntaxClasses.Version.Create;
+  try
+    LDataset := CreateDataSet(LSyntax.SQL);
+    try
+      TTLogger.Instance.LogSyntax(LSyntax.SQL);
+      if not LDataSet.IsEmpty then
+        result := LDataSet.Fields[0].AsString;
+    finally
+      LDataSet.Free;
+    end;
+  finally
+    LSyntax.Free;
+  end;
+end;
+
 procedure TTGenericConnection.GetMetadata(
   const AMapper: TTMapper;
   const ATableMap: TTTableMap;
@@ -282,7 +305,7 @@ begin
   try
     LDataset := CreateDataSet(LSyntax.SQL);
     try
-      LDataset.Open;
+      TTLogger.Instance.LogSyntax(LSyntax.SQL);
       result := LDataset.Fields[0].AsInteger;
     finally
       LDataset.Free;
@@ -308,7 +331,6 @@ begin
   try
     LDataset := CreateDataSet(LSyntax.SQL);
     try
-      LDataset.Open;
       result := (LDataset.Fields[0].AsInteger > 0);
     finally
       LDataset.Free;
