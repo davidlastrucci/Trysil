@@ -35,7 +35,7 @@ type
     destructor Destroy; override;
 
     procedure Enqueue(const AValue: String);
-    function DeQueue: String;
+    function Dequeue: String;
 
     property IsEmpty: Boolean read GetIsEmpty;
   end;
@@ -117,7 +117,7 @@ begin
   end;
 end;
 
-function TTLoggerQueue.DeQueue: String;
+function TTLoggerQueue.Dequeue: String;
 begin
   FCriticalSection.Acquire;
   try
@@ -162,7 +162,7 @@ end;
 
 procedure TTLoggerThread.Execute;
 const
-  Timeout: Cardinal = 20000;
+  Timeout: Cardinal = 5000;
 begin
   while not Terminated do
   begin
