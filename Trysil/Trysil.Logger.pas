@@ -220,8 +220,7 @@ end;
 procedure TTLogger.Log(const AValue: String);
 begin
   if Assigned(FThread) then
-    FThread.AddLog(Format('[%0:s] %1:s', [
-      FormatDateTime('dd/mm/yyyy hh:nn:ss.zzz', now), AValue]));
+    FThread.AddLog(AValue);
 end;
 
 procedure TTLogger.LogParameter(const AName: String; const AValue: String);
