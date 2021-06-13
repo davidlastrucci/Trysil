@@ -408,7 +408,7 @@ begin
   try
     BeforeExecute(AEntity, AEvent);
 
-    TTLogger.Instance.LogSyntax(ASQL);
+    TTLogger.Instance.LogCommand(ASQL);
 
     LRowsAffected := FConnection.Execute(
       ASQL,

@@ -30,6 +30,7 @@ type
     Rollback,
     Parameter,
     Syntax,
+    Command,
     Error);
 
 { TTLoggerItem }
@@ -71,9 +72,17 @@ type
     FQueue: TTLoggerQueue;
     FEvent: TEvent;
 
+    procedure Log(const AItem: TTLoggerItem);
+
     procedure SetTerminated;
   strict protected
-    procedure Log(const AItem: TTLoggerItem); virtual; abstract;
+    procedure LogStartTransaction; virtual; abstract;
+    procedure LogCommit; virtual; abstract;
+    procedure LogRollback; virtual; abstract;
+    procedure LogParameter(const AMessage: String); virtual; abstract;
+    procedure LogSyntax(const ASyntax: String); virtual; abstract;
+    procedure LogCommand(const ASyntax: String); virtual; abstract;
+    procedure LogError(const AMessage: String); virtual; abstract;
 
     procedure Execute; override;
   public
@@ -103,11 +112,12 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    procedure LogStartTransaction;
     procedure LogCommit;
     procedure LogRollback;
+    procedure LogStartTransaction;
     procedure LogParameter(const AName: String; const AValue: String);
     procedure LogSyntax(const ASyntax: String);
+    procedure LogCommand(const ASyntax: String);
 
     property LoggerClass: TTLoggerThreadClass
       read FLoggerClass write SetLoggerClass;
@@ -219,6 +229,19 @@ begin
   end;
 end;
 
+procedure TTLoggerThread.Log(const AItem: TTLoggerItem);
+begin
+  case AItem.Event of
+    StartTransaction: LogStartTransaction;
+    Commit: LogCommit;
+    Rollback: LogRollback;
+    Parameter: LogParameter(AItem.Message);
+    Syntax: LogSyntax(AItem.Message);
+    Command: LogCommand(AItem.Message);
+    Error: LogError(AItem.Message);
+  end;
+end;
+
 procedure TTLoggerThread.SetTerminated;
 begin
   Terminate();
@@ -282,6 +305,11 @@ end;
 procedure TTLogger.LogSyntax(const ASyntax: String);
 begin
   Log(TTLoggerItem.Create(TTLoggerEvent.Syntax, ASyntax));
+end;
+
+procedure TTLogger.LogCommand(const ASyntax: String);
+begin
+  Log(TTLoggerItem.Create(TTLoggerEvent.Command, ASyntax));
 end;
 
 procedure TTLogger.SetLoggerClass(const AValue: TTLoggerThreadClass);
