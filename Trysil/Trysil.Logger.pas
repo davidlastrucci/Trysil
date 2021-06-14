@@ -41,7 +41,9 @@ type
     FMessage: String;
   public
     constructor Create(
-      const AEvent: TTLoggerEvent; const AMessage: String);
+      const AEvent: TTLoggerEvent); overload;
+    constructor Create(
+      const AEvent: TTLoggerEvent; const AMessage: String); overload;
 
     property Event: TTLoggerEvent read FEvent;
     property Message: String read FMessage;
@@ -128,6 +130,11 @@ type
 implementation
 
 { TTLoggerItem }
+
+constructor TTLoggerItem.Create(const AEvent: TTLoggerEvent);
+begin
+  Create(AEvent, String.Empty);
+end;
 
 constructor TTLoggerItem.Create(
   const AEvent: TTLoggerEvent; const AMessage: String);
@@ -283,17 +290,17 @@ end;
 
 procedure TTLogger.LogStartTransaction;
 begin
-  Log(TTLoggerItem.Create(TTLoggerEvent.StartTransaction, String.Empty));
+  Log(TTLoggerItem.Create(TTLoggerEvent.StartTransaction));
 end;
 
 procedure TTLogger.LogCommit;
 begin
-  Log(TTLoggerItem.Create(TTLoggerEvent.Commit, String.Empty));
+  Log(TTLoggerItem.Create(TTLoggerEvent.Commit));
 end;
 
 procedure TTLogger.LogRollback;
 begin
-  Log(TTLoggerItem.Create(TTLoggerEvent.Rollback, String.Empty));
+  Log(TTLoggerItem.Create(TTLoggerEvent.Rollback));
 end;
 
 procedure TTLogger.LogParameter(const AName: String; const AValue: String);
