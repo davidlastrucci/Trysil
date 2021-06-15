@@ -88,13 +88,11 @@ type
 
     procedure Execute; override;
   public
-  	constructor Create;
+  	constructor Create; virtual;
     destructor Destroy; override;
 
     procedure AddLog(const AItem: TTLoggerItem);
   end;
-
-  TTLoggerThreadClass = class of TTLoggerThread;
 
 { TTLogger }
 
@@ -104,12 +102,9 @@ type
     class constructor ClassCreate;
     class destructor ClassDestroy;
   strict private
-    FLoggerClass: TTLoggerThreadClass;
     FThread: TTLoggerThread;
 
     procedure Log(const AItem: TTLoggerItem);
-
-    procedure SetLoggerClass(const AValue: TTLoggerThreadClass);
   public
     constructor Create;
     destructor Destroy; override;
@@ -121,8 +116,7 @@ type
     procedure LogSyntax(const ASyntax: String);
     procedure LogCommand(const ASyntax: String);
 
-    property LoggerClass: TTLoggerThreadClass
-      read FLoggerClass write SetLoggerClass;
+    procedure RegisterLogger<T: TTLoggerThread>();
 
     class property Instance: TTLogger read FInstance;
   end;
@@ -271,7 +265,6 @@ end;
 constructor TTLogger.Create;
 begin
   inherited Create;
-  FLoggerClass := nil;
   FThread := nil;
 end;
 
@@ -319,15 +312,11 @@ begin
   Log(TTLoggerItem.Create(TTLoggerEvent.Command, ASyntax));
 end;
 
-procedure TTLogger.SetLoggerClass(const AValue: TTLoggerThreadClass);
+procedure TTLogger.RegisterLogger<T>();
 begin
-  if FLoggerClass <> AValue then
-  begin
-    if Assigned(FThread) then
-      FThread.Free;
-    FLoggerClass := AValue;
-    FThread := FLoggerClass.Create;
-  end;
+  if Assigned(FThread) then
+    FThread.Free;
+  FThread := T.Create;
 end;
 
 end.
