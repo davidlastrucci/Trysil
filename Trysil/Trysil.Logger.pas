@@ -219,7 +219,7 @@ procedure TTLoggerThread.Execute;
 const
   Timeout: Cardinal = 5000;
 begin
-  while not Terminated do
+  while (not Terminated) or (not FQueue.IsEmpty) do
   begin
     while not FQueue.IsEmpty do
     begin
