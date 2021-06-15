@@ -112,9 +112,9 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    procedure LogStartTransaction;
     procedure LogCommit;
     procedure LogRollback;
-    procedure LogStartTransaction;
     procedure LogParameter(const AName: String; const AValue: String);
     procedure LogSyntax(const ASyntax: String);
     procedure LogCommand(const ASyntax: String);
