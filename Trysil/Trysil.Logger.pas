@@ -38,15 +38,17 @@ type
   TTLoggerItem = record
   strict private
     FEvent: TTLoggerEvent;
-    FMessage: String;
+    FValues: TArray<String>;
   public
     constructor Create(
       const AEvent: TTLoggerEvent); overload;
     constructor Create(
-      const AEvent: TTLoggerEvent; const AMessage: String); overload;
+      const AEvent: TTLoggerEvent; const AValue: String); overload;
+    constructor Create(
+      const AEvent: TTLoggerEvent; const AValues: TArray<String>); overload;
 
     property Event: TTLoggerEvent read FEvent;
-    property Message: String read FMessage;
+    property Values: TArray<String> read FValues;
   end;
 
 { TTLoggerQueue }
@@ -81,7 +83,8 @@ type
     procedure LogStartTransaction; virtual; abstract;
     procedure LogCommit; virtual; abstract;
     procedure LogRollback; virtual; abstract;
-    procedure LogParameter(const AMessage: String); virtual; abstract;
+    procedure LogParameter(
+      const AName: String; const AValue: String); virtual; abstract;
     procedure LogSyntax(const ASyntax: String); virtual; abstract;
     procedure LogCommand(const ASyntax: String); virtual; abstract;
     procedure LogError(const AMessage: String); virtual; abstract;
@@ -131,10 +134,16 @@ begin
 end;
 
 constructor TTLoggerItem.Create(
-  const AEvent: TTLoggerEvent; const AMessage: String);
+  const AEvent: TTLoggerEvent; const AValue: String);
+begin
+  Create(AEvent, [AValue]);
+end;
+
+constructor TTLoggerItem.Create(
+  const AEvent: TTLoggerEvent; const AValues: TArray<String>);
 begin
   FEvent := AEvent;
-  FMessage := AMessage;
+  FValues := Copy(AValues, Low(AValues), Length(AValues));
 end;
 
 { TTLoggerQueue }
@@ -236,10 +245,10 @@ begin
     StartTransaction: LogStartTransaction;
     Commit: LogCommit;
     Rollback: LogRollback;
-    Parameter: LogParameter(AItem.Message);
-    Syntax: LogSyntax(AItem.Message);
-    Command: LogCommand(AItem.Message);
-    Error: LogError(AItem.Message);
+    Parameter: LogParameter(AItem.Values[0], AItem.Values[1]);
+    Syntax: LogSyntax(AItem.Values[0]);
+    Command: LogCommand(AItem.Values[0]);
+    Error: LogError(AItem.Values[0]);
   end;
 end;
 
@@ -298,8 +307,7 @@ end;
 
 procedure TTLogger.LogParameter(const AName: String; const AValue: String);
 begin
-  Log(TTLoggerItem.Create(
-    TTLoggerEvent.Parameter, Format(':%0:s="%1:s"', [AName, AValue])));
+  Log(TTLoggerItem.Create(TTLoggerEvent.Parameter, [AName, AValue]));
 end;
 
 procedure TTLogger.LogSyntax(const ASyntax: String);
