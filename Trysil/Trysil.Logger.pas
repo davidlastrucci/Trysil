@@ -130,7 +130,7 @@ implementation
 
 constructor TTLoggerItem.Create(const AEvent: TTLoggerEvent);
 begin
-  Create(AEvent, String.Empty);
+  Create(AEvent, []);
 end;
 
 constructor TTLoggerItem.Create(
