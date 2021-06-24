@@ -80,9 +80,15 @@ type
 
 { TTObjectList<T> }
 
-  TTObjectList<T: class> = class(TObjectList<T>)
+  TTObjectList<T: class> = class(TTList<T>)
+  strict private
+    FOwnsObjects: Boolean;
+  strict protected
+    procedure Notify(
+      const AValue: T; AAction: TCollectionNotification); override;
   public
-    function Where(const APredicate: TTPredicate<T>): ITEnumerable<T>;
+    constructor Create; overload;
+    constructor Create(AOwnsObjects: Boolean); overload;
   end;
 
 implementation
@@ -152,10 +158,23 @@ end;
 
 { TTObjectList<T> }
 
-function TTObjectList<T>.Where(
-  const APredicate: TTPredicate<T>): ITEnumerable<T>;
+constructor TTObjectList<T>.Create;
 begin
-  result := TTEnumerable<T>.Create(Self, APredicate);
+  Create(True);
+end;
+
+constructor TTObjectList<T>.Create(AOwnsObjects: Boolean);
+begin
+  inherited Create;
+  FOwnsObjects := AOwnsObjects;
+end;
+
+procedure TTObjectList<T>.Notify(
+  const AValue: T; AAction: TCollectionNotification);
+begin
+  inherited Notify(AValue, AAction);
+  if FOwnsObjects and (AAction = TCollectionNotification.cnRemoved) then
+    AValue.Free;
 end;
 
 end.
