@@ -23,7 +23,6 @@ uses
   Trysil.Data,
   Trysil.Mapping,
   Trysil.Metadata,
-  Trysil.IdentityMap,
   Trysil.Provider,
   Trysil.Resolver,
   Trysil.Session;
@@ -38,7 +37,6 @@ type
 
     FMapper: TTMapper;
     FMetadata: TTMetadata;
-    FIdentityMap: TTIdentityMap;
     FProvider: TTProvider;
     FResolver: TTResolver;
 
@@ -94,24 +92,15 @@ begin
   FMapper := TTMapper.Create;
   FMetadata := TTMetadata.Create(FMapper, FConnection);
 
-  FIdentityMap := nil;
-  if AUseIdentityMap then
-    FIdentityMap := TTIdentityMap.Create;
-
   FProvider := TTProvider.Create(
-    FConnection, Self, FMetadata, FMapper, FIdentityMap);
-  FResolver := TTResolver.Create(
-    FConnection, Self, FMetadata, FMapper, FIdentityMap);
+    FConnection, Self, FMetadata, FMapper, AUseIdentityMap);
+  FResolver := TTResolver.Create(FConnection, Self, FMetadata, FMapper);
 end;
 
 destructor TTContext.Destroy;
 begin
   FResolver.Free;
   FProvider.Free;
-
-  if Assigned(FIdentityMap) then
-    FIdentityMap.Free;
-
   FMetadata.Free;
   FMapper.Free;
   inherited Destroy;

@@ -92,7 +92,7 @@ type
       const AContext: TObject;
       const AMetadata: TTMetadata;
       const AMapper: TTMapper;
-      const AIdentityMap: TTIdentityMap);
+      const AUseIdentityMap: Boolean);
     destructor Destroy; override;
 
     function CreateEntity<T: class>(): T;
@@ -117,20 +117,25 @@ constructor TTProvider.Create(
   const AContext: TObject;
   const AMetadata: TTMetadata;
   const AMapper: TTMapper;
-  const AIdentityMap: TTIdentityMap);
+  const AUseIdentityMap: Boolean);
 begin
   inherited Create;
   FConnection := AConnection;
   FContext := AContext;
   FMetadata := AMetadata;
   FMapper := AMapper;
-  FIdentityMap := AIdentityMap;
+
+  FIdentityMap := nil;
+  if AUseIdentityMap then
+    FIdentityMap := TTIdentityMap.Create;
 
   FLazyOwner := TObjectList<TObject>.Create(True);
 end;
 
 destructor TTProvider.Destroy;
 begin
+  if Assigned(FIdentityMap) then
+    FIdentityMap.Free;
   FLazyOwner.Free;
   inherited Destroy;
 end;
