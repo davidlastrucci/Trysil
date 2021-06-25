@@ -39,8 +39,8 @@ type
     FContext: TObject;
     FMetadata: TTMetadata;
     FMapper: TTMapper;
-
     FIdentityMap: TTIdentityMap;
+
     FLazyOwner: TObjectList<TObject>;
 
     function InternalCreateEntity<T: class>(
@@ -92,7 +92,7 @@ type
       const AContext: TObject;
       const AMetadata: TTMetadata;
       const AMapper: TTMapper;
-      const AUseIdentityMap: Boolean);
+      const AIdentityMap: TTIdentityMap);
     destructor Destroy; override;
 
     function CreateEntity<T: class>(): T;
@@ -117,17 +117,14 @@ constructor TTProvider.Create(
   const AContext: TObject;
   const AMetadata: TTMetadata;
   const AMapper: TTMapper;
-  const AUseIdentityMap: Boolean);
+  const AIdentityMap: TTIdentityMap);
 begin
   inherited Create;
   FConnection := AConnection;
   FContext := AContext;
   FMetadata := AMetadata;
   FMapper := AMapper;
-
-  FIdentityMap := nil;
-  if AUseIdentityMap then
-    FIdentityMap := TTIdentityMap.Create;
+  FIdentityMap := AIdentityMap;
 
   FLazyOwner := TObjectList<TObject>.Create(True);
 end;
@@ -135,8 +132,6 @@ end;
 destructor TTProvider.Destroy;
 begin
   FLazyOwner.Free;
-  if Assigned(FIdentityMap) then
-    FIdentityMap.Free;
   inherited Destroy;
 end;
 

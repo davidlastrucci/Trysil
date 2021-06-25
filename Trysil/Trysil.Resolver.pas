@@ -22,6 +22,7 @@ uses
   Trysil.Rtti,
   Trysil.Mapping,
   Trysil.Metadata,
+  Trysil.IdentityMap,
   Trysil.Data,
   Trysil.Events.Abstract,
   Trysil.Events.Factory;
@@ -36,6 +37,7 @@ type
     FContext: TObject;
     FMetadata: TTMetadata;
     FMapper: TTMapper;
+    FIdentityMap: TTIdentityMap;
 
     procedure CheckReadWrite(const ATableMap: TTTableMap);
   public
@@ -43,7 +45,8 @@ type
       const AConnection: TTConnection;
       const AContext: TObject;
       const AMetadata: TTMetadata;
-      const AMapper: TTMapper);
+      const AMapper: TTMapper;
+      const AIdentityMap: TTIdentityMap);
 
     procedure Insert<T: class>(const AEntity: T);
     procedure Update<T: class>(const AEntity: T);
@@ -58,13 +61,15 @@ constructor TTResolver.Create(
   const AConnection: TTConnection;
   const AContext: TObject;
   const AMetadata: TTMetadata;
-  const AMapper: TTMapper);
+  const AMapper: TTMapper;
+  const AIdentityMap: TTIdentityMap);
 begin
   inherited Create;
   FConnection := AConnection;
   FContext := AContext;
   FMetadata := AMetadata;
   FMapper := AMapper;
+  FIdentityMap := AIdentityMap;
 end;
 
 procedure TTResolver.CheckReadWrite(const ATableMap: TTTableMap);
@@ -163,6 +168,10 @@ begin
       if Assigned(LEvent) then
         LEvent.Free;
     end;
+
+    if Assigned(FIdentityMap) then
+      FIdentityMap.RemoveEntity<T>(
+        LTableMap.PrimaryKey.Member.GetValue(AEntity).AsType<TTPrimaryKey>());
   finally
     LCommand.Free;
   end;
