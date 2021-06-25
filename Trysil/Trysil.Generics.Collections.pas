@@ -88,7 +88,7 @@ type
       const AValue: T; AAction: TCollectionNotification); override;
   public
     constructor Create; overload;
-    constructor Create(AOwnsObjects: Boolean); overload;
+    constructor Create(const AOwnsObjects: Boolean); overload;
   end;
 
 implementation
@@ -163,7 +163,7 @@ begin
   Create(True);
 end;
 
-constructor TTObjectList<T>.Create(AOwnsObjects: Boolean);
+constructor TTObjectList<T>.Create(const AOwnsObjects: Boolean);
 begin
   inherited Create;
   FOwnsObjects := AOwnsObjects;
