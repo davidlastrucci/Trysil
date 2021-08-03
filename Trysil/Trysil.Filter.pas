@@ -57,6 +57,7 @@ type
 
     class function Empty: TTFilter; static;
   end;
+
 implementation
 
 { TTFilterTop }

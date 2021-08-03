@@ -311,15 +311,14 @@ var
 begin
   LResult := TStringBuilder.Create;
   try
+    LResult.Append(' ORDER BY ');
     if (not FFilter.Top.OrderBy.IsEmpty) then
-      LResult.AppendFormat(' ORDER BY %s, ', [FFilter.Top.OrderBy])
+      LResult.Append(FFilter.Top.OrderBy)
     else if Assigned(FTableMap.PrimaryKey) then
-      LResult.AppendFormat(' ORDER BY %s, ', [
-        FConnection.GetDatabaseObjectName(FTableMap.PrimaryKey.Name)]);
+      LResult.Append(
+        FConnection.GetDatabaseObjectName(FTableMap.PrimaryKey.Name));
 
     result := LResult.ToString();
-    if not result.IsEmpty then
-      result := result.Substring(0, result.Length - 2);
   finally
     LResult.Free;
   end;
