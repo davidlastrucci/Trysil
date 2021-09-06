@@ -51,6 +51,12 @@ type
     function GetIsEmpty: Boolean;
   public
     constructor Create(const AWhere: String); overload;
+
+    constructor Create(
+      const AWhere: String;
+      const AMaxRecord: Integer;
+      const AOrderBy: String); overload;
+
     constructor Create(
       const AWhere: String;
       const AStart: Integer;
@@ -99,6 +105,15 @@ constructor TTFilter.Create(const AWhere: String);
 begin
   FWhere := AWhere;
   FPaging := TTFilterPaging.Empty();
+end;
+
+constructor TTFilter.Create(
+  const AWhere: String;
+  const AMaxRecord: Integer;
+  const AOrderBy: String);
+begin
+  FWhere := AWhere;
+  FPaging := TTFilterPaging.Create(0, AMaxRecord, AOrderBy);
 end;
 
 constructor TTFilter.Create(
