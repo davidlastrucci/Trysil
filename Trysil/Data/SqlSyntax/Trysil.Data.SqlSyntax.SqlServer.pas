@@ -31,7 +31,7 @@ type
 
   TTSqlServerSelectSyntax = class(TTSelectSyntax)
   strict protected
-    function GetFilterTopSyntax: String; override;
+    function GetFilterPagingSyntax: String; override;
   end;
 
 { TTSqlServerVersionSyntax }
@@ -62,9 +62,10 @@ end;
 
 { TTSqlServerSelectSyntax }
 
-function TTSqlServerSelectSyntax.GetFilterTopSyntax: String;
+function TTSqlServerSelectSyntax.GetFilterPagingSyntax: String;
 begin
-  result := Format('TOP %d', [FFilter.Top.MaxRecord]);
+  result := Format('OFFSET %d ROWS FETCH FIRST %d ROWS ONLY', [
+    FFilter.Paging.Start, FFilter.Paging.Limit]);
 end;
 
 { TTSqlServerVersionSyntax }

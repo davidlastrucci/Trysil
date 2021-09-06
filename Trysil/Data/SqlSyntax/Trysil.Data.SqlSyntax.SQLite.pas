@@ -32,10 +32,7 @@ type
 
   TTSQLiteSelectSyntax = class(TTSelectSyntax)
   strict protected
-    function InternalGetSqlSyntax(
-      const AWhereColumns: TArray<TTColumnMap>): String; override;
-
-    function GetFilterTopSyntax: String; override;
+    function GetFilterPagingSyntax(): String; override;
   end;
 
 { TTSQLiteVersionSyntax }
@@ -66,32 +63,10 @@ end;
 
 { TTSQLiteSelectSyntax }
 
-function TTSQLiteSelectSyntax.InternalGetSqlSyntax(
-  const AWhereColumns: TArray<TTColumnMap>): String;
-var
-  LResult: TStringBuilder;
+function TTSQLiteSelectSyntax.GetFilterPagingSyntax: String;
 begin
-  LResult := TStringBuilder.Create;
-  try
-    LResult.Append('SELECT ');
-    LResult.Append(GetColumns());
-    LResult.AppendFormat(' FROM %s', [
-      FConnection.GetDatabaseObjectName(FTableMap.Name)]);
-    if not FFilter.Where.IsEmpty then
-      LResult.AppendFormat(' WHERE %s', [FFilter.Where]);
-    LResult.Append(GetOrderBy());
-    if FFilter.Top.MaxRecord > 0 then
-      LResult.AppendFormat(' %s', [GetFilterTopSyntax]);
-
-    result := LResult.ToString();
-  finally
-    LResult.Free;
-  end;
-end;
-
-function TTSQLiteSelectSyntax.GetFilterTopSyntax: String;
-begin
-  result := Format('LIMIT %d', [FFilter.Top.MaxRecord]);
+  result := Format('LIMIT %d OFFSET %d', [
+    FFilter.Paging.Limit, FFilter.Paging.Start]);
 end;
 
 { TTSQLiteVersionSyntax }

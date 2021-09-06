@@ -16,6 +16,7 @@ uses
   System.Classes,
   System.SysUtils,
 
+  Trysil.Mapping,
   Trysil.Data.SqlSyntax;
 
 type
@@ -31,7 +32,10 @@ type
 
   TTFirebirdSQLSelectSyntax = class(TTSelectSyntax)
   strict protected
-    function GetFilterTopSyntax: String; override;
+    function InternalGetSqlSyntax(
+      const AWhereColumns: TArray<TTColumnMap>): String; override;
+
+    function GetFilterPagingSyntax(): String; override;
   end;
 
 { TTFirebirdSQLVersionSyntax }
@@ -62,9 +66,33 @@ end;
 
 { TTFirebirdSQLSelectSyntax }
 
-function TTFirebirdSQLSelectSyntax.GetFilterTopSyntax: String;
+function TTFirebirdSQLSelectSyntax.InternalGetSqlSyntax(
+  const AWhereColumns: TArray<TTColumnMap>): String;
+var
+  LResult: TStringBuilder;
 begin
-  result := Format('FIRST %d', [FFilter.Top.MaxRecord]);
+  LResult := TStringBuilder.Create;
+  try
+    LResult.Append('SELECT ');
+    if not FFilter.Paging.IsEmpty then
+      LResult.AppendFormat(' %s', [GetFilterPagingSyntax()]);
+    LResult.Append(GetColumns());
+    LResult.AppendFormat(' FROM %s', [
+      FConnection.GetDatabaseObjectName(FTableMap.Name)]);
+    if not FFilter.Where.IsEmpty then
+      LResult.AppendFormat(' WHERE %s', [FFilter.Where]);
+    LResult.Append(GetOrderBy());
+
+    result := LResult.ToString();
+  finally
+    LResult.Free;
+  end;
+end;
+
+function TTFirebirdSQLSelectSyntax.GetFilterPagingSyntax: String;
+begin
+  result := Format('FIRST %d SKIP %d', [
+    FFilter.Paging.Limit, FFilter.Paging.Start]);
 end;
 
 { TTFirebirdSQLVersionSyntax }
