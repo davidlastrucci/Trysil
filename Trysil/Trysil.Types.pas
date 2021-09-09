@@ -22,6 +22,12 @@ uses
 
 type
 
+{ Defines }
+
+{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
+  {$DEFINE Managed_Records}
+{$ENDIF}
+
 { TTPrimaryKey }
 
   TTPrimaryKey = Int32;
@@ -40,10 +46,6 @@ type
   TTVersion = Int32;
 
 { TTNullable<T> }
-
-{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
-  {$DEFINE Managed_Records}
-{$ENDIF}
 
   TTNullable<T> = record
 {$IFDEF Managed_Records}

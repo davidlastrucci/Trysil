@@ -18,6 +18,12 @@ uses
 
 type
 
+{ Defines }
+
+{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
+  {$DEFINE Managed_Records}
+{$ENDIF}
+
 { TTFilterPaging }
 
   TTFilterPaging = record
@@ -31,6 +37,10 @@ type
   public
     constructor Create(
       const AStart: Integer; const ALimit: Integer; const AOrderBy: String);
+
+{$IFDEF Managed_Records}
+    class operator Initialize(out AFilterPaging: TTFilterPaging);
+{$ENDIF}
 
     property Start: Integer read FStart write FStart;
     property Limit: Integer read FLimit write FLimit;
@@ -63,6 +73,10 @@ type
       const ALimit: Integer;
       const AOrderBy: String); overload;
 
+{$IFDEF Managed_Records}
+    class operator Initialize(out AFilter: TTFilter);
+{$ENDIF}
+
     property Where: String read FWhere write FWhere;
     property Paging: TTFilterPaging read FPaging;
     property IsEmpty: Boolean read GetIsEmpty;
@@ -83,6 +97,15 @@ begin
   FLimit := ALimit;
   FOrderBy := AOrderBy;
 end;
+
+{$IFDEF Managed_Records}
+class operator TTFilterPaging.Initialize(out AFilterPaging: TTFilterPaging);
+begin
+  AFilterPaging.FStart := -1;
+  AFilterPaging.FLimit := -1;
+  AFilterPaging.FOrderBy := String.Empty;
+end;
+{$ENDIF}
 
 function TTFilterPaging.GetIsEmpty: Boolean;
 begin
@@ -125,6 +148,14 @@ begin
   FWhere := AWhere;
   FPaging := TTFilterPaging.Create(AStart, ALimit, AOrderBy);
 end;
+
+{$IFDEF Managed_Records}
+class operator TTFilter.Initialize(out AFilter: TTFilter);
+begin
+  AFilter.FWhere := String.Empty;
+  AFilter.FPaging := TTFilterPaging.Empty();
+end;
+{$ENDIF}
 
 class function TTFilter.Empty: TTFilter;
 begin
