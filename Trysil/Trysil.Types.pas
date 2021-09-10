@@ -22,11 +22,7 @@ uses
 
 type
 
-{ Defines }
-
-{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
-  {$DEFINE Managed_Records}
-{$ENDIF}
+{$INCLUDE 'Trysil.Conditionals.inc'}
 
 { TTPrimaryKey }
 
