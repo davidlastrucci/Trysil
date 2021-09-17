@@ -47,14 +47,12 @@ type
 
 { TDetailColumnAttribute }
 
-  TDetailColumnAttribute = class(TCustomAttribute)
+  TDetailColumnAttribute = class(TNamedAttribute)
   strict private
-    FName: String;
     FDetailName: String;
   public
     constructor Create(const AName: String; const ADetailName: String);
 
-    property Name: String read FName;
     property DetailName: String read FDetailName;
   end;
 
@@ -95,8 +93,7 @@ end;
 constructor TDetailColumnAttribute.Create(
   const AName: String; const ADetailName: String);
 begin
-  inherited Create;
-  FName := AName;
+  inherited Create(AName);
   FDetailName := ADetailName;
 end;
 
