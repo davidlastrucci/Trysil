@@ -25,15 +25,31 @@ type
 
 { TTEntityIdentityMap }
 
-  TTEntityIdentityMap = class(TTCache<TTPrimaryKey, TObject>);
+  TTEntityIdentityMap = class
+  strict private
+    FCache: TObjectDictionary<TTPrimaryKey, TObject>;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure Add(const APrimaryKey: TTPrimaryKey; const AEntity: TObject);
+    function TryGetValue(
+      const APrimaryKey: TTPrimaryKey; var AEntity: TObject): Boolean;
+    procedure Remove(const APrimaryKey: TTPrimaryKey);
+  end;
 
 { TTIdentityMap }
 
-  TTIdentityMap = class(TTCacheEx<PTypeInfo, TTEntityIdentityMap>)
-  strict protected
-    function CreateObject(
-      const ATypeInfo: PTypeInfo): TTEntityIdentityMap; override;
+  TTIdentityMap = class
+  strict private
+    FCache: TObjectDictionary<PTypeInfo, TTEntityIdentityMap>;
+
+    function GetEntityIdentityMap(
+      const ATypeInfo: PTypeInfo): TTEntityIdentityMap;
   public
+    constructor Create;
+    destructor Destroy; override;
+
     procedure AddEntity<T: class>(
       const APrimaryKey: TTPrimaryKey; const AEntity: T);
     function GetEntity<T: class>(const APrimaryKey: TTPrimaryKey): T;
@@ -42,18 +58,73 @@ type
 
 implementation
 
+{ TTEntityIdentityMap }
+
+constructor TTEntityIdentityMap.Create;
+begin
+  inherited Create;
+  FCache := TObjectDictionary<TTPrimaryKey, TObject>.Create([doOwnsValues]);
+end;
+
+destructor TTEntityIdentityMap.Destroy;
+begin
+  FCache.Free;
+  inherited Destroy;
+end;
+
+procedure TTEntityIdentityMap.Add(
+  const APrimaryKey: TTPrimaryKey; const AEntity: TObject);
+begin
+  if not FCache.ContainsKey(APrimaryKey) then
+    FCache.Add(APrimaryKey, AEntity);
+end;
+
+function TTEntityIdentityMap.TryGetValue(
+  const APrimaryKey: TTPrimaryKey; var AEntity: TObject): Boolean;
+begin
+  result := FCache.TryGetValue(APrimaryKey, AEntity);
+end;
+
+procedure TTEntityIdentityMap.Remove(const APrimaryKey: TTPrimaryKey);
+begin
+  if FCache.ContainsKey(APrimaryKey) then
+    FCache.Remove(APrimaryKey);
+end;
+
 { TTIdentityMap }
 
-function TTIdentityMap.CreateObject(
+constructor TTIdentityMap.Create;
+begin
+  inherited Create;
+  FCache := TObjectDictionary<
+    PTypeInfo, TTEntityIdentityMap>.Create([doOwnsValues]);
+end;
+
+destructor TTIdentityMap.Destroy;
+begin
+  FCache.Free;
+  inherited Destroy;
+end;
+
+function TTIdentityMap.GetEntityIdentityMap(
   const ATypeInfo: PTypeInfo): TTEntityIdentityMap;
 begin
-  result := TTEntityIdentityMap.Create;
+  if not FCache.TryGetValue(ATypeInfo, result) then
+  begin
+    result := TTEntityIdentityMap.Create;
+    try
+      FCache.Add(ATypeInfo, result);
+    except
+      result.Free;
+      raise;
+    end;
+  end;
 end;
 
 procedure TTIdentityMap.AddEntity<T>(
   const APrimaryKey: TTPrimaryKey; const AEntity: T);
 begin
-  GetValueOrCreate(TypeInfo(T)).Add(APrimaryKey, AEntity);
+  GetEntityIdentityMap(TypeInfo(T)).Add(APrimaryKey, AEntity);
 end;
 
 function TTIdentityMap.GetEntity<T>(const APrimaryKey: TTPrimaryKey): T;
@@ -61,13 +132,13 @@ var
   LResult: TObject;
 begin
   result := default(T);
-  if GetValueOrCreate(TypeInfo(T)).TryGetValue(APrimaryKey, LResult) then
+  if GetEntityIdentityMap(TypeInfo(T)).TryGetValue(APrimaryKey, LResult) then
     result := T(LResult);
 end;
 
 procedure TTIdentityMap.RemoveEntity<T>(const APrimaryKey: TTPrimaryKey);
 begin
-  GetValueOrCreate(TypeInfo(T)).Remove(APrimaryKey);
+  GetEntityIdentityMap(TypeInfo(T)).Remove(APrimaryKey);
 end;
 
 end.

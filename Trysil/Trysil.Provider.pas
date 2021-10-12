@@ -38,7 +38,6 @@ type
     FConnection: TTConnection;
     FContext: TObject;
     FMetadata: TTMetadata;
-    FMapper: TTMapper;
     FIdentityMap: TTIdentityMap;
 
     FLazyOwner: TObjectList<TObject>;
@@ -91,7 +90,6 @@ type
       const AConnection: TTConnection;
       const AContext: TObject;
       const AMetadata: TTMetadata;
-      const AMapper: TTMapper;
       const AUseIdentityMap: Boolean);
     destructor Destroy; override;
 
@@ -116,14 +114,12 @@ constructor TTProvider.Create(
   const AConnection: TTConnection;
   const AContext: TObject;
   const AMetadata: TTMetadata;
-  const AMapper: TTMapper;
   const AUseIdentityMap: Boolean);
 begin
   inherited Create;
   FConnection := AConnection;
   FContext := AContext;
   FMetadata := AMetadata;
-  FMapper := AMapper;
 
   FIdentityMap := nil;
   if AUseIdentityMap then
@@ -147,7 +143,7 @@ var
   LPrimaryKey: TTPrimaryKey;
   LColumnMap: TTColumnMap;
 begin
-  LTableMap := FMapper.Load<T>();
+  LTableMap := TTMapper.Instance.Load<T>();
   if not Assigned(LTablemap.PrimaryKey) then
     raise ETException.Create(SNotDefinedPrimaryKey);
   if LTableMap.SequenceName.IsEmpty then
@@ -207,7 +203,7 @@ var
   LColumnMap: TTColumnMap;
   LDetailColumnMap: TTDetailColumnMap;
 begin
-  LTableMap := FMapper.Load<T>();
+  LTableMap := TTMapper.Instance.Load<T>();
   LRttiEntity := TTRttiEntity<T>.Create;
   try
     result := LRttiEntity.CreateEntity(FContext);
@@ -273,7 +269,7 @@ var
 begin
   LValue := GetValue(AReader, AColumnName);
   LResult := ARttiMember.CreateObject(
-    AEntity, FContext, FMapper, ADetailColumnName, LValue);
+    AEntity, FContext, ADetailColumnName, LValue);
 
   if Assigned(LResult) then
   begin
@@ -346,11 +342,10 @@ var
 begin
   LGenericList := TTRttiGenericList.Create(AObject);
   try
-    LTableMap := FMapper.Load(LGenericList.GenericTypeInfo);
+    LTableMap := TTMapper.Instance.Load(LGenericList.GenericTypeInfo);
     LTableMetadata := FMetadata.Load(LGenericList.GenericTypeInfo);
     LFilter := TTFilter.Create(GetWhere(AColumnName, AID));
-    LReader := FConnection.CreateReader(
-      FMapper, LTableMap, LTableMetadata, LFilter);
+    LReader := FConnection.CreateReader(LTableMap, LTableMetadata, LFilter);
     try
       LGenericList.Clear;
       while not LReader.Eof do
@@ -381,11 +376,10 @@ var
   LFilter: TTFilter;
   LReader: TTReader;
 begin
-  LTableMap := FMapper.Load(AObject.ClassInfo);
+  LTableMap := TTMapper.Instance.Load(AObject.ClassInfo);
   LTableMetadata := FMetadata.Load(AObject.ClassInfo);
   LFilter := TTFilter.Create(GetWhere(LTablemap, AID));
-  LReader := FConnection.CreateReader(
-    FMapper, LTableMap, LTableMetadata, LFilter);
+  LReader := FConnection.CreateReader(LTableMap, LTableMetadata, LFilter);
   try
     if not LReader.IsEmpty then
       MapEntity(LTableMap, LReader, AObject);
@@ -435,10 +429,9 @@ var
   LTableMetadata: TTTableMetadata;
   LReader: TTReader;
 begin
-  LTableMap := FMapper.Load<T>();
+  LTableMap := TTMapper.Instance.Load<T>();
   LTableMetadata := FMetadata.Load<T>();
-  LReader := FConnection.CreateReader(
-    FMapper, LTableMap, LTableMetadata, AFilter);
+  LReader := FConnection.CreateReader(LTableMap, LTableMetadata, AFilter);
   try
     AResult.Clear;
     while not LReader.Eof do
@@ -459,11 +452,10 @@ var
   LReader: TTReader;
 begin
   result := default(T);
-  LTableMap := FMapper.Load<T>();
+  LTableMap := TTMapper.Instance.Load<T>();
   LTableMetadata := FMetadata.Load<T>();
   LFilter := TTFilter.Create(GetWhere(LTablemap, AID));
-  LReader := FConnection.CreateReader(
-    FMapper, LTableMap, LTableMetadata, LFilter);
+  LReader := FConnection.CreateReader(LTableMap, LTableMetadata, LFilter);
   try
     if not LReader.IsEmpty then
       result := InternalCreateEntity<T>(LTableMap, LReader);
@@ -479,13 +471,12 @@ var
   LFilter: TTFilter;
   LReader: TTReader;
 begin
-  LTableMap := FMapper.Load<T>();
+  LTableMap := TTMapper.Instance.Load<T>();
   LTableMetadata := FMetadata.Load<T>();
   LFilter := TTFilter.Create(GetWhere(
     LTablemap,
     LTablemap.PrimaryKey.Member.GetValue(AEntity).AsType<TTPrimaryKey>()));
-  LReader := FConnection.CreateReader(
-    FMapper, LTableMap, LTableMetadata, LFilter);
+  LReader := FConnection.CreateReader(LTableMap, LTableMetadata, LFilter);
   try
     if not LReader.IsEmpty then
       MapEntity(LTableMap, LReader, AEntity);

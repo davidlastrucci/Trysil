@@ -57,28 +57,23 @@ type
     procedure RollbackTransaction; override;
 
     function CreateReader(
-      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
       const AFilter: TTFilter): TTReader; override;
 
     function CreateInsertCommand(
-      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata): TTAbstractCommand; override;
 
     function CreateUpdateCommand(
-      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata): TTAbstractCommand; override;
 
     function CreateDeleteCommand(
-      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata): TTAbstractCommand; override;
 
     procedure GetMetadata(
-      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata); override;
 
@@ -98,7 +93,6 @@ type
   public
     constructor Create(
       const AConnection: TTGenericConnection;
-      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
       const AFilter: TTFilter);
@@ -123,7 +117,6 @@ type
   public
     constructor Create(
       const AConnection: TTGenericConnection;
-      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
       const AUpdateMode: TTUpdateMode);
@@ -194,40 +187,36 @@ begin
 end;
 
 function TTGenericConnection.CreateReader(
-  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata;
   const AFilter: TTFilter): TTReader;
 begin
   result := TTGenericReader.Create(
-    Self, AMapper, ATableMap, ATableMetadata, AFilter);
+    Self, ATableMap, ATableMetadata, AFilter);
 end;
 
 function TTGenericConnection.CreateInsertCommand(
-  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata): TTAbstractCommand;
 begin
   result := TTGenericInsertCommand.Create(
-    Self, AMapper, ATableMap, ATableMetadata, FUpdateMode);
+    Self, ATableMap, ATableMetadata, FUpdateMode);
 end;
 
 function TTGenericConnection.CreateUpdateCommand(
-  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata): TTAbstractCommand;
 begin
   result := TTGenericUpdateCommand.Create(
-    Self, AMapper, ATableMap, ATableMetadata, FUpdateMode);
+    Self, ATableMap, ATableMetadata, FUpdateMode);
 end;
 
 function TTGenericConnection.CreateDeleteCommand(
-  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata): TTAbstractCommand;
 begin
   result := TTGenericDeleteCommand.Create(
-    Self, AMapper, ATableMap, ATableMetadata, FUpdateMode);
+    Self, ATableMap, ATableMetadata, FUpdateMode);
 end;
 
 function TTGenericConnection.GetColumnMap(
@@ -269,7 +258,6 @@ begin
 end;
 
 procedure TTGenericConnection.GetMetadata(
-  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata);
 var
@@ -278,7 +266,7 @@ var
   LIndex: Integer;
 begin
   LSyntax := FSyntaxClasses.Metadata.Create(
-    Self, AMapper, ATableMap, ATableMetadata);
+    Self, ATableMap, ATableMetadata);
   try
     LDataset := CreateDataSet(LSyntax.SQL);
     try
@@ -344,7 +332,6 @@ end;
 
 constructor TTGenericReader.Create(
   const AConnection: TTGenericConnection;
-  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata;
   const AFilter: TTFilter);
@@ -352,7 +339,7 @@ begin
   inherited Create(ATableMap);
   FConnection := AConnection;
   FSyntax := AConnection.SyntaxClasses.Select.Create(
-    AConnection, AMapper, ATableMap, ATableMetadata, AFilter);
+    AConnection, ATableMap, ATableMetadata, AFilter);
 end;
 
 destructor TTGenericReader.Destroy;
@@ -371,12 +358,11 @@ end;
 
 constructor TTGenericCommand.Create(
   const AConnection: TTGenericConnection;
-  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata;
   const AUpdateMode: TTUpdateMode);
 begin
-  inherited Create(AMapper, ATableMap, ATableMetadata, AUpdateMode);
+  inherited Create(ATableMap, ATableMetadata, AUpdateMode);
   FConnection := AConnection;
 end;
 
@@ -412,7 +398,6 @@ begin
 
     LRowsAffected := FConnection.Execute(
       ASQL,
-      FMapper,
       FTableMap,
       FTableMetadata,
       AEntity);
@@ -441,7 +426,7 @@ var
   LSyntax: TTCommandSyntax;
 begin
   LSyntax := FConnection.SyntaxClasses.Insert.Create(
-    FConnection, FMapper, FTableMap, FTableMetadata);
+    FConnection, FTableMap, FTableMetadata);
   try
     ExecuteCommand(LSyntax.GetSqlSyntax([]), AEntity, AEvent);
   finally
@@ -457,7 +442,7 @@ var
   LSyntax: TTCommandSyntax;
 begin
   LSyntax := FConnection.SyntaxClasses.Update.Create(
-    FConnection, FMapper, FTableMap, FTableMetadata);
+    FConnection, FTableMap, FTableMetadata);
   try
     ExecuteCommand(LSyntax.GetSqlSyntax(GetWhereColumns), AEntity, AEvent);
   finally
@@ -499,7 +484,7 @@ var
   LSyntax: TTCommandSyntax;
 begin
   LSyntax := FConnection.SyntaxClasses.Delete.Create(
-    FConnection, FMapper, FTableMap, FTableMetadata);
+    FConnection, FTableMap, FTableMetadata);
   try
     ExecuteCommand(LSyntax.GetSqlSyntax(GetWhereColumns), AEntity, AEvent);
   finally

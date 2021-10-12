@@ -35,15 +35,13 @@ type
     FConnection: TTConnection;
     FContext: TObject;
     FMetadata: TTMetadata;
-    FMapper: TTMapper;
 
     procedure CheckReadWrite(const ATableMap: TTTableMap);
   public
     constructor Create(
       const AConnection: TTConnection;
       const AContext: TObject;
-      const AMetadata: TTMetadata;
-      const AMapper: TTMapper);
+      const AMetadata: TTMetadata);
 
     procedure Insert<T: class>(const AEntity: T);
     procedure Update<T: class>(const AEntity: T);
@@ -57,14 +55,12 @@ implementation
 constructor TTResolver.Create(
   const AConnection: TTConnection;
   const AContext: TObject;
-  const AMetadata: TTMetadata;
-  const AMapper: TTMapper);
+  const AMetadata: TTMetadata);
 begin
   inherited Create;
   FConnection := AConnection;
   FContext := AContext;
   FMetadata := AMetadata;
-  FMapper := AMapper;
 end;
 
 procedure TTResolver.CheckReadWrite(const ATableMap: TTTableMap);
@@ -88,11 +84,10 @@ var
   LCommand: TTAbstractCommand;
   LEvent: TTEvent;
 begin
-  LTableMap := FMapper.Load<T>();
+  LTableMap := TTMapper.Instance.Load<T>();
   CheckReadWrite(LTableMap);
   LTableMetadata := FMetadata.Load<T>();
-  LCommand := FConnection.CreateInsertCommand(
-    FMapper, LTableMap, LTableMetadata);
+  LCommand := FConnection.CreateInsertCommand(LTableMap, LTableMetadata);
   try
     LEvent := TTEventFactory.Instance.CreateEvent<T>(
       LTableMap.Events.InsertEventClass, FContext, AEntity);
@@ -116,11 +111,10 @@ var
   LCommand: TTAbstractCommand;
   LEvent: TTEvent;
 begin
-  LTableMap := FMapper.Load<T>();
+  LTableMap := TTMapper.Instance.Load<T>();
   CheckReadWrite(LTableMap);
   LTableMetadata := FMetadata.Load<T>();
-  LCommand := FConnection.CreateUpdateCommand(
-    FMapper, LTableMap, LTableMetadata);
+  LCommand := FConnection.CreateUpdateCommand(LTableMap, LTableMetadata);
   try
     LEvent := TTEventFactory.Instance.CreateEvent<T>(
       LTableMap.Events.UpdateEventClass, FContext, AEntity);
@@ -148,12 +142,11 @@ var
   LCommand: TTAbstractCommand;
   LEvent: TTEvent;
 begin
-  LTableMap := FMapper.Load<T>();
+  LTableMap := TTMapper.Instance.Load<T>();
   CheckReadWrite(LTableMap);
   FConnection.CheckRelations(LTableMap, AEntity);
   LTableMetadata := FMetadata.Load<T>();
-  LCommand := FConnection.CreateDeleteCommand(
-    FMapper, LTableMap, LTableMetadata);
+  LCommand := FConnection.CreateDeleteCommand(LTableMap, LTableMetadata);
   try
     LEvent := TTEventFactory.Instance.CreateEvent<T>(
       LTableMap.Events.DeleteEventClass, FContext, AEntity);

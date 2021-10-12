@@ -73,7 +73,6 @@ type
 
     procedure SetParameters(
       const ADataSet: TFDQuery;
-      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
       const AEntity: TObject);
@@ -92,7 +91,6 @@ type
 
     function Execute(
       const ASQL: String;
-      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
       const AEntity: TObject): Integer; override;
@@ -214,7 +212,6 @@ end;
 
 function TTFireDACConnection.Execute(
   const ASQL: String;
-  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata;
   const AEntity: TObject): Integer;
@@ -226,10 +223,11 @@ begin
     LDataSet.Connection := FConnection;
     LDataSet.SQL.Text := ASQL;
 
-    if Assigned(AMapper) and Assigned(ATableMap) and
-      Assigned(ATableMetadata) and Assigned(AEntity) then
+    if Assigned(ATableMap) and
+      Assigned(ATableMetadata) and
+      Assigned(AEntity) then
       SetParameters(
-        LDataSet, AMapper, ATableMap, ATableMetadata, AEntity);
+        LDataSet, ATableMap, ATableMetadata, AEntity);
 
     LDataSet.ExecSQL;
     result := LDataSet.RowsAffected;
@@ -263,7 +261,6 @@ end;
 
 procedure TTFireDACConnection.SetParameters(
   const ADataSet: TFDQuery;
-  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata;
   const AEntity: TObject);
@@ -288,7 +285,6 @@ begin
         LParameter := TTParameterFactory.Instance.CreateParameter(
           LColumn.DataType,
           LParam,
-          AMapper,
           GetColumnMap(ATableMap, LColumn.ColumnName));
         try
           LParameter.SetValue(AEntity);

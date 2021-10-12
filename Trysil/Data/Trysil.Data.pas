@@ -93,7 +93,6 @@ type
 
   TTAbstractCommand = class abstract
   strict protected
-    FMapper: TTMapper;
     FTableMap: TTTableMap;
     FTableMetadata: TTTableMetadata;
     FUpdateMode: TTUpdateMode;
@@ -101,7 +100,6 @@ type
     function GetWhereColumns: TArray<TTColumnMap>;
   public
     constructor Create(
-      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
       const AUpdateMode: TTUpdateMode);
@@ -147,7 +145,6 @@ type
 
     function Execute(
       const ASQL: String;
-      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
       const AEntity: TObject): Integer; overload; virtual; abstract;
@@ -155,23 +152,19 @@ type
     function Execute(const ASQL: String): Integer; overload; virtual;
 
     function CreateReader(
-      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
       const AFilter: TTFilter): TTReader; virtual; abstract;
 
     function CreateInsertCommand(
-      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata): TTAbstractCommand; virtual; abstract;
 
     function CreateUpdateCommand(
-      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata): TTAbstractCommand; virtual; abstract;
 
     function CreateDeleteCommand(
-      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata): TTAbstractCommand; virtual; abstract;
 
@@ -241,13 +234,11 @@ end;
 { TTAbstractCommand }
 
 constructor TTAbstractCommand.Create(
-  const AMapper: TTMapper;
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata;
   const AUpdateMode: TTUpdateMode);
 begin
   inherited Create;
-  FMapper := AMapper;
   FTableMap := ATableMap;
   FTableMetadata := ATableMetadata;
   FUpdateMode := AUpdateMode;
@@ -299,7 +290,7 @@ end;
 
 function TTConnection.Execute(const ASQL: String): Integer;
 begin
-  result := Execute(ASQL, nil, nil, nil, nil);
+  result := Execute(ASQL, nil, nil, nil);
 end;
 
 function TTConnection.GetDatabaseObjectName(

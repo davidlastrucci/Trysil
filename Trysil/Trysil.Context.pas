@@ -35,7 +35,6 @@ type
   strict private
     FConnection: TTConnection;
 
-    FMapper: TTMapper;
     FMetadata: TTMetadata;
     FProvider: TTProvider;
     FResolver: TTResolver;
@@ -89,12 +88,11 @@ begin
   inherited Create;
   FConnection := AConnection;
 
-  FMapper := TTMapper.Create;
-  FMetadata := TTMetadata.Create(FMapper, FConnection);
+  FMetadata := TTMetadata.Create(FConnection);
 
   FProvider := TTProvider.Create(
-    FConnection, Self, FMetadata, FMapper, AUseIdentityMap);
-  FResolver := TTResolver.Create(FConnection, Self, FMetadata, FMapper);
+    FConnection, Self, FMetadata, AUseIdentityMap);
+  FResolver := TTResolver.Create(FConnection, Self, FMetadata);
 end;
 
 destructor TTContext.Destroy;
@@ -102,7 +100,6 @@ begin
   FResolver.Free;
   FProvider.Free;
   FMetadata.Free;
-  FMapper.Free;
   inherited Destroy;
 end;
 

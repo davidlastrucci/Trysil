@@ -208,7 +208,12 @@ type
 
 { TTMapper }
 
-  TTMapper = class(TTCacheEx<PTypeInfo, TTTableMap>)
+  TTMapper = class(TTCache<PTypeInfo, TTTableMap>)
+  strict private
+    class var FInstance: TTMapper;
+
+    class constructor ClassCreate;
+    class destructor ClassDestroy;
   strict private
     FContext: TRttiContext;
   strict protected
@@ -219,6 +224,8 @@ type
 
     function Load<T: class>(): TTTableMap; overload;
     function Load(const ATypeInfo: PTypeInfo): TTTableMap; overload;
+
+    class property Instance: TTMapper read FInstance;
   end;
 
 implementation
@@ -581,6 +588,16 @@ begin
 end;
 
 { TTMapper }
+
+class constructor TTMapper.ClassCreate;
+begin
+  FInstance := TTMapper.Create;
+end;
+
+class destructor TTMapper.ClassDestroy;
+begin
+  FInstance.Free;
+end;
 
 constructor TTMapper.Create;
 begin

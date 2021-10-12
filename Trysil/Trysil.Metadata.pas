@@ -49,6 +49,8 @@ type
   TTColumnsMetadata = class
   strict private
     FColumns: TTObjectList<TTColumnMetadata>;
+
+    function GetEmpty: Boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -59,6 +61,8 @@ type
       const ADataSize: Integer);
 
     function GetEnumerator: TTListEnumerator<TTColumnMetadata>;
+
+    property Empty: Boolean read GetEmpty;
   end;
 
 { TTTableMetadata }
@@ -82,24 +86,33 @@ type
   TTMetadataProvider = class abstract
   public
     procedure GetMetadata(
-      const AMapper: TTMapper;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata); virtual; abstract;
   end;
 
-{ TTMetadata }
+{ TTMetadataCache }
 
-  TTMetadata = class(TTCacheEx<PTypeInfo, TTTableMetadata>)
+  TTMetadataCache = class(TTCache<PTypeInfo, TTTableMetadata>)
   strict private
-    FMapper: TTMapper;
-    FMetadataProvider: TTMetadataProvider;
+    class var FInstance: TTMetadataCache;
+    class constructor ClassCreate;
+    class destructor ClassDestroy;
   strict protected
     function CreateObject(
       const ATypeInfo: PTypeInfo): TTTableMetadata; override;
   public
-    constructor Create(
-      const AMapper: TTMapper;
-      const AMetadataProvider: TTMetadataProvider);
+    function Load(const ATypeInfo: PTypeInfo): TTTableMetaData;
+
+    class property Instance: TTMetadataCache read FInstance;
+  end;
+
+{ TTMetadata }
+
+  TTMetadata = class
+  strict private
+    FMetadataProvider: TTMetadataProvider;
+  public
+    constructor Create(const AMetadataProvider: TTMetadataProvider);
 
     function Load<T: class>(): TTTableMetaData; overload;
     function Load(const ATypeInfo: PTypeInfo): TTTableMetaData; overload;
@@ -150,6 +163,11 @@ begin
   end;
 end;
 
+function TTColumnsMetadata.GetEmpty: Boolean;
+begin
+  result := (FColumns.Count = 0);
+end;
+
 function TTColumnsMetadata.GetEnumerator: TTListEnumerator<TTColumnMetadata>;
 begin
   result := TTListEnumerator<TTColumnMetadata>.Create(FColumns);
@@ -171,28 +189,38 @@ begin
   inherited Destroy;
 end;
 
-{ TTMetadata }
+{ TTMetadataCache }
 
-constructor TTMetadata.Create(
-  const AMapper: TTMapper; const AMetadataProvider: TTMetadataProvider);
+class constructor TTMetadataCache.ClassCreate;
 begin
-  inherited Create;
-  FMapper := AMapper;
-  FMetadataProvider := AMetadataProvider;
+  FInstance := TTMetadataCache.Create;
 end;
 
-function TTMetadata.CreateObject(const ATypeInfo: PTypeInfo): TTTableMetadata;
+class destructor TTMetadataCache.ClassDestroy;
+begin
+  FInstance.Free;
+end;
+
+function TTMetadataCache.CreateObject(
+  const ATypeInfo: PTypeInfo): TTTableMetadata;
 var
   LTableMap: TTTableMap;
 begin
-  LTableMap := FMapper.Load(ATypeInfo);
+  LTableMap := TTMapper.Instance.Load(ATypeInfo);
   result := TTTableMetadata.Create(LTableMap);
-  try
-    FMetadataProvider.GetMetadata(FMapper, LTableMap, result);
-  except
-    result.Free;
-    raise;
-  end;
+end;
+
+function TTMetadataCache.Load(const ATypeInfo: PTypeInfo): TTTableMetaData;
+begin
+  result := GetValueOrCreate(ATypeInfo);
+end;
+
+{ TTMetadata }
+
+constructor TTMetadata.Create(const AMetadataProvider: TTMetadataProvider);
+begin
+  inherited Create;
+  FMetadataProvider := AMetadataProvider;
 end;
 
 function TTMetadata.Load<T>: TTTableMetaData;
@@ -201,8 +229,15 @@ begin
 end;
 
 function TTMetadata.Load(const ATypeInfo: PTypeInfo): TTTableMetaData;
+var
+  LTableMap: TTTableMap;
 begin
-  result := GetValueOrCreate(ATypeInfo);
+  result := TTMetadataCache.Instance.Load(ATypeInfo);
+  if result.Columns.Empty then
+  begin
+    LTableMap := TTMapper.Instance.Load(ATypeInfo);
+    FMetadataProvider.GetMetadata(LTableMap, result);
+  end;
 end;
 
 end.

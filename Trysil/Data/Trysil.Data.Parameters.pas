@@ -34,12 +34,10 @@ type
   TTParameter = class abstract
   strict protected
     FParam: TTParam;
-    FMapper: TTMapper;
     FColumnMap: TTColumnMap;
   public
     constructor Create(
       const AParam: TTParam;
-      const AMapper: TTMapper;
       const AColumnMap: TTColumnMap);
 
     procedure SetValue(const AEntity: TObject); virtual; abstract;
@@ -124,7 +122,6 @@ type
     function CreateParameter(
       const AFieldType: TFieldType;
       const AParam: TTParam;
-      const AMapper: TTMapper;
       const AColumnMap: TTColumnMap): TTParameter;
 
     class property Instance: TTParameterFactory read FInstance;
@@ -143,12 +140,10 @@ implementation
 
 constructor TTParameter.Create(
   const AParam: TTParam;
-  const AMapper: TTMapper;
   const AColumnMap: TTColumnMap);
 begin
   inherited Create;
   FParam := AParam;
-  FMapper := AMapper;
   FColumnMap := AColumnMap;
 end;
 
@@ -210,7 +205,7 @@ begin
     LValue := FColumnMap.Member.GetValueFromObject(AObject)
   else
   begin
-    LTableMap := FMapper.Load(AObject.ClassInfo);
+    LTableMap := TTMapper.Instance.Load(AObject.ClassInfo);
     if not Assigned(LTableMap) then
       raise ETException.Create(STableMapNotFound);
     if not Assigned(LTableMap.PrimaryKey) then
@@ -374,7 +369,6 @@ end;
 function TTParameterFactory.CreateParameter(
   const AFieldType: TFieldType;
   const AParam: TTParam;
-  const AMapper: TTMapper;
   const AColumnMap: TTColumnMap): TTParameter;
 var
   LClass: TClass;
@@ -382,8 +376,7 @@ begin
   if not FParameterTypes.TryGetValue(AFieldType, LClass) then
     raise ETException.CreateFmt(SParameterTypeError, [
       GetEnumName(TypeInfo(TFieldType), Ord(AFieldType))]);
-  result := TTParameterClass(LClass).Create(
-    AParam, AMapper, AColumnMap);
+  result := TTParameterClass(LClass).Create(AParam, AColumnMap);
 end;
 
 { TTParameterRegister }
