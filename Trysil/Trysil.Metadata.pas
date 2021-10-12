@@ -233,11 +233,9 @@ var
   LTableMap: TTTableMap;
 begin
   result := TTMetadataCache.Instance.Load(ATypeInfo);
-  if result.Columns.Empty then
-  begin
-    LTableMap := TTMapper.Instance.Load(ATypeInfo);
+  LTableMap := TTMapper.Instance.Load(ATypeInfo);
+  if (not LTableMap.Columns.Empty) and result.Columns.Empty then
     FMetadataProvider.GetMetadata(LTableMap, result);
-  end;
 end;
 
 end.

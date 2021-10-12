@@ -55,6 +55,8 @@ type
   TTColumnsMap = class
   strict private
     FColumns: TTObjectList<TTColumnMap>;
+
+    function GetEmpty: Boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -62,6 +64,8 @@ type
     procedure Add(const AColumn: TTColumnMap);
 
     function GetEnumerator(): TTListEnumerator<TTColumnMap>;
+
+    property Empty: Boolean read GetEmpty;
   end;
 
 { TTDetailColumnMap }
@@ -275,6 +279,11 @@ end;
 procedure TTColumnsMap.Add(const AColumn: TTColumnMap);
 begin
   FColumns.Add(AColumn);
+end;
+
+function TTColumnsMap.GetEmpty: Boolean;
+begin
+  result := (FColumns.Count = 0);
 end;
 
 function TTColumnsMap.GetEnumerator: TTListEnumerator<TTColumnMap>;
