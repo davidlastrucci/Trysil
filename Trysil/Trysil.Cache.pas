@@ -22,6 +22,10 @@ uses
 
 type
 
+{ TTAfterCreateObjectMethod<K, V> }
+
+  TTAfterCreateObjectMethod<V> = reference to procedure(const AObject: V);
+
 { TTCache<K, V> }
 
   TTCache<K; V: class> = class abstract
@@ -30,7 +34,11 @@ type
     FCache: TObjectDictionary<K, V>;
   strict protected
     function CreateObject(const AKey: K): V; virtual; abstract;
-    function GetValueOrCreate(const AKey: K): V;
+
+    function GetValueOrCreate(const AKey: K): V; overload;
+    function GetValueOrCreate(
+      const AKey: K;
+      const AAfterCreateObject: TTAfterCreateObjectMethod<V>): V; overload;
   public
     constructor Create;
     destructor Destroy; override;
@@ -56,6 +64,12 @@ end;
 
 function TTCache<K, V>.GetValueOrCreate(const AKey: K): V;
 begin
+  result := GetValueOrCreate(AKey, nil);
+end;
+
+function TTCache<K, V>.GetValueOrCreate(
+  const AKey: K; const AAfterCreateObject: TTAfterCreateObjectMethod<V>): V;
+begin
   if not FCache.TryGetValue(AKey, result) then
   begin
     FCriticalSection.Acquire;
@@ -64,6 +78,8 @@ begin
       begin
         result := CreateObject(AKey);
         try
+          if Assigned(AAfterCreateObject) then
+            AAfterCreateObject(result);
           FCache.Add(AKey, result);
         except
           result.Free;

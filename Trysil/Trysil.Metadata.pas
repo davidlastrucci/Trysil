@@ -101,7 +101,10 @@ type
     function CreateObject(
       const ATypeInfo: PTypeInfo): TTTableMetadata; override;
   public
-    function Load(const ATypeInfo: PTypeInfo): TTTableMetaData;
+    function Load(
+      const ATypeInfo: PTypeInfo;
+      const AAfterCreateObject: TTAfterCreateObjectMethod<
+        TTTableMetaData>): TTTableMetaData;
 
     class property Instance: TTMetadataCache read FInstance;
   end;
@@ -210,9 +213,12 @@ begin
   result := TTTableMetadata.Create(LTableMap);
 end;
 
-function TTMetadataCache.Load(const ATypeInfo: PTypeInfo): TTTableMetaData;
+function TTMetadataCache.Load(
+  const ATypeInfo: PTypeInfo;
+  const AAfterCreateObject: TTAfterCreateObjectMethod<
+    TTTableMetaData>): TTTableMetaData;
 begin
-  result := GetValueOrCreate(ATypeInfo);
+  result := GetValueOrCreate(ATypeInfo, AAfterCreateObject);
 end;
 
 { TTMetadata }
@@ -232,10 +238,13 @@ function TTMetadata.Load(const ATypeInfo: PTypeInfo): TTTableMetaData;
 var
   LTableMap: TTTableMap;
 begin
-  result := TTMetadataCache.Instance.Load(ATypeInfo);
-  LTableMap := TTMapper.Instance.Load(ATypeInfo);
-  if (not LTableMap.Columns.Empty) and result.Columns.Empty then
-    FMetadataProvider.GetMetadata(LTableMap, result);
+  result := TTMetadataCache.Instance.Load(
+    ATypeInfo,
+    procedure(const AMetaData: TTTableMetaData)
+    begin
+      LTableMap := TTMapper.Instance.Load(ATypeInfo);
+      FMetadataProvider.GetMetadata(LTableMap, AMetaData);
+    end);
 end;
 
 end.
