@@ -38,7 +38,7 @@ type
     function GetValueOrCreate(const AKey: K): V; overload;
     function GetValueOrCreate(
       const AKey: K;
-      const AAfterCreateObject: TTAfterCreateObjectMethod<V>): V; overload;
+      const AAfterCreate: TTAfterCreateObjectMethod<V>): V; overload;
   public
     constructor Create;
     destructor Destroy; override;
@@ -68,7 +68,7 @@ begin
 end;
 
 function TTCache<K, V>.GetValueOrCreate(
-  const AKey: K; const AAfterCreateObject: TTAfterCreateObjectMethod<V>): V;
+  const AKey: K; const AAfterCreate: TTAfterCreateObjectMethod<V>): V;
 begin
   if not FCache.TryGetValue(AKey, result) then
   begin
@@ -78,8 +78,8 @@ begin
       begin
         result := CreateObject(AKey);
         try
-          if Assigned(AAfterCreateObject) then
-            AAfterCreateObject(result);
+          if Assigned(AAfterCreate) then
+            AAfterCreate(result);
           FCache.Add(AKey, result);
         except
           result.Free;

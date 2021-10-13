@@ -103,7 +103,7 @@ type
   public
     function Load(
       const ATypeInfo: PTypeInfo;
-      const AAfterCreateObject: TTAfterCreateObjectMethod<
+      const AAfterCreate: TTAfterCreateObjectMethod<
         TTTableMetaData>): TTTableMetaData;
 
     class property Instance: TTMetadataCache read FInstance;
@@ -215,10 +215,10 @@ end;
 
 function TTMetadataCache.Load(
   const ATypeInfo: PTypeInfo;
-  const AAfterCreateObject: TTAfterCreateObjectMethod<
+  const AAfterCreate: TTAfterCreateObjectMethod<
     TTTableMetaData>): TTTableMetaData;
 begin
-  result := GetValueOrCreate(ATypeInfo, AAfterCreateObject);
+  result := GetValueOrCreate(ATypeInfo, AAfterCreate);
 end;
 
 { TTMetadata }
@@ -235,12 +235,12 @@ begin
 end;
 
 function TTMetadata.Load(const ATypeInfo: PTypeInfo): TTTableMetaData;
-var
-  LTableMap: TTTableMap;
 begin
   result := TTMetadataCache.Instance.Load(
     ATypeInfo,
     procedure(const AMetaData: TTTableMetaData)
+    var
+      LTableMap: TTTableMap;
     begin
       LTableMap := TTMapper.Instance.Load(ATypeInfo);
       FMetadataProvider.GetMetadata(LTableMap, AMetaData);
