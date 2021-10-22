@@ -93,7 +93,7 @@ type
       const AUseIdentityMap: Boolean);
     destructor Destroy; override;
 
-    function CreateEntity<T: class>(): T;
+    function CreateEntity<T: class>(const AUseSequenceID: Boolean): T;
     function CloneEntity<T: class>(const AEntity: T): T;
 
     function GetMetadata<T: class>(): TTTableMetadata;
@@ -136,7 +136,7 @@ begin
   inherited Destroy;
 end;
 
-function TTProvider.CreateEntity<T>(): T;
+function TTProvider.CreateEntity<T>(const AUseSequenceID: Boolean): T;
 var
   LTableMap: TTTableMap;
   LRttiEntity: TTRttiEntity<T>;
@@ -153,8 +153,11 @@ begin
   try
     result := LRttiEntity.CreateEntity(FContext);
     try
-      LPrimaryKey := FConnection.GetSequenceID(LTableMap);
-      LTableMap.PrimaryKey.Member.SetValue(result, LPrimaryKey);
+      if AUseSequenceID then
+      begin
+        LPrimaryKey := FConnection.GetSequenceID(LTableMap);
+        LTableMap.PrimaryKey.Member.SetValue(result, LPrimaryKey);
+      end;
 
       MapLazyColumns(LTableMap, nil, result);
       MapLazyListColumns(LTableMap, nil, result);

@@ -51,7 +51,8 @@ type
     procedure CommitTransaction;
     procedure RollbackTransaction;
 
-    function CreateEntity<T: class>(): T;
+    function CreateEntity<T: class>(): T; overload;
+    function CreateEntity<T: class>(const AUseSequenceID: Boolean): T; overload;
     function CloneEntity<T: class>(const AEntity: T): T;
     function CreateSession<T: class>(
       const AList: TList<T>): TTSession<T>;
@@ -125,7 +126,12 @@ end;
 
 function TTContext.CreateEntity<T>(): T;
 begin
-  result := FProvider.CreateEntity<T>();
+  result := CreateEntity<T>(True);
+end;
+
+function TTContext.CreateEntity<T>(const AUseSequenceID: Boolean): T;
+begin
+  result := FProvider.CreateEntity<T>(AUseSequenceID);
 end;
 
 function TTContext.CloneEntity<T>(const AEntity: T): T;
