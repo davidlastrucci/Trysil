@@ -43,6 +43,7 @@ type
 
   TTRttiMember = class abstract
   strict protected
+    FName: String;
     FTypeInfo: PTypeInfo;
     FIsClass: Boolean;
     FRttiType: TRttiType;
@@ -53,6 +54,8 @@ type
     procedure SetID(const AObject: TObject; const AID: TTValue);
     function GetIsNullable: Boolean;
   public
+    constructor Create(const AName: String);
+
     function NeedCreateObject(
       const AValue: TTValue; const AIsLazy: Boolean): Boolean;
     function CreateObject(
@@ -67,6 +70,7 @@ type
     procedure SetValue(
       const AInstance: TObject; const AValue: TTValue); virtual; abstract;
 
+    property Name: String read FName;
     property IsClass: Boolean read FIsClass;
     property IsNullable: Boolean read GetIsNullable;
   end;
@@ -165,14 +169,7 @@ implementation
 
 function TTValueHelper.GetIsNullable: Boolean;
 begin
-  result :=
-    Self.IsType<TTNullable<String>>() or
-    Self.IsType<TTNullable<Integer>>() or
-    Self.IsType<TTNullable<Int64>>() or
-    Self.IsType<TTNullable<Double>>() or
-    Self.IsType<TTNullable<Boolean>>() or
-    Self.IsType<TTNullable<TDateTime>>() or
-    Self.IsType<TTNullable<TGuid>>();
+  result := String(Self.TypeInfo.Name).StartsWith('TTNullable<');
 end;
 
 function TTValueHelper.NullableValueToString: String;
@@ -196,6 +193,12 @@ begin
 end;
 
 { TTRttiMember }
+
+constructor TTRttiMember.Create(const AName: String);
+begin
+  inherited Create;
+  FName := AName;
+end;
 
 function TTRttiMember.InternalCreateObject(
   const AContext: TObject;
@@ -291,21 +294,14 @@ end;
 
 function TTRttiMember.GetIsNullable: Boolean;
 begin
-  result :=
-    (FTypeInfo = TypeInfo(TTNullable<String>)) or
-    (FTypeInfo = TypeInfo(TTNullable<Integer>)) or
-    (FTypeInfo = TypeInfo(TTNullable<Int64>)) or
-    (FTypeInfo = TypeInfo(TTNullable<Double>)) or
-    (FTypeInfo = TypeInfo(TTNullable<Boolean>)) or
-    (FTypeInfo = TypeInfo(TTNullable<TDateTime>)) or
-    (FTypeInfo = TypeInfo(TTNullable<TGuid>));
+  result := String(FTypeInfo.Name).StartsWith('TTNullable<');
 end;
 
 { TTRttiField }
 
 constructor TTRttiField.Create(const ARttiField: TRttiField);
 begin
-  inherited Create;
+  inherited Create(ARttiField.Name);
   FTypeInfo := ARttiField.FieldType.Handle;
   FRttiField := ARttiField;
   FIsClass := (FRttiField.FieldType.TypeKind = TTypeKind.tkClass);
@@ -327,7 +323,7 @@ end;
 
 constructor TTRttiProperty.Create(const ARttiProperty: TRttiProperty);
 begin
-  inherited Create;
+  inherited Create(ARttiProperty.Name);
   FTypeInfo := ARttiProperty.PropertyType.Handle;
   FRttiProperty := ARttiProperty;
   FIsClass := (FRttiProperty.PropertyType.TypeKind = TTypeKind.tkClass);
