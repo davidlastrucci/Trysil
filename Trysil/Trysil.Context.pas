@@ -68,8 +68,13 @@ type
     procedure Refresh<T: class>(const AEntity: T);
 
     procedure Insert<T: class>(const AEntity: T);
+    procedure InsertAll<T: class>(const AList: TTList<T>);
+
     procedure Update<T: class>(const AEntity: T);
+    procedure UpdateAll<T: class>(const AList: TTList<T>);
+
     procedure Delete<T: class>(const AEntity: T);
+    procedure DeleteAll<T: class>(const AList: TTList<T>);
 
     property InTransaction: Boolean read GetInTransaction;
   end;
@@ -175,14 +180,38 @@ begin
   FResolver.Insert<T>(AEntity);
 end;
 
+procedure TTContext.InsertAll<T>(const AList: TTList<T>);
+var
+  LEntity: T;
+begin
+  for LEntity in AList do
+    FResolver.Insert<T>(LEntity);
+end;
+
 procedure TTContext.Update<T>(const AEntity: T);
 begin
   FResolver.Update<T>(AEntity);
 end;
 
+procedure TTContext.UpdateAll<T>(const AList: TTList<T>);
+var
+  LEntity: T;
+begin
+  for LEntity in AList do
+    FResolver.Update<T>(LEntity);
+end;
+
 procedure TTContext.Delete<T>(const AEntity: T);
 begin
   FResolver.Delete<T>(AEntity);
+end;
+
+procedure TTContext.DeleteAll<T>(const AList: TTList<T>);
+var
+  LEntity: T;
+begin
+  for LEntity in AList do
+    FResolver.Delete<T>(LEntity);
 end;
 
 end.
