@@ -43,6 +43,10 @@ type
 
 { TTNullable<T> }
 
+{$RTTI EXPLICIT
+  FIELDS([vcPrivate])
+  METHODS([vcPrivate])}
+
   TTNullable<T> = record
 {$IFDEF Managed_Records}
   strict private

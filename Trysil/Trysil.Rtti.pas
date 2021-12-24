@@ -52,6 +52,7 @@ type
       const AContext: TObject;
       const AColumnName: String): TTValue;
     procedure SetID(const AObject: TObject; const AID: TTValue);
+
     function GetIsNullable: Boolean;
   public
     constructor Create(const AName: String);
@@ -105,8 +106,30 @@ type
 
   TTRttiLazy = class
   strict private
+    FObject: TObject;
+    FContext: TRttiContext;
+
+    FType: TRttiType;
+    FID: TRttiField;
+    FProperty: TRttiProperty;
+
+    procedure SearchType;
+    procedure SearchProperty;
+    procedure SearchID;
+
+    function GetObjectValue: TObject;
+    function GetID: TTPrimaryKey;
+  strict private
     class function CheckTypeName(const AType: TRttiType): Boolean;
   public
+    constructor Create(const AObject: TObject);
+    destructor Destroy; override;
+
+    procedure AfterConstruction; override;
+
+    property ObjectValue: TObject read GetObjectValue;
+    property ID: TTPrimaryKey read GetID;
+
     class function IsLazy(const AObject: TObject): Boolean;
     class function IsLazyType(const AType: TRttiType): Boolean;
   end;
@@ -207,7 +230,7 @@ var
   LMethod: TRttiMethod;
   LParameters: TArray<TRttiParameter>;
   LIsValid: Boolean;
-  LParams: TArray<TValue>;
+  LParams: TArray<TTValue>;
 begin
   for LMethod in FRttiType.GetMethods do
     if LMethod.IsConstructor then
@@ -343,6 +366,92 @@ begin
 end;
 
 { TTRttiLazy }
+
+constructor TTRttiLazy.Create(const AObject: TObject);
+begin
+  inherited Create;
+  FObject := AObject;
+  FContext := TRttiContext.Create;
+
+  FType := nil;
+  FProperty := nil;
+  FID := nil;
+end;
+
+destructor TTRttiLazy.Destroy;
+begin
+  FContext.Free;
+  inherited Destroy;
+end;
+
+procedure TTRttiLazy.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  if Assigned(FObject) then
+  begin
+    SearchType;
+    if Assigned(FType) then
+    begin
+      SearchProperty;
+      SearchID;
+    end;
+  end;
+end;
+
+procedure TTRttiLazy.SearchType;
+var
+  LType: TRttiType;
+begin
+  LType := FContext.GetType(FObject.ClassInfo);
+  while not CheckTypeName(LType) do
+  begin
+    LType := LType.BaseType;
+    if not Assigned(LType) then
+      Break;
+  end;
+
+  if Assigned(LType) then
+    FType := LType;
+end;
+
+procedure TTRttiLazy.SearchProperty;
+begin
+  if FType.Name.StartsWith('TTLazy<') then
+    FProperty := FType.GetProperty('Entity')
+  else if FType.Name.StartsWith('TTLazyList<') then
+    FProperty := FType.GetProperty('List');
+end;
+
+procedure TTRttiLazy.SearchID;
+begin
+  FID := FType.GetField('FID');
+end;
+
+function TTRttiLazy.GetObjectValue: TObject;
+var
+  LValue: TTValue;
+begin
+  result := nil;
+  if Assigned(FObject) and Assigned(FProperty) then
+  begin
+    LValue := FProperty.GetValue(FObject);
+    if LValue.IsObject then
+      result := LValue.AsObject;
+  end;
+end;
+
+function TTRttiLazy.GetID: TTPrimaryKey;
+var
+  LValue: TTValue;
+begin
+  result := 0;
+  if Assigned(FObject) and Assigned(FID) then
+  begin
+    LValue := FID.GetValue(FObject);
+    if LValue.IsType<TTPrimaryKey>() then
+      result := LValue.AsType<TTPrimaryKey>();
+  end;
+end;
 
 class function TTRttiLazy.IsLazy(const AObject: TObject): Boolean;
 var
