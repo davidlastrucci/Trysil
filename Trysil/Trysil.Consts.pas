@@ -32,6 +32,7 @@ resourcestring
   SNotDefinedSequence = 'Sequence: not defined.';
   SReadOnly = '"Primary Key" or "Version Column" are not defined.';
   SReadOnlyPrimaryKey = '"Primary Key" is not defined.';
+  SInvalidNullableType = 'Null type is invalid.';
   SPropertyIDNotFound = 'Property ID not found';
   STypeIsNotAList = 'Type %0:s is not a generic list.';
   STypeHasNotValidConstructor = 'Type %0:s has not a valid constructor.';

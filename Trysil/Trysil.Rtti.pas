@@ -189,7 +189,7 @@ begin
   else if Self.IsType<TTNullable<TGuid>>() then
     result := Self.AsType<TTNullable<TGuid>>().GetValueOrDefault().ToString()
   else
-    result := String.Empty;
+    raise ETException.Create(SInvalidNullableType);
 end;
 
 { TTRttiMember }
