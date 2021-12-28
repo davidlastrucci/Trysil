@@ -72,6 +72,7 @@ type
       const AInstance: TObject; const AValue: TTValue); virtual; abstract;
 
     property Name: String read FName;
+    property RttiType: TRttiType read FRttiType;
     property IsClass: Boolean read FIsClass;
     property IsNullable: Boolean read GetIsNullable;
   end;
@@ -327,9 +328,8 @@ begin
   inherited Create(ARttiField.Name);
   FTypeInfo := ARttiField.FieldType.Handle;
   FRttiField := ARttiField;
-  FIsClass := (FRttiField.FieldType.TypeKind = TTypeKind.tkClass);
-  if FIsClass then
-    FRttiType := FRttiField.FieldType;
+  FRttiType := FRttiField.FieldType;
+  FIsClass := (FRttiType.TypeKind = TTypeKind.tkClass);
 end;
 
 function TTRttiField.GetValue(const AInstance: TObject): TTValue;
@@ -349,9 +349,8 @@ begin
   inherited Create(ARttiProperty.Name);
   FTypeInfo := ARttiProperty.PropertyType.Handle;
   FRttiProperty := ARttiProperty;
-  FIsClass := (FRttiProperty.PropertyType.TypeKind = TTypeKind.tkClass);
-  if FIsClass then
-    FRttiType := FRttiProperty.PropertyType;
+  FRttiType := FRttiProperty.PropertyType;
+  FIsClass := (FRttiType.TypeKind = TTypeKind.tkClass);
 end;
 
 function TTRttiProperty.GetValue(const AInstance: TObject): TTValue;
