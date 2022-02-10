@@ -121,8 +121,8 @@ end;
 
 function TTClonedEntities<T>.GetOriginalEntity(const AClone: T): T;
 begin
-  result := nil;
-  FEntities.TryGetValue(AClone, result);
+  if not FEntities.TryGetValue(AClone, result) then
+    result := nil;
 end;
 
 { TTSession<T> }
