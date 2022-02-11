@@ -68,6 +68,7 @@ type
     procedure Clear;
 
     function GetValue: T;
+    procedure SetValue(const AValue: T);
     function GetIsNull: Boolean;
   public
     constructor Create(const AValue: T); overload;
@@ -134,6 +135,12 @@ begin
   if IsNull then
     raise ETException.Create(SNullableTypeHasNoValue);
   result := FValue;
+end;
+
+procedure TTNullable<T>.SetValue(const AValue: T);
+begin
+  FIsNull := NotNullValue;
+  FValue := AValue;
 end;
 
 function TTNullable<T>.GetValueOrDefault: T;
