@@ -57,6 +57,7 @@ type
   public
     constructor Create(
       const AContext: TTContext; const AColumnName: String); override;
+    destructor Destroy; override;
 
     property Entity: T read GetEntity write SetEntity;
   end;
@@ -66,6 +67,9 @@ type
   TTLazyList<T: class> = class(TTAbstractLazy<T>)
   strict private
     FList: TTList<T>;
+
+    function AddEntity: T;
+    function CreateList: TTList<T>;
 
     function GetList: TTList<T>;
   strict protected
@@ -113,6 +117,13 @@ begin
   FEntity := nil;
 end;
 
+destructor TTLazy<T>.Destroy;
+begin
+  if (not FContext.UseIdentityMap) and Assigned(FEntity) then
+    FEntity.Free;
+  inherited Destroy;
+end;
+
 function TTLazy<T>.GetEntity: T;
 begin
   if not Assigned(FEntity) then
@@ -153,6 +164,25 @@ begin
   inherited Destroy;
 end;
 
+function TTLazyList<T>.AddEntity: T;
+begin
+  if not Assigned(FList) then
+    CreateList;
+  result := FContext.CreateEntity<T>();
+  try
+    FList.Add(result);
+  except
+    result.Free;
+    raise;
+  end;
+end;
+
+function TTLazyList<T>.CreateList: TTList<T>;
+begin
+  FList := TTObjectList<T>.Create(not FContext.UseIdentityMap);
+  result := FList;
+end;
+
 procedure TTLazyList<T>.NotifyChangedID;
 begin
   if Assigned(FList) then
@@ -168,7 +198,7 @@ var
 begin
   if not Assigned(FList) then
   begin
-    FList := TTList<T>.Create;
+    FList := CreateList;
     try
       LFilter := TTFilter.Create(
         Format('%s = %s', [FColumnName, TTPrimaryKeyHelper.SqlValue(FID)]));

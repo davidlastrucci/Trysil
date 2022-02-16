@@ -48,6 +48,7 @@ type
     FIsClass: Boolean;
     FRttiType: TRttiType;
 
+    function InheritsFrom(const AObject: TObject; AType: TRttiType): Boolean;
     function InternalCreateObject(
       const AContext: TObject;
       const AColumnName: String): TTValue;
@@ -224,6 +225,22 @@ begin
   FName := AName;
 end;
 
+function TTRttiMember.InheritsFrom(
+  const AObject: TObject; AType: TRttiType): Boolean;
+var
+  LClass: TClass;
+begin
+  LClass := AObject.ClassType;
+  result := LClass.ClassInfo = AType.Handle;
+  while not result do
+  begin
+    LClass := LClass.ClassParent;
+    if not Assigned(LClass) then
+      Break;
+    result := LClass.ClassInfo = AType.Handle;
+  end;
+end;
+
 function TTRttiMember.InternalCreateObject(
   const AContext: TObject;
   const AColumnName: String): TTValue;
@@ -240,7 +257,7 @@ begin
       LIsValid := Length(LParameters) = 2;
       if LIsValid then
         LIsValid :=
-          (LParameters[0].ParamType.Handle = AContext.ClassInfo) and
+          InheritsFrom(AContext, LParameters[0].ParamType) and
           (LParameters[1].ParamType.Handle = TypeInfo(String));
 
       if LIsValid then

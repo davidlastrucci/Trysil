@@ -40,11 +40,14 @@ type
     FResolver: TTResolver;
 
     function GetInTransaction: Boolean;
+    function GetUseIdentityMap: Boolean;
+  strict protected
+    function InLoading: Boolean; virtual;
   public
-    constructor Create(const AConnection: TTConnection); overload;
+    constructor Create(const AConnection: TTConnection); overload; virtual;
     constructor Create(
       const AConnection: TTConnection;
-      const AUseIdentityMap: Boolean); overload;
+      const AUseIdentityMap: Boolean); overload; virtual;
     destructor Destroy; override;
 
     procedure StartTransaction;
@@ -52,7 +55,7 @@ type
     procedure RollbackTransaction;
 
     function CreateEntity<T: class>(): T; overload;
-    function CreateEntity<T: class>(const AUseSequenceID: Boolean): T; overload;
+    procedure SetSequenceID<T: class>(const AEntity: T);
     function CloneEntity<T: class>(const AEntity: T): T;
     function CreateSession<T: class>(
       const AList: TList<T>): TTSession<T>;
@@ -77,6 +80,7 @@ type
     procedure DeleteAll<T: class>(const AList: TTList<T>);
 
     property InTransaction: Boolean read GetInTransaction;
+    property UseIdentityMap: Boolean read GetUseIdentityMap;
   end;
 
 implementation
@@ -109,6 +113,11 @@ begin
   inherited Destroy;
 end;
 
+function TTContext.InLoading: Boolean;
+begin
+  result := False;
+end;
+
 function TTContext.GetInTransaction: Boolean;
 begin
   result := FConnection.InTransaction;
@@ -129,14 +138,19 @@ begin
   FConnection.RollbackTransaction;
 end;
 
-function TTContext.CreateEntity<T>(): T;
+function TTContext.GetUseIdentityMap: Boolean;
 begin
-  result := CreateEntity<T>(True);
+  result := FProvider.UseIdentityMap;
 end;
 
-function TTContext.CreateEntity<T>(const AUseSequenceID: Boolean): T;
+function TTContext.CreateEntity<T>(): T;
 begin
-  result := FProvider.CreateEntity<T>(AUseSequenceID);
+  result := FProvider.CreateEntity<T>(InLoading);
+end;
+
+procedure TTContext.SetSequenceID<T>(const AEntity: T);
+begin
+  FProvider.SetSequenceID<T>(AEntity);
 end;
 
 function TTContext.CloneEntity<T>(const AEntity: T): T;
