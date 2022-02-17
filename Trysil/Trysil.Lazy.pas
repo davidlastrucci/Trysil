@@ -64,15 +64,18 @@ type
 
 { TTLazyList<T> }
 
+{$RTTI EXPLICIT
+  METHODS([vcProtected, vcPrivate])}
   TTLazyList<T: class> = class(TTAbstractLazy<T>)
   strict private
     FList: TTList<T>;
 
-    function AddEntity: T;
     function CreateList: TTList<T>;
 
     function GetList: TTList<T>;
   strict protected
+    function AddEntity: T;
+
     procedure NotifyChangedID; override;
   public
     constructor Create(

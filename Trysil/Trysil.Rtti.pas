@@ -107,7 +107,7 @@ type
 { TTRttiLazy }
 
   TTRttiLazy = class
-  strict private
+  strict protected
     FObject: TObject;
     FContext: TRttiContext;
 
@@ -121,6 +121,7 @@ type
 
     function GetObjectValue: TObject;
     function GetID: TTPrimaryKey;
+    procedure SetID(const AValue: TTPrimaryKey);
   strict private
     class function CheckTypeName(const AType: TRttiType): Boolean;
   public
@@ -130,7 +131,7 @@ type
     procedure AfterConstruction; override;
 
     property ObjectValue: TObject read GetObjectValue;
-    property ID: TTPrimaryKey read GetID;
+    property ID: TTPrimaryKey read GetID write SetID;
 
     class function IsLazy(const AObject: TObject): Boolean;
     class function IsLazyType(const AType: TRttiType): Boolean;
@@ -467,6 +468,12 @@ begin
     if LValue.IsType<TTPrimaryKey>() then
       result := LValue.AsType<TTPrimaryKey>();
   end;
+end;
+
+procedure TTRttiLazy.SetID(const AValue: TTPrimaryKey);
+begin
+  if Assigned(FObject) and Assigned(FID) then
+    FID.SetValue(FObject, AValue);
 end;
 
 class function TTRttiLazy.IsLazy(const AObject: TObject): Boolean;
