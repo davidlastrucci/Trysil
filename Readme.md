@@ -29,7 +29,7 @@ For further information:
 - [Run Simple Demo in Demos/Simple folder](https://github.com/davidlastrucci/Trysil/blob/master/Docs/RunSimpleDemo.md)
 
 **Trysil-JSON**<br>
-[JSON Serializer for Trysil - Delphi ORM](https://github.com/davidlastrucci/Trysil-JSON)
+[JSON Serialization for Trysil - Delphi ORM](https://github.com/davidlastrucci/Trysil-JSON)
 
 ---
 <p>
