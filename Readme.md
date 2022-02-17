@@ -28,8 +28,8 @@ For further information:
 - [Getting started](https://github.com/davidlastrucci/Trysil/blob/master/Docs/GettingStarted.md)
 - [Run Simple Demo in Demos/Simple folder](https://github.com/davidlastrucci/Trysil/blob/master/Docs/RunSimpleDemo.md)
 
-**Trysil-JSON**<br>
-[JSON Serialization for Trysil - Delphi ORM](https://github.com/davidlastrucci/Trysil-JSON)
+**See also<br>
+[Trysil-JSON](https://github.com/davidlastrucci/Trysil-JSON) - JSON Serialization for Trysil - Delphi ORM
 
 ---
 <p>
