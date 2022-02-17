@@ -28,7 +28,7 @@ For further information:
 - [Getting started](https://github.com/davidlastrucci/Trysil/blob/master/Docs/GettingStarted.md)
 - [Run Simple Demo in Demos/Simple folder](https://github.com/davidlastrucci/Trysil/blob/master/Docs/RunSimpleDemo.md)
 
-**Trysil-JSON**
+**Trysil-JSON**<br>
 [JSON Serializer for Trysil - Delphi ORM](https://github.com/davidlastrucci/Trysil-JSON)
 
 ---
