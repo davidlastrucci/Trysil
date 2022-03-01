@@ -194,7 +194,7 @@ var
   LSyntax: TTSelectCountSyntax;
   LDataset: TDataset;
 begin
-  LSyntax := FSyntaxClasses.SelectCount.Create(Self, ATableMap, ATableMap.Name);
+  LSyntax := FSyntaxClasses.SelectCount.Create(Self, ATableMap);
   try
     LDataset := CreateDataSet(LSyntax.SQL);
     try

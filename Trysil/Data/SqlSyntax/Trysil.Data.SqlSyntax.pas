@@ -79,14 +79,11 @@ type
   strict protected
     FConnection: TTConnection;
     FTableMap: TTTableMap;
-    FTableName: String;
 
     function GetSQL: String; virtual;
   public
     constructor Create(
-      const AConnection: TTConnection;
-      const ATableMap: TTTableMap;
-      const ATableName: String);
+      const AConnection: TTConnection; const ATableMap: TTTableMap);
 
     property SQL: String read GetSQL;
   end;
@@ -278,20 +275,17 @@ end;
 { TTSelectCountSyntax }
 
 constructor TTSelectCountSyntax.Create(
-  const AConnection: TTConnection;
-  const ATableMap: TTTableMap;
-  const ATableName: String);
+  const AConnection: TTConnection; const ATableMap: TTTableMap);
 begin
   inherited Create;
   FConnection := AConnection;
   FTableMap := ATableMap;
-  FTableName := ATableName;
 end;
 
 function TTSelectCountSyntax.GetSQL: String;
 begin
   result := Format('SELECT COUNT(*) FROM %0:s', [
-    FConnection.GetDatabaseObjectName(FTableName)]);
+    FConnection.GetDatabaseObjectName(FTableMap.Name)]);
 end;
 
 { TTAbstractSyntax }
