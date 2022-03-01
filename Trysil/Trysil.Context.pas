@@ -62,6 +62,7 @@ type
 
     function GetMetadata<T: class>(): TTTableMetadata;
 
+    function SelectCount<T: class>(): Integer;
     procedure SelectAll<T: class>(const AResult: TTList<T>);
     procedure Select<T: class>(
       const AResult: TTList<T>; const AFilter: TTFilter);
@@ -166,6 +167,11 @@ end;
 function TTContext.GetMetadata<T>: TTTableMetadata;
 begin
   result := FProvider.GetMetadata<T>();
+end;
+
+function TTContext.SelectCount<T>: Integer;
+begin
+  result := FProvider.SelectCount<T>();
 end;
 
 procedure TTContext.SelectAll<T>(const AResult: TTList<T>);

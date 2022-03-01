@@ -105,6 +105,8 @@ type
 
     function GetMetadata<T: class>(): TTTableMetadata;
 
+    function SelectCount<T: class>(): Integer;
+
     procedure Select<T: class>(
       const AResult: TTList<T>; const AFilter: TTFilter);
 
@@ -453,6 +455,14 @@ begin
   if not Assigned(ATablemap.PrimaryKey) then
     raise ETException.Create(SNotDefinedPrimaryKey);
   result := GetWhere(ATablemap.PrimaryKey.Name, AID);
+end;
+
+function TTProvider.SelectCount<T>: Integer;
+var
+  LTableMap: TTTableMap;
+begin
+  LTableMap := TTMapper.Instance.Load<T>();
+  result := FConnection.SelectCount(LTableMap);
 end;
 
 procedure TTProvider.Select<T>(

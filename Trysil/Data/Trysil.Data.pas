@@ -130,6 +130,9 @@ type
     procedure CommitTransaction; virtual; abstract;
     procedure RollbackTransaction; virtual; abstract;
 
+    function SelectCount(
+      const ATableMap: TTTableMap): Integer; virtual; abstract;
+
     function GetDatabaseObjectName(
       const ADatabaseObjectName: String): String; virtual;
     function GetParameterName(

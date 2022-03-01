@@ -73,6 +73,26 @@ type
 
   TTCheckExistsSyntaxClass = class of TTCheckExistsSyntax;
 
+{ TTSelectCountSyntax }
+
+  TTSelectCountSyntax = class
+  strict protected
+    FConnection: TTConnection;
+    FTableMap: TTTableMap;
+    FTableName: String;
+
+    function GetSQL: String; virtual;
+  public
+    constructor Create(
+      const AConnection: TTConnection;
+      const ATableMap: TTTableMap;
+      const ATableName: String);
+
+    property SQL: String read GetSQL;
+  end;
+
+  TTSelectCountSyntaxClass = class of TTSelectCountSyntax;
+
 { TTAbstractSqlSyntax }
 
   TTAbstractSyntax = class abstract
@@ -203,6 +223,7 @@ type
   public
     function Sequence: TTSequenceSyntaxClass; virtual; abstract;
     function CheckExists: TTCheckExistsSyntaxClass; virtual;
+    function SelectCount: TTSelectCountSyntaxClass; virtual;
     function Select: TTSelectSyntaxClass; virtual; abstract;
     function Metadata: TTMetadataSyntaxClass; virtual;
     function Insert: TTCommandSyntaxClass; virtual;
@@ -252,6 +273,25 @@ begin
     FConnection.GetDatabaseObjectName(FTableName),
     FConnection.GetDatabaseObjectName(FColumnName),
     FID]);
+end;
+
+{ TTSelectCountSyntax }
+
+constructor TTSelectCountSyntax.Create(
+  const AConnection: TTConnection;
+  const ATableMap: TTTableMap;
+  const ATableName: String);
+begin
+  inherited Create;
+  FConnection := AConnection;
+  FTableMap := ATableMap;
+  FTableName := ATableName;
+end;
+
+function TTSelectCountSyntax.GetSQL: String;
+begin
+  result := Format('SELECT COUNT(*) FROM %0:s', [
+    FConnection.GetDatabaseObjectName(FTableName)]);
 end;
 
 { TTAbstractSyntax }
@@ -556,6 +596,11 @@ end;
 function TTSyntaxClasses.CheckExists: TTCheckExistsSyntaxClass;
 begin
   result := TTCheckExistsSyntax;
+end;
+
+function TTSyntaxClasses.SelectCount: TTSelectCountSyntaxClass;
+begin
+  result := TTSelectCountSyntax;
 end;
 
 function TTSyntaxClasses.Metadata: TTMetadataSyntaxClass;

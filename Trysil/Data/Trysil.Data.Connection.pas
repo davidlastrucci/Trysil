@@ -56,6 +56,9 @@ type
     procedure CommitTransaction; override;
     procedure RollbackTransaction; override;
 
+    function SelectCount(
+      const ATableMap: TTTableMap): Integer; override;
+
     function CreateReader(
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
@@ -184,6 +187,24 @@ begin
   if not InTransaction then
     raise ETException.CreateFmt(SNotInTransaction, ['RollbackTransaction']);
   TTLogger.Instance.LogRollback;
+end;
+
+function TTGenericConnection.SelectCount(const ATableMap: TTTableMap): Integer;
+var
+  LSyntax: TTSelectCountSyntax;
+  LDataset: TDataset;
+begin
+  LSyntax := FSyntaxClasses.SelectCount.Create(Self, ATableMap, ATableMap.Name);
+  try
+    LDataset := CreateDataSet(LSyntax.SQL);
+    try
+      result := LDataset.Fields[0].AsInteger;
+    finally
+      LDataset.Free;
+    end;
+  finally
+    LSyntax.Free;
+  end;
 end;
 
 function TTGenericConnection.CreateReader(
