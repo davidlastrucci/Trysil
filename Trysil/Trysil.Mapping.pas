@@ -484,7 +484,7 @@ procedure TTTableMap.InitializeTable(const AType: TRttiType);
 var
   LAttribute: TCustomAttribute;
 begin
-  for LAttribute in AType.GetAttributes do
+  for LAttribute in AType.GetInheritedAttributes do
     if LAttribute is TTableAttribute then
       SetTableName(TTableAttribute(LAttribute).Name)
     else if LAttribute is TSequenceAttribute then
@@ -540,7 +540,7 @@ var
   LAttribute: TCustomAttribute;
   LColumnMap: TTColumnMap;
 begin
-  for LAttribute in AObject.GetAttributes do
+  for LAttribute in AObject.GetInheritedAttributes do
     if LAttribute is TColumnAttribute then
     begin
       LColumnMap := CreateColumnMap(
@@ -571,7 +571,7 @@ procedure TTTableMap.InitializePrimaryKey(
 var
   LAttribute: TCustomAttribute;
 begin
-  for LAttribute in AObject.GetAttributes do
+  for LAttribute in AObject.GetInheritedAttributes do
     if LAttribute is TPrimaryKeyAttribute then
     begin
       if Assigned(FPrimaryKey) then
@@ -586,7 +586,7 @@ procedure TTTableMap.InitializeVersionColumn(
 var
   LAttribute: TCustomAttribute;
 begin
-  for LAttribute in AObject.GetAttributes do
+  for LAttribute in AObject.GetInheritedAttributes do
     if LAttribute is TVersionColumnAttribute then
     begin
       if Assigned(FVersionColumn) then

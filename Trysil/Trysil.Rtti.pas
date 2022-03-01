@@ -15,6 +15,7 @@ interface
 uses
   System.Classes,
   System.SysUtils,
+  System.Generics.Collections,
   System.TypInfo,
   System.Rtti,
 
@@ -37,6 +38,22 @@ type
     function NullableValueToString: String;
 
     property IsNullable: Boolean read GetIsNullable;
+  end;
+
+{ TTRttiObjectHelper }
+
+  TTRttiObjectHelper = class helper for TRttiObject
+  strict private
+    function SearchAttribute<T: TCustomAttribute>(
+      const AObject: TRttiObject): T;
+    procedure SearchAttributes(
+      const AObject: TRttiObject; const AList: TList<TCustomAttribute>);
+  public
+{$IF CompilerVersion < 35} // Delphi 11.0 Alexandria
+    function GetAttribute<T: TCustomAttribute>(): T;
+{$ENDIF}
+    function GetInheritedAttribute<T: TCustomAttribute>(): T;
+    function GetInheritedAttributes: TArray<TCustomAttribute>;
   end;
 
 { TTRttiMember }
@@ -216,6 +233,70 @@ begin
     result := Self.AsType<TTNullable<TGuid>>().GetValueOrDefault().ToString()
   else
     raise ETException.Create(SInvalidNullableType);
+end;
+
+{ TTRttiObjectHelper }
+
+{$IF CompilerVersion < 35} // Delphi 11.0 Alexandria
+function TTRttiObjectHelper.GetAttribute<T>(): T;
+var
+  LAttribute: TCustomAttribute;
+begin
+  for LAttribute in Self.GetAttributes do
+    if LAttribute is T then
+    begin
+      result := T(LAttribute);
+      Break;
+    end;
+end;
+{$ENDIF}
+
+function TTRttiObjectHelper.SearchAttribute<T>(const AObject: TRttiObject): T;
+var
+  LParent: TRttiObject;
+begin
+  result := AObject.GetAttribute<T>();
+  if not Assigned(result) and (AObject is TRttiType) then
+  begin
+    LParent := TRttiType(AObject).BaseType;
+    if Assigned(LParent) then
+      result := SearchAttribute<T>(LParent);
+  end;
+end;
+
+function TTRttiObjectHelper.GetInheritedAttribute<T>(): T;
+begin
+  result := SearchAttribute<T>(Self);
+end;
+
+procedure TTRttiObjectHelper.SearchAttributes(
+  const AObject: TRttiObject; const AList: TList<TCustomAttribute>);
+var
+  LParent: TRttiObject;
+  LAttribute: TCustomAttribute;
+begin
+  if AObject is TRttiType then
+  begin
+    LParent := TRttiType(AObject).BaseType;
+    if Assigned(LParent) then
+      SearchAttributes(LParent, AList);
+  end;
+
+  for LAttribute in AObject.GetAttributes do
+    AList.Add(LAttribute);
+end;
+
+function TTRttiObjectHelper.GetInheritedAttributes: TArray<TCustomAttribute>;
+var
+  LResult: TList<TCustomAttribute>;
+begin
+  LResult := TList<TCustomAttribute>.Create;
+  try
+    SearchAttributes(Self, LResult);
+    result := LResult.ToArray;
+  finally
+    LResult.Free;
+  end;
 end;
 
 { TTRttiMember }
