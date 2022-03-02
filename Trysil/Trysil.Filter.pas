@@ -18,8 +18,6 @@ uses
 
 type
 
-{$INCLUDE 'Trysil.Conditionals.inc'}
-
 { TTFilterPaging }
 
   TTFilterPaging = record
@@ -34,7 +32,7 @@ type
     constructor Create(
       const AStart: Integer; const ALimit: Integer; const AOrderBy: String);
 
-{$IFDEF Managed_Records}
+{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
     class operator Initialize(out AFilterPaging: TTFilterPaging);
 {$ENDIF}
 
@@ -69,7 +67,7 @@ type
       const ALimit: Integer;
       const AOrderBy: String); overload;
 
-{$IFDEF Managed_Records}
+{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
     class operator Initialize(out AFilter: TTFilter);
 {$ENDIF}
 
@@ -94,7 +92,7 @@ begin
   FOrderBy := AOrderBy;
 end;
 
-{$IFDEF Managed_Records}
+{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
 class operator TTFilterPaging.Initialize(out AFilterPaging: TTFilterPaging);
 begin
   AFilterPaging.FStart := -1;
@@ -145,7 +143,7 @@ begin
   FPaging := TTFilterPaging.Create(AStart, ALimit, AOrderBy);
 end;
 
-{$IFDEF Managed_Records}
+{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
 class operator TTFilter.Initialize(out AFilter: TTFilter);
 begin
   AFilter.FWhere := String.Empty;

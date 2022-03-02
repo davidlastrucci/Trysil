@@ -40,18 +40,25 @@ type
     property IsNullable: Boolean read GetIsNullable;
   end;
 
+{$IF CompilerVersion < 35} // Delphi 11.0 Alexandria
+
 { TTRttiObjectHelper }
 
   TTRttiObjectHelper = class helper for TRttiObject
-  strict private
-    function SearchAttribute<T: TCustomAttribute>(
-      const AObject: TRttiObject): T;
-    procedure SearchAttributes(
-      const AObject: TRttiObject; const AList: TList<TCustomAttribute>);
   public
-{$IF CompilerVersion < 35} // Delphi 11.0 Alexandria
     function GetAttribute<T: TCustomAttribute>(): T;
+  end;
+
 {$ENDIF}
+
+{ TTRttiTypeHelper }
+
+  TTRttiTypeHelper = class helper for TRttiType
+  strict private
+    function SearchAttribute<T: TCustomAttribute>(const AType: TRttiType): T;
+    procedure SearchAttributes(
+      const AType: TRttiType; const AList: TList<TCustomAttribute>);
+  public
     function GetInheritedAttribute<T: TCustomAttribute>(): T;
     function GetInheritedAttributes: TArray<TCustomAttribute>;
   end;
@@ -235,9 +242,10 @@ begin
     raise ETException.Create(SInvalidNullableType);
 end;
 
+{$IF CompilerVersion < 35} // Delphi 11.0 Alexandria
+
 { TTRttiObjectHelper }
 
-{$IF CompilerVersion < 35} // Delphi 11.0 Alexandria
 function TTRttiObjectHelper.GetAttribute<T>(): T;
 var
   LAttribute: TCustomAttribute;
@@ -251,42 +259,41 @@ begin
 end;
 {$ENDIF}
 
-function TTRttiObjectHelper.SearchAttribute<T>(const AObject: TRttiObject): T;
+{ TTRttiTypeHelper }
+
+function TTRttiTypeHelper.SearchAttribute<T>(const AType: TRttiType): T;
 var
-  LParent: TRttiObject;
+  LParent: TRttiType;
 begin
-  result := AObject.GetAttribute<T>();
-  if not Assigned(result) and (AObject is TRttiType) then
+  result := AType.GetAttribute<T>();
+  if not Assigned(result) then
   begin
-    LParent := TRttiType(AObject).BaseType;
+    LParent := AType.BaseType;
     if Assigned(LParent) then
       result := SearchAttribute<T>(LParent);
   end;
 end;
 
-function TTRttiObjectHelper.GetInheritedAttribute<T>(): T;
+function TTRttiTypeHelper.GetInheritedAttribute<T>(): T;
 begin
   result := SearchAttribute<T>(Self);
 end;
 
-procedure TTRttiObjectHelper.SearchAttributes(
-  const AObject: TRttiObject; const AList: TList<TCustomAttribute>);
+procedure TTRttiTypeHelper.SearchAttributes(
+  const AType: TRttiType; const AList: TList<TCustomAttribute>);
 var
-  LParent: TRttiObject;
+  LParent: TRttiType;
   LAttribute: TCustomAttribute;
 begin
-  if AObject is TRttiType then
-  begin
-    LParent := TRttiType(AObject).BaseType;
-    if Assigned(LParent) then
-      SearchAttributes(LParent, AList);
-  end;
+  LParent := AType.BaseType;
+  if Assigned(LParent) then
+    SearchAttributes(LParent, AList);
 
-  for LAttribute in AObject.GetAttributes do
+  for LAttribute in AType.GetAttributes do
     AList.Add(LAttribute);
 end;
 
-function TTRttiObjectHelper.GetInheritedAttributes: TArray<TCustomAttribute>;
+function TTRttiTypeHelper.GetInheritedAttributes: TArray<TCustomAttribute>;
 var
   LResult: TList<TCustomAttribute>;
 begin

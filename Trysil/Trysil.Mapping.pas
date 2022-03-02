@@ -540,7 +540,7 @@ var
   LAttribute: TCustomAttribute;
   LColumnMap: TTColumnMap;
 begin
-  for LAttribute in AObject.GetInheritedAttributes do
+  for LAttribute in AObject.GetAttributes do
     if LAttribute is TColumnAttribute then
     begin
       LColumnMap := CreateColumnMap(
@@ -571,7 +571,7 @@ procedure TTTableMap.InitializePrimaryKey(
 var
   LAttribute: TCustomAttribute;
 begin
-  for LAttribute in AObject.GetInheritedAttributes do
+  for LAttribute in AObject.GetAttributes do
     if LAttribute is TPrimaryKeyAttribute then
     begin
       if Assigned(FPrimaryKey) then
@@ -586,7 +586,7 @@ procedure TTTableMap.InitializeVersionColumn(
 var
   LAttribute: TCustomAttribute;
 begin
-  for LAttribute in AObject.GetInheritedAttributes do
+  for LAttribute in AObject.GetAttributes do
     if LAttribute is TVersionColumnAttribute then
     begin
       if Assigned(FVersionColumn) then

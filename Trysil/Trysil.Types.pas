@@ -22,8 +22,6 @@ uses
 
 type
 
-{$INCLUDE 'Trysil.Conditionals.inc'}
-
 { TTPrimaryKey }
 
   TTPrimaryKey = Int32;
@@ -48,7 +46,7 @@ type
   METHODS([vcPrivate])}
 
   TTNullable<T> = record
-{$IFDEF Managed_Records}
+{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
   strict private
     const NotNullValue: Boolean = False;
     const NullValue: Boolean = True;
@@ -59,7 +57,7 @@ type
 {$ENDIF}
   strict private
     FValue: T;
-{$IFDEF Managed_Records}
+{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
     FIsNull: Boolean;
 {$ELSE}
     FIsNull: String;
@@ -79,7 +77,7 @@ type
 
     function Equals(const AOther: TTNullable<T>): Boolean;
 
-{$IFDEF Managed_Records}
+{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
     class operator Initialize(out ANullable: TTNullable<T>);
 {$ENDIF}
 
@@ -167,7 +165,7 @@ begin
     result := (IsNull = AOther.IsNull);
 end;
 
-{$IFDEF Managed_Records}
+{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
 class operator TTNullable<T>.Initialize(out ANullable: TTNullable<T>);
 begin
   ANullable.FIsNull := NullValue;
