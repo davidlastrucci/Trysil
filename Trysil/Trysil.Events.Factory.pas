@@ -20,6 +20,7 @@ uses
 
   Trysil.Consts,
   Trysil.Exceptions,
+  Trysil.Factory,
   Trysil.Events.Abstract;
 
 type
@@ -117,7 +118,8 @@ begin
   result := nil;
   if Assigned(AEventClass) then
   begin
-    LRttiType := FContext.GetType(AEventClass);
+    LRttiType := FContext.GetType(
+      TTFactory.Instance.GetType(AEventClass.ClassInfo));
     LRttiMethod := SearchMethod(LRttiType, AContext, AEntity);
     if not Assigned(LRttiMethod) then
       raise ETException.CreateFmt(SNotValidEventClass, [AEventClass.ClassName]);
