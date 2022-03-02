@@ -251,6 +251,7 @@ function TTRttiObjectHelper.GetAttribute<T>(): T;
 var
   LAttribute: TCustomAttribute;
 begin
+  result := nil;
   for LAttribute in Self.GetAttributes do
     if LAttribute is T then
     begin
@@ -258,6 +259,7 @@ begin
       Break;
     end;
 end;
+
 {$ENDIF}
 
 { TTRttiTypeHelper }

@@ -26,6 +26,7 @@ uses
 
   Trysil.Types,
   Trysil.Rtti,
+  Trysil.Factory,
   Trysil.Generics.Collections;
 
 type
@@ -494,7 +495,7 @@ constructor TTRttiListView<T>.Create;
 begin
   inherited Create;
   FContext := TRttiContext.Create;
-  FType := FContext.GetType(TypeInfo(T));
+  FType := FContext.GetType(TTFactory.Instance.GetType<T>());
   FProperties := TObjectDictionary<
     String, TTRttiListViewProperties>.Create([doOwnsValues]);
 end;

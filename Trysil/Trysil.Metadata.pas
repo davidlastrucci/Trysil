@@ -22,6 +22,7 @@ uses
   Trysil.Classes,
   Trysil.Cache,
   Trysil.Mapping,
+  Trysil.Factory,
   Trysil.Generics.Collections;
 
 type
@@ -231,7 +232,7 @@ end;
 
 function TTMetadata.Load<T>: TTTableMetaData;
 begin
-  result := Load(TypeInfo(T));
+  result := Load(TTFactory.Instance.GetType<T>());
 end;
 
 function TTMetadata.Load(const ATypeInfo: PTypeInfo): TTTableMetaData;

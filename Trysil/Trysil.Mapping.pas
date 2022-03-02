@@ -27,6 +27,7 @@ uses
   Trysil.Events.Attributes,
   Trysil.Cache,
   Trysil.Generics.Collections,
+  Trysil.Factory,
   Trysil.Rtti;
 
 type
@@ -627,7 +628,7 @@ end;
 
 function TTMapper.Load<T>: TTTableMap;
 begin
-  result := Load(TypeInfo(T));
+  result := Load(TTFactory.Instance.GetType<T>());
 end;
 
 function TTMapper.Load(const ATypeInfo: PTypeInfo): TTTableMap;
