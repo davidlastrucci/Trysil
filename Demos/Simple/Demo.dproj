@@ -173,6 +173,7 @@
             <Form>EditDialog</Form>
         </DCCReference>
         <DCCReference Include="Demo.ListView.pas"/>
+        <DCCReference Include="..\..\Trysil\Trysil.Factory.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

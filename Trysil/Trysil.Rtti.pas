@@ -21,7 +21,8 @@ uses
 
   Trysil.Consts,
   Trysil.Types,
-  Trysil.Exceptions;
+  Trysil.Exceptions,
+  Trysil.Factory;
 
 type
 
@@ -730,7 +731,7 @@ constructor TTRttiEntity<T>.Create;
 begin
   inherited Create;
   FContext := TRttiContext.Create;
-  FType := FContext.GetType(TypeInfo(T));
+  FType := FContext.GetType(TTFactory.Instance.GetTypeInfo<T>());
 end;
 
 destructor TTRttiEntity<T>.Destroy;

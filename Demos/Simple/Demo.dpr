@@ -44,7 +44,8 @@ uses
   Demo.Model in 'Demo.Model.pas',
   Demo.MainForm in 'Demo.MainForm.pas' {MainForm},
   Demo.EditDialog in 'Demo.EditDialog.pas' {EditDialog},
-  Demo.ListView in 'Demo.ListView.pas';
+  Demo.ListView in 'Demo.ListView.pas',
+  Trysil.Factory in '..\..\Trysil\Trysil.Factory.pas';
 
 {$R *.res}
 
