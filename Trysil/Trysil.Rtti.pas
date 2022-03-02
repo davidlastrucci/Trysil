@@ -731,7 +731,7 @@ constructor TTRttiEntity<T>.Create;
 begin
   inherited Create;
   FContext := TRttiContext.Create;
-  FType := FContext.GetType(TTFactory.Instance.GetTypeInfo<T>());
+  FType := FContext.GetType(TTFactory.Instance.GetType<T>());
 end;
 
 destructor TTRttiEntity<T>.Destroy;

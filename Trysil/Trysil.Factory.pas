@@ -35,7 +35,7 @@ type
     destructor Destroy; override;
 
     procedure RegisterType<T; K: T>();
-    function GetTypeInfo<T>(): PTypeInfo;
+    function GetType<T>(): PTypeInfo;
 
     class property Instance: TTFactory read FInstance;
   end;
@@ -71,7 +71,7 @@ begin
   FTypes.Add(TypeInfo(T), TypeInfo(K));
 end;
 
-function TTFactory.GetTypeInfo<T>(): PTypeInfo;
+function TTFactory.GetType<T>(): PTypeInfo;
 var
   LTypeInfo: PTypeInfo;
 begin
