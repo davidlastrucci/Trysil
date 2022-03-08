@@ -131,7 +131,8 @@ type
     procedure RollbackTransaction; virtual; abstract;
 
     function SelectCount(
-      const ATableMap: TTTableMap): Integer; virtual; abstract;
+      const ATableMap: TTTableMap;
+      const AFilter: TTFilter): Integer; virtual; abstract;
 
     function GetDatabaseObjectName(
       const ADatabaseObjectName: String): String; virtual;

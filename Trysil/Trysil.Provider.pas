@@ -105,7 +105,7 @@ type
 
     function GetMetadata<T: class>(): TTTableMetadata;
 
-    function SelectCount<T: class>(): Integer;
+    function SelectCount<T: class>(const AFilter: TTFilter): Integer;
 
     procedure Select<T: class>(
       const AResult: TTList<T>; const AFilter: TTFilter);
@@ -457,12 +457,12 @@ begin
   result := GetWhere(ATablemap.PrimaryKey.Name, AID);
 end;
 
-function TTProvider.SelectCount<T>: Integer;
+function TTProvider.SelectCount<T>(const AFilter: TTFilter): Integer;
 var
   LTableMap: TTTableMap;
 begin
   LTableMap := TTMapper.Instance.Load<T>();
-  result := FConnection.SelectCount(LTableMap);
+  result := FConnection.SelectCount(LTableMap, AFilter);
 end;
 
 procedure TTProvider.Select<T>(

@@ -62,7 +62,7 @@ type
 
     function GetMetadata<T: class>(): TTTableMetadata;
 
-    function SelectCount<T: class>(): Integer;
+    function SelectCount<T: class>(const AFilter: TTFilter): Integer;
     procedure SelectAll<T: class>(const AResult: TTList<T>);
     procedure Select<T: class>(
       const AResult: TTList<T>; const AFilter: TTFilter);
@@ -164,14 +164,14 @@ begin
   result := TTSession<T>.Create(FConnection, FProvider, FResolver, AList);
 end;
 
-function TTContext.GetMetadata<T>: TTTableMetadata;
+function TTContext.GetMetadata<T>(): TTTableMetadata;
 begin
   result := FProvider.GetMetadata<T>();
 end;
 
-function TTContext.SelectCount<T>: Integer;
+function TTContext.SelectCount<T>(const AFilter: TTFilter): Integer;
 begin
-  result := FProvider.SelectCount<T>();
+  result := FProvider.SelectCount<T>(AFilter);
 end;
 
 procedure TTContext.SelectAll<T>(const AResult: TTList<T>);

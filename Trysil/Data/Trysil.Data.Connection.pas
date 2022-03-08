@@ -57,7 +57,8 @@ type
     procedure RollbackTransaction; override;
 
     function SelectCount(
-      const ATableMap: TTTableMap): Integer; override;
+      const ATableMap: TTTableMap;
+      const AFilter: TTFilter): Integer; override;
 
     function CreateReader(
       const ATableMap: TTTableMap;
@@ -189,12 +190,13 @@ begin
   TTLogger.Instance.LogRollback;
 end;
 
-function TTGenericConnection.SelectCount(const ATableMap: TTTableMap): Integer;
+function TTGenericConnection.SelectCount(
+  const ATableMap: TTTableMap; const AFilter: TTFilter): Integer;
 var
   LSyntax: TTSelectCountSyntax;
   LDataset: TDataset;
 begin
-  LSyntax := FSyntaxClasses.SelectCount.Create(Self, ATableMap);
+  LSyntax := FSyntaxClasses.SelectCount.Create(Self, ATableMap, AFilter);
   try
     LDataset := CreateDataSet(LSyntax.SQL);
     try
