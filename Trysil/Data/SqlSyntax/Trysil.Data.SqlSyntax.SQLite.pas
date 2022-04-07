@@ -57,7 +57,7 @@ implementation
 function TTSQLiteSequenceSyntax.GetSequenceSyntax: String;
 begin
   result := Format(
-    'SELECT MAX(ROWID) + 1 FROM %s', [FTableMap.Name]);
+    'SELECT IFNULL(MAX(ROWID), 0) + 1 FROM %s', [FTableMap.Name]);
 end;
 
 { TTSQLiteSelectSyntax }

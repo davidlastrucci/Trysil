@@ -317,10 +317,7 @@ begin
     LDataset := CreateDataSet(LSyntax.SQL);
     try
       TTLogger.Instance.LogSyntax(LSyntax.SQL);
-      if LDataset.Fields[0].IsNull then
-        result := 1
-      else
-        result := LDataset.Fields[0].AsInteger;
+      result := LDataset.Fields[0].AsInteger;
     finally
       LDataset.Free;
     end;
