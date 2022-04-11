@@ -183,7 +183,8 @@ var
 begin
   LEntity := Context.EntityFromJSonObject<T>(FRequest.JSonContent);
   try
-    Context.SetSequenceID<T>(LEntity);
+    if Context.GetID<T>(LEntity) <= 0 then
+      Context.SetSequenceID<T>(LEntity);
     Context.Insert<T>(LEntity);
     FResponse.Content := Context.EntityToJSon<T>(LEntity, ConfigGet);
   finally

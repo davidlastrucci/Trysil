@@ -49,6 +49,9 @@ type
 
     destructor Destroy; override;
 
+    function GetID<T: class>(const AEntity: T): TTPrimaryKey;
+    procedure SetSequenceID<T: class>(const AEntity: T);
+
     procedure Delete<T: class>(
       const AID: TTPrimaryKey; const AVersionID: TTVersion); overload;
 
@@ -118,6 +121,16 @@ begin
   finally
     LEntity.Free;
   end;
+end;
+
+function TTJSonContext.GetID<T>(const AEntity: T): TTPrimaryKey;
+begin
+  result := FProvider.GetID<T>(AEntity);
+end;
+
+procedure TTJSonContext.SetSequenceID<T>(const AEntity: T);
+begin
+  FProvider.SetSequenceID<T>(AEntity);
 end;
 
 function TTJSonContext.InLoading: Boolean;

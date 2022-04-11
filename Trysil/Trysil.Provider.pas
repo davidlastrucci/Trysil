@@ -100,6 +100,7 @@ type
     destructor Destroy; override;
 
     function CreateEntity<T: class>(const AInLoading: Boolean): T;
+    function GetID<T: class>(const AEntity: T): TTPrimaryKey;
     procedure SetSequenceID<T: class>(const AEntity: T);
     function CloneEntity<T: class>(const AEntity: T): T;
 
@@ -159,6 +160,15 @@ function TTProvider.SetPrimaryKey<T>(
 begin
   result := FConnection.GetSequenceID(ATableMap);
   ATableMap.PrimaryKey.Member.SetValue(AEntity, result);
+end;
+
+function TTProvider.GetID<T>(const AEntity: T): TTPrimaryKey;
+var
+  LTableMap: TTTableMap;
+begin
+  LTableMap := TTMapper.Instance.Load<T>();
+  result :=
+    LTableMap.PrimaryKey.Member.GetValue(AEntity).AsType<TTPrimaryKey>();
 end;
 
 procedure TTProvider.SetSequenceID<T>(const AEntity: T);

@@ -35,13 +35,13 @@ type
   strict private
     FConnection: TTConnection;
 
+    function GetInTransaction: Boolean;
+    function GetUseIdentityMap: Boolean;
+  strict protected
     FMetadata: TTMetadata;
     FProvider: TTProvider;
     FResolver: TTResolver;
 
-    function GetInTransaction: Boolean;
-    function GetUseIdentityMap: Boolean;
-  strict protected
     function InLoading: Boolean; virtual;
   public
     constructor Create(const AConnection: TTConnection); overload; virtual;
@@ -55,7 +55,6 @@ type
     procedure RollbackTransaction;
 
     function CreateEntity<T: class>(): T; overload;
-    procedure SetSequenceID<T: class>(const AEntity: T);
     function CloneEntity<T: class>(const AEntity: T): T;
     function CreateSession<T: class>(
       const AList: TList<T>): TTSession<T>;
@@ -147,11 +146,6 @@ end;
 function TTContext.CreateEntity<T>(): T;
 begin
   result := FProvider.CreateEntity<T>(InLoading);
-end;
-
-procedure TTContext.SetSequenceID<T>(const AEntity: T);
-begin
-  FProvider.SetSequenceID<T>(AEntity);
 end;
 
 function TTContext.CloneEntity<T>(const AEntity: T): T;
