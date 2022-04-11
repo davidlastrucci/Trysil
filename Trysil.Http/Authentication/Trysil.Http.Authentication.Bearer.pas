@@ -66,9 +66,9 @@ begin
     LJWT := TTHttpJWT<P>.Create(LPayload);
     try
       if not LJWT.LoadFromToken(LToken) then
-        ResponseForbiddenError(ARequest, AResponse, 100);
+        ResponseForbiddenError(ARequest, AResponse);
       if not IsValid(LJWT.Payload) then
-        ResponseForbiddenError(ARequest, AResponse, 101);
+        ResponseForbiddenError(ARequest, AResponse);
     finally
       LJWT.Free;
     end;

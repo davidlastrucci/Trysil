@@ -124,7 +124,7 @@ begin
     end;
 
   if not Assigned(result) then
-    raise ETHttpBadRequest.CreateFmt(100, SColumnNotFound, [AName]);
+    raise ETHttpBadRequest.CreateFmt(SColumnNotFound, [AName]);
 end;
 
 { TTHttpFilterWhere }
@@ -160,7 +160,7 @@ begin
     end;
 
   if not LIsValid then
-    raise ETHttpBadRequest.CreateFmt(100, SConditionNotValid, [FCondition]);
+    raise ETHttpBadRequest.CreateFmt(SConditionNotValid, [FCondition]);
 end;
 
 { TTHttpFilterWhereList }
@@ -223,7 +223,7 @@ begin
     end;
 
   if not LIsValid then
-    raise ETHttpBadRequest.CreateFmt(100, SDirectionNotValid, [FDirection]);
+    raise ETHttpBadRequest.CreateFmt(SDirectionNotValid, [FDirection]);
 end;
 
 { TTHttpFilterOrderByList }

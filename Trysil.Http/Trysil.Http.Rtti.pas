@@ -553,9 +553,9 @@ begin
   if not FControllerMethods.TryGetValue(AControllerID.Uri, LDictionary) then
     if not TrySearchParametrizedUri(
       AControllerID.Uri, AParams, LDictionary) then
-      raise ETHttpNotFound.CreateFmt(0, SNotFound, [AControllerID.Uri]);
+      raise ETHttpNotFound.CreateFmt(SNotFound, [AControllerID.Uri]);
   if not LDictionary.TryGetValue(AControllerID.MethodType, result) then
-    raise ETHttpMethodNotAllowed.CreateFmt(0, SMethodNotAllowed, [
+    raise ETHttpMethodNotAllowed.CreateFmt(SMethodNotAllowed, [
       AControllerID.Method, AControllerID.Uri])
 end;
 

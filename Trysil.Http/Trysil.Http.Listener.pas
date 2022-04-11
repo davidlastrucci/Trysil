@@ -114,7 +114,7 @@ begin
       MakeResponse(
         AResponse,
         TTHttpStatusCodeTypes.InternalServerError,
-        E.ToJSon(0));
+        E.ToJSon());
   end;
 end;
 
@@ -202,10 +202,8 @@ begin
   if Assigned(FRttiAuthentication) then
     for LArea in ARttiControllerMethod.Method.Areas do
       if not ARequest.User.Areas.Contains(LArea) then
-        raise ETHttpForbidden.CreateFmt(
-          100,
-          SForbiddenArea,
-          [ARequest.ControllerID.Uri, LArea])
+        raise ETHttpForbidden.CreateFmt(SForbiddenArea, [
+          ARequest.ControllerID.Uri, LArea])
 end;
 
 procedure TTHttpListener<C>.InitializeResponse(const AResponse: TTHttpResponse);

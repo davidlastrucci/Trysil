@@ -107,7 +107,7 @@ var
 begin
   LEntity := Context.Get<T>(AID);
   if not Assigned(LEntity) then
-    raise ETHttpNotFound.CreateFmt(100, SNotFound, [FRequest.ControllerID.Uri]);
+    raise ETHttpNotFound.CreateFmt(SNotFound, [FRequest.ControllerID.Uri]);
   try
     FResponse.Content := Context.EntityToJSon<T>(LEntity, AConfig);
   finally

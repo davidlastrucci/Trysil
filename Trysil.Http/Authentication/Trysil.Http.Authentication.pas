@@ -34,14 +34,10 @@ type
       const ARequest: TTHttpRequest; const AResponse: TTHttpResponse): String;
 
     procedure ResponseUnauthorizedError(
-      const ARequest: TTHttpRequest;
-      const AResponse: TTHttpResponse;
-      const AInternalErrorCode: Integer);
+      const ARequest: TTHttpRequest; const AResponse: TTHttpResponse);
 
     procedure ResponseForbiddenError(
-      const ARequest: TTHttpRequest;
-      const AResponse: TTHttpResponse;
-      const AInternalErrorCode: Integer);
+      const ARequest: TTHttpRequest; const AResponse: TTHttpResponse);
 
     property Context: C read FContext;
   public
@@ -71,19 +67,17 @@ var
 begin
   LAuthorization := ARequest.Headers.Value['Authorization'];
   if LAuthorization.IsEmpty then
-    ResponseUnauthorizedError(ARequest, AResponse, 100);
+    ResponseUnauthorizedError(ARequest, AResponse);
 
   LAuthenticationType := Format('%s ', [GetName]);
   if not LAuthorization.StartsWith(LAuthenticationType, True) then
-    ResponseUnauthorizedError(ARequest, AResponse, 101);
+    ResponseUnauthorizedError(ARequest, AResponse);
 
   result := LAuthorization.Substring(LAuthenticationType.Length).Trim;
 end;
 
 procedure TTHttpAbstractAuthentication<C>.ResponseUnauthorizedError(
-  const ARequest: TTHttpRequest;
-  const AResponse: TTHttpResponse;
-  const AInternalErrorCode: Integer);
+  const ARequest: TTHttpRequest; const AResponse: TTHttpResponse);
 var
   LHeader: String;
 begin
@@ -91,16 +85,13 @@ begin
   if not LHeader.IsEmpty then
     AResponse.AddHeader('WWW-Authenticate', LHeader);
   raise ETHttpUnauthorized.CreateFmt(
-    AInternalErrorCode, SUnauthorized, [ARequest.ControllerID.Uri]);
+    SUnauthorized, [ARequest.ControllerID.Uri]);
 end;
 
 procedure TTHttpAbstractAuthentication<C>.ResponseForbiddenError(
-  const ARequest: TTHttpRequest;
-  const AResponse: TTHttpResponse;
-  const AInternalErrorCode: Integer);
+  const ARequest: TTHttpRequest; const AResponse: TTHttpResponse);
 begin
-  raise ETHttpForbidden.CreateFmt(
-    AInternalErrorCode, SForbidden, [ARequest.ControllerID.Uri])
+  raise ETHttpForbidden.CreateFmt(SForbidden, [ARequest.ControllerID.Uri])
 end;
 
 end.

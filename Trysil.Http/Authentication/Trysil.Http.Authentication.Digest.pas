@@ -139,16 +139,16 @@ begin
   result := TTHttpAuthenticationDigestContext.Create(LValue);
   if result.Username.IsEmpty or result.Realm.IsEmpty or
     result.Response.IsEmpty then
-    ResponseForbiddenError(ARequest, AResponse, 100);
+    ResponseForbiddenError(ARequest, AResponse);
 
   if not IsValidNonce(result.Nonce) then
-    ResponseForbiddenError(ARequest, AResponse, 101);
+    ResponseForbiddenError(ARequest, AResponse);
 
   if not result.Realm.Equals(FRealm) then
-    ResponseForbiddenError(ARequest, AResponse, 102);
+    ResponseForbiddenError(ARequest, AResponse);
 
   if not result.Uri.StartsWith(ARequest.ControllerID.Uri) then
-    ResponseForbiddenError(ARequest, AResponse, 103);
+    ResponseForbiddenError(ARequest, AResponse);
 end;
 
 procedure TTHttpAuthenticationDigest<C>.Check(
@@ -161,7 +161,7 @@ begin
   LContext := GetContext(ARequest, AResponse);
   ARequest.User.Username := LContext.Username;
   if not GetUserMD5(ARequest.User, FRealm) then
-    ResponseForbiddenError(ARequest, AResponse, 104);
+    ResponseForbiddenError(ARequest, AResponse);
 
   LHA := THashMD5.GetHashString(Format('%s:%s', [
     ARequest.ControllerID.Method, LContext.Uri]));
@@ -169,7 +169,7 @@ begin
     ARequest.User.Password, LContext.Nonce, LHA]));
 
   if not LCorrect.Equals(LContext.Response) then
-    ResponseForbiddenError(ARequest, AResponse, 105);
+    ResponseForbiddenError(ARequest, AResponse);
 end;
 
 end.

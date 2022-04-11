@@ -67,12 +67,12 @@ begin
   LValue := TNetEncoding.Base64.Decode(LValue);
   LIndex := LValue.IndexOf(':');
   if LIndex < 0 then
-    ResponseForbiddenError(ARequest, AResponse, 100);
+    ResponseForbiddenError(ARequest, AResponse);
 
   ARequest.User.Username := LValue.Substring(0, LIndex);
   ARequest.User.Password := LValue.Substring(LIndex + 1);
   if not IsValid(ARequest.User) then
-    ResponseForbiddenError(ARequest, AResponse, 101);
+    ResponseForbiddenError(ARequest, AResponse);
 end;
 
 end.
