@@ -17,7 +17,7 @@ uses
   System.SysUtils,
   Trysil.Data,
   Trysil.Data.FireDAC.SqlServer,
-  Trysil.JSon.Context,
+  Trysil.Http.Context,
 
   API.Config;
 
@@ -28,12 +28,12 @@ type
   TAPIContext = class
   strict private
     FConnection: TTConnection;
-    FContext: TTJSonContext;
+    FContext: TTHttpContext;
   public
     constructor Create;
     destructor Destroy; override;
 
-    property Context: TTJSonContext read FContext;
+    property Context: TTHttpContext read FContext;
   end;
 
 implementation
@@ -45,7 +45,7 @@ begin
   inherited Create;
   FConnection := TTSqlServerConnection.Create(
     TAPIConfig.Instance.Database.ConnectionName);
-  FContext := TTJSonContext.Create(FConnection);
+  FContext := TTHttpContext.Create(FConnection);
 end;
 
 destructor TAPIContext.Destroy;

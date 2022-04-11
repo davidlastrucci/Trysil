@@ -20,10 +20,10 @@ uses
   Trysil.Filter,
   Trysil.Generics.Collections,
   Trysil.JSon.Types,
-  Trysil.JSon.Context,
   Trysil.Http.Consts,
-  Trysil.Http.Exceptions,
   Trysil.Http.Attributes,
+  Trysil.Http.Exceptions,
+  Trysil.Http.Context,
   Trysil.Http.Filter,
   Trysil.Http.Controller,
 
@@ -35,9 +35,9 @@ type
 
   TAPIController = class(TTHttpController<TAPIContext>)
   strict private
-    function GetContext: TTJSonContext;
+    function GetContext: TTHttpContext;
   strict protected
-    property Context: TTJSonContext read GetContext;
+    property Context: TTHttpContext read GetContext;
   end;
 
 { TAPIReadOnlyController<T> }
@@ -93,7 +93,7 @@ implementation
 
 { TAPIController }
 
-function TAPIController.GetContext: TTJSonContext;
+function TAPIController.GetContext: TTHttpContext;
 begin
   result := FContext.Context;
 end;

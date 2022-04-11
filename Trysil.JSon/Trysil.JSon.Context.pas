@@ -49,12 +49,6 @@ type
 
     destructor Destroy; override;
 
-    function GetID<T: class>(const AEntity: T): TTPrimaryKey;
-    procedure SetSequenceID<T: class>(const AEntity: T);
-
-    procedure Delete<T: class>(
-      const AID: TTPrimaryKey; const AVersionID: TTVersion); overload;
-
     function EntityToJSon<T: class>(
       const AEntity: T; const AConfig: TTJSonSerializerConfig): String;
     function EntityToJSonObject<T: class>(
@@ -100,37 +94,6 @@ begin
   FDeserializer.Free;
   FSerializer.Free;
   inherited Destroy;
-end;
-
-procedure TTJSonContext.Delete<T>(
-  const AID: TTPrimaryKey; const AVersionID: TTVersion);
-var
-  LTableMap: TTTableMap;
-  LEntity: T;
-  LVersionID: TTVersion;
-begin
-
-  LTableMap := TTMapper.Instance.Load<T>();
-  LEntity := Get<T>(AID);
-  if not Assigned(LEntity) then
-    raise ETException.Create(SRecordChanged);
-  try
-    if Assigned(LTableMap.VersionColumn) then
-      LTableMap.VersionColumn.Member.SetValue(LEntity, AVersionID);
-    Delete<T>(LEntity);
-  finally
-    LEntity.Free;
-  end;
-end;
-
-function TTJSonContext.GetID<T>(const AEntity: T): TTPrimaryKey;
-begin
-  result := FProvider.GetID<T>(AEntity);
-end;
-
-procedure TTJSonContext.SetSequenceID<T>(const AEntity: T);
-begin
-  FProvider.SetSequenceID<T>(AEntity);
 end;
 
 function TTJSonContext.InLoading: Boolean;

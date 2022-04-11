@@ -14,29 +14,61 @@ interface
 
 uses
   System.SysUtils,
-  System.Classes;
+  System.Classes,
+  Trysil.Consts,
+  Trysil.Types,
+  Trysil.Mapping,
+  Trysil.Exceptions,
+  Trysil.JSon.Context;
 
 type
 
-{ TTHttpContext<A> }
+{ TTHttpContext }
 
-  TTHttpContext<A: class> = class
+  TTHttpContext = class(TTJSonContext)
   strict private
-    FApplicationContext: A;
   public
-    constructor Create(const AApplicationContext: A); virtual;
+    function GetID<T: class>(const AEntity: T): TTPrimaryKey;
+    procedure SetSequenceID<T: class>(const AEntity: T);
 
-    property ApplicationContext: A read FApplicationContext;
+    procedure Delete<T: class>(
+      const AID: TTPrimaryKey; const AVersionID: TTVersion); overload;
   end;
 
 implementation
 
-{ TTHttpContext<A> }
+{ TTHttpContext }
 
-constructor TTHttpContext<A>.Create(const AApplicationContext: A);
+{ TTHttpContext }
+
+function TTHttpContext.GetID<T>(const AEntity: T): TTPrimaryKey;
 begin
-  inherited Create;
-  FApplicationContext := AApplicationContext;
+  result := FProvider.GetID<T>(AEntity);
+end;
+
+procedure TTHttpContext.SetSequenceID<T>(const AEntity: T);
+begin
+  FProvider.SetSequenceID<T>(AEntity);
+end;
+
+procedure TTHttpContext.Delete<T>(
+  const AID: TTPrimaryKey; const AVersionID: TTVersion);
+var
+  LTableMap: TTTableMap;
+  LEntity: T;
+  LVersionID: TTVersion;
+begin
+  LTableMap := TTMapper.Instance.Load<T>();
+  LEntity := Get<T>(AID);
+  if not Assigned(LEntity) then
+    raise ETException.Create(SRecordChanged);
+  try
+    if Assigned(LTableMap.VersionColumn) then
+      LTableMap.VersionColumn.Member.SetValue(LEntity, AVersionID);
+    Delete<T>(LEntity);
+  finally
+    LEntity.Free;
+  end;
 end;
 
 end.
