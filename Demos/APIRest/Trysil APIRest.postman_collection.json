@@ -1,0 +1,353 @@
+{
+	"info": {
+		"_postman_id": "5f74c710-32d8-458f-82ac-0c6c55f9dcce",
+		"name": "Trysil APIRest",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "GET /company/1",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:4450/company/1",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "4450",
+					"path": [
+						"company",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET /company",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:4450/company",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "4450",
+					"path": [
+						"company"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST /company/select",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"where\": [],\r\n  \"start\": 0,\r\n  \"limit\": 10,\r\n  \"orderBy\": []\r\n}"
+				},
+				"url": {
+					"raw": "http://127.0.0.1:4450/company/select",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "4450",
+					"path": [
+						"company",
+						"select"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET /company/find/1",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:4450/company/find/3",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "4450",
+					"path": [
+						"company",
+						"find",
+						"3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST /company",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": 0,\r\n    \"name\": \"Embarcadero\",\r\n    \"address\": \"\",\r\n    \"city\": \"\",\r\n    \"country\": \"\",\r\n    \"versionID\": 0\r\n}"
+				},
+				"url": {
+					"raw": "http://127.0.0.1:4450/company",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "4450",
+					"path": [
+						"company"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PUT /company",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": 60,\r\n    \"name\": \"Embarcadero\",\r\n    \"address\": \"Address\",\r\n    \"city\": \"\",\r\n    \"country\": \"\",\r\n    \"versionID\": 0\r\n}"
+				},
+				"url": {
+					"raw": "http://127.0.0.1:4450/company",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "4450",
+					"path": [
+						"company"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DELETE /company",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:4450/company/60/1",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "4450",
+					"path": [
+						"company",
+						"60",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET /employee/1",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:4450/employee/1",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "4450",
+					"path": [
+						"employee",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET /employee",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:4450/employee",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "4450",
+					"path": [
+						"employee"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST /employee/select",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"where\": [],\r\n  \"start\": 0,\r\n  \"limit\": 10,\r\n  \"orderBy\": []\r\n}"
+				},
+				"url": {
+					"raw": "http://127.0.0.1:4450/employee/select",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "4450",
+					"path": [
+						"employee",
+						"select"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET /employee/find/3",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:4450/employee/find/3",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "4450",
+					"path": [
+						"employee",
+						"find",
+						"3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST /employee",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"id\": 0,\r\n  \"firstname\": \"David\",\r\n  \"lastname\": \"Lastrucci\",\r\n  \"email\": \"\",\r\n  \"companyID\": 1,\r\n  \"versionID\": 0\r\n}"
+				},
+				"url": {
+					"raw": "http://127.0.0.1:4450/employee",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "4450",
+					"path": [
+						"employee"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PUT /employee",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"id\": 1003,\r\n  \"firstname\": \"David\",\r\n  \"lastname\": \"Lastrucci\",\r\n  \"email\": \"david.lastrucci@gmail.com\",\r\n  \"companyID\": 1,\r\n  \"versionID\": 0\r\n}"
+				},
+				"url": {
+					"raw": "http://127.0.0.1:4450/employee",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "4450",
+					"path": [
+						"employee"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DELETE /employee",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:4450/employee/1003/1",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "4450",
+					"path": [
+						"employee",
+						"1003",
+						"1"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
