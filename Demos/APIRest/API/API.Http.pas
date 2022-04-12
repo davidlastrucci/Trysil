@@ -70,6 +70,7 @@ end;
 procedure TAPIHttp.AfterConstruction;
 begin
   inherited AfterConstruction;
+  FServer.BaseUri := TAPIConfig.Instance.Server.BaseUri;
   FServer.Port := TAPIConfig.Instance.Server.Port;
 
   FServer.CorsConfig.AllowHeaders := TAPIConfig.Instance.Cors.AllowHeaders;

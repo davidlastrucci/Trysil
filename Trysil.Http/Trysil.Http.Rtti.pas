@@ -77,6 +77,7 @@ type
   TTHttpRttiMethod = class
   strict private
     FMethod: TRttiMethod;
+    FBaseUri: String;
     FUriAttribute: TUriAttribute;
     FMethodAttribute: THttpMethodAttribute;
     FControllerID: TTHttpControllerID;
@@ -85,6 +86,7 @@ type
   public
     constructor Create(
       const AMethod: TRttiMethod;
+      const ABaseUri: String;
       const AUriAttribute: TUriAttribute;
       const AMethodAttribute: THttpMethodAttribute;
       const AAreas: TList<String>);
@@ -107,6 +109,7 @@ type
   TTHttpRttiController<C: class> = class(TTHttpAbstractRtti<C>)
   strict private
     FControllerName: String;
+    FBaseUri: String;
     FMethods: TObjectList<TTHttpRttiMethod>;
 
     function CheckParameters(
@@ -123,7 +126,7 @@ type
   strict protected
     function GetConstructorParamTypes: TArray<PTypeInfo>; override;
   public
-    constructor Create(const ATypeInfo: PTypeInfo);
+    constructor Create(const ATypeInfo: PTypeInfo; const ABaseUri: String);
     destructor Destroy; override;
 
     procedure AfterConstruction; override;
@@ -287,12 +290,14 @@ end;
 
 constructor TTHttpRttiMethod.Create(
   const AMethod: TRttiMethod;
+  const ABaseUri: String;
   const AUriAttribute: TUriAttribute;
   const AMethodAttribute: THttpMethodAttribute;
   const AAreas: TList<String>);
 begin
   inherited Create;
   FMethod := AMethod;
+  FBaseUri := ABaseUri;
   FUriAttribute := AUriAttribute;
   FMethodAttribute := AMethodAttribute;
   FAuthorizationType := TTHttpAuthorizationType.Authentication;
@@ -311,7 +316,7 @@ var
   LAttribute: TCustomAttribute;
 begin
   inherited AfterConstruction;
-  LUri := Format('%s%s', [FUriAttribute.Uri, FMethodAttribute.Uri]);
+  LUri := Format('%s%s%s', [FBaseUri, FUriAttribute.Uri, FMethodAttribute.Uri]);
   FControllerID := TTHttpControllerID.Create(
     LUri, FMethodAttribute.MethodType);
 
@@ -340,10 +345,12 @@ end;
 
 { TTHttpRttiController<C> }
 
-constructor TTHttpRttiController<C>.Create(const ATypeInfo: PTypeInfo);
+constructor TTHttpRttiController<C>.Create(
+  const ATypeInfo: PTypeInfo; const ABaseUri: String);
 begin
   inherited Create(ATypeInfo);
   FControllerName := String(ATypeInfo^.Name);
+  FBaseUri := ABaseUri;
   FMethods := TObjectList<TTHttpRttiMethod>.Create(True);
 end;
 
@@ -369,7 +376,7 @@ var
   LParameters: TArray<TRttiParameter>;
   LParameter: TRttiParameter;
 begin
-  LUri := Format('%s%s', [AUriAttribute.Uri, AMethodAttribute.Uri]);
+  LUri := Format('%s%s%s', [FBaseUri, AUriAttribute.Uri, AMethodAttribute.Uri]);
   LUriParts := TTHttpUriParts.Create(LUri);
   LParameters := AMethod.GetParameters;
   result := Length(LParameters) = LUriParts.ParamsCount;
@@ -396,7 +403,7 @@ begin
     if CheckParameters(AMethod, AUriAttribute, LMethodAttribute) then
     begin
       LRttiMethod := TTHttpRttiMethod.Create(
-        AMethod, AUriAttribute, LMethodAttribute, AAreas);
+        AMethod, FBaseUri, AUriAttribute, LMethodAttribute, AAreas);
       try
         begin
           if Assigned(AAuthAttribute) then

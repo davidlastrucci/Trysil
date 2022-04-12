@@ -1,5 +1,6 @@
 {
   "server": {
+    "baseUri": "",
     "port": 4450
   },
   "cors": {

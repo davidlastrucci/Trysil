@@ -24,10 +24,12 @@ type
 
   TAPIServerConfig = record
   strict private
+    FBaseUri: String;
     FPort: Word;
   private // internal
     procedure Load(const AJSon: TJSonValue);
   public
+    property BaseUri: String read FBaseUri;
     property Port: Word read FPort;
   end;
 
@@ -99,7 +101,10 @@ implementation
 procedure TAPIServerConfig.Load(const AJSon: TJSonValue);
 begin
   if Assigned(AJSon) then
+  begin
+    FBaseUri := AJSon.GetValue<String>('baseUri', String.Empty);
     FPort := AJSon.GetValue<Integer>('port', 4450);
+  end;
 end;
 
 { TAPICorsConfig }

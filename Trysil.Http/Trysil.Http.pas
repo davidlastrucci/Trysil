@@ -50,6 +50,7 @@ type
     FCors: TTHttpCors;
     FListener: TTHttpListener<C>;
     FLog: TTHttpLog;
+    FBaseUri: String;
     FHttpServer: TIdHttpServer;
     FPort: Word;
 
@@ -90,6 +91,7 @@ type
     procedure Stop;
 
     property Started: Boolean read GetStarted;
+    property BaseUri: String read FBaseUri write FBaseUri;
     property Port: Word read FPort write SetPort;
     property CorsConfig: TTHttpCorsConfig read GetCorsConfig;
   end;
@@ -141,10 +143,7 @@ begin
   FHttpServer.ListenQueue := 200;
   FHttpServer.UseNagle := False;
 
-  // GET, POST e (HEAD) scatenano l'evento OnCommandGet,
   FHttpServer.OnCommandGet := OnHttpServerCommand;
-
-  // DELETE, PUT, (TRACE) e (OPTION) l'evento OnCommandOther.
   FHttpServer.OnCommandOther := OnHttpServerCommand;
 
   FHttpServer.OnParseAuthentication := OnHttpServerParseAuthentication;
@@ -224,7 +223,7 @@ var
 begin
   try
     LTypeInfo := TypeInfo(R);
-    LRttiController := TTHttpRttiController<C>.Create(LTypeInfo);
+    LRttiController := TTHttpRttiController<C>.Create(LTypeInfo, FBaseUri);
     try
       if not LRttiController.CheckValid then
         raise ETHttpServerException.CreateFmt(
