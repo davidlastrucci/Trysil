@@ -33,6 +33,8 @@ type
 
   TTParam = class abstract
   strict protected
+    FSize: Integer;
+
     function GetAsString: String; virtual; abstract;
     procedure SetAsString(const Value: String); virtual; abstract;
     function GetAsInteger: Integer; virtual; abstract;
@@ -50,6 +52,7 @@ type
   public
     procedure Clear; virtual; abstract;
 
+    property Size: Integer read FSize;
     property AsString: String read GetAsString write SetAsString;
     property AsInteger: Integer read GetAsInteger write SetAsInteger;
     property AsLargeInt: Int64 read GetAsLargeInt write SetAsLargeInt;

@@ -104,6 +104,7 @@ constructor TTFDParam.Create(const AParam: TFDParam);
 begin
   inherited Create;
   FParam := AParam;
+  FSize := AParam.Size;
 end;
 
 procedure TTFDParam.Clear;

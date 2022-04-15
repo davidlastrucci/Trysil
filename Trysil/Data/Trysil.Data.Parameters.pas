@@ -48,6 +48,8 @@ type
 { TTStringParameter }
 
   TTStringParameter = class(TTParameter)
+  strict private
+    procedure SetParameterValue(const AEntity: TObject; const AValue: String);
   public
     procedure SetValue(const AEntity: TObject); override;
   end;
@@ -149,6 +151,17 @@ end;
 
 { TTStringParameter }
 
+procedure TTStringParameter.SetParameterValue(
+  const AEntity: TObject; const AValue: String);
+var
+  LValue: String;
+begin
+  LValue := AValue.Substring(0, FParam.Size);
+  FParam.AsString := LValue;
+  if not LValue.Equals(AValue) then
+    FColumnMap.Member.SetValue(AEntity, LValue);
+end;
+
 procedure TTStringParameter.SetValue(const AEntity: TObject);
 var
   LValue: TTValue;
@@ -161,10 +174,10 @@ begin
     if LNullable.IsNull then
       FParam.Clear()
     else
-      FParam.AsString := LNullable;
+      SetParameterValue(AEntity, LNullable);
   end
   else
-    FParam.AsString := LValue.AsType<String>();
+    SetParameterValue(AEntity, LValue.AsType<String>());
 
   TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsString);
 end;
