@@ -83,6 +83,7 @@ procedure TTFireDACConnectionPool.AfterConstruction;
 begin
   inherited AfterConstruction;
   FManager.WaitCursor := TFDGUIxScreenCursor.gcrNone;
+  FManager.ConnectionDefFileAutoLoad := False;
   FManager.Open;
 end;
 
