@@ -100,6 +100,14 @@ end;
 
 { TAPIReadOnlyController<T> }
 
+procedure TAPIReadOnlyController<T>.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  FConfigGet := TTJSonSerializerConfig.Create(1, True);
+  FConfigSelect := TTJSonSerializerConfig.Create(1, False);
+  FConfigFind := TTJSonSerializerConfig.Create(0, False);
+end;
+
 procedure TAPIReadOnlyController<T>.InternalGet(
   const AID: TTPrimaryKey; const AConfig: TTJSonSerializerConfig);
 var
@@ -142,14 +150,6 @@ begin
   finally
     LJSon.Free;
   end;
-end;
-
-procedure TAPIReadOnlyController<T>.AfterConstruction;
-begin
-  inherited AfterConstruction;
-  FConfigGet := TTJSonSerializerConfig.Create(1, True);
-  FConfigSelect := TTJSonSerializerConfig.Create(1, False);
-  FConfigFind := TTJSonSerializerConfig.Create(0, False);
 end;
 
 procedure TAPIReadOnlyController<T>.Get(const AID: TTPrimaryKey);
