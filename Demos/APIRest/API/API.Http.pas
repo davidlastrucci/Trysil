@@ -21,8 +21,9 @@ uses
 
   API.Config,
   API.Context,
-  API.Controller.Company,
-  API.Controller.Employee;
+  API.Model.Company,
+  API.Model.Employee,
+  API.Controller;
 
 type
 
@@ -100,8 +101,8 @@ end;
 
 procedure TAPIHttp.RegisterControllers;
 begin
-  FServer.RegisterController<TAPICompanyController>();
-  FServer.RegisterController<TAPIEmployeeController>();
+  FServer.RegisterController<TAPIReadWriteController<TAPICompany>>('/company');
+  FServer.RegisterController<TAPIReadWriteController<TAPIEmployee>>('/employee');
 end;
 
 procedure TAPIHttp.Start;

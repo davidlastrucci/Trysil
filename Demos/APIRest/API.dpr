@@ -79,8 +79,6 @@ uses
   API.Model.Company in 'API\Model\API.Model.Company.pas',
   API.Model.Employee in 'API\Model\API.Model.Employee.pas',
   API.Controller in 'API\Controllers\API.Controller.pas',
-  API.Controller.Employee in 'API\Controllers\API.Controller.Employee.pas',
-  API.Controller.Company in 'API\Controllers\API.Controller.Company.pas',
   API.MainForm in 'API.MainForm.pas' {APIMainForm};
 
 {$R *.res}

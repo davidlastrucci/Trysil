@@ -85,7 +85,8 @@ type
 
     procedure RegisterLogWriter<W: TTHttpLogAbstractWriter>();
     procedure RegisterAuthentication<H: TTHttpAbstractAuthentication<C>>();
-    procedure RegisterController<R: TTHttpController<C>>();
+    procedure RegisterController<R: TTHttpController<C>>(
+      const AUri: String = String.Empty);
 
     procedure Start;
     procedure Stop;
@@ -216,14 +217,16 @@ begin
   FCors.RegisterController(AControllerID, AAuthType);
 end;
 
-procedure TTHttpServer<C>.RegisterController<R>;
+procedure TTHttpServer<C>.RegisterController<R>(const AUri: String);
 var
   LTypeInfo: PTypeInfo;
+  LUri: String;
   LRttiController: TTHttpRttiController<C>;
 begin
   try
     LTypeInfo := TypeInfo(R);
-    LRttiController := TTHttpRttiController<C>.Create(LTypeInfo, FBaseUri);
+    LUri := Format('%s%s', [FBaseUri, AUri]);
+    LRttiController := TTHttpRttiController<C>.Create(LTypeInfo, LUri);
     try
       if not LRttiController.CheckValid then
         raise ETHttpServerException.CreateFmt(

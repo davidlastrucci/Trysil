@@ -312,11 +312,14 @@ end;
 
 procedure TTHttpRttiMethod.AfterConstruction;
 var
-  LUri: String;
+  LAttributeUri, LUri: String;
   LAttribute: TCustomAttribute;
 begin
   inherited AfterConstruction;
-  LUri := Format('%s%s%s', [FBaseUri, FUriAttribute.Uri, FMethodAttribute.Uri]);
+  LAttributeUri := String.Empty;
+  if Assigned(FUriAttribute) then
+    LAttributeUri := FUriAttribute.Uri;
+  LUri := Format('%s%s%s', [FBaseUri, LAttributeUri, FMethodAttribute.Uri]);
   FControllerID := TTHttpControllerID.Create(
     LUri, FMethodAttribute.MethodType);
 
@@ -371,12 +374,16 @@ function TTHttpRttiController<C>.CheckParameters(
   const AUriAttribute: TUriAttribute;
   const AMethodAttribute: THttpMethodAttribute): Boolean;
 var
-  LUri, LUriPart: String;
+  LAttributeUri, LUri, LUriPart: String;
   LUriParts: TTHttpUriParts;
   LParameters: TArray<TRttiParameter>;
   LParameter: TRttiParameter;
 begin
-  LUri := Format('%s%s%s', [FBaseUri, AUriAttribute.Uri, AMethodAttribute.Uri]);
+  LAttributeUri := String.Empty;
+  if Assigned(AUriAttribute) then
+    LAttributeUri := AUriAttribute.Uri;
+
+  LUri := Format('%s%s%s', [FBaseUri, LAttributeUri, AMethodAttribute.Uri]);
   LUriParts := TTHttpUriParts.Create(LUri);
   LParameters := AMethod.GetParameters;
   result := Length(LParameters) = LUriParts.ParamsCount;
@@ -426,22 +433,19 @@ var
   LMethod: TRttiMethod;
 begin
   LUriAttribute := FType.GetInheritedAttribute<TUriAttribute>();
-  if Assigned(LUriAttribute) then
-  begin
-    LAuthAttribute := FType.GetInheritedAttribute<
-      TAuthorizationTypeAttribute>();
-    LAreas := TList<String>.Create;
-    try
-      for LAttribute in FType.GetInheritedAttributes do
-        if LAttribute is TAreaAttribute then
-          LAreas.Add(TAreaAttribute(LAttribute).Area.ToLower());
+  LAuthAttribute := FType.GetInheritedAttribute<
+    TAuthorizationTypeAttribute>();
+  LAreas := TList<String>.Create;
+  try
+    for LAttribute in FType.GetInheritedAttributes do
+      if LAttribute is TAreaAttribute then
+        LAreas.Add(TAreaAttribute(LAttribute).Area.ToLower());
 
-      for LMethod in FType.GetMethods do
-        if not LMethod.IsClassMethod then
-          SearchAttributes(LUriAttribute, LAuthAttribute, LAreas, LMethod);
-    finally
-      LAreas.Free;
-    end;
+    for LMethod in FType.GetMethods do
+      if not LMethod.IsClassMethod then
+        SearchAttributes(LUriAttribute, LAuthAttribute, LAreas, LMethod);
+  finally
+    LAreas.Free;
   end;
 end;
 
