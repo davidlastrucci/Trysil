@@ -90,7 +90,7 @@ type
     procedure RegisterAuthentication<H: TTHttpAbstractAuthentication<C>>();
     procedure RegisterController<R: TTHttpController<C>>(); overload;
     procedure RegisterController<R: TTHttpController<C>>(
-      const AUri: String = String.Empty); overload;
+      const AUri: String); overload;
 
     procedure Start;
     procedure Stop;
