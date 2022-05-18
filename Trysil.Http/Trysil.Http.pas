@@ -77,6 +77,9 @@ type
       const AAuthType, AAuthContext: string;
       var AUsername, APassword: string;
       var AHandled: Boolean);
+
+    procedure InternalRegisterController(
+      const ATypeInfo: PTypeInfo; const AUri: String);
   public
     constructor Create;
     destructor Destroy; override;
@@ -85,8 +88,9 @@ type
 
     procedure RegisterLogWriter<W: TTHttpLogAbstractWriter>();
     procedure RegisterAuthentication<H: TTHttpAbstractAuthentication<C>>();
+    procedure RegisterController<R: TTHttpController<C>>(); overload;
     procedure RegisterController<R: TTHttpController<C>>(
-      const AUri: String = String.Empty);
+      const AUri: String = String.Empty); overload;
 
     procedure Start;
     procedure Stop;
@@ -217,20 +221,19 @@ begin
   FCors.RegisterController(AControllerID, AAuthType);
 end;
 
-procedure TTHttpServer<C>.RegisterController<R>(const AUri: String);
+procedure TTHttpServer<C>.InternalRegisterController(
+  const ATypeInfo: PTypeInfo; const AUri: String);
 var
-  LTypeInfo: PTypeInfo;
   LUri: String;
   LRttiController: TTHttpRttiController<C>;
 begin
   try
-    LTypeInfo := TypeInfo(R);
     LUri := Format('%s%s', [FBaseUri, AUri]);
-    LRttiController := TTHttpRttiController<C>.Create(LTypeInfo, LUri);
+    LRttiController := TTHttpRttiController<C>.Create(ATypeInfo, LUri);
     try
       if not LRttiController.CheckValid then
         raise ETHttpServerException.CreateFmt(
-          SNotValidController, [LTypeInfo^.Name]);
+          SNotValidController, [ATypeInfo^.Name]);
     except
       LRttiController.Free;
       raise;
@@ -238,7 +241,7 @@ begin
 
     FControllers.Add(LRttiController);
     FRttiControllers.Add(LRttiController, OnAfterRttiControllerAddedEvent);
-    Log(Format(SRegisterController, [LTypeInfo^.Name]));
+    Log(Format(SRegisterController, [ATypeInfo^.Name]));
   except
     on E: Exception do
     begin
@@ -246,6 +249,16 @@ begin
       raise;
     end;
   end;
+end;
+
+procedure TTHttpServer<C>.RegisterController<R>;
+begin
+  InternalRegisterController(TypeInfo(R), String.Empty);
+end;
+
+procedure TTHttpServer<C>.RegisterController<R>(const AUri: String);
+begin
+  InternalRegisterController(TypeInfo(R), AUri);
 end;
 
 procedure TTHttpServer<C>.Start;
