@@ -166,7 +166,7 @@ function TAPIConfig.GetJSonConfig: TJSonValue;
 var
   LFileName: String;
 begin
-  LFileName := TPath.ChangeExtension(ParamStr(0), '.JSon');
+  LFileName := TPath.ChangeExtension(ParamStr(0), '.json');
   if not TFile.Exists(LFileName, False) then
     raise EFileNotFoundException.CreateFmt(SConfigNotFound, [LFileName]);
 

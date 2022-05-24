@@ -39,8 +39,6 @@ implementation
 
 { TTHttpContext }
 
-{ TTHttpContext }
-
 function TTHttpContext.GetID<T>(const AEntity: T): TTPrimaryKey;
 begin
   result := FProvider.GetID<T>(AEntity);
