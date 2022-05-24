@@ -3,10 +3,7 @@
 ## Company controller
 
 <pre>
-<i>{ TAPICompanyController }</i>
-
-  [TUri('/company')]
-  TAPICompanyController = <b>class</b>(TAPIReadWriteController<TAPICompany>);
+  FServer.RegisterController&lt;TAPIReadWriteController&lt;TAPICompany&gt;&gt;('/company');
 </pre>
 
 ## Methods
