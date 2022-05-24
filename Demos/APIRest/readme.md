@@ -3,7 +3,7 @@
 ## Company controller
 
 <pre>
-  FServer.RegisterController&lt;TAPIReadWriteController&lt;TAPICompany&gt;&gt;('/company');
+FServer.RegisterController&lt;TAPIReadWriteController&lt;TAPICompany&gt;&gt;('/company');
 </pre>
 
 ## Methods
@@ -17,4 +17,4 @@
 |DELETE|/company/?/?|Delete&lt;TAPICompany&gt;|DELETE|||
 |POST|/company/select|Select&lt;TAPICompany&gt;|SELECT|Yes|No|
 |GET|/company/find/?|Get&lt;TAPICompany&gt;|SELECT|No|No|
-|GET|/company/createnew|CreateEntity&lt;TAPICompany&gt;|none|||
+|GET|/company/createnew|CreateEntity&lt;TAPICompany&gt;||||
