@@ -10,6 +10,8 @@
 *)
 unit Demo.Model;
 
+{$WARN UNKNOWN_CUSTOM_ATTRIBUTE ERROR}
+
 interface
 
 uses

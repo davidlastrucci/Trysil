@@ -10,6 +10,8 @@
 *)
 unit API.Controller;
 
+{$WARN UNKNOWN_CUSTOM_ATTRIBUTE ERROR}
+
 interface
 
 uses

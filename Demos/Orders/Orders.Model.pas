@@ -10,6 +10,8 @@
 *)
 unit Orders.Model;
 
+{$WARN UNKNOWN_CUSTOM_ATTRIBUTE ERROR}
+
 interface
 
 uses

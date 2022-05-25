@@ -10,6 +10,8 @@
 *)
 unit API.Model.Employee;
 
+{$WARN UNKNOWN_CUSTOM_ATTRIBUTE ERROR}
+
 interface
 
 uses
