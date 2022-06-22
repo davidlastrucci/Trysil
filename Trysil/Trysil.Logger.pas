@@ -22,6 +22,8 @@ uses
 
 type
 
+{$SCOPEDENUMS ON}
+
 { TTLoggerEvent }
 
   TTLoggerEvent = (
@@ -242,13 +244,13 @@ end;
 procedure TTLoggerThread.Log(const AItem: TTLoggerItem);
 begin
   case AItem.Event of
-    StartTransaction: LogStartTransaction;
-    Commit: LogCommit;
-    Rollback: LogRollback;
-    Parameter: LogParameter(AItem.Values[0], AItem.Values[1]);
-    Syntax: LogSyntax(AItem.Values[0]);
-    Command: LogCommand(AItem.Values[0]);
-    Error: LogError(AItem.Values[0]);
+    TTLoggerEvent.StartTransaction: LogStartTransaction;
+    TTLoggerEvent.Commit: LogCommit;
+    TTLoggerEvent.Rollback: LogRollback;
+    TTLoggerEvent.Parameter: LogParameter(AItem.Values[0], AItem.Values[1]);
+    TTLoggerEvent.Syntax: LogSyntax(AItem.Values[0]);
+    TTLoggerEvent.Command: LogCommand(AItem.Values[0]);
+    TTLoggerEvent.Error: LogError(AItem.Values[0]);
   end;
 end;
 

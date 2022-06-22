@@ -24,6 +24,8 @@ uses
 
 type
 
+{$SCOPEDENUMS ON}
+
 { TTHttpMethodType }
 
   TTHttpMethodType = (GET, POST, DELETE, PUT, OPTIONS);

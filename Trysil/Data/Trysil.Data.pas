@@ -29,6 +29,8 @@ uses
 
 type
 
+{$SCOPEDENUMS ON}
+
 { TTParam }
 
   TTParam = class abstract

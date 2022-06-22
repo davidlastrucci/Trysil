@@ -25,6 +25,8 @@ uses
 
 type
 
+{$SCOPEDENUMS ON}
+
 { TTHttpLogAction }
 
   TTHttpLogAction = record

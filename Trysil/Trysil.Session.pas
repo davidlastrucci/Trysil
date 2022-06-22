@@ -26,6 +26,8 @@ uses
 
 type
 
+{$SCOPEDENUMS ON}
+
 { TTClonedEntities<T> }
 
   TTClonedEntities<T: class> = class
