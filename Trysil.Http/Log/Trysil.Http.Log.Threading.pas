@@ -75,8 +75,8 @@ begin
       LWriter := FRttiLogWriter.CreateLogWriter;
       try
         case LValue.QueueType of
-          TTHttpLogQueueType.qtRequest: LWriter.WriteRequest(LValue.Request);
-          TTHttpLogQueueType.qtResponse: LWriter.WriteResponse(LValue.Response);
+          TTHttpLogQueueType.Request: LWriter.WriteRequest(LValue.Request);
+          TTHttpLogQueueType.Response: LWriter.WriteResponse(LValue.Response);
         end;
       finally
         LWriter.Free;
