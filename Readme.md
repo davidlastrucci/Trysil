@@ -28,6 +28,8 @@ For further information:
 - [Getting started](https://github.com/davidlastrucci/Trysil/blob/master/Docs/GettingStarted.md)
 - [Run Simple Demo in Demos/Simple folder](https://github.com/davidlastrucci/Trysil/blob/master/Docs/RunSimpleDemo.md)
 
+If you use my ORM, please, put a star and, if you have time, write me to david.lastrucci@gmail.com, and tell me how you use it and why. I would appreciate it!
+
 ---
 <p>
   <a href="https://www.lastrucci.net/">
