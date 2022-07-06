@@ -29,11 +29,18 @@ uses
 
 type
 
+{ TTApplyAllMethod<T> }
+
+  TTApplyAllMethod<T: class> = reference to procedure(const AEntity: T);
+
 { TTContext }
 
   TTContext = class
   strict private
     FConnection: TTConnection;
+
+    procedure ApplyAll<T: class>(
+      const AList: TTList<T>; const AApplyAllMethod: TTApplyAllMethod<T>);
 
     function GetInTransaction: Boolean;
     function GetUseIdentityMap: Boolean;
@@ -189,17 +196,43 @@ begin
   FProvider.Refresh<T>(AEntity);
 end;
 
+procedure TTContext.ApplyAll<T>(
+  const AList: TTList<T>; const AApplyAllMethod: TTApplyAllMethod<T>);
+var
+  LLocalTransaction: Boolean;
+  LEntity: T;
+begin
+  if Assigned(AApplyAllMethod) then
+  begin
+    LLocalTransaction := not FConnection.InTransaction;
+    if LLocalTransaction then
+      FConnection.StartTransaction;
+    try
+      for LEntity in AList do
+        AApplyAllMethod(LEntity);
+
+      if LLocalTransaction then
+        FConnection.CommitTransaction;
+    except
+      if LLocalTransaction then
+        FConnection.RollbackTransaction;
+      raise;
+    end;
+  end;
+end;
+
 procedure TTContext.Insert<T>(const AEntity: T);
 begin
   FResolver.Insert<T>(AEntity);
 end;
 
 procedure TTContext.InsertAll<T>(const AList: TTList<T>);
-var
-  LEntity: T;
 begin
-  for LEntity in AList do
-    FResolver.Insert<T>(LEntity);
+  ApplyAll<T>(
+    AList, procedure(const AEntity: T)
+    begin
+      FResolver.Insert<T>(AEntity);
+    end);
 end;
 
 procedure TTContext.Update<T>(const AEntity: T);
@@ -208,11 +241,12 @@ begin
 end;
 
 procedure TTContext.UpdateAll<T>(const AList: TTList<T>);
-var
-  LEntity: T;
 begin
-  for LEntity in AList do
-    FResolver.Update<T>(LEntity);
+  ApplyAll<T>(
+    AList, procedure(const AEntity: T)
+    begin
+      FResolver.Update<T>(AEntity);
+    end);
 end;
 
 procedure TTContext.Delete<T>(const AEntity: T);
@@ -221,11 +255,12 @@ begin
 end;
 
 procedure TTContext.DeleteAll<T>(const AList: TTList<T>);
-var
-  LEntity: T;
 begin
-  for LEntity in AList do
-    FResolver.Delete<T>(LEntity);
+  ApplyAll<T>(
+    AList, procedure(const AEntity: T)
+    begin
+      FResolver.Delete<T>(AEntity);
+    end);
 end;
 
 end.
