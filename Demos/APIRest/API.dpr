@@ -79,7 +79,8 @@ uses
   API.Model.Company in 'API\Model\API.Model.Company.pas',
   API.Model.Employee in 'API\Model\API.Model.Employee.pas',
   API.Controller in 'API\Controllers\API.Controller.pas',
-  API.MainForm in 'API.MainForm.pas' {APIMainForm};
+  API.MainForm in 'API.MainForm.pas' {APIMainForm},
+  Trysil.Transaction in '..\..\Trysil\Trysil.Transaction.pas';
 
 {$R *.res}
 

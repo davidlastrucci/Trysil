@@ -45,7 +45,8 @@ uses
   Demo.EditDialog in 'Demo.EditDialog.pas' {EditDialog},
   Demo.ListView in 'Demo.ListView.pas',
   Demo.DatabaseBuilder in 'Demo.DatabaseBuilder.pas' {DatabaseBuilder: TDataModule},
-  Trysil.Factory in '..\..\Trysil\Trysil.Factory.pas';
+  Trysil.Factory in '..\..\Trysil\Trysil.Factory.pas',
+  Trysil.Transaction in '..\..\Trysil\Trysil.Transaction.pas';
 
 {$R *.res}
 

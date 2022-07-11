@@ -178,6 +178,7 @@
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
         <DCCReference Include="..\..\Trysil\Trysil.Factory.pas"/>
+        <DCCReference Include="..\..\Trysil\Trysil.Transaction.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

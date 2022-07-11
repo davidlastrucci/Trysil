@@ -175,11 +175,10 @@
         <DCCReference Include="API\Model\API.Model.Company.pas"/>
         <DCCReference Include="API\Model\API.Model.Employee.pas"/>
         <DCCReference Include="API\Controllers\API.Controller.pas"/>
-        <DCCReference Include="API\Controllers\API.Controller.Employee.pas"/>
-        <DCCReference Include="API\Controllers\API.Controller.Company.pas"/>
         <DCCReference Include="API.MainForm.pas">
             <Form>APIMainForm</Form>
         </DCCReference>
+        <DCCReference Include="..\..\Trysil\Trysil.Transaction.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
