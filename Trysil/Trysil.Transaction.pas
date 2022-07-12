@@ -16,6 +16,8 @@ uses
   System.SysUtils,
   System.Classes,
 
+  Trysil.Consts,
+  Trysil.Exceptions,
   Trysil.Context;
 
 type
@@ -46,7 +48,6 @@ constructor TTTransaction.Create(const AContext: TTContext);
 begin
   inherited Create;
   FContext := AContext;
-  FLocalTransaction := not FContext.InTransaction;
 end;
 
 procedure TTTransaction.AfterConstruction;
@@ -63,20 +64,29 @@ end;
 
 procedure TTTransaction.Start;
 begin
+  FLocalTransaction := not FContext.InTransaction;
   if FLocalTransaction then
     FContext.StartTransaction;
 end;
 
 procedure TTTransaction.Commit;
 begin
-  if FLocalTransaction and FContext.InTransaction then
+  if FLocalTransaction then
+  begin
+    if not FContext.InTransaction then
+      raise ETException.Create(SNotValidTransaction);
     FContext.CommitTransaction;
+  end;
 end;
 
 procedure TTTransaction.Rollback;
 begin
-  if FLocalTransaction and FContext.InTransaction  then
+  if FLocalTransaction then
+  begin
+    if not FContext.InTransaction then
+      raise ETException.Create(SNotValidTransaction);
     FContext.RollbackTransaction;
+  end;
 end;
 
 end.
