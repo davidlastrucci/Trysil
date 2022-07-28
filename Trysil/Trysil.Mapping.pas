@@ -17,7 +17,6 @@ uses
   System.SysUtils,
   System.TypInfo,
   System.Rtti,
-  Data.DB,
 
   Trysil.Consts,
   Trysil.Exceptions,
