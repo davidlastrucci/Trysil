@@ -16,7 +16,7 @@ uses
   System.Classes,
   System.SysUtils,
   System.Generics.Collections,
-  System.TypInfo,
+  System.Rtti,
   Data.DB,
 
   Trysil.Consts,
@@ -388,7 +388,7 @@ var
 begin
   if not FParameterTypes.TryGetValue(AFieldType, LClass) then
     raise ETException.CreateFmt(SParameterTypeError, [
-      GetEnumName(TypeInfo(TFieldType), Ord(AFieldType))]);
+      TRttiEnumerationType.GetName<TFieldType>(AFieldType)]);
   result := TTParameterClass(LClass).Create(AParam, AColumnMap);
 end;
 

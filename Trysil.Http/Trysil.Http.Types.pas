@@ -16,7 +16,7 @@ uses
   System.SysUtils,
   System.Classes,
   System.Generics.Collections,
-  System.TypInfo,
+  System.Rtti,
   IdCustomHttpServer,
 
   Trysil.Http.Consts,
@@ -186,7 +186,7 @@ end;
 
 function TTHttpControllerID.GetMethod: String;
 begin
-  result := GetEnumName(TypeInfo(TTHttpMethodType), Ord(MethodType));
+  result := TRttiEnumerationType.GetName<TTHttpMethodType>(MethodType);
 end;
 
 function TTHttpControllerID.GetMethodType: TTHttpMethodType;
@@ -204,7 +204,7 @@ begin
       result := TTHttpMethodType.OPTIONS;
     else
       raise ETHttpServerException.CreateFmt(SNotValidCommandType, [
-        GetEnumName(TypeInfo(THttpCommandType), Ord(FCommandType))]);
+        TRttiEnumerationType.GetName<THttpCommandType>(FCommandType)]);
   end;
 end;
 
