@@ -64,7 +64,7 @@ end;
 
 constructor ETException.Create(const AMessage: String);
 begin
-	Create(AMessage, nil);
+  Create(AMessage, nil);
 end;
 
 constructor ETException.Create(
@@ -72,7 +72,7 @@ constructor ETException.Create(
 begin
   inherited Create(AMessage);
   if Assigned(ANestedException) then
-  	FNestedException := Exception(AcquireExceptionObject);
+    FNestedException := Exception(AcquireExceptionObject);
 end;
 
 destructor ETException.Destroy;

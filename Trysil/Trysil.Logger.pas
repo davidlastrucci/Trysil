@@ -93,7 +93,7 @@ type
 
     procedure Execute; override;
   public
-  	constructor Create; virtual;
+    constructor Create; virtual;
     destructor Destroy; override;
 
     procedure AddLog(const AItem: TTLoggerItem);
