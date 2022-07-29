@@ -23,6 +23,8 @@ type
   ETException = class(Exception)
   strict private
     FNestedException: Exception;
+
+    function GetNestedException: Exception;
   public
     constructor CreateFmt(const AMessage: String;const AArgs: array of const);
     constructor Create(const AMessage: String);
@@ -43,14 +45,9 @@ begin
 end;
 
 constructor ETException.Create(const AMessage: String);
-var
-  LExceptionObject: TObject;
 begin
   inherited Create(AMessage);
-  FNestedException := nil;
-  LExceptionObject := AcquireExceptionObject();
-  if Assigned(LExceptionObject) and (LExceptionObject is Exception) then
-    FNestedException := Exception(LExceptionObject);
+  FNestedException := GetNestedException();
 end;
 
 destructor ETException.Destroy;
@@ -58,6 +55,16 @@ begin
   if Assigned(FNestedException) then
     FNestedException.Free;
   inherited Destroy;
+end;
+
+function ETException.GetNestedException: Exception;
+var
+  LResult: TObject;
+begin
+  result := nil;
+  LResult := AcquireExceptionObject();
+  if Assigned(LResult) and (LResult is Exception) then
+    result := Exception(LResult);
 end;
 
 end.
