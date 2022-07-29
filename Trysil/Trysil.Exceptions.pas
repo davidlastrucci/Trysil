@@ -24,20 +24,8 @@ type
   strict private
     FNestedException: Exception;
   public
-    constructor CreateFmt(
-      const AMessage: String;
-      const AArgs: array of const); overload;
-
-    constructor CreateFmt(
-      const AMessage: String;
-      const AArgs: array of const;
-      const ANestedException: Exception); overload;
-
-    constructor Create(const AMessage: String); overload;
-
-    constructor Create(
-      const AMessage: String;
-      const ANestedException: Exception); overload;
+    constructor CreateFmt(const AMessage: String;const AArgs: array of const);
+    constructor Create(const AMessage: String);
 
     destructor Destroy; override;
 
@@ -51,28 +39,18 @@ implementation
 constructor ETException.CreateFmt(
   const AMessage: String; const AArgs: array of const);
 begin
-  CreateFmt(AMessage, AArgs, nil);
-end;
-
-constructor ETException.CreateFmt(
-  const AMessage: String;
-  const AArgs: array of const;
-  const ANestedException: Exception);
-begin
-  Create(Format(AMessage, AArgs), ANestedException);
+  Create(Format(AMessage, AArgs));
 end;
 
 constructor ETException.Create(const AMessage: String);
-begin
-  Create(AMessage, nil);
-end;
-
-constructor ETException.Create(
-  const AMessage: String; const ANestedException: Exception);
+var
+  LExceptionObject: TObject;
 begin
   inherited Create(AMessage);
-  if Assigned(ANestedException) then
-    FNestedException := Exception(AcquireExceptionObject);
+  FNestedException := nil;
+  LExceptionObject := AcquireExceptionObject();
+  if Assigned(LExceptionObject) and (LExceptionObject is Exception) then
+    FNestedException := Exception(LExceptionObject);
 end;
 
 destructor ETException.Destroy;

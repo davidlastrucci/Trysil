@@ -35,21 +35,10 @@ type
     constructor CreateFmt(
       const AStatusCode: Integer;
       const AMessage: String;
-      const AArgs: array of const); overload;
-
-    constructor CreateFmt(
-      const AStatusCode: Integer;
-      const AMessage: String;
-      const AArgs: array of const;
-      const ANestedException: Exception); overload;
+      const AArgs: array of const);
 
     constructor Create(
-      const AStatusCode: Integer; const AMessage: String); overload;
-
-    constructor Create(
-      const AStatusCode: Integer;
-      const AMessage: String;
-      const ANestedException: Exception); overload;
+      const AStatusCode: Integer; const AMessage: String);
 
     function ToJSon(): String;
 
@@ -60,108 +49,48 @@ type
 
   ETHttpBadRequest = class(ETHttpException)
   public
-    constructor CreateFmt(
-      const AMessage: String; const AArgs: array of const); overload;
-
-    constructor CreateFmt(
-      const AMessage: String;
-      const AArgs: array of const;
-      const ANestedException: Exception); overload;
-
-    constructor Create(const AMessage: String); overload;
-
-    constructor Create(
-      const AMessage: String; const ANestedException: Exception); overload;
+    constructor CreateFmt(const AMessage: String; const AArgs: array of const);
+    constructor Create(const AMessage: String);
   end;
 
 { ETHttpUnauthorized }
 
   ETHttpUnauthorized = class(ETHttpException)
   public
-    constructor CreateFmt(
-      const AMessage: String; const AArgs: array of const); overload;
-
-    constructor CreateFmt(
-      const AMessage: String;
-      const AArgs: array of const;
-      const ANestedException: Exception); overload;
-
-    constructor Create(const AMessage: String); overload;
-
-    constructor Create(
-      const AMessage: String; const ANestedException: Exception); overload;
+    constructor CreateFmt(const AMessage: String; const AArgs: array of const);
+    constructor Create(const AMessage: String);
   end;
 
 { ETHttpForbidden }
 
   ETHttpForbidden = class(ETHttpException)
   public
-    constructor CreateFmt(
-      const AMessage: String; const AArgs: array of const); overload;
-
-    constructor CreateFmt(
-      const AMessage: String;
-      const AArgs: array of const;
-      const ANestedException: Exception); overload;
-
-    constructor Create(const AMessage: String); overload;
-
-    constructor Create(
-      const AMessage: String; const ANestedException: Exception); overload;
+    constructor CreateFmt(const AMessage: String; const AArgs: array of const);
+    constructor Create(const AMessage: String);
   end;
 
 { ETHttpNotFound }
 
   ETHttpNotFound = class(ETHttpException)
   public
-    constructor CreateFmt(
-      const AMessage: String; const AArgs: array of const); overload;
-
-    constructor CreateFmt(
-      const AMessage: String;
-      const AArgs: array of const;
-      const ANestedException: Exception); overload;
-
-    constructor Create(const AMessage: String); overload;
-
-    constructor Create(
-      const AMessage: String; const ANestedException: Exception); overload;
+    constructor CreateFmt(const AMessage: String; const AArgs: array of const);
+    constructor Create(const AMessage: String);
   end;
 
 { ETHttpMethodNotAllowed }
 
   ETHttpMethodNotAllowed = class(ETHttpException)
   public
-    constructor CreateFmt(
-      const AMessage: String; const AArgs: array of const); overload;
-
-    constructor CreateFmt(
-      const AMessage: String;
-      const AArgs: array of const;
-      const ANestedException: Exception); overload;
-
-    constructor Create(const AMessage: String); overload;
-
-    constructor Create(
-      const AMessage: String; const ANestedException: Exception); overload;
+    constructor CreateFmt(const AMessage: String; const AArgs: array of const);
+    constructor Create(const AMessage: String);
   end;
 
 { ETHttpInternalServerError }
 
   ETHttpInternalServerError = class(ETHttpException)
   public
-    constructor CreateFmt(
-      const AMessage: String; const AArgs: array of const); overload;
-
-    constructor CreateFmt(
-      const AMessage: String;
-      const AArgs: array of const;
-      const ANestedException: Exception); overload;
-
-    constructor Create(const AMessage: String); overload;
-
-    constructor Create(
-      const AMessage: String; const ANestedException: Exception); overload;
+    constructor CreateFmt(const AMessage: String; const AArgs: array of const);
+    constructor Create(const AMessage: String);
   end;
 
 { TExceptionHelper }
@@ -181,30 +110,13 @@ constructor ETHttpException.CreateFmt(
   const AMessage: String;
   const AArgs: array of const);
 begin
-  CreateFmt(AStatusCode, AMessage, AArgs, nil);
-end;
-
-constructor ETHttpException.CreateFmt(
-  const AStatusCode: Integer;
-  const AMessage: String;
-  const AArgs: array of const;
-  const ANestedException: Exception);
-begin
-  Create(AStatusCode, Format(AMessage, AArgs), ANestedException);
+  Create(AStatusCode, Format(AMessage, AArgs));
 end;
 
 constructor ETHttpException.Create(
   const AStatusCode: Integer; const AMessage: String);
 begin
-  Create(AStatusCode, AMessage, nil);
-end;
-
-constructor ETHttpException.Create(
-  const AStatusCode: Integer;
-  const AMessage: String;
-  const ANestedException: Exception);
-begin
-  inherited Create(AMessage, ANestedException);
+  inherited Create(AMessage);
   FStatusCode := AStatusCode;
 end;
 
@@ -242,25 +154,9 @@ begin
   inherited CreateFmt(TTHttpStatusCodeTypes.BadRequest, AMessage, AArgs);
 end;
 
-constructor ETHttpBadRequest.CreateFmt(
-  const AMessage: String;
-  const AArgs: array of const;
-  const ANestedException: Exception);
-begin
-  inherited CreateFmt(
-    TTHttpStatusCodeTypes.BadRequest, AMessage, AArgs, ANestedException);
-end;
-
 constructor ETHttpBadRequest.Create(const AMessage: String);
 begin
   inherited Create(TTHttpStatusCodeTypes.BadRequest, AMessage);
-end;
-
-constructor ETHttpBadRequest.Create(
-  const AMessage: String; const ANestedException: Exception);
-begin
-  inherited Create(
-    TTHttpStatusCodeTypes.BadRequest, AMessage, ANestedException);
 end;
 
 { ETHttpUnauthorized }
@@ -271,25 +167,9 @@ begin
   inherited CreateFmt(TTHttpStatusCodeTypes.Unauthorized, AMessage, AArgs);
 end;
 
-constructor ETHttpUnauthorized.CreateFmt(
-  const AMessage: String;
-  const AArgs: array of const;
-  const ANestedException: Exception);
-begin
-  inherited CreateFmt(
-    TTHttpStatusCodeTypes.Unauthorized, AMessage, AArgs, ANestedException);
-end;
-
 constructor ETHttpUnauthorized.Create(const AMessage: String);
 begin
   inherited Create(TTHttpStatusCodeTypes.Unauthorized, AMessage);
-end;
-
-constructor ETHttpUnauthorized.Create(
-  const AMessage: String; const ANestedException: Exception);
-begin
-  inherited Create(
-    TTHttpStatusCodeTypes.Unauthorized, AMessage, ANestedException);
 end;
 
 { ETHttpForbidden }
@@ -300,25 +180,9 @@ begin
   inherited CreateFmt(TTHttpStatusCodeTypes.Forbidden, AMessage, AArgs);
 end;
 
-constructor ETHttpForbidden.CreateFmt(
-  const AMessage: String;
-  const AArgs: array of const;
-  const ANestedException: Exception);
-begin
-  inherited CreateFmt(
-    TTHttpStatusCodeTypes.Forbidden, AMessage, AArgs, ANestedException);
-end;
-
 constructor ETHttpForbidden.Create(const AMessage: String);
 begin
   inherited Create(TTHttpStatusCodeTypes.Forbidden, AMessage);
-end;
-
-constructor ETHttpForbidden.Create(
-  const AMessage: String; const ANestedException: Exception);
-begin
-  inherited Create(
-    TTHttpStatusCodeTypes.Forbidden, AMessage, ANestedException);
 end;
 
 { ETHttpNotFound }
@@ -329,25 +193,9 @@ begin
   inherited CreateFmt(TTHttpStatusCodeTypes.NotFound, AMessage, AArgs);
 end;
 
-constructor ETHttpNotFound.CreateFmt(
-  const AMessage: String;
-  const AArgs: array of const;
-  const ANestedException: Exception);
-begin
-  inherited CreateFmt(
-    TTHttpStatusCodeTypes.NotFound, AMessage, AArgs, ANestedException);
-end;
-
 constructor ETHttpNotFound.Create(const AMessage: String);
 begin
   inherited Create(TTHttpStatusCodeTypes.NotFound, AMessage);
-end;
-
-constructor ETHttpNotFound.Create(
-  const AMessage: String; const ANestedException: Exception);
-begin
-  inherited Create(
-    TTHttpStatusCodeTypes.NotFound, AMessage, ANestedException);
 end;
 
 { ETHttpMethodNotAllowed }
@@ -358,25 +206,9 @@ begin
   inherited CreateFmt(TTHttpStatusCodeTypes.MethodNotAllowed, AMessage, AArgs);
 end;
 
-constructor ETHttpMethodNotAllowed.CreateFmt(
-  const AMessage: String;
-  const AArgs: array of const;
-  const ANestedException: Exception);
-begin
-  inherited CreateFmt(
-    TTHttpStatusCodeTypes.MethodNotAllowed, AMessage, AArgs, ANestedException);
-end;
-
 constructor ETHttpMethodNotAllowed.Create(const AMessage: String);
 begin
   inherited Create(TTHttpStatusCodeTypes.MethodNotAllowed, AMessage);
-end;
-
-constructor ETHttpMethodNotAllowed.Create(
-  const AMessage: String; const ANestedException: Exception);
-begin
-  inherited Create(
-    TTHttpStatusCodeTypes.MethodNotAllowed, AMessage, ANestedException);
 end;
 
 { ETHttpInternalServerError }
@@ -388,28 +220,9 @@ begin
     TTHttpStatusCodeTypes.InternalServerError, AMessage, AArgs);
 end;
 
-constructor ETHttpInternalServerError.CreateFmt(
-  const AMessage: String;
-  const AArgs: array of const;
-  const ANestedException: Exception);
-begin
-  inherited CreateFmt(
-    TTHttpStatusCodeTypes.InternalServerError,
-    AMessage,
-    AArgs,
-    ANestedException);
-end;
-
 constructor ETHttpInternalServerError.Create(const AMessage: String);
 begin
   inherited Create(TTHttpStatusCodeTypes.InternalServerError, AMessage);
-end;
-
-constructor ETHttpInternalServerError.Create(
-  const AMessage: String; const ANestedException: Exception);
-begin
-  inherited Create(
-    TTHttpStatusCodeTypes.InternalServerError, AMessage, ANestedException);
 end;
 
 { TExceptionHelper }
