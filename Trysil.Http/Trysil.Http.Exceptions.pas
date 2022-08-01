@@ -130,7 +130,7 @@ begin
     LResult.AddPair('message', Self.Message);
     result := LResult.ToJSon();
 
-    if Assigned(NestedException) then
+    if Assigned(InnerException) then
     begin
       LJSon := TJSonObject.Create;
       try
@@ -243,18 +243,23 @@ end;
 procedure TExceptionHelper.ToJSon(const AJSon: TJSonObject);
 var
   LJSon: TJSonObject;
+  LException: ETException;
 begin
   AJSon.AddPair('status', TJSonNumber.Create(500));
   AJSon.AddPair('message', Self.Message);
-  if (Self is ETException) and Assigned(ETException(Self).NestedException) then
+  if (Self is ETException) then
   begin
-    LJSon := TJSonObject.Create;
-    try
-      ETException(Self).NestedException.ToJSon(LJSon);
-      AJSon.AddPair('nestedException', LJSon);
-    except
-      LJSon.Free;
-      raise;
+    LException := ETException(Self);
+    if Assigned(LException.NestedException) then
+    begin
+      LJSon := TJSonObject.Create;
+      try
+        LException.NestedException.ToJSon(LJSon);
+        AJSon.AddPair('nestedException', LJSon);
+      except
+        LJSon.Free;
+        raise;
+      end;
     end;
   end;
 end;
