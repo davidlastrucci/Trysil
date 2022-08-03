@@ -22,7 +22,8 @@ uses
   Trysil.Generics.Collections,
   Trysil.Data,
   Trysil.Provider,
-  Trysil.Resolver;
+  Trysil.Resolver,
+  Trysil.Transaction;
 
 type
 
@@ -251,22 +252,21 @@ end;
 
 procedure TTSession<T>.ApplyChanges;
 var
-  LLocalTransaction: Boolean;
+  LTransaction: TTTransaction;
 begin
   if FApplied then
     raise ETException.Create(SSessionNotTwice);
 
-  LLocalTransaction := not FConnection.InTransaction;
-  if LLocalTransaction then
-    FConnection.StartTransaction;
+  LTransaction := TTTransaction.Create(FConnection);
   try
-    InternalApplyChanges;
-    if LLocalTransaction then
-      FConnection.CommitTransaction;
-  except
-    if LLocalTransaction then
-      FConnection.RollbackTransaction;
-    raise;
+    try
+      InternalApplyChanges;
+    except
+      LTransaction.Rollback;
+      raise;
+    end;
+  finally
+    LTransaction.Free;
   end;
 
   FApplied := True;

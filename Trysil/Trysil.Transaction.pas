@@ -18,7 +18,7 @@ uses
 
   Trysil.Consts,
   Trysil.Exceptions,
-  Trysil.Context;
+  Trysil.Data;
 
 type
 
@@ -26,13 +26,13 @@ type
 
   TTTransaction = class
   strict private
-    FContext: TTContext;
+    FConnection: TTConnection;
     FLocalTransaction: Boolean;
 
     procedure Start;
     procedure Commit;
   public
-    constructor Create(const AContext: TTContext);
+    constructor Create(const AConnection: TTConnection);
 
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
@@ -44,10 +44,10 @@ implementation
 
 { TTTransaction }
 
-constructor TTTransaction.Create(const AContext: TTContext);
+constructor TTTransaction.Create(const AConnection: TTConnection);
 begin
   inherited Create;
-  FContext := AContext;
+  FConnection := AConnection;
 end;
 
 procedure TTTransaction.AfterConstruction;
@@ -64,18 +64,18 @@ end;
 
 procedure TTTransaction.Start;
 begin
-  FLocalTransaction := not FContext.InTransaction;
+  FLocalTransaction := not FConnection.InTransaction;
   if FLocalTransaction then
-    FContext.StartTransaction;
+    FConnection.StartTransaction;
 end;
 
 procedure TTTransaction.Commit;
 begin
   if FLocalTransaction then
   begin
-    if not FContext.InTransaction then
+    if not FConnection.InTransaction then
       raise ETException.Create(SNotValidTransaction);
-    FContext.CommitTransaction;
+    FConnection.CommitTransaction;
   end;
 end;
 
@@ -83,9 +83,9 @@ procedure TTTransaction.Rollback;
 begin
   if FLocalTransaction then
   begin
-    if not FContext.InTransaction then
+    if not FConnection.InTransaction then
       raise ETException.Create(SNotValidTransaction);
-    FContext.RollbackTransaction;
+    FConnection.RollbackTransaction;
   end;
 end;
 

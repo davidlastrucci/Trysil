@@ -25,6 +25,7 @@ uses
   Trysil.Metadata,
   Trysil.Mapping,
   Trysil.Filter,
+  Trysil.Transaction,
   Trysil.Events.Abstract,
   Trysil.Data.SqlSyntax;
 
@@ -408,36 +409,34 @@ procedure TTGenericCommand.ExecuteCommand(
   const AEntity: TObject;
   const AEvent: TTEvent);
 var
-  LLocalTransaction: Boolean;
+  LTransaction: TTTransaction;
   LRowsAffected: Integer;
 begin
-  LLocalTransaction := not FConnection.InTransaction;
-  if LLocalTransaction then
-    FConnection.StartTransaction;
+  LTransaction := TTTransaction.Create(FConnection);
   try
-    BeforeExecute(AEntity, AEvent);
+    try
+      BeforeExecute(AEntity, AEvent);
 
-    TTLogger.Instance.LogCommand(ASQL);
+      TTLogger.Instance.LogCommand(ASQL);
 
-    LRowsAffected := FConnection.Execute(
-      ASQL,
-      FTableMap,
-      FTableMetadata,
-      AEntity);
+      LRowsAffected := FConnection.Execute(
+        ASQL,
+        FTableMap,
+        FTableMetadata,
+        AEntity);
 
-    if LRowsAffected = 0 then
-      raise ETException.Create(SRecordChanged)
-    else if LRowsAffected > 1 then
-      raise ETException.Create(SSyntaxError);
+      if LRowsAffected = 0 then
+        raise ETException.Create(SRecordChanged)
+      else if LRowsAffected > 1 then
+        raise ETException.Create(SSyntaxError);
 
-    AfterExecute(AEntity, AEvent);
-
-    if LLocalTransaction then
-      FConnection.CommitTransaction;
-  except
-    if LLocalTransaction then
-      FConnection.RollbackTransaction;
-    raise;
+      AfterExecute(AEntity, AEvent);
+    except
+      LTransaction.Rollback;
+      raise;
+    end;
+  finally
+    LTransaction.Free;
   end;
 end;
 

@@ -25,7 +25,8 @@ uses
   Trysil.Metadata,
   Trysil.Provider,
   Trysil.Resolver,
-  Trysil.Session;
+  Trysil.Session,
+  Trysil.Transaction;
 
 type
 
@@ -57,12 +58,14 @@ type
       const AUseIdentityMap: Boolean); overload; virtual;
     destructor Destroy; override;
 
-    procedure StartTransaction;
-    procedure CommitTransaction;
-    procedure RollbackTransaction;
+    procedure StartTransaction; deprecated 'Use CreateTransaction';
+    procedure CommitTransaction; deprecated 'Use CreateTransaction';
+    procedure RollbackTransaction; deprecated 'Use CreateTransaction';
 
     function CreateEntity<T: class>(): T; overload;
     function CloneEntity<T: class>(const AEntity: T): T;
+
+    function CreateTransaction(): TTTransaction;
     function CreateSession<T: class>(
       const AList: TList<T>): TTSession<T>;
 
@@ -160,6 +163,11 @@ begin
   result := FProvider.CloneEntity<T>(AEntity);
 end;
 
+function TTContext.CreateTransaction: TTTransaction;
+begin
+  result := TTTransaction.Create(FConnection);
+end;
+
 function TTContext.CreateSession<T>(const AList: TList<T>): TTSession<T>;
 begin
   result := TTSession<T>.Create(FConnection, FProvider, FResolver, AList);
@@ -199,24 +207,22 @@ end;
 procedure TTContext.ApplyAll<T>(
   const AList: TTList<T>; const AApplyAllMethod: TTApplyAllMethod<T>);
 var
-  LLocalTransaction: Boolean;
+  LTransaction: TTTransaction;
   LEntity: T;
 begin
   if Assigned(AApplyAllMethod) then
   begin
-    LLocalTransaction := not FConnection.InTransaction;
-    if LLocalTransaction then
-      FConnection.StartTransaction;
+    LTransaction := TTTransaction.Create(FConnection);
     try
-      for LEntity in AList do
-        AApplyAllMethod(LEntity);
-
-      if LLocalTransaction then
-        FConnection.CommitTransaction;
-    except
-      if LLocalTransaction then
-        FConnection.RollbackTransaction;
-      raise;
+      try
+        for LEntity in AList do
+          AApplyAllMethod(LEntity);
+      except
+        LTransaction.Rollback;
+        raise;
+      end;
+    finally
+      LTransaction.Free;
     end;
   end;
 end;
