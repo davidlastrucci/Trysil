@@ -48,6 +48,7 @@ constructor TTTransaction.Create(const AConnection: TTConnection);
 begin
   inherited Create;
   FConnection := AConnection;
+  FLocalTransaction := False;
 end;
 
 procedure TTTransaction.AfterConstruction;
@@ -85,6 +86,7 @@ begin
   begin
     if not FConnection.InTransaction then
       raise ETException.Create(SNotValidTransaction);
+    FLocalTransaction := False;
     FConnection.RollbackTransaction;
   end;
 end;
