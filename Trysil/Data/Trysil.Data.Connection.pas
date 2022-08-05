@@ -93,6 +93,7 @@ type
   strict private
     FConnection: TTGenericConnection;
     FSyntax: TTSelectSyntax;
+    FFilter: TTFilter;
   strict protected
     function GetDataset: TDataset; override;
   public
@@ -199,7 +200,7 @@ var
 begin
   LSyntax := FSyntaxClasses.SelectCount.Create(Self, ATableMap, AFilter);
   try
-    LDataset := CreateDataSet(LSyntax.SQL);
+    LDataset := CreateDataSet(LSyntax.SQL, AFilter);
     try
       result := LDataset.Fields[0].AsInteger;
     finally
@@ -268,7 +269,7 @@ begin
   result := string.Empty;
   LSyntax := SyntaxClasses.Version.Create;
   try
-    LDataset := CreateDataSet(LSyntax.SQL);
+    LDataset := CreateDataSet(LSyntax.SQL, TTFilter.Empty);
     try
       TTLogger.Instance.LogSyntax(LSyntax.SQL);
       if not LDataSet.IsEmpty then
@@ -292,7 +293,7 @@ begin
   LSyntax := FSyntaxClasses.Metadata.Create(
     Self, ATableMap, ATableMetadata);
   try
-    LDataset := CreateDataSet(LSyntax.SQL);
+    LDataset := CreateDataSet(LSyntax.SQL, TTFilter.Empty);
     try
       for LIndex := 0 to LDataset.FieldDefs.Count - 1 do
         ATableMetadata.Columns.Add(
@@ -315,7 +316,7 @@ var
 begin
   LSyntax := FSyntaxClasses.Sequence.Create(Self, ATableMap);
   try
-    LDataset := CreateDataSet(LSyntax.SQL);
+    LDataset := CreateDataSet(LSyntax.SQL, TTFilter.Empty);
     try
       TTLogger.Instance.LogSyntax(LSyntax.SQL);
       result := LDataset.Fields[0].AsInteger;
@@ -341,7 +342,7 @@ begin
   LSyntax := FSyntaxClasses.CheckExists.Create(
     Self, ATableMap, ATableName, AColumnName, LID);
   try
-    LDataset := CreateDataSet(LSyntax.SQL);
+    LDataset := CreateDataSet(LSyntax.SQL, TTFilter.Empty);
     try
       result := (LDataset.Fields[0].AsInteger > 0);
     finally
@@ -364,6 +365,7 @@ begin
   FConnection := AConnection;
   FSyntax := AConnection.SyntaxClasses.Select.Create(
     AConnection, ATableMap, ATableMetadata, AFilter);
+  FFilter := AFilter;
 end;
 
 destructor TTGenericReader.Destroy;
@@ -374,7 +376,7 @@ end;
 
 function TTGenericReader.GetDataset: TDataset;
 begin
-  result := FConnection.CreateDataset(FSyntax.SQL);
+  result := FConnection.CreateDataset(FSyntax.SQL, FFilter);
   TTLogger.Instance.LogSyntax(FSyntax.SQL);
 end;
 

@@ -35,8 +35,8 @@ type
 
   TTParam = class abstract
   strict protected
-    FSize: Integer;
-
+    function GetName: String; virtual; abstract;
+    function GetSize: Integer; virtual; abstract;
     function GetAsString: String; virtual; abstract;
     procedure SetAsString(const Value: String); virtual; abstract;
     function GetAsInteger: Integer; virtual; abstract;
@@ -54,7 +54,8 @@ type
   public
     procedure Clear; virtual; abstract;
 
-    property Size: Integer read FSize;
+    property Name: String read GetName;
+    property Size: Integer read GetSize;
     property AsString: String read GetAsString write SetAsString;
     property AsInteger: Integer read GetAsInteger write SetAsInteger;
     property AsLargeInt: Int64 read GetAsLargeInt write SetAsLargeInt;
@@ -121,7 +122,7 @@ type
 
     function GetDatabaseVersion: String; virtual; abstract;
     function InternalCreateDataSet(
-      const ASQL: String): TDataSet; virtual; abstract;
+      const ASQL: String; const AFilter: TTFilter): TDataSet; virtual; abstract;
     function GetInTransaction: Boolean; virtual; abstract;
     function CheckExists(
       const ATableMap: TTTableMap;
@@ -150,7 +151,8 @@ type
     procedure CheckRelations(
       const ATableMap: TTTableMap; const AEntity: TObject);
 
-    function CreateDataSet(const ASQL: String): TDataSet;
+    function CreateDataSet(
+      const ASQL: String; const AFilter: TTFilter): TDataSet;
 
     function Execute(
       const ASQL: String;
@@ -274,9 +276,10 @@ begin
   FUpdateMode := TTUpdateMode.KeyAndVersionColumn;
 end;
 
-function TTConnection.CreateDataSet(const ASQL: String): TDataSet;
+function TTConnection.CreateDataSet(
+  const ASQL: String; const AFilter: TTFilter): TDataSet;
 begin
-  result := InternalCreateDataSet(ASQL);
+  result := InternalCreateDataSet(ASQL, AFilter);
   try
     result.Open;
   except

@@ -42,6 +42,9 @@ type
   strict private
     FParam: TFDParam;
   strict protected
+    function GetName: String; override;
+    function GetSize: Integer; override;
+
     function GetAsString: String; override;
     procedure SetAsString(const AValue: String); override;
     function GetAsInteger: Integer; override;
@@ -71,13 +74,17 @@ type
     FWaitCursor: TFDGUIxWaitCursor;
     FConnection: TFDConnection;
 
+    procedure SetParameter(
+      const ADataset: TFDQuery;
+      const AParameter: TTFilterParameter);
     procedure SetParameters(
       const ADataSet: TFDQuery;
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
       const AEntity: TObject);
   strict protected
-    function InternalCreateDataSet(const ASQL: String): TDataSet; override;
+    function InternalCreateDataSet(
+      const ASQL: String; const AFilter: TTFilter): TDataSet; override;
     function GetInTransaction: Boolean; override;
   public
     constructor Create(const AConnectionName: String);
@@ -104,12 +111,21 @@ constructor TTFDParam.Create(const AParam: TFDParam);
 begin
   inherited Create;
   FParam := AParam;
-  FSize := AParam.Size;
 end;
 
 procedure TTFDParam.Clear;
 begin
   FParam.Clear;
+end;
+
+function TTFDParam.GetName: String;
+begin
+  result := FParam.Name;
+end;
+
+function TTFDParam.GetSize: Integer;
+begin
+  result := FParam.Size;
 end;
 
 function TTFDParam.GetAsString: String;
@@ -260,6 +276,36 @@ begin
   result := FConnection.InTransaction;
 end;
 
+procedure TTFireDACConnection.SetParameter(
+  const ADataset: TFDQuery;
+  const AParameter: TTFilterParameter);
+var
+  LFireDACParam: TFDParam;
+  LParam: TTParam;
+  LParameter: TTParameter;
+begin
+  LFireDACParam := ADataset.Params.FindParam(AParameter.Name);
+  if Assigned(LFireDACParam) then
+  begin
+    LFireDACParam.ParamType := TParamType.ptInput;
+    LFireDACParam.DataType := AParameter.DataType;
+    LFireDACParam.Size := AParameter.Size;
+
+    LParam := TTFDParam.Create(LFireDACParam);
+    try
+      LParameter := TTParameterFactory.Instance.CreateParameter(
+        AParameter.DataType, LParam);
+      try
+        LParameter.SetValue(AParameter.Value);
+      finally
+        LParameter.Free;
+      end;
+    finally
+      LParam.Free;
+    end;
+  end;
+end;
+
 procedure TTFireDACConnection.SetParameters(
   const ADataSet: TFDQuery;
   const ATableMap: TTTableMap;
@@ -267,9 +313,9 @@ procedure TTFireDACConnection.SetParameters(
   const AEntity: TObject);
 var
   LColumn: TTColumnMetadata;
+  LFireDACParam: TFDParam;
   LParam: TTParam;
   LParameter: TTParameter;
-  LFireDACParam: TFDParam;
 begin
   for LColumn in ATableMetadata.Columns do
   begin
@@ -300,14 +346,18 @@ begin
 end;
 
 function TTFireDACConnection.InternalCreateDataSet(
-  const ASQL: String): TDataSet;
+  const ASQL: String; const AFilter: TTFilter): TDataSet;
 var
   LDataSet: TFDQuery;
+  LParameter: TTFilterParameter;
 begin
   LDataSet := TFDQuery.Create(nil);
   try
     LDataSet.Connection := FConnection;
     LDataSet.SQL.Text := ASQL;
+    if not AFilter.IsEmpty then
+      for LParameter in AFilter.Parameters do
+        SetParameter(LDataSet, LParameter);
   except
     LDataSet.Free;
     raise;

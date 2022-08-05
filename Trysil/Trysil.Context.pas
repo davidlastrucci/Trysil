@@ -66,8 +66,7 @@ type
     function CloneEntity<T: class>(const AEntity: T): T;
 
     function CreateTransaction(): TTTransaction;
-    function CreateSession<T: class>(
-      const AList: TList<T>): TTSession<T>;
+    function CreateSession<T: class>(const AList: TList<T>): TTSession<T>;
 
     function GetMetadata<T: class>(): TTTableMetadata;
 

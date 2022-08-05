@@ -36,11 +36,13 @@ type
     FParam: TTParam;
     FColumnMap: TTColumnMap;
   public
+    constructor Create(const AParam: TTParam); overload;
     constructor Create(
       const AParam: TTParam;
-      const AColumnMap: TTColumnMap);
+      const AColumnMap: TTColumnMap); overload;
 
-    procedure SetValue(const AEntity: TObject); virtual; abstract;
+    procedure SetValue(const AEntity: TObject); overload; virtual; abstract;
+    procedure SetValue(const AValue: TTValue); overload; virtual; abstract;
   end;
 
   TTParameterClass = class of TTParameter;
@@ -51,7 +53,8 @@ type
   strict private
     procedure SetParameterValue(const AEntity: TObject; const AValue: String);
   public
-    procedure SetValue(const AEntity: TObject); override;
+    procedure SetValue(const AEntity: TObject); overload; override;
+    procedure SetValue(const AValue: TTValue); overload; override;
   end;
 
 { TTIntegerParameter }
@@ -60,49 +63,56 @@ type
   strict private
     procedure SetValueFromObject(const AObject: TObject);
   public
-    procedure SetValue(const AEntity: TObject); override;
+    procedure SetValue(const AEntity: TObject); overload; override;
+    procedure SetValue(const AValue: TTValue); overload; override;
   end;
 
 { TTLargeIntegerParameter }
 
   TTLargeIntegerParameter = class(TTParameter)
   public
-    procedure SetValue(const AEntity: TObject); override;
+    procedure SetValue(const AEntity: TObject); overload; override;
+    procedure SetValue(const AValue: TTValue); overload; override;
   end;
 
 { TTDoubleParameter }
 
   TTDoubleParameter = class(TTParameter)
   public
-    procedure SetValue(const AEntity: TObject); override;
+    procedure SetValue(const AEntity: TObject); overload; override;
+    procedure SetValue(const AValue: TTValue); overload; override;
   end;
 
 { TTBooleanParameter }
 
   TTBooleanParameter = class(TTParameter)
   public
-    procedure SetValue(const AEntity: TObject); override;
+    procedure SetValue(const AEntity: TObject); overload; override;
+    procedure SetValue(const AValue: TTValue); overload; override;
   end;
 
 { TTDateTimeParameter }
 
   TTDateTimeParameter = class(TTParameter)
   public
-    procedure SetValue(const AEntity: TObject); override;
+    procedure SetValue(const AEntity: TObject); overload; override;
+    procedure SetValue(const AValue: TTValue); overload; override;
   end;
 
 { TTGuidParameter }
 
   TTGuidParameter = class(TTParameter)
   public
-    procedure SetValue(const AEntity: TObject); override;
+    procedure SetValue(const AEntity: TObject); overload; override;
+    procedure SetValue(const AValue: TTValue); overload; override;
   end;
 
 { TTBlobParameter }
 
   TTBlobParameter = class(TTParameter)
   public
-    procedure SetValue(const AEntity: TObject); override;
+    procedure SetValue(const AEntity: TObject); overload; override;
+    procedure SetValue(const AValue: TTValue); overload; override;
   end;
 
 { TTParameterFactory }
@@ -123,8 +133,11 @@ type
 
     function CreateParameter(
       const AFieldType: TFieldType;
+      const AParam: TTParam): TTParameter; overload;
+    function CreateParameter(
+      const AFieldType: TFieldType;
       const AParam: TTParam;
-      const AColumnMap: TTColumnMap): TTParameter;
+      const AColumnMap: TTColumnMap): TTParameter; overload;
 
     class property Instance: TTParameterFactory read FInstance;
   end;
@@ -139,6 +152,11 @@ type
 implementation
 
 { TTParameter }
+
+constructor TTParameter.Create(const AParam: TTParam);
+begin
+  Create(AParam, nil);
+end;
 
 constructor TTParameter.Create(
   const AParam: TTParam;
@@ -158,7 +176,7 @@ var
 begin
   LValue := AValue.Substring(0, FParam.Size);
   FParam.AsString := LValue;
-  if not LValue.Equals(AValue) then
+  if Assigned(AEntity) and (not LValue.Equals(AValue)) then
     FColumnMap.Member.SetValue(AEntity, LValue);
 end;
 
@@ -180,6 +198,12 @@ begin
     SetParameterValue(AEntity, LValue.AsType<String>());
 
   TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsString);
+end;
+
+procedure TTStringParameter.SetValue(const AValue: TTValue);
+begin
+  SetParameterValue(nil, AValue.AsType<String>());
+  TTLogger.Instance.LogParameter(FParam.Name, FParam.AsString);
 end;
 
 { TTIntegerParameter }
@@ -207,6 +231,12 @@ begin
 
   if not LIsClass then
     TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsInteger.ToString);
+end;
+
+procedure TTIntegerParameter.SetValue(const AValue: TTValue);
+begin
+  FParam.AsInteger := AValue.AsType<Integer>();
+  TTLogger.Instance.LogParameter(FParam.Name, FParam.AsInteger.ToString);
 end;
 
 procedure TTIntegerParameter.SetValueFromObject(const AObject: TObject);
@@ -252,6 +282,12 @@ begin
   TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsLargeInt.ToString);
 end;
 
+procedure TTLargeIntegerParameter.SetValue(const AValue: TTValue);
+begin
+  FParam.AsLargeInt := AValue.AsType<Int64>();
+  TTLogger.Instance.LogParameter(FParam.Name, FParam.AsLargeInt.ToString);
+end;
+
 { TTDoubleParameter }
 
 procedure TTDoubleParameter.SetValue(const AEntity: TObject);
@@ -274,6 +310,12 @@ begin
   TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsDouble.ToString);
 end;
 
+procedure TTDoubleParameter.SetValue(const AValue: TTValue);
+begin
+  FParam.AsDouble := AValue.AsType<Double>();
+  TTLogger.Instance.LogParameter(FParam.Name, FParam.AsDouble.ToString);
+end;
+
 { TTBooleanParameter }
 
 procedure TTBooleanParameter.SetValue(const AEntity: TObject);
@@ -294,6 +336,12 @@ begin
     FParam.AsBoolean := LValue.AsType<Boolean>();
 
   TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsBoolean.ToString);
+end;
+
+procedure TTBooleanParameter.SetValue(const AValue: TTValue);
+begin
+  FParam.AsBoolean := AValue.AsType<Boolean>();
+  TTLogger.Instance.LogParameter(FParam.Name, FParam.AsBoolean.ToString);
 end;
 
 { TTDateTimeParameter }
@@ -319,6 +367,12 @@ begin
     FColumnMap.Name, DateTimeToStr(FParam.AsDateTime));
 end;
 
+procedure TTDateTimeParameter.SetValue(const AValue: TTValue);
+begin
+  FParam.AsDateTime := AValue.AsType<TDateTime>();
+  TTLogger.Instance.LogParameter(FParam.Name, DateTimeToStr(FParam.AsDateTime));
+end;
+
 { TTGuidParameter }
 
 procedure TTGuidParameter.SetValue(const AEntity: TObject);
@@ -341,9 +395,20 @@ begin
   TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsGuid.ToString);
 end;
 
+procedure TTGuidParameter.SetValue(const AValue: TTValue);
+begin
+  FParam.AsGuid := AValue.AsType<TGuid>();
+  TTLogger.Instance.LogParameter(FParam.Name, FParam.AsGuid.ToString);
+end;
+
 { TTBlobParameter }
 
 procedure TTBlobParameter.SetValue(const AEntity: TObject);
+begin
+  raise ETException.Create(SBlobParameterValue);
+end;
+
+procedure TTBlobParameter.SetValue(const AValue: TTValue);
 begin
   raise ETException.Create(SBlobParameterValue);
 end;
@@ -377,6 +442,12 @@ procedure TTParameterFactory.RegisterParameterClass<C>(
   const AFieldType: TFieldType);
 begin
   FParameterTypes.Add(AFieldType, C);
+end;
+
+function TTParameterFactory.CreateParameter(
+  const AFieldType: TFieldType; const AParam: TTParam): TTParameter;
+begin
+  result := CreateParameter(AFieldType, AParam, nil);
 end;
 
 function TTParameterFactory.CreateParameter(
