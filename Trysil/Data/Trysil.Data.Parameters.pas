@@ -174,7 +174,9 @@ procedure TTStringParameter.SetParameterValue(
 var
   LValue: String;
 begin
-  LValue := AValue.Substring(0, FParam.Size);
+  LValue := AValue;
+  if FParam.Size > 0 then
+    LValue := LValue.Substring(0, FParam.Size);
   FParam.AsString := LValue;
   if Assigned(AEntity) and (not LValue.Equals(AValue)) then
     FColumnMap.Member.SetValue(AEntity, LValue);
