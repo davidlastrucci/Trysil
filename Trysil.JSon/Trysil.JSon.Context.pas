@@ -44,6 +44,11 @@ type
     FDeserializer: TTJSonDeserializer;
   strict protected
     function InLoading: Boolean; override;
+
+    procedure ColumnMetadataToJSon(
+      const AJSon: TJSonObject; const AColumnMetadata: TTColumnMetadata);
+    procedure TableMetadataToJSon(
+      const AJSon: TJSonObject; const ATableMetadata: TTTableMetadata);
   public
     constructor Create(const AConnection: TTConnection); overload; override;
     constructor Create(
@@ -237,45 +242,55 @@ begin
   end;
 end;
 
+procedure TTJSonContext.ColumnMetadataToJSon(
+  const AJSon: TJSonObject; const AColumnMetadata: TTColumnMetadata);
+begin
+  AJSon.AddPair('name', AColumnMetadata.ColumnName);
+  AJSon.AddPair('type', TRttiEnumerationType.GetName<TFieldType>(
+    AColumnMetadata.DataType).Substring(2));
+  if AColumnMetadata.DataSize <> 0 then
+    AJSon.AddPair('size', TJSonNumber.Create(
+      AColumnMetadata.DataSize));
+end;
+
+procedure TTJSonContext.TableMetadataToJSon(
+  const AJSon: TJSonObject; const ATableMetadata: TTTableMetadata);
+var
+  LColumns: TJSonArray;
+  LColumnMetadata: TTColumnMetadata;
+  LColumn: TJSonObject;
+begin
+  AJSon.AddPair('tableName', ATableMetadata.TableName);
+  AJSon.AddPair('primaryKey', ATableMetadata.PrimaryKey);
+  LColumns := TJSonArray.Create;
+  try
+    for LColumnMetadata in ATableMetadata.Columns do
+    begin
+      LColumn := TJSonObject.Create;
+      try
+        ColumnMetadataToJSon(LColumn, LColumnMetadata);
+      except
+        LColumn.Free;
+        raise;
+      end;
+      LColumns.Add(LColumn);
+    end;
+    AJSon.AddPair('columns', LColumns);
+  except
+    LColumns.Free;
+    raise;
+  end;
+end;
+
 function TTJSonContext.MetadataToJSon<T>(): String;
 var
   LTableMetadata: TTTableMetadata;
-  LResult, LColumn: TJSonObject;
-  LColumns: TJSonArray;
-  LColumnMetadata: TTColumnMetadata;
+  LResult: TJSonObject;
 begin
   LTableMetaData := GetMetadata<T>;
   LResult := TJSonObject.Create;
   try
-    LResult.AddPair('tableName', LTableMetadata.TableName);
-    LResult.AddPair('primaryKey', LTableMetadata.PrimaryKey);
-
-    LColumns := TJSonArray.Create;
-    try
-      for LColumnMetadata in LTableMetadata.Columns do
-      begin
-        LColumn := TJSonObject.Create;
-        try
-          LColumn.AddPair('name', LColumnMetadata.ColumnName);
-          LColumn.AddPair('type', TRttiEnumerationType.GetName<TFieldType>(
-            LColumnMetadata.DataType).Substring(2));
-          if LColumnMetadata.DataSize <> 0 then
-            LColumn.AddPair('size', TJSonNumber.Create(
-              LColumnMetadata.DataSize));
-
-          LColumns.Add(LColumn);
-        except
-          LColumn.Free;
-          raise;
-        end;
-      end;
-
-      LResult.AddPair('columns', LColumns);
-    except
-      LColumns.Free;
-      raise;
-    end;
-
+    TableMetadataToJSon(LResult, LTableMetadata);
     result := LResult.ToJSon;
   finally
     LResult.Free;
