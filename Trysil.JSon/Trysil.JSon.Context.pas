@@ -17,8 +17,11 @@ uses
   System.Classes,
   System.JSon,
   System.Generics.Collections,
+  System.Rtti,
+  Data.DB,
   Trysil.Types,
   Trysil.Mapping,
+  Trysil.Metadata,
   Trysil.Consts,
   Trysil.Exceptions,
   Trysil.Data,
@@ -64,6 +67,8 @@ type
       const AJSon: String; const AList: TList<T>);
     procedure ListFromJSonArray<T: class>(
       const AJSon: TJSonArray; const AList: TList<T>);
+
+    function MetadataToJSon<T: class>(): String;
   end;
 
 implementation
@@ -229,6 +234,51 @@ begin
       end;
   finally
     FInLoading := False;
+  end;
+end;
+
+function TTJSonContext.MetadataToJSon<T>(): String;
+var
+  LTableMetadata: TTTableMetadata;
+  LResult, LColumn: TJSonObject;
+  LColumns: TJSonArray;
+  LColumnMetadata: TTColumnMetadata;
+begin
+  LTableMetaData := GetMetadata<T>;
+  LResult := TJSonObject.Create;
+  try
+    LResult.AddPair('tableName', LTableMetadata.TableName);
+    LResult.AddPair('primaryKey', LTableMetadata.PrimaryKey);
+
+    LColumns := TJSonArray.Create;
+    try
+      for LColumnMetadata in LTableMetadata.Columns do
+      begin
+        LColumn := TJSonObject.Create;
+        try
+          LColumn.AddPair('name', LColumnMetadata.ColumnName);
+          LColumn.AddPair('type', TRttiEnumerationType.GetName<TFieldType>(
+            LColumnMetadata.DataType).Substring(2));
+          if LColumnMetadata.DataSize <> 0 then
+            LColumn.AddPair('size', TJSonNumber.Create(
+              LColumnMetadata.DataSize));
+
+          LColumns.Add(LColumn);
+        except
+          LColumn.Free;
+          raise;
+        end;
+      end;
+
+      LResult.AddPair('columns', LColumns);
+    except
+      LColumns.Free;
+      raise;
+    end;
+
+    result := LResult.ToJSon;
+  finally
+    LResult.Free;
   end;
 end;
 

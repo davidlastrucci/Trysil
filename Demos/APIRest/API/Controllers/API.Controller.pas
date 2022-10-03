@@ -72,6 +72,9 @@ type
 
     [TGet('/find/?')]
     procedure Find(const AID: TTPrimaryKey);
+
+    [TGet('/metadata')]
+    procedure Metadata;
   end;
 
 { TAPIReadWriteController<T> }
@@ -175,6 +178,11 @@ end;
 procedure TAPIReadOnlyController<T>.Find;
 begin
   InternalGet(AID, ConfigFind);
+end;
+
+procedure TAPIReadOnlyController<T>.Metadata;
+begin
+  FResponse.Content := Context.MetadataToJSon<T>();
 end;
 
 { TAPIReadWriteController<T> }
