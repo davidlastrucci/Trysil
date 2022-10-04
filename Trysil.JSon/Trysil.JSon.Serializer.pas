@@ -18,8 +18,10 @@ uses
   System.JSon,
   System.TypInfo,
   System.Rtti,
+  Data.DB,
   Trysil.Rtti,
   Trysil.Mapping,
+  Trysil.Metadata,
 
   Trysil.JSon.Types,
   Trysil.JSon.Rtti,
@@ -52,6 +54,15 @@ type
 
     procedure InternalEntityToJSon(
       const AObject: TObject; const AResult: TJSonObject);
+
+    procedure ColumnMetadataToJSon(
+      const AJSon: TJSonObject;
+      const AColumnMetadata: TTColumnMetadata;
+      const AColumnMap: TTColumnMap);
+    procedure TableMetadataToJSon(
+      const AJSon: TJSonObject;
+      const ATableMetadata: TTTableMetadata;
+      const ATableMap: TTTableMap);
   public
     constructor Create;
     destructor Destroy; override;
@@ -60,6 +71,10 @@ type
       const AObject: TObject;
       const AResult: TJSonObject;
       const AConfig: TTJSonSerializerConfig);
+
+    function MetadataToJSon(
+      const ATableMetadata: TTTableMetadata;
+      const ATableMap: TTTableMap): String;
   end;
 
 implementation
@@ -277,6 +292,75 @@ begin
   FConfig := TTJSonSerializerConfig.Create(AConfig);
   FLevel := 0;
   InternalEntityToJSon(AObject, AResult);
+end;
+
+procedure TTJSonSerializer.ColumnMetadataToJSon(
+  const AJSon: TJSonObject;
+  const AColumnMetadata: TTColumnMetadata;
+  const AColumnMap: TTColumnMap);
+begin
+  if TTRttiLazy.IsLazyType(AColumnMap.Member.RttiType) then
+    AJSon.AddPair('name', Format('%sID', [GetName(AColumnMap.Member.Name)]))
+  else
+    AJSon.AddPair('name', GetName(AColumnMap.Member.Name));
+  AJSon.AddPair('type', TRttiEnumerationType.GetName<TFieldType>(
+    AColumnMetadata.DataType).Substring(2).ToLower());
+  if AColumnMetadata.DataSize <> 0 then
+    AJSon.AddPair('size', TJSonNumber.Create(
+      AColumnMetadata.DataSize));
+end;
+
+procedure TTJSonSerializer.TableMetadataToJSon(
+  const AJSon: TJSonObject;
+  const ATableMetadata: TTTableMetadata;
+  const ATableMap: TTTableMap);
+var
+  LColumns: TJSonArray;
+  LColumnMap: TTColumnMap;
+  LColumnMetadata: TTColumnMetadata;
+  LColumn: TJSonObject;
+begin
+  AJSon.AddPair('tableName', ATableMap.Name);
+  AJSon.AddPair('primaryKey', GetName(ATableMap.PrimaryKey.Member.Name));
+  AJSon.AddPair('versionColumn', GetName(ATableMap.VersionColumn.Member.Name));
+  LColumns := TJSonArray.Create;
+  try
+    for LColumnMap in ATableMap.Columns do
+    begin
+      LColumnMetadata := ATableMetadata.Columns.Find(LColumnMap.Name);
+      if Assigned(LColumnMetadata) then
+      begin
+        LColumn := TJSonObject.Create;
+        try
+          ColumnMetadataToJSon(LColumn, LColumnMetadata, LColumnMap);
+
+          LColumns.Add(LColumn);
+        except
+          LColumn.Free;
+          raise;
+        end;
+      end;
+    end;
+    AJSon.AddPair('columns', LColumns);
+  except
+    LColumns.Free;
+    raise;
+  end;
+end;
+
+function TTJSonSerializer.MetadataToJSon(
+  const ATableMetadata: TTTableMetadata;
+  const ATableMap: TTTableMap): String;
+var
+  LResult: TJSonObject;
+begin
+  LResult := TJSonObject.Create;
+  try
+    TableMetadataToJSon(LResult, ATableMetadata, ATableMap);
+    result := LResult.ToJSon;
+  finally
+    LResult.Free;
+  end;
 end;
 
 end.

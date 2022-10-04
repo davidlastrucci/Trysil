@@ -61,6 +61,8 @@ type
       const ADataType: TFieldType;
       const ADataSize: Integer);
 
+    function Find(const AColumnName: String): TTColumnMetadata;
+
     function GetEnumerator: TTListEnumerator<TTColumnMetadata>;
 
     property Empty: Boolean read GetEmpty;
@@ -165,6 +167,19 @@ begin
     LColumnMetadata.Free;
     raise;
   end;
+end;
+
+function TTColumnsMetadata.Find(const AColumnName: String): TTColumnMetadata;
+var
+  LColumnMetadata: TTColumnMetadata;
+begin
+  result := nil;
+  for LColumnMetadata in FColumns do
+    if String.Compare(LColumnMetadata.ColumnName, AColumnName, True) = 0 then
+    begin
+      result := LColumnMetadata;
+      Break;
+    end;
 end;
 
 function TTColumnsMetadata.GetEmpty: Boolean;
