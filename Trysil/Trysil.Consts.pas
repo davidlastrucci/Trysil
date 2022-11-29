@@ -37,6 +37,8 @@ resourcestring
   SNotInvalidTypeValidation = '%0:s type not valid for validation.';
   SMaxLengthValidation = '%0:s cannot be longer than %1:d characters.';
   SMinLengthValidation = '%0:s cannot be shorter than %1:d characters.';
+  SMinValueValidation = '%0:s cannot be less than %1:s.';
+  SMaxValueValidation = '%0:s cannot exceed %1:s.';
   SRangeValidation = '%0:s must be between %1:s and %2:s.';
   SNotValidValidator = 'Validator method is not valid: %0:s method of %1:s entity.';
   SInvalidNullableType = 'Null type is invalid.';
