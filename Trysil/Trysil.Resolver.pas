@@ -85,24 +85,23 @@ procedure TTResolver.ExecuteValidators(
   const AEntity: TObject; const AValidatorsMap: TTValidatorsMap);
 var
   LValidatorMap: TTValidatorMap;
-  LParameters: TArray<TRttiParameter>;
   LLength: Integer;
   LIsValid: Boolean;
 begin
   for LValidatorMap in AValidatorsMap do
   begin
-    LParameters := LValidatorMap.Method.GetParameters;
-    LLength := Length(LParameters);
+    LLength := Length(LValidatorMap.Parameters);
     if LLength = 0 then
       LValidatorMap.Method.Invoke(AEntity, [])
     else
     begin
       LIsValid := (LLength = 1);
       if LIsValid then
-        LIsValid := (LParameters[0].ParamType.Handle = FContext.ClassInfo);
+        LIsValid := (
+          LValidatorMap.Parameters[0].ParamType.Handle = FContext.ClassInfo);
       if not LIsValid then
         raise ETException.CreateFmt(SNotValidValidator, [
-          LValidatorMap.Method.Name]);
+          LValidatorMap.Method.Name, AEntity.ClassName]);
       LValidatorMap.Method.Invoke(AEntity, [FContext])
     end;
   end;

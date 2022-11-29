@@ -145,10 +145,12 @@ type
   TTValidatorMap = class
   strict private
     FMethod: TRttiMethod;
+    FParameters: TArray<TRttiParameter>;
   public
     constructor Create(const AMedhod: TRttiMethod);
 
     property Method: TRttiMethod read FMethod;
+    property Parameters: TArray<TRttiParameter> read FParameters;
   end;
 
 { TTValidatorsMap }
@@ -421,6 +423,7 @@ constructor TTValidatorMap.Create(const AMedhod: TRttiMethod);
 begin
   inherited Create;
   FMethod := AMedhod;
+  FParameters := FMethod.GetParameters;
 end;
 
 { TTValidatorsMap }
