@@ -140,6 +140,31 @@ type
     function GetEnumerator(): TTListEnumerator<TTRelationMap>;
   end;
 
+{ TTValidatorMap }
+
+  TTValidatorMap = class
+  strict private
+    FMethod: TRttiMethod;
+  public
+    constructor Create(const AMedhod: TRttiMethod);
+
+    property Method: TRttiMethod read FMethod;
+  end;
+
+{ TTValidatorsMap }
+
+  TTValidatorsMap = class
+  strict private
+    FValidators: TTObjectList<TTValidatorMap>;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure Add(const AValidator: TTValidatorMap);
+
+    function GetEnumerator(): TTListEnumerator<TTValidatorMap>;
+  end;
+
 { TTEventsMap }
 
   TTEventsMap = class
@@ -175,6 +200,7 @@ type
     FColumns: TTColumnsMap;
     FDetailColumns: TTDetailColumnsMap;
     FRelations: TTRelationsMap;
+    FValidators: TTValidatorsMap;
     FEvents: TTEventsMap;
 
     procedure SetTableName(const AName: String);
@@ -182,6 +208,7 @@ type
 
     procedure InitializeTable(const AType: TRttiType);
     procedure InitializeColumns(const AType: TRttiType);
+    procedure InitializeValidators(const AType: TRttiType);
     function CreateColumnMap(
       const AName: String; const AObject: TRttiObject): TTColumnMap;
     function CreateDetailColumnMap(
@@ -207,6 +234,7 @@ type
     property Columns: TTColumnsMap read FColumns;
     property DetailColums: TTDetailColumnsMap read FDetailColumns;
     property Relations: TTRelationsMap read FRelations;
+    property Validators: TTValidatorsMap read FValidators;
     property Events: TTEventsMap read FEvents;
   end;
 
@@ -387,6 +415,38 @@ begin
   result := TTListEnumerator<TTRelationMap>.Create(FRelations);
 end;
 
+{ TTValidatorMap }
+
+constructor TTValidatorMap.Create(const AMedhod: TRttiMethod);
+begin
+  inherited Create;
+  FMethod := AMedhod;
+end;
+
+{ TTValidatorsMap }
+
+constructor TTValidatorsMap.Create;
+begin
+  inherited Create;
+  FValidators := TTObjectList<TTValidatorMap>.Create(True);
+end;
+
+destructor TTValidatorsMap.Destroy;
+begin
+  FValidators.Free;
+  inherited Destroy;
+end;
+
+procedure TTValidatorsMap.Add(const AValidator: TTValidatorMap);
+begin
+  FValidators.Add(AValidator);
+end;
+
+function TTValidatorsMap.GetEnumerator: TTListEnumerator<TTValidatorMap>;
+begin
+  result := TTListEnumerator<TTValidatorMap>.Create(FValidators);
+end;
+
 { TTEventsMap }
 
 constructor TTEventsMap.Create;
@@ -444,12 +504,14 @@ begin
   FColumns := TTColumnsMap.Create;
   FDetailColumns := TTDetailColumnsMap.Create;
   FRelations := TTRelationsMap.Create;
+  FValidators := TTValidatorsMap.Create;
   FEvents := TTEventsMap.Create;
 end;
 
 destructor TTTableMap.Destroy;
 begin
   FEvents.Free;
+  FValidators.Free;
   FRelations.Free;
   FDetailColumns.Free;
   FColumns.Free;
@@ -464,6 +526,7 @@ begin
   LType := FContext.GetType(FTypeInfo);
   InitializeTable(LType);
   InitializeColumns(LType);
+  InitializeValidators(LType);
 end;
 
 procedure TTTableMap.SetTableName(const AName: String);
@@ -507,6 +570,19 @@ begin
     SearchColumnAttribute(LObject);
   for LObject in AType.GetProperties do
     SearchColumnAttribute(LObject);
+end;
+
+procedure TTTableMap.InitializeValidators(const AType: TRttiType);
+var
+  LMethod: TRttiMethod;
+  LAttribute: TValidatorAttribute;
+begin
+  for LMethod in AType.GetMethods do
+  begin
+    LAttribute := LMethod.GetAttribute<TValidatorAttribute>;
+    if Assigned(LAttribute) then
+      FValidators.Add(TTValidatorMap.Create(LMethod));
+  end;
 end;
 
 function TTTableMap.CreateColumnMap(

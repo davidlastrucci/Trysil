@@ -15,6 +15,8 @@ interface
 uses
   System.SysUtils,
   System.Classes,
+  System.TypInfo,
+  System.Rtti,
 
   Trysil.Consts,
   Trysil.Types,
@@ -37,6 +39,8 @@ type
     FMetadata: TTMetadata;
 
     procedure CheckReadWrite(const ATableMap: TTTableMap);
+    procedure ExecuteValidators(
+      const AEntity: TObject; const AValidatorsMap: TTValidatorsMap);
   public
     constructor Create(
       const AConnection: TTConnection;
@@ -77,6 +81,33 @@ begin
   end;
 end;
 
+procedure TTResolver.ExecuteValidators(
+  const AEntity: TObject; const AValidatorsMap: TTValidatorsMap);
+var
+  LValidatorMap: TTValidatorMap;
+  LParameters: TArray<TRttiParameter>;
+  LLength: Integer;
+  LIsValid: Boolean;
+begin
+  for LValidatorMap in AValidatorsMap do
+  begin
+    LParameters := LValidatorMap.Method.GetParameters;
+    LLength := Length(LParameters);
+    if LLength = 0 then
+      LValidatorMap.Method.Invoke(AEntity, [])
+    else
+    begin
+      LIsValid := (LLength = 1);
+      if LIsValid then
+        LIsValid := (LParameters[0].ParamType.Handle = FContext.ClassInfo);
+      if not LIsValid then
+        raise ETException.CreateFmt(SNotValidValidator, [
+          LValidatorMap.Method.Name]);
+      LValidatorMap.Method.Invoke(AEntity, [FContext])
+    end;
+  end;
+end;
+
 procedure TTResolver.Insert<T>(const AEntity: T);
 var
   LTableMap: TTTableMap;
@@ -86,6 +117,7 @@ var
 begin
   LTableMap := TTMapper.Instance.Load<T>();
   CheckReadWrite(LTableMap);
+  ExecuteValidators(AEntity, LTableMap.Validators);
   LTableMetadata := FMetadata.Load<T>();
   LCommand := FConnection.CreateInsertCommand(LTableMap, LTableMetadata);
   try
@@ -113,6 +145,7 @@ var
 begin
   LTableMap := TTMapper.Instance.Load<T>();
   CheckReadWrite(LTableMap);
+  ExecuteValidators(AEntity, LTableMap.Validators);
   LTableMetadata := FMetadata.Load<T>();
   LCommand := FConnection.CreateUpdateCommand(LTableMap, LTableMetadata);
   try
