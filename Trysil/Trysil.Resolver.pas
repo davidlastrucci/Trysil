@@ -40,7 +40,7 @@ type
 
     procedure CheckReadWrite(const ATableMap: TTTableMap);
     procedure ExecuteValidators(
-      const AEntity: TObject; const AValidatorsMap: TTValidatorsMap);
+      const AEntity: TObject; const ATableMap: TTTableMap);
   public
     constructor Create(
       const AConnection: TTConnection;
@@ -82,13 +82,17 @@ begin
 end;
 
 procedure TTResolver.ExecuteValidators(
-  const AEntity: TObject; const AValidatorsMap: TTValidatorsMap);
+  const AEntity: TObject; const ATableMap: TTTableMap);
 var
+  LColumnMap: TTColumnMap;
   LValidatorMap: TTValidatorMap;
   LLength: Integer;
   LIsValid: Boolean;
 begin
-  for LValidatorMap in AValidatorsMap do
+  for LColumnMap in ATableMap.Columns do
+    LColumnMap.Validate(AEntity);
+
+  for LValidatorMap in ATableMap.Validators do
   begin
     LLength := Length(LValidatorMap.Parameters);
     if LLength = 0 then
@@ -116,7 +120,7 @@ var
 begin
   LTableMap := TTMapper.Instance.Load<T>();
   CheckReadWrite(LTableMap);
-  ExecuteValidators(AEntity, LTableMap.Validators);
+  ExecuteValidators(AEntity, LTableMap);
   LTableMetadata := FMetadata.Load<T>();
   LCommand := FConnection.CreateInsertCommand(LTableMap, LTableMetadata);
   try
@@ -144,7 +148,7 @@ var
 begin
   LTableMap := TTMapper.Instance.Load<T>();
   CheckReadWrite(LTableMap);
-  ExecuteValidators(AEntity, LTableMap.Validators);
+  ExecuteValidators(AEntity, LTableMap);
   LTableMetadata := FMetadata.Load<T>();
   LCommand := FConnection.CreateUpdateCommand(LTableMap, LTableMetadata);
   try

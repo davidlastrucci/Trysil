@@ -34,10 +34,12 @@ type
 
   TTValueHelper = record helper for TValue
   strict private
+    function GetIsNull: Boolean;
     function GetIsNullable: Boolean;
   public
     function NullableValueToString: String;
 
+    property IsNull: Boolean read GetIsNull;
     property IsNullable: Boolean read GetIsNullable;
   end;
 
@@ -221,6 +223,30 @@ implementation
 function TTValueHelper.GetIsNullable: Boolean;
 begin
   result := String(Self.TypeInfo.Name).StartsWith('TTNullable<');
+end;
+
+function TTValueHelper.GetIsNull: Boolean;
+begin
+  result := False;
+  if Self.IsNullable then
+  begin
+    if Self.IsType<TTNullable<String>>() then
+      result := Self.AsType<TTNullable<String>>().IsNull
+    else if Self.IsType<TTNullable<Integer>>() then
+      result := Self.AsType<TTNullable<Integer>>().IsNull
+    else if Self.IsType<TTNullable<Int64>>() then
+      result := Self.AsType<TTNullable<Int64>>().IsNull
+    else if Self.IsType<TTNullable<Double>>() then
+      result := Self.AsType<TTNullable<Double>>().IsNull
+    else if Self.IsType<TTNullable<Boolean>>() then
+      result := Self.AsType<TTNullable<Boolean>>().IsNull
+    else if Self.IsType<TTNullable<TDateTime>>() then
+      result := Self.AsType<TTNullable<TDateTime>>().IsNull
+    else if Self.IsType<TTNullable<TGuid>>() then
+      result := Self.AsType<TTNullable<TGuid>>().IsNull
+    else
+      raise ETException.Create(SInvalidNullableType);
+  end;
 end;
 
 function TTValueHelper.NullableValueToString: String;

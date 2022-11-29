@@ -23,6 +23,7 @@ uses
   Trysil.Classes,
   Trysil.Events.Abstract,
   Trysil.Attributes,
+  Trysil.Validation.Attributes,
   Trysil.Events.Attributes,
   Trysil.Cache,
   Trysil.Generics.Collections,
@@ -31,12 +32,39 @@ uses
 
 type
 
+{ TTValidationMap }
+
+  TTValidationMap = class
+  strict private
+    FValidation: TValidationAttribute;
+  public
+    constructor Create(const AValidation: TValidationAttribute);
+
+    procedure Validate(const AColumnName: String; const AValue: TValue);
+  end;
+
+{ TTValidationsMap }
+
+  TTValidationsMap = class
+  strict private
+    FValidations: TTObjectList<TTValidationMap>;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure Add(const AValidation: TTValidationMap);
+    procedure Validate(const AColumnName: String; const AValue: TValue);
+  end;
+
 { TTColumnMap }
 
   TTColumnMap = class
   strict private
     FMember: TTRttiMember;
     FName: String;
+    FValidations: TTValidationsMap;
+
+    procedure SearchValidations(const ARttiMember: TRttiMember);
   public
     constructor Create(const AName: String); overload;
     constructor Create(
@@ -45,6 +73,8 @@ type
       const AName: String; const AProperty: TRttiProperty); overload;
 
     destructor Destroy; override;
+
+    procedure Validate(const AEntity: TObject);
 
     property Member: TTRttiMember read FMember;
     property Name: String read FName;
@@ -264,6 +294,48 @@ type
 
 implementation
 
+{ TTValidationMap }
+
+constructor TTValidationMap.Create(const AValidation: TValidationAttribute);
+begin
+  inherited Create;
+  FValidation := AValidation;
+end;
+
+procedure TTValidationMap.Validate(
+  const AColumnName: String; const AValue: TValue);
+begin
+  FValidation.Validate(AColumnName, AValue);
+end;
+
+{ TTValidationsMap }
+
+constructor TTValidationsMap.Create;
+begin
+  inherited Create;
+  FValidations := TTObjectList<TTValidationMap>.Create(True);
+end;
+
+destructor TTValidationsMap.Destroy;
+begin
+  FValidations.Free;
+  inherited Destroy;
+end;
+
+procedure TTValidationsMap.Add(const AValidation: TTValidationMap);
+begin
+  FValidations.Add(AValidation);
+end;
+
+procedure TTValidationsMap.Validate(
+  const AColumnName: String; const AValue: TValue);
+var
+  LValidation: TTValidationMap;
+begin
+  for LValidation in FValidations do
+    LValidation.Validate(AColumnName, AValue);
+end;
+
 { TTColumnMap }
 
 constructor TTColumnMap.Create(const AName: String);
@@ -271,12 +343,14 @@ begin
   inherited Create;
   FMember := nil;
   FName := AName;
+  FValidations := TTValidationsMap.Create;
 end;
 
 constructor TTColumnMap.Create(const AName: String; const AField: TRttiField);
 begin
   Create(AName);
   FMember := TTRttiField.Create(AField);
+  SearchValidations(AField);
 end;
 
 constructor TTColumnMap.Create(
@@ -284,12 +358,29 @@ constructor TTColumnMap.Create(
 begin
   Create(AName);
   FMember := TTRttiProperty.Create(AProperty);
+  SearchValidations(AProperty);
 end;
 
 destructor TTColumnMap.Destroy;
 begin
+  FValidations.Free;
   FMember.Free;
   inherited Destroy;
+end;
+
+procedure TTColumnMap.SearchValidations(const ARttiMember: TRttiMember);
+var
+  LAttribute: TCustomAttribute;
+begin
+  for LAttribute in ARttiMember.GetAttributes do
+    if LAttribute is TValidationAttribute then
+      FValidations.Add(
+        TTValidationMap.Create(TValidationAttribute(LAttribute)));
+end;
+
+procedure TTColumnMap.Validate(const AEntity: TObject);
+begin
+  FValidations.Validate(FName, FMember.GetValue(AEntity));
 end;
 
 { TTColumnsMap }

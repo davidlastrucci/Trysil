@@ -80,7 +80,8 @@ uses
   API.Model.Employee in 'API\Model\API.Model.Employee.pas',
   API.Controller in 'API\Controllers\API.Controller.pas',
   API.MainForm in 'API.MainForm.pas' {APIMainForm},
-  Trysil.Transaction in '..\..\Trysil\Trysil.Transaction.pas';
+  Trysil.Transaction in '..\..\Trysil\Trysil.Transaction.pas',
+  Trysil.Validation.Attributes in '..\..\Trysil\Trysil.Validation.Attributes.pas';
 
 {$R *.res}
 

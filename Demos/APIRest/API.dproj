@@ -179,6 +179,7 @@
             <Form>APIMainForm</Form>
         </DCCReference>
         <DCCReference Include="..\..\Trysil\Trysil.Transaction.pas"/>
+        <DCCReference Include="..\..\Trysil\Trysil.Validation.Attributes.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

@@ -78,10 +78,6 @@ type
     property IsCascade: Boolean read FIsCascade;
   end;
 
-{ TValidatorAttribute }
-
-  TValidatorAttribute = class(TCustomAttribute);
-
 implementation
 
 { TNamedAttribute }
