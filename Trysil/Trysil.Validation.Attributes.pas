@@ -44,24 +44,30 @@ type
   TLengthAttribute = class abstract(TValidationAttribute)
   strict protected
     FLength: Integer;
+
+    function IsValid(const AValue: String): Boolean; virtual; abstract;
+    procedure RaiseException(const AColumnName: String); virtual; abstract;
   public
     constructor Create(const ALength: Integer);
+
+    procedure Validate(
+      const AColumnName: String; const AValue: TValue); override;
   end;
 
 { TMaxLengthAttribute }
 
   TMaxLengthAttribute = class(TLengthAttribute)
-  public
-    procedure Validate(
-      const AColumnName: String; const AValue: TValue); override;
+  strict protected
+    function IsValid(const AValue: String): Boolean; override;
+    procedure RaiseException(const AColumnName: String); override;
   end;
 
 { TMinLengthAttribute }
 
   TMinLengthAttribute = class(TLengthAttribute)
-  public
-    procedure Validate(
-      const AColumnName: String; const AValue: TValue); override;
+  strict protected
+    function IsValid(const AValue: String): Boolean; override;
+    procedure RaiseException(const AColumnName: String); override;
   end;
 
 { TValidationValueType }
@@ -73,16 +79,23 @@ type
   TValueAttribute = class abstract(TValidationAttribute)
   strict private
     FValueType: TValidationValueType;
+    FValue: TValue;
 
     constructor Create(
       const AValueType: TValidationValueType; const AValue: TValue); overload;
-  strict protected
-    FValue: TValue;
 
-    procedure ValidateInteger(
-      const AColumnName: String; const AValue: TValue); virtual; abstract;
-    procedure ValidateDouble(
-      const AColumnName: String; const AValue: TValue); virtual; abstract;
+    procedure ValidateInteger(const AColumnName: String; const AValue: TValue);
+    procedure ValidateDouble(const AColumnName: String; const AValue: TValue);
+  strict protected
+    function IsValidInteger(
+      const AValue1: Integer;
+      const AValue2: Integer): Boolean; virtual; abstract;
+    function IsValidDouble(
+      const AValue1: Double;
+      const AValue2: Double): Boolean; virtual; abstract;
+
+    procedure RaiseException(
+      const AColumnName: String; const AValue: String); virtual; abstract;
   public
     constructor Create(const AValue: Integer); overload;
     constructor Create(const AValue: Double); overload;
@@ -95,20 +108,26 @@ type
 
   TMinValueAttribute = class(TValueAttribute)
   strict protected
-    procedure ValidateInteger(
-      const AColumnName: String; const AValue: TValue); override;
-    procedure ValidateDouble(
-      const AColumnName: String; const AValue: TValue); override;
+    function IsValidInteger(
+      const AValue1: Integer; const AValue2: Integer): Boolean; override;
+    function IsValidDouble(
+      const AValue1: Double; const AValue2: Double): Boolean; override;
+
+    procedure RaiseException(
+      const AColumnName: String; const AValue: String); override;
   end;
 
 { TMaxValueAttibute }
 
   TMaxValueAttibute = class(TValueAttribute)
   strict protected
-    procedure ValidateInteger(
-      const AColumnName: String; const AValue: TValue); override;
-    procedure ValidateDouble(
-      const AColumnName: String; const AValue: TValue); override;
+    function IsValidInteger(
+      const AValue1: Integer; const AValue2: Integer): Boolean; override;
+    function IsValidDouble(
+      const AValue1: Double; const AValue2: Double): Boolean; override;
+
+    procedure RaiseException(
+      const AColumnName: String; const AValue: String); override;
   end;
 
 { TRangeAttribute }
@@ -163,26 +182,37 @@ begin
   FLength := ALength;
 end;
 
-{ TMaxLengthAttribute }
-
-procedure TMaxLengthAttribute.Validate(
+procedure TLengthAttribute.Validate(
   const AColumnName: String; const AValue: TValue);
 begin
   if not AValue.IsType<String> then
     raise ETException.CreateFmt(SNotInvalidTypeValidation, [AColumnName]);
-  if AValue.AsType<String>().Length > FLength then
-    raise ETException.CreateFmt(SMaxLengthValidation, [AColumnName, FLength]);
+  if not IsValid(AValue.AsType<String>()) then
+    RaiseException(AColumnName);
+end;
+
+{ TMaxLengthAttribute }
+
+function TMaxLengthAttribute.IsValid(const AValue: String): Boolean;
+begin
+  result := AValue.Length <= FLength;
+end;
+
+procedure TMaxLengthAttribute.RaiseException(const AColumnName: String);
+begin
+  raise ETException.CreateFmt(SMaxLengthValidation, [AColumnName, FLength]);
 end;
 
 { TMinLengthAttribute }
 
-procedure TMinLengthAttribute.Validate(
-  const AColumnName: String; const AValue: TValue);
+function TMinLengthAttribute.IsValid(const AValue: String): Boolean;
 begin
-  if not AValue.IsType<String> then
-    raise ETException.CreateFmt(SNotInvalidTypeValidation, [AColumnName]);
-  if AValue.AsType<String>().Length < FLength then
-    raise ETException.CreateFmt(SMinLengthValidation, [AColumnName, FLength]);
+  result := AValue.Length >= FLength;
+end;
+
+procedure TMinLengthAttribute.RaiseException(const AColumnName: String);
+begin
+  raise ETException.CreateFmt(SMinLengthValidation, [AColumnName, FLength]);
 end;
 
 { TValueAttribute }
@@ -217,64 +247,70 @@ begin
   end;
 end;
 
-{ TMinValueAttribute }
-
-procedure TMinValueAttribute.ValidateInteger(
+procedure TValueAttribute.ValidateInteger(
   const AColumnName: String; const AValue: TValue);
 var
-  LValue, LMinValue: Integer;
+  LValue1, LValue2: Integer;
 begin
   if not AValue.IsType<Integer> then
     raise ETException.CreateFmt(SNotInvalidTypeValidation, [AColumnName]);
-  LValue := AValue.AsType<Integer>;
-  LMinValue := FValue.AsType<Integer>;
-  if (LValue < LMinValue) then
-    raise ETException.CreateFmt(SMinValueValidation, [
-      AColumnName, LMinValue.ToString()]);
+  LValue1 := AValue.AsType<Integer>;
+  LValue2 := FValue.AsType<Integer>;
+  if not IsValidInteger(LValue1, LValue2) then
+    RaiseException(AColumnName, LValue2.ToString());
 end;
 
-procedure TMinValueAttribute.ValidateDouble(
+procedure TValueAttribute.ValidateDouble(
   const AColumnName: String; const AValue: TValue);
 var
-  LValue, LMinValue: Double;
+  LValue1, LValue2: Double;
 begin
   if not AValue.IsType<Double> then
     raise ETException.CreateFmt(SNotInvalidTypeValidation, [AColumnName]);
-  LValue := AValue.AsType<Double>;
-  LMinValue := FValue.AsType<Double>;
-  if (LValue < LMinValue) then
-    raise ETException.CreateFmt(SMinValueValidation, [
-      AColumnName, LMinValue.ToString()]);
+  LValue1 := AValue.AsType<Double>;
+  LValue2 := FValue.AsType<Double>;
+  if not IsValidDouble(LValue1, LValue2) then
+    RaiseException(AColumnName, LValue2.ToString());
+end;
+
+{ TMinValueAttribute }
+
+function TMinValueAttribute.IsValidInteger(
+  const AValue1: Integer; const AValue2: Integer): Boolean;
+begin
+  result := (AValue1 >= AValue2);
+end;
+
+function TMinValueAttribute.IsValidDouble(
+  const AValue1: Double; const AValue2: Double): Boolean;
+begin
+  result := (AValue1 >= AValue2);
+end;
+
+procedure TMinValueAttribute.RaiseException(
+  const AColumnName: String; const AValue: String);
+begin
+  raise ETException.CreateFmt(SMinValueValidation, [AColumnName, AValue]);
 end;
 
 { TMaxValueAttibute }
 
-procedure TMaxValueAttibute.ValidateInteger(
-  const AColumnName: String; const AValue: TValue);
-var
-  LValue, LMaxValue: Integer;
+function TMaxValueAttibute.IsValidInteger(
+  const AValue1: Integer; const AValue2: Integer): Boolean;
 begin
-  if not AValue.IsType<Integer> then
-    raise ETException.CreateFmt(SNotInvalidTypeValidation, [AColumnName]);
-  LValue := AValue.AsType<Integer>;
-  LMaxValue := FValue.AsType<Integer>;
-  if (LValue > LMaxValue) then
-    raise ETException.CreateFmt(SMinValueValidation, [
-      AColumnName, LMaxValue.ToString()]);
+  result := (AValue1 <= AValue2);
 end;
 
-procedure TMaxValueAttibute.ValidateDouble(
-  const AColumnName: String; const AValue: TValue);
-var
-  LValue, LMaxValue: Double;
+function TMaxValueAttibute.IsValidDouble(
+  const AValue1: Double; const AValue2: Double): Boolean;
 begin
-  if not AValue.IsType<Double> then
-    raise ETException.CreateFmt(SNotInvalidTypeValidation, [AColumnName]);
-  LValue := AValue.AsType<Double>;
-  LMaxValue := FValue.AsType<Double>;
-  if (LValue > LMaxValue) then
-    raise ETException.CreateFmt(SMinValueValidation, [
-      AColumnName, LMaxValue.ToString()]);
+  result := (AValue1 <= AValue2);
+end;
+
+procedure TMaxValueAttibute.RaiseException(
+  const AColumnName: String; const AValue: String);
+begin
+  raise ETException.CreateFmt(SMaxValueValidation, [AColumnName, AValue]);
 end;
 
 { TRangeAttribute }
