@@ -130,9 +130,9 @@ type
       const AColumnName: String; const AValue: String); override;
   end;
 
-{ TLessAttibute }
+{ TLessAttribute }
 
-  TLessAttibute = class(TValueAttribute)
+  TLessAttribute = class(TValueAttribute)
   strict protected
     function IsValidInteger(
       const AValue1: Integer; const AValue2: Integer): Boolean; override;
@@ -143,9 +143,9 @@ type
       const AColumnName: String; const AValue: String); override;
   end;
 
-{ TGreaterAttibute }
+{ TGreaterAttribute }
 
-  TGreaterAttibute = class(TValueAttribute)
+  TGreaterAttribute = class(TValueAttribute)
   strict protected
     function IsValidInteger(
       const AValue1: Integer; const AValue2: Integer): Boolean; override;
@@ -339,41 +339,41 @@ begin
   raise ETException.CreateFmt(SMaxValueValidation, [AColumnName, AValue]);
 end;
 
-{ TLessAttibute }
+{ TLessAttribute }
 
-function TLessAttibute.IsValidInteger(
+function TLessAttribute.IsValidInteger(
   const AValue1: Integer; const AValue2: Integer): Boolean;
 begin
   result := (AValue1 < AValue2);
 end;
 
-function TLessAttibute.IsValidDouble(
+function TLessAttribute.IsValidDouble(
   const AValue1: Double; const AValue2: Double): Boolean;
 begin
   result := (AValue1 < AValue2);
 end;
 
-procedure TLessAttibute.RaiseException(
+procedure TLessAttribute.RaiseException(
   const AColumnName: String; const AValue: String);
 begin
   raise ETException.CreateFmt(SLessValidation, [AColumnName, AValue]);
 end;
 
-{ TGreaterAttibute }
+{ TGreaterAttribute }
 
-function TGreaterAttibute.IsValidInteger(
+function TGreaterAttribute.IsValidInteger(
   const AValue1: Integer; const AValue2: Integer): Boolean;
 begin
   result := (AValue1 > AValue2);
 end;
 
-function TGreaterAttibute.IsValidDouble(
+function TGreaterAttribute.IsValidDouble(
   const AValue1: Double; const AValue2: Double): Boolean;
 begin
   result := (AValue1 > AValue2);
 end;
 
-procedure TGreaterAttibute.RaiseException(
+procedure TGreaterAttribute.RaiseException(
   const AColumnName: String; const AValue: String);
 begin
   raise ETException.CreateFmt(SGreaterValidation, [AColumnName, AValue]);
