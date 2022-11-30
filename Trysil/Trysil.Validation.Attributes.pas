@@ -130,6 +130,32 @@ type
       const AColumnName: String; const AValue: String); override;
   end;
 
+{ TLessAttibute }
+
+  TLessAttibute = class(TValueAttribute)
+  strict protected
+    function IsValidInteger(
+      const AValue1: Integer; const AValue2: Integer): Boolean; override;
+    function IsValidDouble(
+      const AValue1: Double; const AValue2: Double): Boolean; override;
+
+    procedure RaiseException(
+      const AColumnName: String; const AValue: String); override;
+  end;
+
+{ TGreaterAttibute }
+
+  TGreaterAttibute = class(TValueAttribute)
+  strict protected
+    function IsValidInteger(
+      const AValue1: Integer; const AValue2: Integer): Boolean; override;
+    function IsValidDouble(
+      const AValue1: Double; const AValue2: Double): Boolean; override;
+
+    procedure RaiseException(
+      const AColumnName: String; const AValue: String); override;
+  end;
+
 { TRangeAttribute }
 
   TRangeAttribute = class(TValidationAttribute)
@@ -311,6 +337,46 @@ procedure TMaxValueAttibute.RaiseException(
   const AColumnName: String; const AValue: String);
 begin
   raise ETException.CreateFmt(SMaxValueValidation, [AColumnName, AValue]);
+end;
+
+{ TLessAttibute }
+
+function TLessAttibute.IsValidInteger(
+  const AValue1: Integer; const AValue2: Integer): Boolean;
+begin
+  result := (AValue1 < AValue2);
+end;
+
+function TLessAttibute.IsValidDouble(
+  const AValue1: Double; const AValue2: Double): Boolean;
+begin
+  result := (AValue1 < AValue2);
+end;
+
+procedure TLessAttibute.RaiseException(
+  const AColumnName: String; const AValue: String);
+begin
+  raise ETException.CreateFmt(SLessValidation, [AColumnName, AValue]);
+end;
+
+{ TGreaterAttibute }
+
+function TGreaterAttibute.IsValidInteger(
+  const AValue1: Integer; const AValue2: Integer): Boolean;
+begin
+  result := (AValue1 > AValue2);
+end;
+
+function TGreaterAttibute.IsValidDouble(
+  const AValue1: Double; const AValue2: Double): Boolean;
+begin
+  result := (AValue1 > AValue2);
+end;
+
+procedure TGreaterAttibute.RaiseException(
+  const AColumnName: String; const AValue: String);
+begin
+  raise ETException.CreateFmt(SGreaterValidation, [AColumnName, AValue]);
 end;
 
 { TRangeAttribute }
