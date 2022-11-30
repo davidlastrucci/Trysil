@@ -66,6 +66,14 @@ type
     function GetInheritedAttributes: TArray<TCustomAttribute>;
   end;
 
+{ TTRtti }
+
+  TTRtti = class
+  public
+    class function InheritsFrom(
+      const AObject: TObject; AType: TRttiType): Boolean;
+  end;
+
 { TTRttiMember }
 
   TTRttiMember = class abstract
@@ -75,7 +83,6 @@ type
     FIsClass: Boolean;
     FRttiType: TRttiType;
 
-    function InheritsFrom(const AObject: TObject; AType: TRttiType): Boolean;
     function InternalCreateObject(
       const AContext: TObject;
       const AColumnName: String): TTValue;
@@ -335,15 +342,9 @@ begin
   end;
 end;
 
-{ TTRttiMember }
+{ TTRtti }
 
-constructor TTRttiMember.Create(const AName: String);
-begin
-  inherited Create;
-  FName := AName;
-end;
-
-function TTRttiMember.InheritsFrom(
+class function TTRtti.InheritsFrom(
   const AObject: TObject; AType: TRttiType): Boolean;
 var
   LClass: TClass;
@@ -357,6 +358,14 @@ begin
       Break;
     result := LClass.ClassInfo = AType.Handle;
   end;
+end;
+
+{ TTRttiMember }
+
+constructor TTRttiMember.Create(const AName: String);
+begin
+  inherited Create;
+  FName := AName;
 end;
 
 function TTRttiMember.InternalCreateObject(
@@ -375,7 +384,7 @@ begin
       LIsValid := Length(LParameters) = 2;
       if LIsValid then
         LIsValid :=
-          InheritsFrom(AContext, LParameters[0].ParamType) and
+          TTRtti.InheritsFrom(AContext, LParameters[0].ParamType) and
           (LParameters[1].ParamType.Handle = TypeInfo(String));
 
       if LIsValid then
@@ -812,7 +821,7 @@ begin
     begin
       LParameters := LMethod.GetParameters;
       if (Length(LParameters) = 1) and
-        (LParameters[0].ParamType.Handle = AContext.ClassInfo) then
+        TTRtti.InheritsFrom(AContext, LParameters[0].ParamType) then
       begin
         result := LMethod;
         Break;

@@ -21,6 +21,7 @@ uses
   Trysil.Consts,
   Trysil.Exceptions,
   Trysil.Factory,
+  Trysil.Rtti,
   Trysil.Events.Abstract;
 
 type
@@ -94,8 +95,8 @@ begin
       LIsValid := Length(LParameters) = 2;
       if LIsValid then
         LIsValid :=
-          (LParameters[0].ParamType.Handle = AContext.ClassInfo) and
-          (LParameters[1].ParamType.Handle = AEntity.ClassInfo);
+          TTRtti.InheritsFrom(AContext, LParameters[0].ParamType) and
+          TTRtti.InheritsFrom(AEntity, LParameters[1].ParamType);
 
       if LIsValid then
       begin

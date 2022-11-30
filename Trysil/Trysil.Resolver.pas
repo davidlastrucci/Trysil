@@ -101,8 +101,8 @@ begin
     begin
       LIsValid := (LLength = 1);
       if LIsValid then
-        LIsValid := (
-          LValidatorMap.Parameters[0].ParamType.Handle = FContext.ClassInfo);
+        LIsValid :=
+          TTRtti.InheritsFrom(FContext, LValidatorMap.Parameters[0].ParamType);
       if not LIsValid then
         raise ETException.CreateFmt(SNotValidValidator, [
           LValidatorMap.Method.Name, AEntity.ClassName]);
