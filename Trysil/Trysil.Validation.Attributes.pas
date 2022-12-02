@@ -34,6 +34,9 @@ type
 { TRequiredAttribute }
 
   TRequiredAttribute = class(TValidationAttribute)
+  strict private
+    procedure ValidateObject(
+      const AColumnName: String; const AObject: TObject);
   public
     procedure Validate(
       const AColumnName: String; const AValue: TValue); override;
@@ -192,12 +195,31 @@ implementation
 procedure TRequiredAttribute.Validate(
   const AColumnName: String; const AValue: TValue);
 begin
-  if AValue.IsType<String> and AValue.AsType<String>.IsEmpty then
+  if AValue.IsType<String>() and AValue.AsType<String>.IsEmpty then
     raise ETException.CreateFmt(SRequiredStringValidation, [AColumnName])
-  else if AValue.IsType<TDateTime> and (AValue.AsType<TDateTime> = 0) then
+  else if AValue.IsType<TDateTime>() and (AValue.AsType<TDateTime> = 0) then
     raise ETException.CreateFmt(SRequiredValidation, [AColumnName])
+  else if AValue.IsType<TObject>() then
+    ValidateObject(AColumnName, AValue.AsType<TObject>())
   else if AValue.IsNull then
     raise ETException.CreateFmt(SRequiredValidation, [AColumnName]);
+end;
+
+procedure TRequiredAttribute.ValidateObject(
+  const AColumnName: String; const AObject: TObject);
+var
+  LRttiLazy: TTRttiLazy;
+begin
+  if TTRttiLazy.IsLazy(AObject) then
+  begin
+    LRttiLazy := TTRttiLazy.Create(AObject);
+    try
+      if not Assigned(LRttiLazy.ObjectValue) then
+        raise ETException.CreateFmt(SRequiredValidation, [AColumnName])
+    finally
+      LRttiLazy.Free;
+    end;
+  end;
 end;
 
 { TLengthAttribute }
