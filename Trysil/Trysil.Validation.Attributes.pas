@@ -40,6 +40,7 @@ type
   strict protected
     FErrorMessage: String;
 
+    procedure CheckType<T>(const AColumnName: String; const AValue: TValue);
     function GetErrorMessage(const AMessage: String): String;
   public
     procedure Validate(
@@ -237,6 +238,14 @@ end;
 
 { TValidationAttribute }
 
+procedure TValidationAttribute.CheckType<T>(
+  const AColumnName: String; const AValue: TValue);
+begin
+  if not AValue.IsType<T> then
+    raise ETException.CreateFmt(
+      GetErrorMessage(SNotInvalidTypeValidation), [AColumnName]);
+end;
+
 function TValidationAttribute.GetErrorMessage(const AMessage: String): String;
 begin
   result := FErrorMessage;
@@ -320,9 +329,7 @@ end;
 procedure TLengthAttribute.Validate(
   const AColumnName: String; const AValue: TValue);
 begin
-  if not AValue.IsType<String> then
-    raise ETException.CreateFmt(
-      GetErrorMessage(SNotInvalidTypeValidation), [AColumnName]);
+  CheckType<String>(AColumnName, AValue);
   if not IsValid(AValue.AsType<String>()) then
     RaiseException(AColumnName);
 end;
@@ -405,9 +412,7 @@ procedure TValueAttribute.ValidateInteger(
 var
   LValue1, LValue2: Integer;
 begin
-  if not AValue.IsType<Integer> then
-    raise ETException.CreateFmt(
-      GetErrorMessage(SNotInvalidTypeValidation), [AColumnName]);
+  CheckType<Integer>(AColumnName, AValue);
   LValue1 := AValue.AsType<Integer>;
   LValue2 := FValue.AsType<Integer>;
   if not IsValidInteger(LValue1, LValue2) then
@@ -419,9 +424,7 @@ procedure TValueAttribute.ValidateDouble(
 var
   LValue1, LValue2: Double;
 begin
-  if not AValue.IsType<Double> then
-    raise ETException.CreateFmt(
-      GetErrorMessage(SNotInvalidTypeValidation), [AColumnName]);
+  CheckType<Double>(AColumnName, AValue);
   LValue1 := AValue.AsType<Double>;
   LValue2 := FValue.AsType<Double>;
   if not IsValidDouble(LValue1, LValue2) then
@@ -572,9 +575,7 @@ procedure TRangeAttribute.ValidateInteger(
 var
   LValue, LMinValue, LMaxValue: Integer;
 begin
-  if not AValue.IsType<Integer> then
-    raise ETException.CreateFmt(
-      GetErrorMessage(SNotInvalidTypeValidation), [AColumnName]);
+  CheckType<Integer>(AColumnName, AValue);
   LValue := AValue.AsType<Integer>;
   LMinValue := FMinValue.AsType<Integer>;
   LMaxValue := FMaxValue.AsType<Integer>;
@@ -588,9 +589,7 @@ procedure TRangeAttribute.ValidateDouble(
 var
   LValue, LMinValue, LMaxValue: Double;
 begin
-  if not AValue.IsType<Double> then
-    raise ETException.CreateFmt(
-      GetErrorMessage(SNotInvalidTypeValidation), [AColumnName]);
+  CheckType<Double>(AColumnName, AValue);
   LValue := AValue.AsType<Double>;
   LMinValue := FMinValue.AsType<Double>;
   LMaxValue := FMaxValue.AsType<Double>;
