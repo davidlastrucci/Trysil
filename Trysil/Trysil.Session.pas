@@ -201,6 +201,7 @@ procedure TTSession<T>.Insert(const AEntity: T);
 begin
   if FClonedEntities.Contains(AEntity) then
     raise ETException.CreateFmt(SClonedEntity, [AEntity.ToString()]);
+  FResolver.Validate<T>(AEntity);
   FEntities.Add(AEntity);
   FAllEntities.Add(AEntity);
   FEntityStates.Add(AEntity, TTSessionState.Inserted);
@@ -213,8 +214,12 @@ begin
   LState := GetEntityState(AClone);
   if LState = TTSessionState.Deleted then
     raise ETException.CreateFmt(SDeletedEntity, [AClone.ToString()])
-  else if LState = TTSessionState.Original then
-    FEntityStates.AddOrSetValue(AClone, TTSessionState.Updated);
+  else
+  begin
+    FResolver.Validate<T>(AClone);
+    if LState = TTSessionState.Original then
+      FEntityStates.AddOrSetValue(AClone, TTSessionState.Updated);
+  end;
 end;
 
 procedure TTSession<T>.Delete(const AClone: T);

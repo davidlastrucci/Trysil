@@ -79,6 +79,8 @@ type
 
     procedure Refresh<T: class>(const AEntity: T);
 
+    procedure Validate<T: class>(const AEntity: T);
+
     procedure Insert<T: class>(const AEntity: T);
     procedure InsertAll<T: class>(const AList: TTList<T>);
 
@@ -201,6 +203,11 @@ end;
 procedure TTContext.Refresh<T>(const AEntity: T);
 begin
   FProvider.Refresh<T>(AEntity);
+end;
+
+procedure TTContext.Validate<T>(const AEntity: T);
+begin
+  FResolver.Validate<T>(AEntity);
 end;
 
 procedure TTContext.ApplyAll<T>(

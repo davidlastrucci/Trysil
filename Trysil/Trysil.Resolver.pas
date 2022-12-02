@@ -47,6 +47,8 @@ type
       const AContext: TObject;
       const AMetadata: TTMetadata);
 
+    procedure Validate<T: class>(const AEntity: T);
+
     procedure Insert<T: class>(const AEntity: T);
     procedure Update<T: class>(const AEntity: T);
     procedure Delete<T: class>(const AEntity: T);
@@ -109,6 +111,14 @@ begin
       LValidatorMap.Method.Invoke(AEntity, [FContext])
     end;
   end;
+end;
+
+procedure TTResolver.Validate<T>(const AEntity: T);
+var
+  LTableMap: TTTableMap;
+begin
+  LTableMap := TTMapper.Instance.Load<T>();
+  ExecuteValidators(AEntity, LTableMap);
 end;
 
 procedure TTResolver.Insert<T>(const AEntity: T);
