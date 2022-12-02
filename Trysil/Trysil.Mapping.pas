@@ -62,8 +62,10 @@ type
   strict private
     FMember: TTRttiMember;
     FName: String;
+    FCaption: String;
     FValidations: TTValidationsMap;
 
+    function GetValidationColumnName: String;
     procedure SearchValidations(const ARttiMember: TRttiMember);
   public
     constructor Create(const AName: String); overload;
@@ -343,6 +345,7 @@ begin
   inherited Create;
   FMember := nil;
   FName := AName;
+  FCaption := String.Empty;
   FValidations := TTValidationsMap.Create;
 end;
 
@@ -373,14 +376,23 @@ var
   LAttribute: TCustomAttribute;
 begin
   for LAttribute in ARttiMember.GetAttributes do
-    if LAttribute is TValidationAttribute then
+    if LAttribute is TCaptionAttribute then
+      FCaption := TCaptionAttribute(LAttribute).Caption
+    else if LAttribute is TValidationAttribute then
       FValidations.Add(
         TTValidationMap.Create(TValidationAttribute(LAttribute)));
 end;
 
+function TTColumnMap.GetValidationColumnName: String;
+begin
+  result := FCaption;
+  if result.IsEmpty then
+    result := FName;
+end;
+
 procedure TTColumnMap.Validate(const AEntity: TObject);
 begin
-  FValidations.Validate(FName, FMember.GetValue(AEntity));
+  FValidations.Validate(GetValidationColumnName, FMember.GetValue(AEntity));
 end;
 
 { TTColumnsMap }
