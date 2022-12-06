@@ -255,11 +255,6 @@ end;
 
 { TRequiredAttribute }
 
-function TRequiredAttribute.IsNullString(const AValue: TValue): Boolean;
-begin
-  result := AValue.IsType<String>() and AValue.AsType<String>().IsEmpty;
-end;
-
 constructor TRequiredAttribute.Create;
 begin
   inherited Create;
@@ -269,6 +264,11 @@ constructor TRequiredAttribute.Create(const AErrorMessage: String);
 begin
   Create;
   FErrorMessage := AErrorMessage;
+end;
+
+function TRequiredAttribute.IsNullString(const AValue: TValue): Boolean;
+begin
+  result := AValue.IsType<String>() and AValue.AsType<String>().IsEmpty;
 end;
 
 function TRequiredAttribute.IsNullDateTime(const AValue: TValue): Boolean;
