@@ -34,6 +34,10 @@ type
     property NestedException: Exception read FNestedException;
   end;
 
+{ ETValidationException }
+
+  ETValidationException = class(ETException);
+
 implementation
 
 { ETException }

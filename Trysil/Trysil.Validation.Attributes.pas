@@ -242,7 +242,7 @@ procedure TValidationAttribute.CheckType<T>(
   const AColumnName: String; const AValue: TValue);
 begin
   if not AValue.IsType<T> then
-    raise ETException.CreateFmt(
+    raise ETValidationException.CreateFmt(
       GetErrorMessage(SNotInvalidTypeValidation), [AColumnName]);
 end;
 
@@ -307,7 +307,7 @@ procedure TRequiredAttribute.Validate(
 begin
   if IsNullString(AValue) or IsNullObject(AValue) or
     IsNullDateTime(AValue) or IsNullNullable(AValue) then
-    raise ETException.CreateFmt(
+    raise ETValidationException.CreateFmt(
       GetErrorMessage(SRequiredValidation), [AColumnName]);
 end;
 
@@ -343,7 +343,7 @@ end;
 
 procedure TMaxLengthAttribute.RaiseException(const AColumnName: String);
 begin
-  raise ETException.CreateFmt(
+  raise ETValidationException.CreateFmt(
     GetErrorMessage(SMaxLengthValidation), [AColumnName, FLength]);
 end;
 
@@ -356,7 +356,7 @@ end;
 
 procedure TMinLengthAttribute.RaiseException(const AColumnName: String);
 begin
-  raise ETException.CreateFmt(
+  raise ETValidationException.CreateFmt(
     GetErrorMessage(SMinLengthValidation), [AColumnName, FLength]);
 end;
 
@@ -448,7 +448,7 @@ end;
 procedure TMinValueAttribute.RaiseException(
   const AColumnName: String; const AValue: String);
 begin
-  raise ETException.CreateFmt(
+  raise ETValidationException.CreateFmt(
     GetErrorMessage(SMinValueValidation), [AColumnName, AValue]);
 end;
 
@@ -469,7 +469,7 @@ end;
 procedure TMaxValueAttibute.RaiseException(
   const AColumnName: String; const AValue: String);
 begin
-  raise ETException.CreateFmt(
+  raise ETValidationException.CreateFmt(
     GetErrorMessage(SMaxValueValidation), [AColumnName, AValue]);
 end;
 
@@ -490,7 +490,7 @@ end;
 procedure TLessAttribute.RaiseException(
   const AColumnName: String; const AValue: String);
 begin
-  raise ETException.CreateFmt(
+  raise ETValidationException.CreateFmt(
     GetErrorMessage(SLessValidation), [AColumnName, AValue]);
 end;
 
@@ -511,7 +511,7 @@ end;
 procedure TGreaterAttribute.RaiseException(
   const AColumnName: String; const AValue: String);
 begin
-  raise ETException.CreateFmt(
+  raise ETValidationException.CreateFmt(
     GetErrorMessage(SGreaterValidation), [AColumnName, AValue]);
 end;
 
@@ -580,7 +580,7 @@ begin
   LMinValue := FMinValue.AsType<Integer>;
   LMaxValue := FMaxValue.AsType<Integer>;
   if (LValue < LMinValue) or (LValue > LMaxValue) then
-    raise ETException.CreateFmt(GetErrorMessage(SRangeValidation), [
+    raise ETValidationException.CreateFmt(GetErrorMessage(SRangeValidation), [
       AColumnName, LMinValue.ToString(), LMaxValue.ToString()]);
 end;
 
@@ -594,7 +594,7 @@ begin
   LMinValue := FMinValue.AsType<Double>;
   LMaxValue := FMaxValue.AsType<Double>;
   if (LValue < LMinValue) or (LValue > LMaxValue) then
-    raise ETException.CreateFmt(GetErrorMessage(SRangeValidation), [
+    raise ETValidationException.CreateFmt(GetErrorMessage(SRangeValidation), [
       AColumnName, LMinValue.ToString(), LMaxValue.ToString()]);
 end;
 
