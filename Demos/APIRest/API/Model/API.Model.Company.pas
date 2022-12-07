@@ -18,7 +18,8 @@ uses
   System.Classes,
   System.SysUtils,
   Trysil.Types,
-  Trysil.Attributes;
+  Trysil.Attributes,
+  Trysil.Validation.Attributes;
 
 type
 
@@ -33,15 +34,20 @@ type
     [TColumn('ID')]
     FID: TTPrimaryKey;
 
+    [TRequired]
+    [TMaxLength(100)]
     [TColumn('Name')]
     FName: String;
 
+    [TMaxLength(100)]
     [TColumn('Address')]
     FAddress: String;
 
+    [TMaxLength(100)]
     [TColumn('City')]
     FCity: String;
 
+    [TMaxLength(100)]
     [TColumn('Country')]
     FCountry: String;
 

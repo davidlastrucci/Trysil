@@ -20,6 +20,7 @@ uses
   Trysil.Types,
   Trysil.Attributes,
   Trysil.Lazy,
+  Trysil.Validation.Attributes,
 
   API.Model.Company;
 
@@ -35,15 +36,22 @@ type
     [TColumn('ID')]
     FID: TTPrimaryKey;
 
+    [TRequired]
+    [TMaxLength(100)]
     [TColumn('Firstname')]
     FFirstname: String;
 
+    [TRequired]
+    [TMaxLength(100)]
     [TColumn('Lastname')]
     FLastname: String;
 
+    [TMaxLength(255)]
     [TColumn('Email')]
     FEmail: String;
 
+    [TRequired]
+    [TDisplayName('Company')]
     [TColumn('CompanyID')]
     FCompany: TTLazy<TAPICompany>;
 
