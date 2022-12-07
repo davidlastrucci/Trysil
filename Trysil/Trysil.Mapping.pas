@@ -62,7 +62,7 @@ type
   strict private
     FMember: TTRttiMember;
     FName: String;
-    FCaption: String;
+    FDisplayName: String;
     FValidations: TTValidationsMap;
 
     function GetValidationColumnName: String;
@@ -345,7 +345,7 @@ begin
   inherited Create;
   FMember := nil;
   FName := AName;
-  FCaption := String.Empty;
+  FDisplayName := String.Empty;
   FValidations := TTValidationsMap.Create;
 end;
 
@@ -376,8 +376,8 @@ var
   LAttribute: TCustomAttribute;
 begin
   for LAttribute in ARttiMember.GetAttributes do
-    if LAttribute is TCaptionAttribute then
-      FCaption := TCaptionAttribute(LAttribute).Caption
+    if LAttribute is TDisplayNameAttribute then
+      FDisplayName := TDisplayNameAttribute(LAttribute).DisplayName
     else if LAttribute is TValidationAttribute then
       FValidations.Add(
         TTValidationMap.Create(TValidationAttribute(LAttribute)));
@@ -385,7 +385,7 @@ end;
 
 function TTColumnMap.GetValidationColumnName: String;
 begin
-  result := FCaption;
+  result := FDisplayName;
   if result.IsEmpty then
     result := FName;
 end;

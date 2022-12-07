@@ -23,15 +23,15 @@ uses
 
 type
 
-{ TCaptionAttribute }
+{ TDisplayNameAttribute }
 
-  TCaptionAttribute = class(TCustomAttribute)
+  TDisplayNameAttribute = class(TCustomAttribute)
   strict private
-    FCaption: String;
+    FDisplayName: String;
   public
-    constructor Create(const ACaption: String);
+    constructor Create(const ADisplayName: String);
 
-    property Caption: String read FCaption;
+    property DisplayName: String read FDisplayName;
   end;
 
 { TValidationAttribute }
@@ -228,12 +228,12 @@ type
 
 implementation
 
-{ TCaptionAttribute }
+{ TDisplayNameAttribute }
 
-constructor TCaptionAttribute.Create(const ACaption: String);
+constructor TDisplayNameAttribute.Create(const ADisplayName: String);
 begin
   inherited Create;
-  FCaption := ACaption;
+  FDisplayName := ADisplayName;
 end;
 
 { TValidationAttribute }
