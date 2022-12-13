@@ -41,6 +41,8 @@ resourcestring
   SLessValidation = '%0:s must be less than %1:s.';
   SGreaterValidation = '%0:s must be greater than %1:s.';
   SRangeValidation = '%0:s must be between %1:s and %2:s.';
+  SRegexValidation = '%1:s is not a valid value for %0:s.';
+  SEMailValidation = '%0:s: %1:s is not a valid email address.';
   SNotValidValidator = 'Validator method is not valid: %0:s method of %1:s entity.';
   SInvalidNullableType = 'Null type is invalid.';
   SPropertyIDNotFound = 'Property ID not found';

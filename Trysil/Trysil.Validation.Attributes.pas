@@ -16,6 +16,7 @@ uses
   System.SysUtils,
   System.Classes,
   System.Rtti,
+  System.RegularExpressions,
 
   Trysil.Rtti,
   Trysil.Exceptions,
@@ -220,6 +221,30 @@ type
 
     procedure Validate(
       const AColumnName: String; const AValue: TValue); override;
+  end;
+
+{ TRegexAttribute }
+
+  TRegexAttribute = class(TValidationAttribute)
+  strict private
+    FRegex: string;
+  public
+    constructor Create(const ARegex: String); overload;
+    constructor Create(
+      const ARegex: String; const AErrorMessage: String); overload;
+
+    procedure Validate(
+      const AColumnName: String; const AValue: TValue); override;
+  end;
+
+{ TEMailAttribute }
+
+  TEMailAttribute = class(TRegexAttribute)
+  strict private
+    const EmailRegex: string = '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$';
+  public
+    constructor Create; overload;
+    constructor Create(const AErrorMessage: String); overload;
   end;
 
 { TValidatorAttribute }
@@ -596,6 +621,45 @@ begin
   if (LValue < LMinValue) or (LValue > LMaxValue) then
     raise ETValidationException.CreateFmt(GetErrorMessage(SRangeValidation), [
       AColumnName, LMinValue.ToString(), LMaxValue.ToString()]);
+end;
+
+{ TRegexAttribute }
+
+constructor TRegexAttribute.Create(const ARegex: String);
+begin
+  Create(ARegex, String.Empty);
+end;
+
+constructor TRegexAttribute.Create(
+  const ARegex: String; const AErrorMessage: String);
+begin
+  inherited Create;
+  FRegex := ARegex;
+  FErrorMessage := AErrorMessage;
+end;
+
+procedure TRegexAttribute.Validate(
+  const AColumnName: String; const AValue: TValue);
+var
+  LValue: String;
+begin
+  CheckType<String>(AColumnName, AValue);
+  LValue := AValue.AsType<String>();
+  if (not LValue.IsEmpty) and not TRegEx.IsMatch(LValue, FRegex) then
+    raise ETValidationException.CreateFmt(
+      GetErrorMessage(SRegexValidation), [AColumnName, LValue]);
+end;
+
+{ TEMailAttribute }
+
+constructor TEMailAttribute.Create;
+begin
+  Create(SEMailValidation);
+end;
+
+constructor TEMailAttribute.Create(const AErrorMessage: String);
+begin
+  inherited Create(EmailRegex, AErrorMessage);
 end;
 
 end.

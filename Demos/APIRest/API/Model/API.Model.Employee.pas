@@ -47,6 +47,7 @@ type
     FLastname: String;
 
     [TMaxLength(255)]
+    [TEmail]
     [TColumn('Email')]
     FEmail: String;
 
