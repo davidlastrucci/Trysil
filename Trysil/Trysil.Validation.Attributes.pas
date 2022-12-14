@@ -38,12 +38,14 @@ type
 { TValidationAttribute }
 
   TValidationAttribute = class abstract(TCustomAttribute)
-  strict protected
+  strict private
     FErrorMessage: String;
-
+  strict protected
     procedure CheckType<T>(const AColumnName: String; const AValue: TValue);
     function GetErrorMessage(const AMessage: String): String;
   public
+    constructor Create(const AErrorMessage: String);
+
     procedure Validate(
       const AColumnName: String; const AValue: TValue); virtual; abstract;
   end;
@@ -263,6 +265,12 @@ end;
 
 { TValidationAttribute }
 
+constructor TValidationAttribute.Create(const AErrorMessage: String);
+begin
+  inherited Create;
+  FErrorMessage := AErrorMessage;
+end;
+
 procedure TValidationAttribute.CheckType<T>(
   const AColumnName: String; const AValue: TValue);
 begin
@@ -282,13 +290,12 @@ end;
 
 constructor TRequiredAttribute.Create;
 begin
-  inherited Create;
+  Create(String.Empty);
 end;
 
 constructor TRequiredAttribute.Create(const AErrorMessage: String);
 begin
-  Create;
-  FErrorMessage := AErrorMessage;
+  inherited Create(AErrorMessage);
 end;
 
 function TRequiredAttribute.IsNullString(const AValue: TValue): Boolean;
@@ -340,15 +347,14 @@ end;
 
 constructor TLengthAttribute.Create(const ALength: Integer);
 begin
-  inherited Create;
-  FLength := ALength;
+  Create(ALength, String.Empty);
 end;
 
 constructor TLengthAttribute.Create(
   const ALength: Integer; const AErrorMessage: String);
 begin
-  Create(ALength);
-  FErrorMessage := AErrorMessage;
+  inherited Create(AErrorMessage);
+  FLength := ALength;
 end;
 
 procedure TLengthAttribute.Validate(
@@ -392,10 +398,9 @@ constructor TValueAttribute.Create(
   const AValue: TValue;
   const AErrorMessage: String);
 begin
-  inherited Create;
+  inherited Create(AErrorMessage);
   FValueType := AValueType;
   FValue := AValue;
-  FErrorMessage := AErrorMessage;
 end;
 
 constructor TValueAttribute.Create(const AValue: Integer);
@@ -548,11 +553,10 @@ constructor TRangeAttribute.Create(
   const AMaxValue: TValue;
   const AErrorMessage: String);
 begin
-  inherited Create;
+  inherited Create(AErrorMessage);
   FValueType := AValueType;
   FMinValue := AMinValue;
   FMaxValue := AMaxValue;
-  FErrorMessage := AErrorMessage;
 end;
 
 constructor TRangeAttribute.Create(
@@ -633,9 +637,8 @@ end;
 constructor TRegexAttribute.Create(
   const ARegex: String; const AErrorMessage: String);
 begin
-  inherited Create;
+  inherited Create(AErrorMessage);
   FRegex := ARegex;
-  FErrorMessage := AErrorMessage;
 end;
 
 procedure TRegexAttribute.Validate(
