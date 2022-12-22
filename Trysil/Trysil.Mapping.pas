@@ -23,6 +23,7 @@ uses
   Trysil.Classes,
   Trysil.Events.Abstract,
   Trysil.Attributes,
+  Trysil.Validation,
   Trysil.Validation.Attributes,
   Trysil.Events.Attributes,
   Trysil.Cache,
@@ -40,7 +41,10 @@ type
   public
     constructor Create(const AValidation: TValidationAttribute);
 
-    procedure Validate(const AColumnName: String; const AValue: TValue);
+    procedure Validate(
+      const AColumnName: String;
+      const AValue: TValue;
+      const AErrors: TTValidationErrors);
   end;
 
 { TTValidationsMap }
@@ -53,7 +57,10 @@ type
     destructor Destroy; override;
 
     procedure Add(const AValidation: TTValidationMap);
-    procedure Validate(const AColumnName: String; const AValue: TValue);
+    procedure Validate(
+      const AColumnName: String;
+      const AValue: TValue;
+      const AErrors: TTValidationErrors);
   end;
 
 { TTColumnMap }
@@ -76,7 +83,9 @@ type
 
     destructor Destroy; override;
 
-    procedure Validate(const AEntity: TObject);
+    procedure Validate(
+      const AEntity: TObject;
+      const AErrors: TTValidationErrors);
 
     property Member: TTRttiMember read FMember;
     property Name: String read FName;
@@ -305,9 +314,11 @@ begin
 end;
 
 procedure TTValidationMap.Validate(
-  const AColumnName: String; const AValue: TValue);
+  const AColumnName: String;
+  const AValue: TValue;
+  const AErrors: TTValidationErrors);
 begin
-  FValidation.Validate(AColumnName, AValue);
+  FValidation.Validate(AColumnName, AValue, AErrors);
 end;
 
 { TTValidationsMap }
@@ -330,12 +341,14 @@ begin
 end;
 
 procedure TTValidationsMap.Validate(
-  const AColumnName: String; const AValue: TValue);
+  const AColumnName: String;
+  const AValue: TValue;
+  const AErrors: TTValidationErrors);
 var
   LValidation: TTValidationMap;
 begin
   for LValidation in FValidations do
-    LValidation.Validate(AColumnName, AValue);
+    LValidation.Validate(AColumnName, AValue, AErrors);
 end;
 
 { TTColumnMap }
@@ -390,9 +403,11 @@ begin
     result := FName;
 end;
 
-procedure TTColumnMap.Validate(const AEntity: TObject);
+procedure TTColumnMap.Validate(
+  const AEntity: TObject; const AErrors: TTValidationErrors);
 begin
-  FValidations.Validate(GetValidationColumnName, FMember.GetValue(AEntity));
+  FValidations.Validate(
+    GetValidationColumnName, FMember.GetValue(AEntity), AErrors);
 end;
 
 { TTColumnsMap }

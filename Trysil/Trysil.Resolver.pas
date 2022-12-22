@@ -25,10 +25,32 @@ uses
   Trysil.Mapping,
   Trysil.Metadata,
   Trysil.Data,
+  Trysil.Validation,
   Trysil.Events.Abstract,
   Trysil.Events.Factory;
 
 type
+
+{ TTResolverValidator }
+
+  TTResolverValidator = class
+  strict private
+    FContext: TObject;
+    FTableMap: TTTableMap;
+    FEntity: TObject;
+    FErrors: TTValidationErrors;
+
+    procedure ValidateColumns;
+    procedure ValidateMethods;
+  public
+    constructor Create(
+      const AContext: TObject;
+      const ATableMap: TTTableMap;
+      const AEntity: TObject;
+      const AErrors: TTValidationErrors);
+
+    procedure Execute;
+  end;
 
 { TTResolver }
 
@@ -39,8 +61,12 @@ type
     FMetadata: TTMetadata;
 
     procedure CheckReadWrite(const ATableMap: TTTableMap);
+
     procedure ExecuteValidators(
       const AEntity: TObject; const ATableMap: TTTableMap);
+  strict protected
+    function GetValidationErrorMessage(
+      const AErrors: TTValidationErrors): String; virtual;
   public
     constructor Create(
       const AConnection: TTConnection;
@@ -55,6 +81,65 @@ type
   end;
 
 implementation
+
+{ TTResolverValidator }
+
+constructor TTResolverValidator.Create(
+  const AContext: TObject;
+  const ATableMap: TTTableMap;
+  const AEntity: TObject;
+  const AErrors: TTValidationErrors);
+begin
+  inherited Create;
+  FContext := AContext;
+  FTableMap := ATableMap;
+  FEntity := AEntity;
+  FErrors := AErrors;
+end;
+
+procedure TTResolverValidator.Execute;
+begin
+  ValidateColumns;
+  ValidateMethods;
+end;
+
+procedure TTResolverValidator.ValidateColumns;
+var
+  LColumnMap: TTColumnMap;
+begin
+  for LColumnMap in FTableMap.Columns do
+    LColumnMap.Validate(FEntity, FErrors);
+end;
+
+procedure TTResolverValidator.ValidateMethods;
+var
+  LValidatorMap: TTValidatorMap;
+  LLength: Integer;
+  LIsValid: Boolean;
+begin
+  for LValidatorMap in FTableMap.Validators do
+  begin
+    LLength := Length(LValidatorMap.Parameters);
+    if LLength = 0 then
+      LValidatorMap.Method.Invoke(FEntity, [])
+    else
+    begin
+      LIsValid := (LLength = 2);
+      if LIsValid then
+        LIsValid :=
+          TTRtti.InheritsFrom(
+            FContext, LValidatorMap.Parameters[0].ParamType) and
+          TTRtti.InheritsFrom(
+            FErrors, LValidatorMap.Parameters[1].ParamType);
+      if not LIsValid then
+        FErrors.Add(
+          String.Empty,
+          Format(SNotValidValidator, [
+            LValidatorMap.Method.Name, FEntity.ClassName]));
+      LValidatorMap.Method.Invoke(FEntity, [FContext, FErrors])
+    end;
+  end;
+end;
 
 { TTResolver }
 
@@ -83,33 +168,31 @@ begin
   end;
 end;
 
+function TTResolver.GetValidationErrorMessage(
+  const AErrors: TTValidationErrors): String;
+begin
+  result := AErrors.ToString();
+end;
+
 procedure TTResolver.ExecuteValidators(
   const AEntity: TObject; const ATableMap: TTTableMap);
 var
-  LColumnMap: TTColumnMap;
-  LValidatorMap: TTValidatorMap;
-  LLength: Integer;
-  LIsValid: Boolean;
+  LErrors: TTValidationErrors;
+  LValidator: TTResolverValidator;
 begin
-  for LColumnMap in ATableMap.Columns do
-    LColumnMap.Validate(AEntity);
-
-  for LValidatorMap in ATableMap.Validators do
-  begin
-    LLength := Length(LValidatorMap.Parameters);
-    if LLength = 0 then
-      LValidatorMap.Method.Invoke(AEntity, [])
-    else
-    begin
-      LIsValid := (LLength = 1);
-      if LIsValid then
-        LIsValid :=
-          TTRtti.InheritsFrom(FContext, LValidatorMap.Parameters[0].ParamType);
-      if not LIsValid then
-        raise ETException.CreateFmt(SNotValidValidator, [
-          LValidatorMap.Method.Name, AEntity.ClassName]);
-      LValidatorMap.Method.Invoke(AEntity, [FContext])
+  LErrors := TTValidationErrors.Create;
+  try
+    LValidator := TTResolverValidator.Create(
+      FContext, ATableMap, AEntity, LErrors);
+    try
+      LValidator.Execute;
+    finally
+      LValidator.Free;
     end;
+    if not LErrors.IsEmpty then
+      raise ETValidationException.Create(GetValidationErrorMessage(LErrors));
+  finally
+    LErrors.Free;
   end;
 end;
 

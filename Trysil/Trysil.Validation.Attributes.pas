@@ -19,8 +19,8 @@ uses
   System.RegularExpressions,
 
   Trysil.Rtti,
-  Trysil.Exceptions,
-  Trysil.Consts;
+  Trysil.Consts,
+  Trysil.Validation;
 
 type
 
@@ -41,13 +41,18 @@ type
   strict private
     FErrorMessage: String;
   strict protected
-    procedure CheckType<T>(const AColumnName: String; const AValue: TValue);
+    function CheckType<T>(
+      const AColumnName: String;
+      const AValue: TValue;
+      const AErrors: TTValidationErrors): Boolean;
     function GetErrorMessage(const AMessage: String): String;
   public
     constructor Create(const AErrorMessage: String);
 
     procedure Validate(
-      const AColumnName: String; const AValue: TValue); virtual; abstract;
+      const AColumnName: String;
+      const AValue: TValue;
+      const AErrors: TTValidationErrors); virtual; abstract;
   end;
 
 { TRequiredAttribute }
@@ -63,7 +68,9 @@ type
     constructor Create(const AErrorMessage: String); overload;
 
     procedure Validate(
-      const AColumnName: String; const AValue: TValue); override;
+      const AColumnName: String;
+      const AValue: TValue;
+      const AErrors: TTValidationErrors); override;
   end;
 
 { TLengthAttribute }
@@ -73,14 +80,18 @@ type
     FLength: Integer;
 
     function IsValid(const AValue: String): Boolean; virtual; abstract;
-    procedure RaiseException(const AColumnName: String); virtual; abstract;
+    procedure AddValidationError(
+      const AColumnName: String;
+      const AErrors: TTValidationErrors); virtual; abstract;
   public
     constructor Create(const ALength: Integer); overload;
     constructor Create(
       const ALength: Integer; const AErrorMessage: String); overload;
 
     procedure Validate(
-      const AColumnName: String; const AValue: TValue); override;
+      const AColumnName: String;
+      const AValue: TValue;
+      const AErrors: TTValidationErrors); override;
   end;
 
 { TMaxLengthAttribute }
@@ -88,7 +99,9 @@ type
   TMaxLengthAttribute = class(TLengthAttribute)
   strict protected
     function IsValid(const AValue: String): Boolean; override;
-    procedure RaiseException(const AColumnName: String); override;
+    procedure AddValidationError(
+      const AColumnName: String;
+      const AErrors: TTValidationErrors); override;
   end;
 
 { TMinLengthAttribute }
@@ -96,7 +109,9 @@ type
   TMinLengthAttribute = class(TLengthAttribute)
   strict protected
     function IsValid(const AValue: String): Boolean; override;
-    procedure RaiseException(const AColumnName: String); override;
+    procedure AddValidationError(
+      const AColumnName: String;
+      const AErrors: TTValidationErrors); override;
   end;
 
 { TValidationValueType }
@@ -115,8 +130,14 @@ type
       const AValue: TValue;
       const AErrorMessage: String); overload;
 
-    procedure ValidateInteger(const AColumnName: String; const AValue: TValue);
-    procedure ValidateDouble(const AColumnName: String; const AValue: TValue);
+    procedure ValidateInteger(
+      const AColumnName: String;
+      const AValue: TValue;
+      const AErrors: TTValidationErrors);
+    procedure ValidateDouble(
+      const AColumnName: String;
+      const AValue: TValue;
+      const AErrors: TTValidationErrors);
   strict protected
     function IsValidInteger(
       const AValue1: Integer;
@@ -125,8 +146,10 @@ type
       const AValue1: Double;
       const AValue2: Double): Boolean; virtual; abstract;
 
-    procedure RaiseException(
-      const AColumnName: String; const AValue: String); virtual; abstract;
+    procedure AddValidationError(
+      const AColumnName: String;
+      const AValue: String;
+      const AErrors: TTValidationErrors); virtual; abstract;
   public
     constructor Create(const AValue: Integer); overload;
     constructor Create(
@@ -136,7 +159,9 @@ type
       const AValue: Double; const AErrorMessage: String); overload;
 
     procedure Validate(
-      const AColumnName: String; const AValue: TValue); override;
+      const AColumnName: String;
+      const AValue: TValue;
+      const AErrors: TTValidationErrors); override;
   end;
 
 { TMinValueAttibute }
@@ -148,21 +173,25 @@ type
     function IsValidDouble(
       const AValue1: Double; const AValue2: Double): Boolean; override;
 
-    procedure RaiseException(
-      const AColumnName: String; const AValue: String); override;
+    procedure AddValidationError(
+      const AColumnName: String;
+      const AValue: String;
+      const AErrors: TTValidationErrors); override;
   end;
 
-{ TMaxValueAttibute }
+{ TMaxValueAttribute }
 
-  TMaxValueAttibute = class(TValueAttribute)
+  TMaxValueAttribute = class(TValueAttribute)
   strict protected
     function IsValidInteger(
       const AValue1: Integer; const AValue2: Integer): Boolean; override;
     function IsValidDouble(
       const AValue1: Double; const AValue2: Double): Boolean; override;
 
-    procedure RaiseException(
-      const AColumnName: String; const AValue: String); override;
+    procedure AddValidationError(
+      const AColumnName: String;
+      const AValue: String;
+      const AErrors: TTValidationErrors); override;
   end;
 
 { TLessAttribute }
@@ -174,8 +203,10 @@ type
     function IsValidDouble(
       const AValue1: Double; const AValue2: Double): Boolean; override;
 
-    procedure RaiseException(
-      const AColumnName: String; const AValue: String); override;
+    procedure AddValidationError(
+      const AColumnName: String;
+      const AValue: String;
+      const AErrors: TTValidationErrors); override;
   end;
 
 { TGreaterAttribute }
@@ -187,8 +218,10 @@ type
     function IsValidDouble(
       const AValue1: Double; const AValue2: Double): Boolean; override;
 
-    procedure RaiseException(
-      const AColumnName: String; const AValue: String); override;
+    procedure AddValidationError(
+      const AColumnName: String;
+      const AValue: String;
+      const AErrors: TTValidationErrors); override;
   end;
 
 { TRangeAttribute }
@@ -205,8 +238,14 @@ type
       const AMaxValue: TValue;
       const AErrorMessage: String); overload;
 
-    procedure ValidateInteger(const AColumnName: String; const AValue: TValue);
-    procedure ValidateDouble(const AColumnName: String; const AValue: TValue);
+    procedure ValidateInteger(
+      const AColumnName: String;
+      const AValue: TValue;
+      const AErrors: TTValidationErrors);
+    procedure ValidateDouble(
+      const AColumnName: String;
+      const AValue: TValue;
+      const AErrors: TTValidationErrors);
   public
     constructor Create(
       const AMinValue: Integer; const AMaxValue: Integer); overload;
@@ -222,7 +261,9 @@ type
       const AErrorMessage: String); overload;
 
     procedure Validate(
-      const AColumnName: String; const AValue: TValue); override;
+      const AColumnName: String;
+      const AValue: TValue;
+      const AErrors: TTValidationErrors); override;
   end;
 
 { TRegexAttribute }
@@ -236,7 +277,9 @@ type
       const ARegex: String; const AErrorMessage: String); overload;
 
     procedure Validate(
-      const AColumnName: String; const AValue: TValue); override;
+      const AColumnName: String;
+      const AValue: TValue;
+      const AErrors: TTValidationErrors); override;
   end;
 
 { TEMailAttribute }
@@ -271,12 +314,16 @@ begin
   FErrorMessage := AErrorMessage;
 end;
 
-procedure TValidationAttribute.CheckType<T>(
-  const AColumnName: String; const AValue: TValue);
+function TValidationAttribute.CheckType<T>(
+  const AColumnName: String;
+  const AValue: TValue;
+  const AErrors: TTValidationErrors): Boolean;
 begin
-  if not AValue.IsType<T> then
-    raise ETValidationException.CreateFmt(
-      GetErrorMessage(SNotInvalidTypeValidation), [AColumnName]);
+  result := AValue.IsType<T>;
+  if not result then
+    AErrors.Add(
+      AColumnName,
+      Format(GetErrorMessage(SNotInvalidTypeValidation), [AColumnName]));
 end;
 
 function TValidationAttribute.GetErrorMessage(const AMessage: String): String;
@@ -335,12 +382,15 @@ begin
 end;
 
 procedure TRequiredAttribute.Validate(
-  const AColumnName: String; const AValue: TValue);
+  const AColumnName: String;
+  const AValue: TValue;
+  const AErrors: TTValidationErrors);
 begin
   if IsNullString(AValue) or IsNullObject(AValue) or
     IsNullDateTime(AValue) or IsNullNullable(AValue) then
-    raise ETValidationException.CreateFmt(
-      GetErrorMessage(SRequiredValidation), [AColumnName]);
+    AErrors.Add(
+      AColumnName,
+      Format(GetErrorMessage(SRequiredValidation), [AColumnName]));
 end;
 
 { TLengthAttribute }
@@ -358,11 +408,13 @@ begin
 end;
 
 procedure TLengthAttribute.Validate(
-  const AColumnName: String; const AValue: TValue);
+  const AColumnName: String;
+  const AValue: TValue;
+  const AErrors: TTValidationErrors);
 begin
-  CheckType<String>(AColumnName, AValue);
-  if not IsValid(AValue.AsType<String>()) then
-    RaiseException(AColumnName);
+  if CheckType<String>(AColumnName, AValue, AErrors) and
+    (not IsValid(AValue.AsType<String>())) then
+      AddValidationError(AColumnName, AErrors);
 end;
 
 { TMaxLengthAttribute }
@@ -372,10 +424,12 @@ begin
   result := AValue.Length <= FLength;
 end;
 
-procedure TMaxLengthAttribute.RaiseException(const AColumnName: String);
+procedure TMaxLengthAttribute.AddValidationError(
+  const AColumnName: String; const AErrors: TTValidationErrors);
 begin
-  raise ETValidationException.CreateFmt(
-    GetErrorMessage(SMaxLengthValidation), [AColumnName, FLength]);
+  AErrors.Add(
+    AColumnName,
+    Format(GetErrorMessage(SMaxLengthValidation), [AColumnName, FLength]));
 end;
 
 { TMinLengthAttribute }
@@ -385,10 +439,12 @@ begin
   result := AValue.Length >= FLength;
 end;
 
-procedure TMinLengthAttribute.RaiseException(const AColumnName: String);
+procedure TMinLengthAttribute.AddValidationError(
+  const AColumnName: String; const AErrors: TTValidationErrors);
 begin
-  raise ETValidationException.CreateFmt(
-    GetErrorMessage(SMinLengthValidation), [AColumnName, FLength]);
+  AErrors.Add(
+    AColumnName,
+    Format(GetErrorMessage(SMinLengthValidation), [AColumnName, FLength]));
 end;
 
 { TValueAttribute }
@@ -426,39 +482,49 @@ begin
 end;
 
 procedure TValueAttribute.Validate(
-  const AColumnName: String; const AValue: TValue);
+  const AColumnName: String;
+  const AValue: TValue;
+  const AErrors: TTValidationErrors);
 begin
   case FValueType of
     TValidationValueType.vvtInteger:
-      ValidateInteger(AColumnName, AValue);
+      ValidateInteger(AColumnName, AValue, AErrors);
 
     TValidationValueType.vvtDouble:
-      ValidateDouble(AColumnName, AValue);
+      ValidateDouble(AColumnName, AValue, AErrors);
   end;
 end;
 
 procedure TValueAttribute.ValidateInteger(
-  const AColumnName: String; const AValue: TValue);
+  const AColumnName: String;
+  const AValue: TValue;
+  const AErrors: TTValidationErrors);
 var
   LValue1, LValue2: Integer;
 begin
-  CheckType<Integer>(AColumnName, AValue);
-  LValue1 := AValue.AsType<Integer>;
-  LValue2 := FValue.AsType<Integer>;
-  if not IsValidInteger(LValue1, LValue2) then
-    RaiseException(AColumnName, LValue2.ToString());
+  if CheckType<Integer>(AColumnName, AValue, AErrors) then
+  begin
+    LValue1 := AValue.AsType<Integer>;
+    LValue2 := FValue.AsType<Integer>;
+    if not IsValidInteger(LValue1, LValue2) then
+      AddValidationError(AColumnName, LValue2.ToString(), AErrors);
+  end;
 end;
 
 procedure TValueAttribute.ValidateDouble(
-  const AColumnName: String; const AValue: TValue);
+  const AColumnName: String;
+  const AValue: TValue;
+  const AErrors: TTValidationErrors);
 var
   LValue1, LValue2: Double;
 begin
-  CheckType<Double>(AColumnName, AValue);
-  LValue1 := AValue.AsType<Double>;
-  LValue2 := FValue.AsType<Double>;
-  if not IsValidDouble(LValue1, LValue2) then
-    RaiseException(AColumnName, LValue2.ToString());
+  if CheckType<Double>(AColumnName, AValue, AErrors) then
+  begin
+    LValue1 := AValue.AsType<Double>;
+    LValue2 := FValue.AsType<Double>;
+    if not IsValidDouble(LValue1, LValue2) then
+      AddValidationError(AColumnName, LValue2.ToString(), AErrors);
+  end;
 end;
 
 { TMinValueAttribute }
@@ -475,32 +541,38 @@ begin
   result := (AValue1 >= AValue2);
 end;
 
-procedure TMinValueAttribute.RaiseException(
-  const AColumnName: String; const AValue: String);
+procedure TMinValueAttribute.AddValidationError(
+  const AColumnName: String;
+  const AValue: String;
+  const AErrors: TTValidationErrors);
 begin
-  raise ETValidationException.CreateFmt(
-    GetErrorMessage(SMinValueValidation), [AColumnName, AValue]);
+  AErrors.Add(
+    AColumnName,
+    Format(GetErrorMessage(SMinValueValidation), [AColumnName, AValue]));
 end;
 
-{ TMaxValueAttibute }
+{ TMaxValueAttribute }
 
-function TMaxValueAttibute.IsValidInteger(
+function TMaxValueAttribute.IsValidInteger(
   const AValue1: Integer; const AValue2: Integer): Boolean;
 begin
   result := (AValue1 <= AValue2);
 end;
 
-function TMaxValueAttibute.IsValidDouble(
+function TMaxValueAttribute.IsValidDouble(
   const AValue1: Double; const AValue2: Double): Boolean;
 begin
   result := (AValue1 <= AValue2);
 end;
 
-procedure TMaxValueAttibute.RaiseException(
-  const AColumnName: String; const AValue: String);
+procedure TMaxValueAttribute.AddValidationError(
+  const AColumnName: String;
+  const AValue: String;
+  const AErrors: TTValidationErrors);
 begin
-  raise ETValidationException.CreateFmt(
-    GetErrorMessage(SMaxValueValidation), [AColumnName, AValue]);
+  AErrors.Add(
+    AColumnName,
+    Format(GetErrorMessage(SMaxValueValidation), [AColumnName, AValue]));
 end;
 
 { TLessAttribute }
@@ -517,11 +589,14 @@ begin
   result := (AValue1 < AValue2);
 end;
 
-procedure TLessAttribute.RaiseException(
-  const AColumnName: String; const AValue: String);
+procedure TLessAttribute.AddValidationError(
+  const AColumnName: String;
+  const AValue: String;
+  const AErrors: TTValidationErrors);
 begin
-  raise ETValidationException.CreateFmt(
-    GetErrorMessage(SLessValidation), [AColumnName, AValue]);
+  AErrors.Add(
+    AColumnName,
+    Format(GetErrorMessage(SLessValidation), [AColumnName, AValue]));
 end;
 
 { TGreaterAttribute }
@@ -538,11 +613,14 @@ begin
   result := (AValue1 > AValue2);
 end;
 
-procedure TGreaterAttribute.RaiseException(
-  const AColumnName: String; const AValue: String);
+procedure TGreaterAttribute.AddValidationError(
+  const AColumnName: String;
+  const AValue: String;
+  const AErrors: TTValidationErrors);
 begin
-  raise ETValidationException.CreateFmt(
-    GetErrorMessage(SGreaterValidation), [AColumnName, AValue]);
+  AErrors.Add(
+    AColumnName,
+    Format(GetErrorMessage(SGreaterValidation), [AColumnName, AValue]));
 end;
 
 { TRangeAttribute }
@@ -588,43 +666,57 @@ begin
 end;
 
 procedure TRangeAttribute.Validate(
-  const AColumnName: String; const AValue: TValue);
+  const AColumnName: String;
+  const AValue: TValue;
+  const AErrors: TTValidationErrors);
 begin
   case FValueType of
     TValidationValueType.vvtInteger:
-      ValidateInteger(AColumnName, AValue);
+      ValidateInteger(AColumnName, AValue, AErrors);
 
     TValidationValueType.vvtDouble:
-      ValidateDouble(AColumnName, AValue);
+      ValidateDouble(AColumnName, AValue, AErrors);
   end;
 end;
 
 procedure TRangeAttribute.ValidateInteger(
-  const AColumnName: String; const AValue: TValue);
+  const AColumnName: String;
+  const AValue: TValue;
+  const AErrors: TTValidationErrors);
 var
   LValue, LMinValue, LMaxValue: Integer;
 begin
-  CheckType<Integer>(AColumnName, AValue);
-  LValue := AValue.AsType<Integer>;
-  LMinValue := FMinValue.AsType<Integer>;
-  LMaxValue := FMaxValue.AsType<Integer>;
-  if (LValue < LMinValue) or (LValue > LMaxValue) then
-    raise ETValidationException.CreateFmt(GetErrorMessage(SRangeValidation), [
-      AColumnName, LMinValue.ToString(), LMaxValue.ToString()]);
+  if CheckType<Integer>(AColumnName, AValue, AErrors) then
+  begin
+    LValue := AValue.AsType<Integer>;
+    LMinValue := FMinValue.AsType<Integer>;
+    LMaxValue := FMaxValue.AsType<Integer>;
+    if (LValue < LMinValue) or (LValue > LMaxValue) then
+      AErrors.Add(
+        AColumnName,
+        Format(GetErrorMessage(SRangeValidation), [
+          AColumnName, LMinValue.ToString(), LMaxValue.ToString()]));
+  end;
 end;
 
 procedure TRangeAttribute.ValidateDouble(
-  const AColumnName: String; const AValue: TValue);
+  const AColumnName: String;
+  const AValue: TValue;
+  const AErrors: TTValidationErrors);
 var
   LValue, LMinValue, LMaxValue: Double;
 begin
-  CheckType<Double>(AColumnName, AValue);
-  LValue := AValue.AsType<Double>;
-  LMinValue := FMinValue.AsType<Double>;
-  LMaxValue := FMaxValue.AsType<Double>;
-  if (LValue < LMinValue) or (LValue > LMaxValue) then
-    raise ETValidationException.CreateFmt(GetErrorMessage(SRangeValidation), [
-      AColumnName, LMinValue.ToString(), LMaxValue.ToString()]);
+  if CheckType<Double>(AColumnName, AValue, AErrors) then
+  begin
+    LValue := AValue.AsType<Double>;
+    LMinValue := FMinValue.AsType<Double>;
+    LMaxValue := FMaxValue.AsType<Double>;
+    if (LValue < LMinValue) or (LValue > LMaxValue) then
+      AErrors.Add(
+        AColumnName,
+        Format(GetErrorMessage(SRangeValidation), [
+          AColumnName, LMinValue.ToString(), LMaxValue.ToString()]));
+  end;
 end;
 
 { TRegexAttribute }
@@ -642,15 +734,20 @@ begin
 end;
 
 procedure TRegexAttribute.Validate(
-  const AColumnName: String; const AValue: TValue);
+  const AColumnName: String;
+  const AValue: TValue;
+  const AErrors: TTValidationErrors);
 var
   LValue: String;
 begin
-  CheckType<String>(AColumnName, AValue);
-  LValue := AValue.AsType<String>();
-  if (not LValue.IsEmpty) and not TRegEx.IsMatch(LValue, FRegex) then
-    raise ETValidationException.CreateFmt(
-      GetErrorMessage(SRegexValidation), [AColumnName, LValue]);
+  if CheckType<String>(AColumnName, AValue, AErrors) then
+  begin
+    LValue := AValue.AsType<String>();
+    if (not LValue.IsEmpty) and not TRegEx.IsMatch(LValue, FRegex) then
+      AErrors.Add(
+        AColumnName,
+        Format(GetErrorMessage(SRegexValidation), [AColumnName, LValue]));
+  end;
 end;
 
 { TEMailAttribute }

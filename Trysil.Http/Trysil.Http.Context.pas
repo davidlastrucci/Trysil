@@ -19,14 +19,18 @@ uses
   Trysil.Types,
   Trysil.Mapping,
   Trysil.Exceptions,
-  Trysil.JSon.Context;
+  Trysil.Resolver,
+  Trysil.JSon.Context,
+
+  Trysil.Http.Resolver;
 
 type
 
 { TTHttpContext }
 
   TTHttpContext = class(TTJSonContext)
-  strict private
+  strict protected
+    function CreateResolver: TTResolver; override;
   public
     function GetID<T: class>(const AEntity: T): TTPrimaryKey;
     procedure SetSequenceID<T: class>(const AEntity: T);
@@ -38,6 +42,11 @@ type
 implementation
 
 { TTHttpContext }
+
+function TTHttpContext.CreateResolver: TTResolver;
+begin
+  result := TTHttpResolver.Create(FConnection, Self, FMetadata);
+end;
 
 function TTHttpContext.GetID<T>(const AEntity: T): TTPrimaryKey;
 begin

@@ -38,18 +38,18 @@ type
 
   TTContext = class
   strict private
-    FConnection: TTConnection;
-
     procedure ApplyAll<T: class>(
       const AList: TTList<T>; const AApplyAllMethod: TTApplyAllMethod<T>);
 
     function GetInTransaction: Boolean;
     function GetUseIdentityMap: Boolean;
   strict protected
+    FConnection: TTConnection;
     FMetadata: TTMetadata;
     FProvider: TTProvider;
     FResolver: TTResolver;
 
+    function CreateResolver: TTResolver; virtual;
     function InLoading: Boolean; virtual;
   public
     constructor Create(const AConnection: TTConnection); overload; virtual;
@@ -113,7 +113,7 @@ begin
 
   FProvider := TTProvider.Create(
     FConnection, Self, FMetadata, AUseIdentityMap);
-  FResolver := TTResolver.Create(FConnection, Self, FMetadata);
+  FResolver := CreateResolver;
 end;
 
 destructor TTContext.Destroy;
@@ -122,6 +122,11 @@ begin
   FProvider.Free;
   FMetadata.Free;
   inherited Destroy;
+end;
+
+function TTContext.CreateResolver: TTResolver;
+begin
+  result := TTResolver.Create(FConnection, Self, FMetadata);
 end;
 
 function TTContext.InLoading: Boolean;

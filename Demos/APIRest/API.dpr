@@ -81,7 +81,9 @@ uses
   API.Controller in 'API\Controllers\API.Controller.pas',
   API.MainForm in 'API.MainForm.pas' {APIMainForm},
   Trysil.Transaction in '..\..\Trysil\Trysil.Transaction.pas',
-  Trysil.Validation.Attributes in '..\..\Trysil\Trysil.Validation.Attributes.pas';
+  Trysil.Validation.Attributes in '..\..\Trysil\Trysil.Validation.Attributes.pas',
+  Trysil.Validation in '..\..\Trysil\Trysil.Validation.pas',
+  Trysil.Http.Resolver in '..\..\Trysil.Http\Trysil.Http.Resolver.pas';
 
 {$R *.res}
 

@@ -47,7 +47,8 @@ uses
   Demo.DatabaseBuilder in 'Demo.DatabaseBuilder.pas' {DatabaseBuilder: TDataModule},
   Trysil.Factory in '..\..\Trysil\Trysil.Factory.pas',
   Trysil.Transaction in '..\..\Trysil\Trysil.Transaction.pas',
-  Trysil.Validation.Attributes in '..\..\Trysil\Trysil.Validation.Attributes.pas';
+  Trysil.Validation.Attributes in '..\..\Trysil\Trysil.Validation.Attributes.pas',
+  Trysil.Validation in '..\..\Trysil\Trysil.Validation.pas';
 
 {$R *.res}
 
