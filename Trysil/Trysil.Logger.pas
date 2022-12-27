@@ -242,7 +242,7 @@ begin
           try
             Log(TTLoggerItem.Create(TTLoggerEvent.Error, E.Message));
           except
-            // The thread should not crash in case of exception
+            // Thread should not crash in case of exception
           end;
         end;
       end;

@@ -102,9 +102,13 @@ begin
       LValue := FQueue.Dequeue;
       LWriter := FRttiLogWriter.CreateLogWriter;
       try
-        case LValue.QueueType of
-          TTHttpLogQueueType.Request: LWriter.WriteRequest(LValue.Request);
-          TTHttpLogQueueType.Response: LWriter.WriteResponse(LValue.Response);
+        try
+          case LValue.QueueType of
+            TTHttpLogQueueType.Request: LWriter.WriteRequest(LValue.Request);
+            TTHttpLogQueueType.Response: LWriter.WriteResponse(LValue.Response);
+          end;
+        except
+          // Thread should not crash in case of exception
         end;
       finally
         LWriter.Free;
