@@ -18,7 +18,7 @@ uses
   System.Generics.Collections,
   System.SyncObjs,
   System.Threading,
-  Trysil.Logger.Types,
+  Trysil.LoadBalancing,
 
   Trysil.Http.Rtti,
   Trysil.Http.Log.Types,
@@ -48,7 +48,7 @@ type
 
 { TTHttpLogThreads }
 
-  TTHttpLogThreads = class(TTLoggerThreads<TTHttpLogThread>);
+  TTHttpLogThreads = class(TTRoundRobin<TTHttpLogThread>);
 
 implementation
 

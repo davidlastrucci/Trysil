@@ -68,12 +68,12 @@ procedure TTHttpLog.RegisterWriter(
   const ALogWriter: TTHttpRttiLogWriter; const ALogThreadPoolSize: Integer);
 begin
   FRttiLogWriter := ALogWriter;
-  FLogThreads.CreateThreads(
-    ALogThreadPoolSize,
+  FLogThreads.CreateItems(
     function: TTHttpLogThread
     begin
       result := TTHttpLogThread.Create(ALogWriter);
-    end);
+    end,
+    ALogThreadPoolSize);
 end;
 
 procedure TTHttpLog.LogAction(const ATaskID: String; const AAction: String);
@@ -95,7 +95,7 @@ procedure TTHttpLog.LogRequest(const ARequest: TTHttpRequest);
 var
   LLogThread: TTHttpLogThread;
 begin
-  LLogThread := FLogThreads.NextThread;
+  LLogThread := FLogThreads.Next;
   if Assigned(LLogThread) then
     LLogThread.Add(TTHttpLogRequest.Create(ARequest));
 end;
@@ -105,7 +105,7 @@ procedure TTHttpLog.LogResponse(
 var
   LLogThread: TTHttpLogThread;
 begin
-  LLogThread := FLogThreads.NextThread;
+  LLogThread := FLogThreads.Next;
   if Assigned(LLogThread) then
     LLogThread.Add(TTHttpLogResponse.Create(AUser, AResponse));
 end;

@@ -19,7 +19,7 @@ uses
   System.Generics.Collections,
 
   Trysil.Sync,
-  Trysil.Logger.Types;
+  Trysil.LoadBalancing;
 
 type
 
@@ -102,7 +102,7 @@ type
 
 { TTLoggerThreads }
 
-  TTLoggerThreads = class(TTLoggerThreads<TTLoggerThread>);
+  TTLoggerThreads = class(TTRoundRobin<TTLoggerThread>);
 
 { TTLogger }
 
@@ -304,7 +304,7 @@ procedure TTLogger.Log(const AItem: TTLoggerItem);
 var
   LThread: TTLoggerThread;
 begin
-  LThread := FThreads.NextThread;
+  LThread := FThreads.Next;
   if Assigned(LThread) then
     LThread.AddLog(AItem);
 end;
@@ -346,12 +346,12 @@ end;
 
 procedure TTLogger.RegisterLogger<T>(const AThreadPoolSize: Integer);
 begin
-  FThreads.CreateThreads(
-    AThreadPoolSize,
+  FThreads.CreateItems(
     function: TTLoggerThread
     begin
       result := T.Create;
-    end);
+    end,
+    AThreadPoolSize);
 end;
 
 end.
