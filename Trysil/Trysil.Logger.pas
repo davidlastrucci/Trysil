@@ -99,6 +99,24 @@ type
     procedure AddLog(const AItem: TTLoggerItem);
   end;
 
+{ TTLoggerThreads }
+
+  TTLoggerThreads = class
+  strict private
+    FCurrentIndex: Integer;
+    FCriticalSection: TTCriticalSection;
+    FThreads: TObjectList<TTLoggerThread>;
+
+    function GetNextThread: TTLoggerThread;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure CreateThreads<T: TTLoggerThread>(const AThreadPoolSize: Integer);
+
+    property NextThread: TTLoggerThread read GetNextThread;
+  end;
+
 { TTLogger }
 
   TTLogger = class
@@ -107,7 +125,9 @@ type
     class constructor ClassCreate;
     class destructor ClassDestroy;
   strict private
-    FThread: TTLoggerThread;
+    const DefaultThreadPoolSize: Integer = 1;
+  strict private
+    FThreads: TTLoggerThreads;
 
     procedure Log(const AItem: TTLoggerItem);
   public
@@ -121,7 +141,9 @@ type
     procedure LogSyntax(const ASyntax: String);
     procedure LogCommand(const ASyntax: String);
 
-    procedure RegisterLogger<T: TTLoggerThread>();
+    procedure RegisterLogger<T: TTLoggerThread>(); overload;
+    procedure RegisterLogger<T: TTLoggerThread>(
+      const AThreadPoolSize: Integer); overload;
 
     class property Instance: TTLogger read FInstance;
   end;
@@ -229,7 +251,13 @@ begin
         Log(FQueue.Dequeue);
       except
         on E: Exception do
-          Log(TTLoggerItem.Create(TTLoggerEvent.Error, E.Message));
+        begin
+          try
+            Log(TTLoggerItem.Create(TTLoggerEvent.Error, E.Message));
+          except
+            // The thread should not crash in case of exception
+          end;
+        end;
       end;
     end;
 
@@ -261,6 +289,60 @@ begin
   WaitFor();
 end;
 
+{ TTLoggerThreads }
+
+constructor TTLoggerThreads.Create;
+begin
+  inherited Create;
+  FCurrentIndex := 0;
+  FCriticalSection := TTCriticalSection.Create;
+  FThreads := TObjectList<TTLoggerThread>.Create(True);
+end;
+
+destructor TTLoggerThreads.Destroy;
+begin
+  FThreads.Free;
+  FCriticalSection.Free;
+  inherited Destroy;
+end;
+
+procedure TTLoggerThreads.CreateThreads<T>(const AThreadPoolSize: Integer);
+var
+  LThreadSize, LIndex: Integer;
+  LThread: TTLoggerThread;
+begin
+  LThreadSize := AThreadPoolSize;
+  if LThreadSize < 1 then
+    LThreadSize := 1;
+  for LIndex := 0 to LThreadSize - 1 do
+  begin
+    LThread := T.Create;
+    try
+      FThreads.Add(LThread);
+    except
+      LThread.Free;
+      raise;
+    end;
+  end;
+end;
+
+function TTLoggerThreads.GetNextThread: TTLoggerThread;
+begin
+  result := nil;
+  if FThreads.Count > 0 then
+  begin
+    FCriticalSection.Acquire;
+    try
+      result := FThreads[FCurrentIndex];
+      Inc(FCurrentIndex);
+      if FCurrentIndex >= FThreads.Count then
+        FCurrentIndex := 0;
+    finally
+      FCriticalSection.Leave;
+    end;
+  end;
+end;
+
 { TTLogger }
 
 class constructor TTLogger.ClassCreate;
@@ -276,20 +358,22 @@ end;
 constructor TTLogger.Create;
 begin
   inherited Create;
-  FThread := nil;
+  FThreads := TTLoggerThreads.Create;
 end;
 
 destructor TTLogger.Destroy;
 begin
-  if Assigned(FThread) then
-    FThread.Free;
+  FThreads.Free;
   inherited Destroy;
 end;
 
 procedure TTLogger.Log(const AItem: TTLoggerItem);
+var
+  LThread: TTLoggerThread;
 begin
-  if Assigned(FThread) then
-    FThread.AddLog(AItem);
+  LThread := FThreads.NextThread;
+  if Assigned(LThread) then
+    LThread.AddLog(AItem);
 end;
 
 procedure TTLogger.LogStartTransaction;
@@ -322,11 +406,14 @@ begin
   Log(TTLoggerItem.Create(TTLoggerEvent.Command, ASyntax));
 end;
 
-procedure TTLogger.RegisterLogger<T>();
+procedure TTLogger.RegisterLogger<T>;
 begin
-  if Assigned(FThread) then
-    FThread.Free;
-  FThread := T.Create;
+  RegisterLogger<T>(DefaultThreadPoolSize);
+end;
+
+procedure TTLogger.RegisterLogger<T>(const AThreadPoolSize: Integer);
+begin
+  FThreads.CreateThreads<T>(AThreadPoolSize);
 end;
 
 end.
