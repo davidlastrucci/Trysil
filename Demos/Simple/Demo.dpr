@@ -48,7 +48,8 @@ uses
   Trysil.Factory in '..\..\Trysil\Trysil.Factory.pas',
   Trysil.Transaction in '..\..\Trysil\Trysil.Transaction.pas',
   Trysil.Validation.Attributes in '..\..\Trysil\Trysil.Validation.Attributes.pas',
-  Trysil.Validation in '..\..\Trysil\Trysil.Validation.pas';
+  Trysil.Validation in '..\..\Trysil\Trysil.Validation.pas',
+  Trysil.Logger.Types in '..\..\Trysil\Trysil.Logger.Types.pas';
 
 {$R *.res}
 

@@ -18,7 +18,8 @@ uses
   System.SyncObjs,
   System.Generics.Collections,
 
-  Trysil.Sync;
+  Trysil.Sync,
+  Trysil.Logger.Types;
 
 type
 
@@ -101,21 +102,7 @@ type
 
 { TTLoggerThreads }
 
-  TTLoggerThreads = class
-  strict private
-    FCurrentIndex: Integer;
-    FCriticalSection: TTCriticalSection;
-    FThreads: TObjectList<TTLoggerThread>;
-
-    function GetNextThread: TTLoggerThread;
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    procedure CreateThreads<T: TTLoggerThread>(const AThreadPoolSize: Integer);
-
-    property NextThread: TTLoggerThread read GetNextThread;
-  end;
+  TTLoggerThreads = class(TTLoggerThreads<TTLoggerThread>);
 
 { TTLogger }
 
@@ -289,60 +276,6 @@ begin
   WaitFor();
 end;
 
-{ TTLoggerThreads }
-
-constructor TTLoggerThreads.Create;
-begin
-  inherited Create;
-  FCurrentIndex := 0;
-  FCriticalSection := TTCriticalSection.Create;
-  FThreads := TObjectList<TTLoggerThread>.Create(True);
-end;
-
-destructor TTLoggerThreads.Destroy;
-begin
-  FThreads.Free;
-  FCriticalSection.Free;
-  inherited Destroy;
-end;
-
-procedure TTLoggerThreads.CreateThreads<T>(const AThreadPoolSize: Integer);
-var
-  LThreadSize, LIndex: Integer;
-  LThread: TTLoggerThread;
-begin
-  LThreadSize := AThreadPoolSize;
-  if LThreadSize < 1 then
-    LThreadSize := 1;
-  for LIndex := 0 to LThreadSize - 1 do
-  begin
-    LThread := T.Create;
-    try
-      FThreads.Add(LThread);
-    except
-      LThread.Free;
-      raise;
-    end;
-  end;
-end;
-
-function TTLoggerThreads.GetNextThread: TTLoggerThread;
-begin
-  result := nil;
-  if FThreads.Count > 0 then
-  begin
-    FCriticalSection.Acquire;
-    try
-      result := FThreads[FCurrentIndex];
-      Inc(FCurrentIndex);
-      if FCurrentIndex >= FThreads.Count then
-        FCurrentIndex := 0;
-    finally
-      FCriticalSection.Leave;
-    end;
-  end;
-end;
-
 { TTLogger }
 
 class constructor TTLogger.ClassCreate;
@@ -413,7 +346,12 @@ end;
 
 procedure TTLogger.RegisterLogger<T>(const AThreadPoolSize: Integer);
 begin
-  FThreads.CreateThreads<T>(AThreadPoolSize);
+  FThreads.CreateThreads(
+    AThreadPoolSize,
+    function: TTLoggerThread
+    begin
+      result := T.Create;
+    end);
 end;
 
 end.

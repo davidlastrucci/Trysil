@@ -42,6 +42,7 @@ type
   TTHttpServer<C: class, constructor> = class
   strict private
     const DefaultPort = 8022;
+    const DefaultLogThreadPoolSize: Integer = 1;
   strict private
     FRttiLogWriter: TTHttpRttiLogWriter;
     FRttiAuthentication: TTHttpRttiAuthentication<C>;
@@ -86,7 +87,9 @@ type
 
     procedure AfterConstruction; override;
 
-    procedure RegisterLogWriter<W: TTHttpLogAbstractWriter>();
+    procedure RegisterLogWriter<W: TTHttpLogAbstractWriter>(); overload;
+    procedure RegisterLogWriter<W: TTHttpLogAbstractWriter>(
+      const ALogThreadPoolSize: Integer); overload;
     procedure RegisterAuthentication<H: TTHttpAbstractAuthentication<C>>();
     procedure RegisterController<R: TTHttpController<C>>(); overload;
     procedure RegisterController<R: TTHttpController<C>>(
@@ -160,6 +163,12 @@ begin
 end;
 
 procedure TTHttpServer<C>.RegisterLogWriter<W>;
+begin
+  RegisterLogWriter<W>(DefaultLogThreadPoolSize);
+end;
+
+procedure TTHttpServer<C>.RegisterLogWriter<W>(
+  const ALogThreadPoolSize: Integer);
 var
   LTypeInfo: PTypeInfo;
 begin
@@ -178,7 +187,7 @@ begin
     raise;
   end;
 
-  FLog.RegisterWriter(FRttiLogWriter);
+  FLog.RegisterWriter(FRttiLogWriter, DefaultLogThreadPoolSize);
 end;
 
 procedure TTHttpServer<C>.RegisterAuthentication<H>;

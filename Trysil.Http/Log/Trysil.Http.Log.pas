@@ -31,14 +31,15 @@ type
 
   TTHttpLog = class
   strict private
-    FQueue: TTHttpLogQueue;
-    FLogThread: TTHttpLogThread;
+    FLogThreads: TTHttpLogThreads;
     FRttiLogWriter: TTHttpRttiLogWriter;
   public
     constructor Create;
     destructor Destroy; override;
 
-    procedure RegisterWriter(const ALogWriter: TTHttpRttiLogWriter);
+    procedure RegisterWriter(
+      const ALogWriter: TTHttpRttiLogWriter;
+      const ALogThreadPoolSize: Integer);
 
     procedure LogAction(const ATaskID: String; const AAction: String);
     procedure LogRequest(const ARequest: TTHttpRequest);
@@ -53,27 +54,26 @@ implementation
 constructor TTHttpLog.Create;
 begin
   inherited Create;
-  FQueue := TTHttpLogQueue.Create;
-  FLogThread := nil;
+  FLogThreads := TTHttpLogThreads.Create;
   FRttiLogWriter := nil;
 end;
 
 destructor TTHttpLog.Destroy;
 begin
-  if Assigned(FLogThread) then
-  begin
-    FLogThread.Signal;
-    FLogThread.Terminate;
-    FLogThread.WaitFor;
-    FLogThread.Free;
-  end;
-  FQueue.Free;
+  FLogThreads.Free;
   inherited Destroy;
 end;
 
-procedure TTHttpLog.RegisterWriter;
+procedure TTHttpLog.RegisterWriter(
+  const ALogWriter: TTHttpRttiLogWriter; const ALogThreadPoolSize: Integer);
 begin
   FRttiLogWriter := ALogWriter;
+  FLogThreads.CreateThreads(
+    ALogThreadPoolSize,
+    function: TTHttpLogThread
+    begin
+      result := TTHttpLogThread.Create(ALogWriter);
+    end);
 end;
 
 procedure TTHttpLog.LogAction(const ATaskID: String; const AAction: String);
@@ -92,26 +92,22 @@ begin
 end;
 
 procedure TTHttpLog.LogRequest(const ARequest: TTHttpRequest);
+var
+  LLogThread: TTHttpLogThread;
 begin
-  if Assigned(FRttiLogWriter) then
-  begin
-    if not Assigned(FLogThread) then
-      FLogThread := TTHttpLogThread.Create(FRttiLogWriter, FQueue);
-    FQueue.Enqueue(TTHttpLogRequest.Create(ARequest));
-    FLogThread.Signal;
-  end;
+  LLogThread := FLogThreads.NextThread;
+  if Assigned(LLogThread) then
+    LLogThread.Add(TTHttpLogRequest.Create(ARequest));
 end;
 
 procedure TTHttpLog.LogResponse(
   const AUser: TTHttpUser; const AResponse: TTHttpResponse);
+var
+  LLogThread: TTHttpLogThread;
 begin
-  if Assigned(FRttiLogWriter) then
-  begin
-    if not Assigned(FLogThread) then
-      FLogThread := TTHttpLogThread.Create(FRttiLogWriter, FQueue);
-    FQueue.Enqueue(TTHttpLogResponse.Create(AUser, AResponse));
-    FLogThread.Signal;
-  end;
+  LLogThread := FLogThreads.NextThread;
+  if Assigned(LLogThread) then
+    LLogThread.Add(TTHttpLogResponse.Create(AUser, AResponse));
 end;
 
 end.
