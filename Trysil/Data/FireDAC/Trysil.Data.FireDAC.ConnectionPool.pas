@@ -31,6 +31,8 @@ type
     class destructor ClassDestroy;
     class function GetInstance: TTFireDACConnectionPool; static;
   strict private
+    const DefaultMaxPoolSize: Integer = 50;
+  strict private
     FManager: TFDManager;
   public
     constructor Create;
@@ -39,7 +41,15 @@ type
     procedure AfterConstruction; override;
 
     procedure RegisterConnection(
-      const AName: String; const ADriver: String; const AParameters: TStrings);
+      const AName: String;
+      const ADriver: String;
+      const AParameters: TStrings); overload;
+
+    procedure RegisterConnection(
+      const AName: String;
+      const AMaxPoolSize: Integer;
+      const ADriver: String;
+      const AParameters: TStrings); overload;
 
     class property Instance: TTFireDACConnectionPool read GetInstance;
   end;
@@ -91,12 +101,22 @@ procedure TTFireDACConnectionPool.RegisterConnection(
   const AName: String;
   const ADriver: String;
   const AParameters: TStrings);
+begin
+  RegisterConnection(AName, DefaultMaxPoolSize, ADriver, AParameters);
+end;
+
+procedure TTFireDACConnectionPool.RegisterConnection(
+  const AName: String;
+  const AMaxPoolSize: Integer;
+  const ADriver: String;
+  const AParameters: TStrings);
 var
   LParameters: TStrings;
 begin
   LParameters := TStringList.Create;
   try
     LParameters.Add('Pooled=True');
+    LParameters.Add(Format('POOL_MaximumItems=%d', [AMaxPoolSize]));
     LParameters.Add(Format('DriverID=%s', [ADriver]));
 
     LParameters.AddStrings(AParameters);
