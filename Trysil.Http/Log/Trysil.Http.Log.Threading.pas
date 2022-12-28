@@ -92,16 +92,16 @@ end;
 
 procedure TTHttpLogThread.Execute;
 var
-  LValue: TTHttpLogQueueValue;
   LWriter: TTHttpLogAbstractWriter;
+  LValue: TTHttpLogQueueValue;
 begin
-  while not Terminated do
-  begin
-    while not FQueue.IsEmpty do
+  LWriter := FRttiLogWriter.CreateLogWriter;
+  try
+    while not Terminated do
     begin
-      LValue := FQueue.Dequeue;
-      LWriter := FRttiLogWriter.CreateLogWriter;
-      try
+      while not FQueue.IsEmpty do
+      begin
+        LValue := FQueue.Dequeue;
         try
           case LValue.QueueType of
             TTHttpLogQueueType.Request: LWriter.WriteRequest(LValue.Request);
@@ -110,16 +110,16 @@ begin
         except
           // Thread should not crash in case of exception
         end;
-      finally
-        LWriter.Free;
+      end;
+
+      if not Terminated then
+      begin
+        FEvent.ResetEvent;
+        FEvent.WaitFor(20000);
       end;
     end;
-
-    if not Terminated then
-    begin
-      FEvent.ResetEvent;
-      FEvent.WaitFor(20000);
-    end;
+  finally
+    LWriter.Free;
   end;
 end;
 
