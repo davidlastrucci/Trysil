@@ -31,6 +31,7 @@ uses
   Vcl.WinXCtrls,
   FireDAC.ConsoleUI.Wait,
   FireDAC.VCLUI.Wait,
+  Trysil.Config,
   Trysil.Filter,
   Trysil.Data,
   Trysil.Data.FireDAC.SQLite,
@@ -99,6 +100,8 @@ const
   DatabaseName: String = 'Test.db';
 begin
   inherited Create(AOwner);
+  TTConfig.Instance.Pooling.Enabled := False;
+
   FCreateDatabase := not TFile.Exists(DatabaseName);
 
   TTSQLiteConnection.RegisterConnection('Test', DatabaseName);

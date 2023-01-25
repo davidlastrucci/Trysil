@@ -18,6 +18,7 @@ uses
   FireDAC.UI.Intf,
   FireDAC.Comp.Client,
 
+  Trysil.Config,
   Trysil.Data.FireDAC.Common;
 
 type
@@ -32,6 +33,9 @@ type
     class function GetInstance: TTFireDACConnectionPool; static;
   strict private
     FManager: TFDManager;
+
+    procedure AddConnectionPooling(
+      const AParameters: TStrings; const APooling: TTConfigPooling);
   public
     constructor Create;
     destructor Destroy; override;
@@ -89,6 +93,18 @@ begin
   FManager.Open;
 end;
 
+procedure TTFireDACConnectionPool.AddConnectionPooling(
+  const AParameters: TStrings; const APooling: TTConfigPooling);
+begin
+  if APooling.Enabled then
+  begin
+    AParameters.Add('Pooled=True');
+    AParameters.Add(Format('POOL_MaximumItems=%d', [APooling.MaximumItems]));
+    AParameters.Add(Format('POOL_CleanupTimeout=%d', [APooling.CleanupTimeout]));
+    AParameters.Add(Format('POOL_ExpireTimeout=%d', [APooling.ExpireTimeout]));
+  end;
+end;
+
 procedure TTFireDACConnectionPool.RegisterConnection(
   const AName: String;
   const ADriver: String;
@@ -98,7 +114,7 @@ var
 begin
   LParameters := TStringList.Create;
   try
-    LParameters.Add('Pooled=True');
+    AddConnectionPooling(AParameters, TTConfig.Instance.Pooling);
     LParameters.Add(Format('DriverID=%s', [ADriver]));
 
     LParameters.AddStrings(AParameters);

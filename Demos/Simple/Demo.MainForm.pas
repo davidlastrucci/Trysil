@@ -30,6 +30,7 @@ uses
   Vcl.WinXCtrls,
   FireDAC.ConsoleUI.Wait,
   FireDAC.VCLUI.Wait,
+  Trysil.Config,
   Trysil.Filter,
   Trysil.Data,
   Trysil.Data.FireDAC.SqlServer,
@@ -98,6 +99,8 @@ var
   LConnection: TConnectionConfig;
 begin
   inherited Create(AOwner);
+  TTConfig.Instance.Pooling.Enabled := True;
+
   FConfig := TConfig.Create;
   for LConnection in FConfig.Connections do
     TTSqlServerConnection.RegisterConnection(
