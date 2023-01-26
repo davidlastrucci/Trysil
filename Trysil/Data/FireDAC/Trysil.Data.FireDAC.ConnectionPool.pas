@@ -15,27 +15,45 @@ interface
 uses
   System.Classes,
   System.SysUtils,
+  FireDAC.Stan.Consts,
   FireDAC.UI.Intf,
   FireDAC.Comp.Client,
 
-  Trysil.Config,
   Trysil.Data.FireDAC.Common;
 
 type
+
+{ FireDACConfigConnectionPool }
+
+  FireDACConfigConnectionPool = class
+  strict private
+    FEnabled: Boolean;
+    FMaximumItems: Integer;
+    FCleanupTimeout: Cardinal;
+    FExpireTimeout: Cardinal;
+  public
+    constructor Create;
+
+    property Enabled: Boolean read FEnabled write FEnabled;
+    property MaximumItems: Integer read FMaximumItems write FMaximumItems;
+    property CleanupTimeout: Cardinal read FCleanupTimeout write FCleanupTimeout;
+    property ExpireTimeout: Cardinal read FExpireTimeout write FExpireTimeout;
+  end;
 
 { TTFireDACConnectionPool }
 
   TTFireDACConnectionPool = class
   strict private
     class var FInstance: TTFireDACConnectionPool;
+
     class constructor ClassCreate;
     class destructor ClassDestroy;
     class function GetInstance: TTFireDACConnectionPool; static;
   strict private
     FManager: TFDManager;
+    FConfig: FireDACConfigConnectionPool;
 
-    procedure AddConnectionPooling(
-      const AParameters: TStrings; const APooling: TTConfigPooling);
+    procedure AddConnectionPooling(const AParameters: TStrings);
   public
     constructor Create;
     destructor Destroy; override;
@@ -47,10 +65,23 @@ type
       const ADriver: String;
       const AParameters: TStrings);
 
+    property Config: FireDACConfigConnectionPool read FConfig;
+
     class property Instance: TTFireDACConnectionPool read GetInstance;
   end;
 
 implementation
+
+{ FireDACConfigConnectionPool }
+
+constructor FireDACConfigConnectionPool.Create;
+begin
+  inherited Create;
+  FEnabled := False;
+  FMaximumItems := C_FD_PoolMaximumItems;
+  FCleanupTimeout := C_FD_PoolCleanupTimeout;
+  FExpireTimeout := C_FD_PoolExpireTimeout;
+end;
 
 { TTFireDACConnectionPool }
 
@@ -77,10 +108,12 @@ constructor TTFireDACConnectionPool.Create;
 begin
   inherited Create;
   FManager := TFDManager.Create(nil);
+  FConfig := FireDACConfigConnectionPool.Create;
 end;
 
 destructor TTFireDACConnectionPool.Destroy;
 begin
+  FConfig.Free;
   FManager.Free;
   inherited Destroy;
 end;
@@ -94,14 +127,14 @@ begin
 end;
 
 procedure TTFireDACConnectionPool.AddConnectionPooling(
-  const AParameters: TStrings; const APooling: TTConfigPooling);
+  const AParameters: TStrings);
 begin
-  if APooling.Enabled then
+  if FConfig.Enabled then
   begin
     AParameters.Add('Pooled=True');
-    AParameters.Add(Format('POOL_MaximumItems=%d', [APooling.MaximumItems]));
-    AParameters.Add(Format('POOL_CleanupTimeout=%d', [APooling.CleanupTimeout]));
-    AParameters.Add(Format('POOL_ExpireTimeout=%d', [APooling.ExpireTimeout]));
+    AParameters.Add(Format('POOL_MaximumItems=%d', [FConfig.MaximumItems]));
+    AParameters.Add(Format('POOL_CleanupTimeout=%d', [FConfig.CleanupTimeout]));
+    AParameters.Add(Format('POOL_ExpireTimeout=%d', [FConfig.ExpireTimeout]));
   end;
 end;
 
@@ -114,7 +147,7 @@ var
 begin
   LParameters := TStringList.Create;
   try
-    AddConnectionPooling(AParameters, TTConfig.Instance.Pooling);
+    AddConnectionPooling(AParameters);
     LParameters.Add(Format('DriverID=%s', [ADriver]));
 
     LParameters.AddStrings(AParameters);

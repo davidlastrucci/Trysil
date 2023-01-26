@@ -182,7 +182,6 @@
         <DCCReference Include="..\..\Trysil\Trysil.Validation.Attributes.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Validation.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.LoadBalancing.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Config.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

@@ -49,8 +49,7 @@ uses
   Trysil.Transaction in '..\..\Trysil\Trysil.Transaction.pas',
   Trysil.Validation.Attributes in '..\..\Trysil\Trysil.Validation.Attributes.pas',
   Trysil.Validation in '..\..\Trysil\Trysil.Validation.pas',
-  Trysil.LoadBalancing in '..\..\Trysil\Trysil.LoadBalancing.pas',
-  Trysil.Config in '..\..\Trysil\Trysil.Config.pas';
+  Trysil.LoadBalancing in '..\..\Trysil\Trysil.LoadBalancing.pas';
 
 {$R *.res}
 
