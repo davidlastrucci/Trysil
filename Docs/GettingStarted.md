@@ -43,7 +43,7 @@ ShowMessage(
 Write this:
 
 <pre>
-LInvoice := Session.Get<TInvoice>(1);  
+LInvoice := Session.Get&lt;TInvoice&gt;(1);  
 ShowMessage(
   Format('Invoice No: %d, Customer: %s, Country: %s',  [
     Invoice.InvoiceNo,
