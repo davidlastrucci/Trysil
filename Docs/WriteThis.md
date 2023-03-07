@@ -10,17 +10,16 @@
 > *Trysil* - Operation ORM (World War II)<br>
 > http://codenames.info/operation/orm/
 
-### Getting started
+### Write this:
 
-In this example we will see how to:
-
-- [Design database](https://github.com/davidlastrucci/Trysil/blob/master/Docs/DesignDatabase.md)
-- [Define entity](https://github.com/davidlastrucci/Trysil/blob/master/Docs/DefineEntity.md)
-- [Use Trysil](https://github.com/davidlastrucci/Trysil/blob/master/Docs/UseTrysil.md)
-
-Don't write code like [this](https://github.com/davidlastrucci/Trysil/blob/master/Docs/NotWriteThis.md), write [this](https://github.com/davidlastrucci/Trysil/blob/master/Docs/WriteThis.md)
-
-**Enjoy!**
+<pre>
+LInvoice := Session.Get&lt;TInvoice&gt;(1);  
+ShowMessage(
+  Format('Invoice No: %d, Customer: %s, Country: %s',  [
+    Invoice.InvoiceNo,
+    Invoice.Customer.Name,
+    Invoice.Customer.Country.Name]));
+</pre>
 
 ---
 <p>
