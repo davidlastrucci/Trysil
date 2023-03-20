@@ -34,7 +34,7 @@ type
 
   TTFirebirdSQLConnection = class(TTFireDACConnection)
   strict private
-    class var VendorLib: String;
+    class var FVendorLib: String;
   strict private
     FDriverLink: TFDPhysFBDriverLink;
   strict protected
@@ -60,20 +60,9 @@ type
 
     class procedure RegisterConnection(
       const AName: String;
-      const AServer: String;
-      const AUsername: String;
-      const APassword: String;
-      const ADatabaseName: String;
-      const AVendorLib: String); overload;
-
-    class procedure RegisterConnection(
-      const AName: String;
       const AParameters: TStrings); overload;
 
-    class procedure RegisterConnection(
-      const AName: String;
-      const AVendorLib: String;
-      const AParameters: TStrings); overload;
+    class property VendorLib: String read FVendorLib write FVendorLib;
   end;
 
 implementation
@@ -94,7 +83,7 @@ end;
 
 procedure TTFirebirdSQLConnection.AfterConstruction;
 begin
-  FDriverLink.VendorLib := VendorLib;
+  FDriverLink.VendorLib := FVendorLib;
   inherited AfterConstruction;
 end;
 
@@ -123,17 +112,6 @@ class procedure TTFirebirdSQLConnection.RegisterConnection(
   const AUsername: String;
   const APassword: String;
   const ADatabaseName: String);
-begin
-  RegisterConnection(AName, AServer, AUsername, APassword, ADatabaseName, '');
-end;
-
-class procedure TTFirebirdSQLConnection.RegisterConnection(
-  const AName: String;
-  const AServer: String;
-  const AUsername: String;
-  const APassword: String;
-  const ADatabaseName: String;
-  const AVendorLib: String);
 var
   LParameters: TStrings;
 begin
@@ -148,7 +126,7 @@ begin
         LParameters.Add(Format('User_Name=%s', [AUserName]));
         LParameters.Add(Format('Password=%s', [APassword]));
     end;
-    RegisterConnection(AName, VendorLib, LParameters);
+    RegisterConnection(AName, LParameters);
   finally
     LParameters.Free;
   end;
@@ -157,15 +135,7 @@ end;
 class procedure TTFirebirdSQLConnection.RegisterConnection(
   const AName: String; const AParameters: TStrings);
 begin
-  RegisterConnection(AName, VendorLib, AParameters);
-end;
-
-class procedure TTFirebirdSQLConnection.RegisterConnection(
-  const AName: String; const AVendorLib: String; const AParameters: TStrings);
-begin
-  VendorLib := AVendorLib;
-  TTFireDACConnectionPool.Instance.RegisterConnection(
-    AName, 'FB', AParameters);
+  RegisterConnection(AName, AParameters);
 end;
 
 end.

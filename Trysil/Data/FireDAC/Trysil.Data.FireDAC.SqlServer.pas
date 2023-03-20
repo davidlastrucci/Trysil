@@ -32,9 +32,18 @@ type
 { TTSqlServerConnection }
 
   TTSqlServerConnection = class(TTFireDACConnection)
+  strict private
+    class var FVendorLib: String;
+  strict private
+    FDriverLink: TFDPhysMSSQLDriverLink;
   strict protected
     function CreateSyntaxClasses: TTSyntaxClasses; override;
   public
+    constructor Create(const AConnectionName: String);
+    destructor Destroy; override;
+
+    procedure AfterConstruction; override;
+
     function GetDatabaseObjectName(
       const ADatabaseObjectName: String): String; override;
   public
@@ -53,11 +62,31 @@ type
     class procedure RegisterConnection(
       const AName: String;
       const AParameters: TStrings); overload;
+
+    class property VendorLib: String read FVendorLib write FVendorLib;
   end;
 
 implementation
 
 { TTSqlServerConnection }
+
+constructor TTSqlServerConnection.Create(const AConnectionName: String);
+begin
+  inherited Create(AConnectionName);
+  FDriverLink := TFDPhysMSSQLDriverLink.Create(nil);
+end;
+
+destructor TTSqlServerConnection.Destroy;
+begin
+  FDriverLink.Free;
+  inherited Destroy;
+end;
+
+procedure TTSqlServerConnection.AfterConstruction;
+begin
+  FDriverLink.VendorLib := VendorLib;
+  inherited AfterConstruction;
+end;
 
 function TTSqlServerConnection.GetDatabaseObjectName(
   const ADatabaseObjectName: String): String;

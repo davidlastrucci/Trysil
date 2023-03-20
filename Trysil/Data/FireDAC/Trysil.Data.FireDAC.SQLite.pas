@@ -32,9 +32,18 @@ type
 { TTSQLiteConnection }
 
   TTSQLiteConnection = class(TTFireDACConnection)
+  strict private
+    class var FVendorLib: String;
+  strict private
+    FDriverLink: TFDPhysSQLiteDriverLink;
   strict protected
     function CreateSyntaxClasses: TTSyntaxClasses; override;
     function GetDatabaseVersion: String; override;
+  public
+    constructor Create(const AConnectionName: String);
+    destructor Destroy; override;
+
+    procedure AfterConstruction; override;
   public
     class procedure RegisterConnection(
       const AName: String; const ADatabaseName: String); overload;
@@ -47,11 +56,31 @@ type
 
     class procedure RegisterConnection(
       const AName: String; const AParameters: TStrings); overload;
+
+    class property VendorLib: String read FVendorLib write FVendorLib;
   end;
 
 implementation
 
 { TTSQLiteConnection }
+
+constructor TTSQLiteConnection.Create(const AConnectionName: String);
+begin
+  inherited Create(AConnectionName);
+  FDriverLink := TFDPhysSQLiteDriverLink.Create(nil);
+end;
+
+destructor TTSQLiteConnection.Destroy;
+begin
+  FDriverLink.Free;
+  inherited Destroy;
+end;
+
+procedure TTSQLiteConnection.AfterConstruction;
+begin
+  FDriverLink.VendorLib := FVendorLib;
+  inherited AfterConstruction;
+end;
 
 function TTSQLiteConnection.CreateSyntaxClasses: TTSyntaxClasses;
 begin
