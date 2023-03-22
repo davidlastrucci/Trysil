@@ -35,11 +35,16 @@ type
   TTSQLiteDriver = class(TTFireDACDriver)
   strict private
     FDriverLink: TFDPhysSQLiteDriverLink;
+
+    function GetSEEKey: String;
+    procedure SetSEEKey(const AValue: String);
   strict protected
     function DriverLink: TFDPhysDriverLink; override;
   public
     constructor Create;
     destructor Destroy; override;
+
+    property SEEKey: String read GetSEEKey write SetSEEKey;
   end;
 
 { TTSQLiteConnection }
@@ -87,6 +92,22 @@ end;
 function TTSQLiteDriver.DriverLink: TFDPhysDriverLink;
 begin
   result := FDriverLink;
+end;
+
+function TTSQLiteDriver.GetSEEKey: String;
+begin
+{$IF CompilerVersion >= 35} // Delphi 11 Alexandria
+  result := FDriverLink.SEEKey;
+{$ELSE}
+  result := String.Empty;
+{$ENDIF}
+end;
+
+procedure TTSQLiteDriver.SetSEEKey(const AValue: String);
+begin
+{$IF CompilerVersion >= 35} // Delphi 11 Alexandria
+  FDriverLink.SEEKey := AValue;
+{$ENDIF}
 end;
 
 { TTSQLiteConnection }
