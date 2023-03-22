@@ -33,6 +33,7 @@ type
 
   TTSQLiteConnection = class(TTFireDACConnection)
   strict private
+    class var FVendorHome: String;
     class var FVendorLib: String;
   strict private
     FDriverLink: TFDPhysSQLiteDriverLink;
@@ -57,6 +58,7 @@ type
     class procedure RegisterConnection(
       const AName: String; const AParameters: TStrings); overload;
 
+    class property VendorHome: String read FVendorHome write FVendorHome;
     class property VendorLib: String read FVendorLib write FVendorLib;
   end;
 
@@ -78,6 +80,7 @@ end;
 
 procedure TTSQLiteConnection.AfterConstruction;
 begin
+  FDriverLink.VendorHome := FVendorHome;
   FDriverLink.VendorLib := FVendorLib;
   inherited AfterConstruction;
 end;

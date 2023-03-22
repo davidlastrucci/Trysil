@@ -33,6 +33,7 @@ type
 
   TTSqlServerConnection = class(TTFireDACConnection)
   strict private
+    class var FVendorHome: String;
     class var FVendorLib: String;
   strict private
     FDriverLink: TFDPhysMSSQLDriverLink;
@@ -63,6 +64,7 @@ type
       const AName: String;
       const AParameters: TStrings); overload;
 
+    class property VendorHome: String read FVendorHome write FVendorHome;
     class property VendorLib: String read FVendorLib write FVendorLib;
   end;
 
@@ -84,7 +86,9 @@ end;
 
 procedure TTSqlServerConnection.AfterConstruction;
 begin
-  FDriverLink.VendorLib := VendorLib;
+  FDriverLink.ListServers := False;
+  FDriverLink.VendorHome := FVendorHome;
+  FDriverLink.VendorLib := FVendorLib;
   inherited AfterConstruction;
 end;
 
