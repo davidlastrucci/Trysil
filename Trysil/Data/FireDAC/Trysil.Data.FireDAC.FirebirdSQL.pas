@@ -135,7 +135,8 @@ end;
 class procedure TTFirebirdSQLConnection.RegisterConnection(
   const AName: String; const AParameters: TStrings);
 begin
-  RegisterConnection(AName, AParameters);
+  TTFireDACConnectionPool.Instance.RegisterConnection(
+    AName, 'FB', AParameters);
 end;
 
 end.
