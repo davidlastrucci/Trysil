@@ -30,22 +30,26 @@ uses
 
 type
 
+{ TTFirebirdSQLDriver }
+
+  TTFirebirdSQLDriver = class(TTFireDACDriver)
+  strict private
+    FDriverLink: TFDPhysFBDriverLink;
+  public
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
 { TTFirebirdSQLConnection }
 
   TTFirebirdSQLConnection = class(TTFireDACConnection)
   strict private
-    class var FVendorHome: String;
-    class var FVendorLib: String;
-  strict private
-    FDriverLink: TFDPhysFBDriverLink;
+    class var FDriver: TTFirebirdSQLDriver;
+    class constructor ClassCreate;
+    class destructor ClassDestroy;
   strict protected
     function CreateSyntaxClasses: TTSyntaxClasses; override;
     function GetDatabaseVersion: String; override;
-  public
-    constructor Create(const AConnectionName: String);
-    destructor Destroy; override;
-
-    procedure AfterConstruction; override;
   public
     class procedure RegisterConnection(
       const AName: String;
@@ -63,31 +67,36 @@ type
       const AName: String;
       const AParameters: TStrings); overload;
 
-    class property VendorHome: String read FVendorHome write FVendorHome;
-    class property VendorLib: String read FVendorLib write FVendorLib;
+    class property Driver: TTFirebirdSQLDriver read FDriver;
   end;
 
 implementation
 
-{ TTFirebirdSQLConnection }
+{ TTFirebirdSQLDriver }
 
-constructor TTFirebirdSQLConnection.Create(const AConnectionName: String);
+constructor TTFirebirdSQLDriver.Create;
 begin
-  inherited Create(AConnectionName);
+  inherited Create;
   FDriverLink := TFDPhysFBDriverLink.Create(nil);
+  FPhysDriverLink := FDriverLink;
 end;
 
-destructor TTFirebirdSQLConnection.Destroy;
+destructor TTFirebirdSQLDriver.Destroy;
 begin
   FDriverLink.Free;
   inherited Destroy;
 end;
 
-procedure TTFirebirdSQLConnection.AfterConstruction;
+{ TTFirebirdSQLConnection }
+
+class constructor TTFirebirdSQLConnection.ClassCreate;
 begin
-  FDriverLink.VendorHome := FVendorHome;
-  FDriverLink.VendorLib := FVendorLib;
-  inherited AfterConstruction;
+  FDriver := TTFirebirdSQLDriver.Create;
+end;
+
+class destructor TTFirebirdSQLConnection.ClassDestroy;
+begin
+  FDriver.Free;
 end;
 
 function TTFirebirdSQLConnection.CreateSyntaxClasses: TTSyntaxClasses;

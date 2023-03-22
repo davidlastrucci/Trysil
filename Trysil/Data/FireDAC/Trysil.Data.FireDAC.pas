@@ -20,6 +20,7 @@ uses
   FireDAC.Comp.UI,
   FireDAC.Stan.Param,
   FireDAC.Comp.Client,
+  FireDAC.Phys,
 
   Trysil.Types,
   Trysil.Filter,
@@ -63,6 +64,21 @@ type
     constructor Create(const AParam: TFDParam);
 
     procedure Clear; override;
+  end;
+
+{ TTFireDACDriver }
+
+  TTFireDACDriver = class
+  strict private
+    function GetVendorHome: String;
+    procedure SetVendorHome(const AValue: String);
+    function GetVendorLib: String;
+    procedure SetVendorLib(const AValue: String);
+  strict protected
+    FPhysDriverLink: TFDPhysDriverLink;
+  public
+    property VendorHome: String read GetVendorHome write SetVendorHome;
+    property VendorLib: String read GetVendorLib write SetVendorLib;
   end;
 
 { TTFireDACConnection }
@@ -196,6 +212,28 @@ end;
 procedure TTFDParam.SetAsGuid(const AValue: TGUID);
 begin
   FParam.AsGUID := AValue;
+end;
+
+{ TTFireDACDriver }
+
+function TTFireDACDriver.GetVendorHome: String;
+begin
+  result := FPhysDriverLink.VendorHome;
+end;
+
+procedure TTFireDACDriver.SetVendorHome(const AValue: String);
+begin
+  FPhysDriverLink.VendorHome := AValue;
+end;
+
+function TTFireDACDriver.GetVendorLib: String;
+begin
+  result := FPhysDriverLink.VendorLib;
+end;
+
+procedure TTFireDACDriver.SetVendorLib(const AValue: String);
+begin
+  FPhysDriverLink.VendorLib := AValue;
 end;
 
 { TTFireDACConnection }

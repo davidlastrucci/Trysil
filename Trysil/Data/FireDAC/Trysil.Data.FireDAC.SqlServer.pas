@@ -29,22 +29,36 @@ uses
 
 type
 
-{ TTSqlServerConnection }
+{ TTSqlServerDriver }
 
-  TTSqlServerConnection = class(TTFireDACConnection)
-  strict private
-    class var FVendorHome: String;
-    class var FVendorLib: String;
+  TTSqlServerDriver = class(TTFireDACDriver)
   strict private
     FDriverLink: TFDPhysMSSQLDriverLink;
-  strict protected
-    function CreateSyntaxClasses: TTSyntaxClasses; override;
+
+    function GetODBCDriver: String;
+    procedure SetODBCDriver(const AValue: String);
+    function GetODBCAdvanced: String;
+    procedure SetODBCAdvanced(const AValue: String);
   public
-    constructor Create(const AConnectionName: String);
+    constructor Create;
     destructor Destroy; override;
 
     procedure AfterConstruction; override;
 
+    property ODBCDriver: String read GetODBCDriver write SetODBCDriver;
+    property ODBCAdvanced: String read GetODBCAdvanced write SetODBCAdvanced;
+  end;
+
+{ TTSqlServerConnection }
+
+  TTSqlServerConnection = class(TTFireDACConnection)
+  strict private
+    class var FDriver: TTSqlServerDriver;
+    class constructor ClassCreate;
+    class destructor ClassDestroy;
+  strict protected
+    function CreateSyntaxClasses: TTSyntaxClasses; override;
+  public
     function GetDatabaseObjectName(
       const ADatabaseObjectName: String): String; override;
   public
@@ -64,32 +78,62 @@ type
       const AName: String;
       const AParameters: TStrings); overload;
 
-    class property VendorHome: String read FVendorHome write FVendorHome;
-    class property VendorLib: String read FVendorLib write FVendorLib;
+    class property Driver: TTSqlServerDriver read FDriver;
   end;
 
 implementation
 
-{ TTSqlServerConnection }
+{ TTSqlServerDriver }
 
-constructor TTSqlServerConnection.Create(const AConnectionName: String);
+constructor TTSqlServerDriver.Create;
 begin
-  inherited Create(AConnectionName);
+  inherited Create;
   FDriverLink := TFDPhysMSSQLDriverLink.Create(nil);
+  FPhysDriverLink := FDriverLink;
 end;
 
-destructor TTSqlServerConnection.Destroy;
+destructor TTSqlServerDriver.Destroy;
 begin
   FDriverLink.Free;
   inherited Destroy;
 end;
 
-procedure TTSqlServerConnection.AfterConstruction;
+procedure TTSqlServerDriver.AfterConstruction;
 begin
-  FDriverLink.ListServers := False;
-  FDriverLink.VendorHome := FVendorHome;
-  FDriverLink.VendorLib := FVendorLib;
   inherited AfterConstruction;
+  FDriverLink.ListServers := False;
+end;
+
+function TTSqlServerDriver.GetODBCDriver: String;
+begin
+  result := FDriverLink.ODBCDriver;
+end;
+
+procedure TTSqlServerDriver.SetODBCDriver(const AValue: String);
+begin
+  FDriverLink.ODBCDriver := AValue;
+end;
+
+function TTSqlServerDriver.GetODBCAdvanced: String;
+begin
+  result := FDriverLink.ODBCAdvanced;
+end;
+
+procedure TTSqlServerDriver.SetODBCAdvanced(const AValue: String);
+begin
+  FDriverLink.ODBCAdvanced := AValue;
+end;
+
+{ TTSqlServerConnection }
+
+class constructor TTSqlServerConnection.ClassCreate;
+begin
+  FDriver := TTSqlServerDriver.Create;
+end;
+
+class destructor TTSqlServerConnection.ClassDestroy;
+begin
+  FDriver.Free;
 end;
 
 function TTSqlServerConnection.GetDatabaseObjectName(

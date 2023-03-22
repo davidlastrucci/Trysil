@@ -29,22 +29,26 @@ uses
 
 type
 
+{ TTSQLiteDriver }
+
+  TTSQLiteDriver = class(TTFireDACDriver)
+  strict private
+    FDriverLink: TFDPhysSQLiteDriverLink;
+  public
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
 { TTSQLiteConnection }
 
   TTSQLiteConnection = class(TTFireDACConnection)
   strict private
-    class var FVendorHome: String;
-    class var FVendorLib: String;
-  strict private
-    FDriverLink: TFDPhysSQLiteDriverLink;
+    class var FDriver: TTSQLiteDriver;
+    class constructor ClassCreate;
+    class destructor ClassDestroy;
   strict protected
     function CreateSyntaxClasses: TTSyntaxClasses; override;
     function GetDatabaseVersion: String; override;
-  public
-    constructor Create(const AConnectionName: String);
-    destructor Destroy; override;
-
-    procedure AfterConstruction; override;
   public
     class procedure RegisterConnection(
       const AName: String; const ADatabaseName: String); overload;
@@ -58,31 +62,36 @@ type
     class procedure RegisterConnection(
       const AName: String; const AParameters: TStrings); overload;
 
-    class property VendorHome: String read FVendorHome write FVendorHome;
-    class property VendorLib: String read FVendorLib write FVendorLib;
+    class property Driver: TTSQLiteDriver read FDriver;
   end;
 
 implementation
 
-{ TTSQLiteConnection }
+{ TTSQLiteDriver }
 
-constructor TTSQLiteConnection.Create(const AConnectionName: String);
+constructor TTSQLiteDriver.Create;
 begin
-  inherited Create(AConnectionName);
+  inherited Create;
   FDriverLink := TFDPhysSQLiteDriverLink.Create(nil);
+  FPhysDriverLink := FDriverLink;
 end;
 
-destructor TTSQLiteConnection.Destroy;
+destructor TTSQLiteDriver.Destroy;
 begin
   FDriverLink.Free;
   inherited Destroy;
 end;
 
-procedure TTSQLiteConnection.AfterConstruction;
+{ TTSQLiteConnection }
+
+class constructor TTSQLiteConnection.ClassCreate;
 begin
-  FDriverLink.VendorHome := FVendorHome;
-  FDriverLink.VendorLib := FVendorLib;
-  inherited AfterConstruction;
+  FDriver := TTSQLiteDriver.Create;
+end;
+
+class destructor TTSQLiteConnection.ClassDestroy;
+begin
+  FDriver.Free;
 end;
 
 function TTSQLiteConnection.CreateSyntaxClasses: TTSyntaxClasses;
