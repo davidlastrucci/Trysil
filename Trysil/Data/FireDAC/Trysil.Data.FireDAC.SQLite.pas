@@ -18,6 +18,7 @@ uses
   Data.DB,
   FireDAC.UI.Intf,
   FireDAC.Comp.UI,
+  FireDAC.Phys,
   FireDAC.Phys.SQLite,
   FireDAC.Stan.Param,
   FireDAC.Comp.Client,
@@ -34,6 +35,8 @@ type
   TTSQLiteDriver = class(TTFireDACDriver)
   strict private
     FDriverLink: TFDPhysSQLiteDriverLink;
+  strict protected
+    function DriverLink: TFDPhysDriverLink; override;
   public
     constructor Create;
     destructor Destroy; override;
@@ -73,13 +76,17 @@ constructor TTSQLiteDriver.Create;
 begin
   inherited Create;
   FDriverLink := TFDPhysSQLiteDriverLink.Create(nil);
-  FPhysDriverLink := FDriverLink;
 end;
 
 destructor TTSQLiteDriver.Destroy;
 begin
   FDriverLink.Free;
   inherited Destroy;
+end;
+
+function TTSQLiteDriver.DriverLink: TFDPhysDriverLink;
+begin
+  result := FDriverLink;
 end;
 
 { TTSQLiteConnection }

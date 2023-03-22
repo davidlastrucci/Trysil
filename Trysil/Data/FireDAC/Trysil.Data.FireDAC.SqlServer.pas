@@ -18,6 +18,7 @@ uses
   Data.DB,
   FireDAC.UI.Intf,
   FireDAC.Comp.UI,
+  FireDAC.Phys,
   FireDAC.Phys.MSSQL,
   FireDAC.Stan.Param,
   FireDAC.Comp.Client,
@@ -39,6 +40,8 @@ type
     procedure SetODBCDriver(const AValue: String);
     function GetODBCAdvanced: String;
     procedure SetODBCAdvanced(const AValue: String);
+  strict protected
+    function DriverLink: TFDPhysDriverLink; override;
   public
     constructor Create;
     destructor Destroy; override;
@@ -89,7 +92,6 @@ constructor TTSqlServerDriver.Create;
 begin
   inherited Create;
   FDriverLink := TFDPhysMSSQLDriverLink.Create(nil);
-  FPhysDriverLink := FDriverLink;
 end;
 
 destructor TTSqlServerDriver.Destroy;
@@ -102,6 +104,11 @@ procedure TTSqlServerDriver.AfterConstruction;
 begin
   inherited AfterConstruction;
   FDriverLink.ListServers := False;
+end;
+
+function TTSqlServerDriver.DriverLink: TFDPhysDriverLink;
+begin
+  result := FDriverLink;
 end;
 
 function TTSqlServerDriver.GetODBCDriver: String;

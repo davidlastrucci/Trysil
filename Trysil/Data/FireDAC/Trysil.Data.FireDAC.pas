@@ -68,14 +68,14 @@ type
 
 { TTFireDACDriver }
 
-  TTFireDACDriver = class
+  TTFireDACDriver = class abstract
   strict private
     function GetVendorHome: String;
     procedure SetVendorHome(const AValue: String);
     function GetVendorLib: String;
     procedure SetVendorLib(const AValue: String);
   strict protected
-    FPhysDriverLink: TFDPhysDriverLink;
+    function DriverLink: TFDPhysDriverLink; virtual; abstract;
   public
     property VendorHome: String read GetVendorHome write SetVendorHome;
     property VendorLib: String read GetVendorLib write SetVendorLib;
@@ -218,22 +218,22 @@ end;
 
 function TTFireDACDriver.GetVendorHome: String;
 begin
-  result := FPhysDriverLink.VendorHome;
+  result := DriverLink.VendorHome;
 end;
 
 procedure TTFireDACDriver.SetVendorHome(const AValue: String);
 begin
-  FPhysDriverLink.VendorHome := AValue;
+  DriverLink.VendorHome := AValue;
 end;
 
 function TTFireDACDriver.GetVendorLib: String;
 begin
-  result := FPhysDriverLink.VendorLib;
+  result := DriverLink.VendorLib;
 end;
 
 procedure TTFireDACDriver.SetVendorLib(const AValue: String);
 begin
-  FPhysDriverLink.VendorLib := AValue;
+  DriverLink.VendorLib := AValue;
 end;
 
 { TTFireDACConnection }

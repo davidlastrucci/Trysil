@@ -18,6 +18,7 @@ uses
   Data.DB,
   FireDAC.UI.Intf,
   FireDAC.Comp.UI,
+  FireDAC.Phys,
   FireDAC.Phys.IBBase,
   FireDAC.Phys.FB,
   FireDAC.Stan.Param,
@@ -35,6 +36,8 @@ type
   TTFirebirdSQLDriver = class(TTFireDACDriver)
   strict private
     FDriverLink: TFDPhysFBDriverLink;
+  strict protected
+    function DriverLink: TFDPhysDriverLink; override;
   public
     constructor Create;
     destructor Destroy; override;
@@ -78,13 +81,17 @@ constructor TTFirebirdSQLDriver.Create;
 begin
   inherited Create;
   FDriverLink := TFDPhysFBDriverLink.Create(nil);
-  FPhysDriverLink := FDriverLink;
 end;
 
 destructor TTFirebirdSQLDriver.Destroy;
 begin
   FDriverLink.Free;
   inherited Destroy;
+end;
+
+function TTFirebirdSQLDriver.DriverLink: TFDPhysDriverLink;
+begin
+  result := FDriverLink;
 end;
 
 { TTFirebirdSQLConnection }
