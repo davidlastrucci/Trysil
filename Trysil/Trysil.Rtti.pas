@@ -43,7 +43,7 @@ type
     property IsNullable: Boolean read GetIsNullable;
   end;
 
-{$IF CompilerVersion < 35} // Delphi 11.0 Alexandria
+{$IF CompilerVersion < 35} // Delphi 11 Alexandria
 
 { TTRttiObjectHelper }
 
@@ -276,7 +276,7 @@ begin
     raise ETException.Create(SInvalidNullableType);
 end;
 
-{$IF CompilerVersion < 35} // Delphi 11.0 Alexandria
+{$IF CompilerVersion < 35} // Delphi 11 Alexandria
 
 { TTRttiObjectHelper }
 
