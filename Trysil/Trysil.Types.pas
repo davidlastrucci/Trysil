@@ -46,22 +46,12 @@ type
   METHODS([vcPrivate])}
 
   TTNullable<T> = record
-{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
-  strict private
-    const NotNullValue: Boolean = False;
-    const NullValue: Boolean = True;
-{$ELSE}
   strict private
     const NotNullValue: String = '@@@';
     const NullValue: String = String.Empty;
-{$ENDIF}
   strict private
     FValue: T;
-{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
-    FIsNull: Boolean;
-{$ELSE}
     FIsNull: String;
-{$ENDIF}
 
     procedure Clear;
 
@@ -76,10 +66,6 @@ type
     function GetValueOrDefault(const ADefaultValue: T): T; overload;
 
     function Equals(const AOther: TTNullable<T>): Boolean;
-
-{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
-    class operator Initialize(out ANullable: TTNullable<T>);
-{$ENDIF}
 
     class operator Implicit(const AValue: TTNullable<T>): T;
     class operator Implicit(const AValue: T): TTNullable<T>;
@@ -164,14 +150,6 @@ begin
   else
     result := (IsNull = AOther.IsNull);
 end;
-
-{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
-class operator TTNullable<T>.Initialize(out ANullable: TTNullable<T>);
-begin
-  ANullable.FIsNull := NullValue;
-  ANullable.FValue := default(T);
-end;
-{$ENDIF}
 
 class operator TTNullable<T>.Implicit(const AValue: TTNullable<T>): T;
 begin
