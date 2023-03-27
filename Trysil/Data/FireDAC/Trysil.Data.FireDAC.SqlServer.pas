@@ -41,7 +41,7 @@ type
     function GetODBCAdvanced: String;
     procedure SetODBCAdvanced(const AValue: String);
   strict protected
-    function DriverLink: TFDPhysDriverLink; override;
+    function GetDriverLink: TFDPhysDriverLink; override;
   public
     constructor Create;
     destructor Destroy; override;
@@ -106,7 +106,7 @@ begin
   FDriverLink.ListServers := False;
 end;
 
-function TTSqlServerDriver.DriverLink: TFDPhysDriverLink;
+function TTSqlServerDriver.GetDriverLink: TFDPhysDriverLink;
 begin
   result := FDriverLink;
 end;
@@ -193,7 +193,7 @@ class procedure TTSqlServerConnection.RegisterConnection(
   const AName: String; const AParameters: TStrings);
 begin
   TTFireDACConnectionPool.Instance.RegisterConnection(
-    AName, 'MSSQL', AParameters);
+    AName, FDriver.DriverLink.DriverID, AParameters);
 end;
 
 end.

@@ -39,7 +39,7 @@ type
     function GetSEEKey: String;
     procedure SetSEEKey(const AValue: String);
   strict protected
-    function DriverLink: TFDPhysDriverLink; override;
+    function GetDriverLink: TFDPhysDriverLink; override;
   public
     constructor Create;
     destructor Destroy; override;
@@ -89,7 +89,7 @@ begin
   inherited Destroy;
 end;
 
-function TTSQLiteDriver.DriverLink: TFDPhysDriverLink;
+function TTSQLiteDriver.GetDriverLink: TFDPhysDriverLink;
 begin
   result := FDriverLink;
 end;
@@ -164,7 +164,7 @@ class procedure TTSQLiteConnection.RegisterConnection(
   const AName: String; const AParameters: TStrings);
 begin
   TTFireDACConnectionPool.Instance.RegisterConnection(
-    AName, 'SQLite', AParameters);
+    AName, FDriver.DriverLink.DriverID, AParameters);
 end;
 
 end.

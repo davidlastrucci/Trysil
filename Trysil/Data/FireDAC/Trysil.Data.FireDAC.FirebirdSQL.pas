@@ -37,7 +37,7 @@ type
   strict private
     FDriverLink: TFDPhysFBDriverLink;
   strict protected
-    function DriverLink: TFDPhysDriverLink; override;
+    function GetDriverLink: TFDPhysDriverLink; override;
   public
     constructor Create;
     destructor Destroy; override;
@@ -89,7 +89,7 @@ begin
   inherited Destroy;
 end;
 
-function TTFirebirdSQLDriver.DriverLink: TFDPhysDriverLink;
+function TTFirebirdSQLDriver.GetDriverLink: TFDPhysDriverLink;
 begin
   result := FDriverLink;
 end;
@@ -155,7 +155,7 @@ class procedure TTFirebirdSQLConnection.RegisterConnection(
   const AName: String; const AParameters: TStrings);
 begin
   TTFireDACConnectionPool.Instance.RegisterConnection(
-    AName, 'FB', AParameters);
+    AName, FDriver.DriverLink.DriverID, AParameters);
 end;
 
 end.

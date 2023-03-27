@@ -75,8 +75,11 @@ type
     function GetVendorLib: String;
     procedure SetVendorLib(const AValue: String);
   strict protected
-    function DriverLink: TFDPhysDriverLink; virtual; abstract;
+    function GetDriverLink: TFDPhysDriverLink; virtual; abstract;
   public
+    procedure AfterConstruction; override;
+
+    property DriverLink: TFDPhysDriverLink read GetDriverLink;
     property VendorHome: String read GetVendorHome write SetVendorHome;
     property VendorLib: String read GetVendorLib write SetVendorLib;
   end;
@@ -215,6 +218,12 @@ begin
 end;
 
 { TTFireDACDriver }
+
+procedure TTFireDACDriver.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  DriverLink.DriverID := Format('Trysil_%s', [DriverLink.BaseDriverID]);
+end;
 
 function TTFireDACDriver.GetVendorHome: String;
 begin
