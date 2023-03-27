@@ -84,7 +84,9 @@ uses
   Trysil.Validation.Attributes in '..\..\Trysil\Trysil.Validation.Attributes.pas',
   Trysil.Validation in '..\..\Trysil\Trysil.Validation.pas',
   Trysil.Http.Resolver in '..\..\Trysil.Http\Trysil.Http.Resolver.pas',
-  Trysil.LoadBalancing in '..\..\Trysil\Trysil.LoadBalancing.pas';
+  Trysil.LoadBalancing in '..\..\Trysil\Trysil.LoadBalancing.pas',
+  Trysil.Data.SqlSyntax.PostgreSQL in '..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.PostgreSQL.pas',
+  Trysil.Data.FireDAC.PostgreSQL in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.PostgreSQL.pas';
 
 {$R *.res}
 
