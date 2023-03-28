@@ -48,7 +48,6 @@ type
   TTNullable<T> = record
   strict private
     const NotNullValue: String = '@@@';
-    const NullValue: String = String.Empty;
   strict private
     FValue: T;
     FIsNull: String;
@@ -110,7 +109,7 @@ end;
 
 procedure TTNullable<T>.Clear;
 begin
-  FIsNull := NullValue;
+  FIsNull := String.Empty;
   FValue := Default(T);
 end;
 
@@ -188,7 +187,7 @@ end;
 
 function TTNullable<T>.GetIsNull: Boolean;
 begin
-  result := (FIsNull = NullValue);
+  result := not FIsNull.Equals(NotNullValue);
 end;
 
 end.

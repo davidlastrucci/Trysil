@@ -35,10 +35,6 @@ type
     constructor Create(
       const AStart: Integer; const ALimit: Integer; const AOrderBy: String);
 
-{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
-    class operator Initialize(out AFilterPaging: TTFilterPaging);
-{$ENDIF}
-
     property Start: Integer read FStart write FStart;
     property Limit: Integer read FLimit write FLimit;
     property OrderBy: String read FOrderBy write FOrderBy;
@@ -62,10 +58,6 @@ type
       const ADataType: TFieldType;
       const ASize: Integer;
       const AValue: TTValue);
-
-{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
-    class operator Initialize(out AFilterParameter: TTFilterParameter);
-{$ENDIF}
 
     property Name: String read FName;
     property DataType: TFieldType read FDataType;
@@ -95,10 +87,6 @@ type
       const AStart: Integer;
       const ALimit: Integer;
       const AOrderBy: String); overload;
-
-{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
-    class operator Initialize(out AFilter: TTFilter);
-{$ENDIF}
 
     procedure AddParameter(
       const AName: String;
@@ -133,15 +121,6 @@ begin
   FOrderBy := AOrderBy;
 end;
 
-{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
-class operator TTFilterPaging.Initialize(out AFilterPaging: TTFilterPaging);
-begin
-  AFilterPaging.FStart := -1;
-  AFilterPaging.FLimit := -1;
-  AFilterPaging.FOrderBy := String.Empty;
-end;
-{$ENDIF}
-
 function TTFilterPaging.GetIsEmpty: Boolean;
 begin
   result := (FStart < 0) or (FLimit <= 0);
@@ -170,17 +149,6 @@ begin
   FSize := ASize;
   FValue := AValue;
 end;
-
-{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
-class operator TTFilterParameter.Initialize(
-  out AFilterParameter: TTFilterParameter);
-begin
-  AFilterParameter.FName := String.Empty;
-  AFilterParameter.FDataType := TFieldType.ftUnknown;
-  AFilterParameter.FSize := 0;
-  AFilterParameter.FValue := TTValue.Empty;
-end;
-{$ENDIF}
 
 { TTFilter }
 
@@ -211,15 +179,6 @@ begin
   SetLength(FParameters, 0);
   FPaging := TTFilterPaging.Create(AStart, ALimit, AOrderBy);
 end;
-
-{$IF CompilerVersion >= 34} // Delphi 10.4 Sydney
-class operator TTFilter.Initialize(out AFilter: TTFilter);
-begin
-  AFilter.FWhere := String.Empty;
-  SetLength(AFilter.FParameters, 0);
-  AFilter.FPaging := TTFilterPaging.Empty();
-end;
-{$ENDIF}
 
 procedure TTFilter.AddParameter(
   const AName: String;
