@@ -27,13 +27,6 @@ type
     function GetSequenceSyntax: String; override;
   end;
 
-{ TTSQLiteSelectSyntax }
-
-  TTSQLiteSelectSyntax = class(TTSelectSyntax)
-  strict protected
-    function GetFilterPagingSyntax(): String; override;
-  end;
-
 { TTSQLiteVersionSyntax }
 
   TTSQLiteVersionSyntax = class(TTVersionSyntax)
@@ -46,7 +39,6 @@ type
   TTSQLiteSyntaxClasses = class(TTSyntaxClasses)
   public
     function Sequence: TTSequenceSyntaxClass; override;
-    function Select: TTSelectSyntaxClass; override;
     function Version: TTVersionSyntaxClass; override;
   end;
 
@@ -58,14 +50,6 @@ function TTSQLiteSequenceSyntax.GetSequenceSyntax: String;
 begin
   result := Format(
     'SELECT IFNULL(MAX(ROWID), 0) + 1 FROM %s', [FTableMap.Name]);
-end;
-
-{ TTSQLiteSelectSyntax }
-
-function TTSQLiteSelectSyntax.GetFilterPagingSyntax: String;
-begin
-  result := Format('LIMIT %d OFFSET %d', [
-    FFilter.Paging.Limit, FFilter.Paging.Start]);
 end;
 
 { TTSQLiteVersionSyntax }
@@ -80,11 +64,6 @@ end;
 function TTSQLiteSyntaxClasses.Sequence: TTSequenceSyntaxClass;
 begin
   result := TTSQLiteSequenceSyntax;
-end;
-
-function TTSQLiteSyntaxClasses.Select: TTSelectSyntaxClass;
-begin
-  result := TTSQLiteSelectSyntax;
 end;
 
 function TTSQLiteSyntaxClasses.Version: TTVersionSyntaxClass;

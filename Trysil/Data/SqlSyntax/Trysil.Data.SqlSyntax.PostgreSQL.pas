@@ -27,13 +27,6 @@ type
     function GetSequenceSyntax: String; override;
   end;
 
-{ TTPostgreSQLSelectSyntax }
-
-  TTPostgreSQLSelectSyntax = class(TTSelectSyntax)
-  strict protected
-    function GetFilterPagingSyntax: String; override;
-  end;
-
 { TTPostgreSQLVersionSyntax }
 
   TTPostgreSQLVersionSyntax = class(TTVersionSyntax)
@@ -46,7 +39,6 @@ type
   TTPostgreSQLSyntaxClasses = class(TTSyntaxClasses)
   public
     function Sequence: TTSequenceSyntaxClass; override;
-    function Select: TTSelectSyntaxClass; override;
     function Version: TTVersionSyntaxClass; override;
   end;
 
@@ -57,15 +49,7 @@ implementation
 function TTPostgreSQLSequenceSyntax.GetSequenceSyntax: String;
 begin
   result := Format(
-    'SELECT NEXTVAL(''%s'') AS ID', [FTableMap.SequenceName]);
-end;
-
-{ TTPostgreSQLSelectSyntax }
-
-function TTPostgreSQLSelectSyntax.GetFilterPagingSyntax: String;
-begin
-  result := Format('LIMIT %d OFFSET %d', [
-    FFilter.Paging.Limit, FFilter.Paging.Start]);
+    'SELECT NEXTVAL(%s) AS ID', [QuotedStr(FTableMap.SequenceName)]);
 end;
 
 { TTPostgreSQLVersionSyntax }
@@ -80,11 +64,6 @@ end;
 function TTPostgreSQLSyntaxClasses.Sequence: TTSequenceSyntaxClass;
 begin
   result := TTPostgreSQLSequenceSyntax;
-end;
-
-function TTPostgreSQLSyntaxClasses.Select: TTSelectSyntaxClass;
-begin
-  result := TTPostgreSQLSelectSyntax;
 end;
 
 function TTPostgreSQLSyntaxClasses.Version: TTVersionSyntaxClass;

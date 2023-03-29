@@ -124,7 +124,7 @@ type
     function InternalGetSqlSyntax(
       const AWhereColumns: TArray<TTColumnMap>): String; override;
 
-    function GetFilterPagingSyntax: String; virtual; abstract;
+    function GetFilterPagingSyntax: String; virtual;
   public
     constructor Create(
       const AConnection: TTConnection;
@@ -224,7 +224,7 @@ type
     function Sequence: TTSequenceSyntaxClass; virtual; abstract;
     function CheckExists: TTCheckExistsSyntaxClass; virtual;
     function SelectCount: TTSelectCountSyntaxClass; virtual;
-    function Select: TTSelectSyntaxClass; virtual; abstract;
+    function Select: TTSelectSyntaxClass; virtual;
     function Metadata: TTMetadataSyntaxClass; virtual;
     function Insert: TTCommandSyntaxClass; virtual;
     function Update: TTCommandSyntaxClass; virtual;
@@ -338,6 +338,12 @@ begin
   finally
     LResult.Free;
   end;
+end;
+
+function TTSelectSyntax.GetFilterPagingSyntax: String;
+begin
+  result := Format('LIMIT %d OFFSET %d', [
+    FFilter.Paging.Limit, FFilter.Paging.Start]);
 end;
 
 function TTSelectSyntax.GetOrderBy: String;
@@ -598,6 +604,11 @@ end;
 function TTSyntaxClasses.CheckExists: TTCheckExistsSyntaxClass;
 begin
   result := TTCheckExistsSyntax;
+end;
+
+function TTSyntaxClasses.Select: TTSelectSyntaxClass;
+begin
+  result := TTSelectSyntax;
 end;
 
 function TTSyntaxClasses.SelectCount: TTSelectCountSyntaxClass;
