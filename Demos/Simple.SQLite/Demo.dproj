@@ -154,14 +154,10 @@
         <DCCReference Include="..\..\Trysil\Data\Trysil.Data.Connection.pas"/>
         <DCCReference Include="..\..\Trysil\Data\Trysil.Data.Parameters.pas"/>
         <DCCReference Include="..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.pas"/>
-        <DCCReference Include="..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.SqlServer.pas"/>
-        <DCCReference Include="..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.FirebirdSQL.pas"/>
         <DCCReference Include="..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.SQLite.pas"/>
         <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.pas"/>
         <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.Common.pas"/>
         <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.ConnectionPool.pas"/>
-        <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.SqlServer.pas"/>
-        <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.FirebirdSQL.pas"/>
         <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.SQLite.pas"/>
         <DCCReference Include="..\..\Trysil.UI\Trysil.Vcl.ListView.pas"/>
         <DCCReference Include="Demo.Model.pas"/>
