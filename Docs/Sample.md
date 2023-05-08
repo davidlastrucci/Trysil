@@ -89,8 +89,5 @@ Using **Trysil** you can define a model that map a database table into a class.
 **Enjoy!**
 
 ---
-<p>
-  <a href="https://www.lastrucci.net/">
-    <img width="400" height="100" src="https://www.lastrucci.net/images/badge.small.png" title="https://www.lastrucci.net/">
-  </a>
-</p>
+
+[https://www.lastrucci.net/](https://www.lastrucci.net)
