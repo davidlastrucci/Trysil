@@ -12,10 +12,6 @@ unit Trysil.Consts;
 
 interface
 
-uses
-  System.SysUtils,
-  System.Classes;
-
 resourcestring
   SNotValidEventClass = 'Not valid constructor in TTEvent class: %0:s.';
   SNotEventType = 'Not valid TTEvent type: %0:s.';
