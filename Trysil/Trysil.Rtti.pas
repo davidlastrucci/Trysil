@@ -351,6 +351,10 @@ class function TTRtti.IsSameType(
   const AClass: TClass; const AType: TRttiType): Boolean;
 begin
   result := AClass.ClassInfo = AType.Handle;
+  // Package & Generics
+  if not result then
+    result := String.Compare(
+      AClass.QualifiedClassName, AType.QualifiedName, True) = 0;
 end;
 
 class function TTRtti.InheritsFrom(
