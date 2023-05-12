@@ -18,4 +18,3 @@ FServer.RegisterController&lt;TAPIReadWriteController&lt;TAPICompany&gt;&gt;('/c
 |POST|/company/select|Select&lt;TAPICompany&gt;|SELECT|Yes|No|
 |GET|/company/find/?|Get&lt;TAPICompany&gt;|SELECT|No|No|
 |GET|/company/createnew|CreateEntity&lt;TAPICompany&gt;||||
-|GET|/company/metadata|MetadataToJSon&lt;TAPICompany&gt;|SELECT|||
