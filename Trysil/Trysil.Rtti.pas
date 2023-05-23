@@ -70,6 +70,11 @@ type
 
   TTRtti = class
   strict private
+    class var FHasPackages: Boolean;
+
+    class constructor ClassCreate;
+
+    class function GetHasPackages: Boolean;
     class function IsSameType(
       const AClass: TClass; const AType: TRttiType): Boolean;
   public
@@ -347,14 +352,34 @@ end;
 
 { TTRtti }
 
+class constructor TTRtti.ClassCreate;
+begin
+  FHasPackages := GetHasPackages;
+end;
+
+class function TTRtti.GetHasPackages: Boolean;
+var
+  LContext: TRttiContext;
+  LPackages: TArray<TRttiPackage>;
+begin
+  LContext := TRttiContext.Create;
+  try
+    LPackages := LContext.GetPackages;
+    result := Length(LPackages) > 1;
+  finally
+    LContext.Free;
+  end;
+end;
+
 class function TTRtti.IsSameType(
   const AClass: TClass; const AType: TRttiType): Boolean;
 begin
-  result := AClass.ClassInfo = AType.Handle;
-  // Package & Generics
-  if not result then
+  // RTTI, Package & Generics
+  if FHasPackages then
     result := String.Compare(
-      AClass.QualifiedClassName, AType.QualifiedName, True) = 0;
+      AClass.QualifiedClassName, AType.QualifiedName, True) = 0
+  else
+    result := AClass.ClassInfo = AType.Handle;
 end;
 
 class function TTRtti.InheritsFrom(
