@@ -58,10 +58,6 @@ type
       const AUseIdentityMap: Boolean); overload; virtual;
     destructor Destroy; override;
 
-    procedure StartTransaction; deprecated 'Use CreateTransaction';
-    procedure CommitTransaction; deprecated 'Use CreateTransaction';
-    procedure RollbackTransaction; deprecated 'Use CreateTransaction';
-
     function CreateEntity<T: class>(): T; overload;
     function CloneEntity<T: class>(const AEntity: T): T;
 
@@ -137,21 +133,6 @@ end;
 function TTContext.GetInTransaction: Boolean;
 begin
   result := FConnection.InTransaction;
-end;
-
-procedure TTContext.StartTransaction;
-begin
-  FConnection.StartTransaction;
-end;
-
-procedure TTContext.CommitTransaction;
-begin
-  FConnection.CommitTransaction;
-end;
-
-procedure TTContext.RollbackTransaction;
-begin
-  FConnection.RollbackTransaction;
 end;
 
 function TTContext.GetUseIdentityMap: Boolean;
