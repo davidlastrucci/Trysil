@@ -62,18 +62,23 @@ type
     procedure AfterConstruction; override;
 
     [TGet('/?')]
+    [TArea('read')]
     procedure Get(const AID: TTPrimaryKey);
 
     [TGet]
+    [TArea('read')]
     procedure SelectAll;
 
     [TPost('/select')]
+    [TArea('read')]
     procedure Select;
 
     [TGet('/find/?')]
+    [TArea('read')]
     procedure Find(const AID: TTPrimaryKey);
 
     [TGet('/metadata')]
+    [TArea('read')]
     procedure Metadata;
   end;
 
@@ -82,15 +87,19 @@ type
   TAPIReadWriteController<T: class> = class(TAPIReadOnlyController<T>)
   public
     [TPost]
+    [TArea('write')]
     procedure Insert;
 
     [TPut]
+    [TArea('write')]
     procedure Update;
 
     [TDelete('/?/?')]
+    [TArea('write')]
     procedure Delete(const AID: TTPrimaryKey; const AVersionID: TTVersion);
 
     [TGet('/createnew')]
+    [TArea('write')]
     procedure CreateNew;
   end;
 

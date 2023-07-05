@@ -5,7 +5,7 @@
   All rights reserved
 
   Trysil - Operation ORM (World War II)
-  Http://codenames.info/operation/orm/
+  http://codenames.info/operation/orm/
 
 *)
 unit API.Authentication.Controller;
@@ -17,11 +17,13 @@ interface
 uses
   System.Classes,
   System.SysUtils,
+  System.Generics.Collections,
   System.JSon,
   Trysil.Http.Consts,
   Trysil.Http.Types,
   Trysil.Http.Attributes,
   Trysil.Http.Exceptions,
+  Trysil.Http.Classes,
   Trysil.Http.JWT,
 
   API.Context,
@@ -36,10 +38,19 @@ type
   [TAuthorizationType(TTHttpAuthorizationType.None)]
   TAPILogonController = class(TAPIController)
   strict private
-    procedure CheckCredentials(
-      const AUsername: String; const APassword: String);
+    FUsername: String;
+    FPassword: String;
+    FAreas: TList<String>;
+
+    procedure CheckCredentials;
     procedure ResponseToken;
   public
+    constructor Create(
+      const AContext: TAPIContext;
+      const ARequest: TTHttpRequest;
+      const AResponse: TTHttpResponse); override;
+    destructor Destroy; override;
+
     [TPost]
     procedure Logon;
   end;
@@ -48,38 +59,53 @@ implementation
 
 { TAPILogonController }
 
-procedure TAPILogonController.CheckCredentials(
-  const AUsername: String; const APassword: String);
+procedure TAPILogonController.CheckCredentials;
 begin
   // TODO: Check username & password
-  if (not AUsername.Equals('Guest')) or (not APassword.Equals('Test')) then
+  if (not FUsername.Equals('Guest')) or (not FPassword.Equals('Test')) then
     raise ETHttpForbidden.Create('Invalid logon credentials.');
+
+  // TODO: Areas
+  FAreas.Add('read');
+  FAreas.Add('write');
+end;
+
+constructor TAPILogonController.Create(
+  const AContext: TAPIContext;
+  const ARequest: TTHttpRequest;
+  const AResponse: TTHttpResponse);
+begin
+  inherited Create(AContext, ARequest, AResponse);
+  FAreas := TList<String>.Create;
+end;
+
+destructor TAPILogonController.Destroy;
+begin
+  FAreas.Free;
+  inherited Destroy;
 end;
 
 procedure TAPILogonController.Logon;
-var
-  LUsername, LPassword: String;
 begin
-  LUsername := FRequest.JSonContent.GetValue<String>('username', '');
-  LPassword := FRequest.JSonContent.GetValue<String>('password', '');
+  FUsername := FRequest.JSonContent.GetValue<String>('username', '');
+  FPassword := FRequest.JSonContent.GetValue<String>('password', '');
 
-  CheckCredentials(LUsername, LPassword);
-
-  FRequest.User.Username := LUsername;
-  FRequest.User.Password := LPassword;
-
+  CheckCredentials;
   ResponseToken;
 end;
 
 procedure TAPILogonController.ResponseToken;
 var
   LPayload: TAPIJWTPayload;
+  LArea: String;
   LJWT: TTHttpJWT<TAPIJWTPayload>;
   LJSon: TJSonObject;
 begin
   LPayload := TAPIJWTPayload.Create;
   try
-    LPayload.Username := FRequest.User.Username;
+    LPayload.Username := FUsername;
+    for LArea in FAreas do
+      LPayload.AddArea(LArea);
 
     LJWT := TTHttpJWT<TAPIJWTPayload>.Create(LPayload);
     try
