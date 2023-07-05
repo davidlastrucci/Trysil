@@ -141,6 +141,9 @@ type
     [TColumn('Content')]
     FContent: String;
 
+    [TColumn('BinaryContent')]
+    FBinaryContent: String;
+
     [TVersionColumn]
     [TColumn('VersionID')]
     FVersionID: TTVersion;
@@ -156,6 +159,7 @@ type
     property ContentType: String read FContentType;
     property ContentEncoding: String read FContentEncoding;
     property Content: String read FContent;
+    property BinaryContent: String read FBinaryContent;
     property VersionID: TTVersion read FVersionID;
   end;
 
@@ -196,6 +200,7 @@ begin
   FContentType := AResponse.ContentType;
   FContentEncoding := AResponse.ContentEncoding;
   FContent := AResponse.Content;
+  FBinaryContent := AResponse.BinaryContent;
 end;
 
 end.

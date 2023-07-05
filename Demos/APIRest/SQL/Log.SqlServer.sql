@@ -59,6 +59,7 @@ CREATE TABLE [dbo].[LogResponses](
   [ContentType] [nvarchar](255) NULL,
   [ContentEncoding] [nvarchar](255) NULL,
   [Content] [nvarchar](max) NULL,
+  [BinaryContent] [nvarchar](max) NULL,
   [VersionID] [int] NOT NULL,
   CONSTRAINT [PK_LogResponses] PRIMARY KEY CLUSTERED ([ID] ASC)
 )
