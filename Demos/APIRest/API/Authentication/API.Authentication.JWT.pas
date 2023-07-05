@@ -40,8 +40,6 @@ type
 
     function IsValid: Boolean;
 
-    procedure AddArea(const AValue: String);
-
     procedure Assign(const APayload: TAPIJWTPayload);
     function ToJSon: String; override;
     procedure FromJSon(const AData: String); override;
@@ -69,11 +67,6 @@ var
 begin
   LCurrentTime := Int64.Parse(FormatDateTime('yyyymmddhhnnss', now));
   result := (FExpireTime > LCurrentTime);
-end;
-
-procedure TAPIJWTPayload.AddArea(const AValue: String);
-begin
-  FAreas.Add(AValue);
 end;
 
 procedure TAPIJWTPayload.Assign(const APayload: TAPIJWTPayload);

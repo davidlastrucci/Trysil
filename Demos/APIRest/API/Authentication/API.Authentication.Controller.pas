@@ -104,7 +104,7 @@ begin
   try
     LPayload.Username := FUsername;
     for LArea in FAreas do
-      LPayload.AddArea(LArea);
+      LPayload.Areas.Add(LArea);
 
     LJWT := TTHttpJWT<TAPIJWTPayload>.Create(LPayload);
     try
