@@ -66,6 +66,7 @@ type
     constructor Create(const ANameValues: TTHttpNameValues);
 
     function ToJSonArray(): TJSonArray;
+    function ToString: String;
   end;
 
 { TTHttpLogRequest }
@@ -104,6 +105,7 @@ type
     constructor Create(const AAreas: TTHttpUserAreas);
 
     function ToJSonArray: TJSonArray;
+    function ToString: String;
   end;
 
 { TTHttpLogUser }
@@ -245,6 +247,18 @@ begin
   end;
 end;
 
+function TTHttpLogNameValues.ToString: String;
+var
+  LJSon: TJSonArray;
+begin
+  LJSon := ToJSonArray;
+  try
+    result := LJSon.ToJSon;
+  finally
+    LJSon.Free;
+  end;
+end;
+
 { TTHttpLogRequest }
 
 constructor TTHttpLogRequest.Create(const ARequest: TTHttpRequest);
@@ -304,6 +318,18 @@ begin
   except
     result.Free;
     raise;
+  end;
+end;
+
+function TTHttpLogUserAreas.ToString: String;
+var
+  LJSon: TJSonArray;
+begin
+  LJSon := ToJSonArray;
+  try
+    result := LJSon.ToJSon;
+  finally
+    LJSon.Free;
   end;
 end;
 

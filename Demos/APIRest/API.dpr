@@ -89,7 +89,9 @@ uses
   Trysil.Data.FireDAC.PostgreSQL in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.PostgreSQL.pas',
   API.Authentication.Controller in 'API\Authentication\API.Authentication.Controller.pas',
   API.Authentication.JWT in 'API\Authentication\API.Authentication.JWT.pas',
-  API.Authentication in 'API\Authentication\API.Authentication.pas';
+  API.Authentication in 'API\Authentication\API.Authentication.pas',
+  API.Log.Writer in 'API\Log\API.Log.Writer.pas',
+  API.Log.Model in 'API\Log\API.Log.Model.pas';
 
 {$R *.res}
 

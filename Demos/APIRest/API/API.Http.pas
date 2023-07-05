@@ -23,6 +23,7 @@ uses
   API.Context,
   API.Model.Company,
   API.Model.Employee,
+  API.Log.Writer,
   API.Authentication,
   API.Authentication.Controller,
   API.Controller;
@@ -93,7 +94,7 @@ end;
 
 procedure TAPIHttp.RegisterLogWriter;
 begin
-  // FServer.RegisterLogWriter<...>();
+  FServer.RegisterLogWriter<TAPILogWriter>();
 end;
 
 procedure TAPIHttp.RegisterAuthentication;

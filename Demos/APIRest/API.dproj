@@ -188,6 +188,8 @@
         <DCCReference Include="API\Authentication\API.Authentication.Controller.pas"/>
         <DCCReference Include="API\Authentication\API.Authentication.JWT.pas"/>
         <DCCReference Include="API\Authentication\API.Authentication.pas"/>
+        <DCCReference Include="API\Log\API.Log.Writer.pas"/>
+        <DCCReference Include="API\Log\API.Log.Model.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
