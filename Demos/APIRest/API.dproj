@@ -185,6 +185,9 @@
         <DCCReference Include="..\..\Trysil\Trysil.LoadBalancing.pas"/>
         <DCCReference Include="..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.PostgreSQL.pas"/>
         <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.PostgreSQL.pas"/>
+        <DCCReference Include="API\Authentication\API.Authentication.Controller.pas"/>
+        <DCCReference Include="API\Authentication\API.Authentication.JWT.pas"/>
+        <DCCReference Include="API\Authentication\API.Authentication.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -208,6 +211,12 @@
             </Delphi.Personality>
             <Deployment Version="4">
                 <DeployFile LocalName="Win32\Debug\API.exe" Configuration="Debug" Class="ProjectOutput"/>
+                <DeployFile LocalName="Win32\Debug\API.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>API.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="iOSSimulator">
                         <Operation>1</Operation>

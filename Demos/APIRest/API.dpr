@@ -86,7 +86,10 @@ uses
   Trysil.Http.Resolver in '..\..\Trysil.Http\Trysil.Http.Resolver.pas',
   Trysil.LoadBalancing in '..\..\Trysil\Trysil.LoadBalancing.pas',
   Trysil.Data.SqlSyntax.PostgreSQL in '..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.PostgreSQL.pas',
-  Trysil.Data.FireDAC.PostgreSQL in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.PostgreSQL.pas';
+  Trysil.Data.FireDAC.PostgreSQL in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.PostgreSQL.pas',
+  API.Authentication.Controller in 'API\Authentication\API.Authentication.Controller.pas',
+  API.Authentication.JWT in 'API\Authentication\API.Authentication.JWT.pas',
+  API.Authentication in 'API\Authentication\API.Authentication.pas';
 
 {$R *.res}
 

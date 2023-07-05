@@ -23,6 +23,8 @@ uses
   API.Context,
   API.Model.Company,
   API.Model.Employee,
+  API.Authentication,
+  API.Authentication.Controller,
   API.Controller;
 
 type
@@ -96,11 +98,12 @@ end;
 
 procedure TAPIHttp.RegisterAuthentication;
 begin
-  // FServer.RegisterAuthentication<...>();
+  FServer.RegisterAuthentication<TAPIAuthentication>();
 end;
 
 procedure TAPIHttp.RegisterControllers;
 begin
+  FServer.RegisterController<TAPILogonController>();
   FServer.RegisterController<TAPIReadWriteController<TAPICompany>>('/company');
   FServer.RegisterController<TAPIReadWriteController<TAPIEmployee>>('/employee');
 end;
