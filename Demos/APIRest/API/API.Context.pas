@@ -20,7 +20,8 @@ uses
   Trysil.Data.FireDAC.SqlServer,
   Trysil.Http.Context,
 
-  API.Config;
+  API.Config,
+  API.Authentication.JWT;
 
 type
 
@@ -30,11 +31,13 @@ type
   strict private
     FConnection: TTConnection;
     FContext: TTHttpContext;
+    FPayload: TAPIJWTPayload;
   public
     constructor Create;
     destructor Destroy; override;
 
     property Context: TTHttpContext read FContext;
+    property Payload: TAPIJWTPayload read FPayload;
   end;
 
 implementation
@@ -48,10 +51,12 @@ begin
   FConnection := TTSqlServerConnection.Create(
     TAPIConfig.Instance.Database.ConnectionName);
   FContext := TTHttpContext.Create(FConnection);
+  FPayload := TAPIJWTPayload.Create;
 end;
 
 destructor TAPIContext.Destroy;
 begin
+  FPayload.Free;
   FContext.Free;
   FConnection.Free;
   inherited Destroy;

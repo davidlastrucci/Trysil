@@ -67,6 +67,7 @@ begin
   result := APayload.IsValid;
   if result then
   begin
+    Context.Payload.Assign(APayload);
     FRequest.User.Username := APayload.Username;
     for LArea in APayload.Areas do
       FRequest.User.Areas.Add(LArea);
