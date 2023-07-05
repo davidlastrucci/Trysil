@@ -1,3 +1,13 @@
+(*
+
+  Trysil
+  Copyright © David Lastrucci
+  All rights reserved
+
+  Trysil - Operation ORM (World War II)
+  Http://codenames.info/operation/orm/
+
+*)
 unit API.Authentication.JWT;
 
 interface
