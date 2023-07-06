@@ -1,29 +1,32 @@
-CREATE TABLE [dbo].[LogActions](
+CREATE SCHEMA [log]
+GO
+
+CREATE TABLE [log].[Actions](
   [ID] [int] NOT NULL,
   [TaskID] [nvarchar](50) NULL,
-  [LogDate] [datetime] NULL,
+  [Date] [datetime] NULL,
   [Action] [nvarchar](255) NULL,
   [VersionID] [int] NOT NULL,
-  CONSTRAINT [PK_LogActions] PRIMARY KEY CLUSTERED ([ID] ASC)
+  CONSTRAINT [PK_Actions] PRIMARY KEY CLUSTERED ([ID] ASC)
 )
 GO
 
-ALTER TABLE [dbo].[LogActions] ADD CONSTRAINT [DF_LogActions_ID] DEFAULT (0) FOR [ID]
-ALTER TABLE [dbo].[LogActions] ADD CONSTRAINT [DF_LogActions_TaskID] DEFAULT (N'') FOR [TaskID]
-ALTER TABLE [dbo].[LogActions] ADD CONSTRAINT [DF_LogActions_Action] DEFAULT (N'') FOR [Action]
-ALTER TABLE [dbo].[LogActions] ADD CONSTRAINT [DF_LogActions_VersionID] DEFAULT (0) FOR [VersionID]
+ALTER TABLE [log].[Actions] ADD CONSTRAINT [DF_Actions_ID] DEFAULT (0) FOR [ID]
+ALTER TABLE [log].[Actions] ADD CONSTRAINT [DF_Actions_TaskID] DEFAULT (N'') FOR [TaskID]
+ALTER TABLE [log].[Actions] ADD CONSTRAINT [DF_Actions_Action] DEFAULT (N'') FOR [Action]
+ALTER TABLE [log].[Actions] ADD CONSTRAINT [DF_Actions_VersionID] DEFAULT (0) FOR [VersionID]
 GO
 
-CREATE SEQUENCE [dbo].[LogActionsID]
+CREATE SEQUENCE [log].[ActionsID]
  AS [int]
  START WITH 1
  INCREMENT BY 1
 GO
 
-CREATE TABLE [dbo].[LogRequests](
+CREATE TABLE [log].[Requests](
   [ID] [int] NOT NULL,
   [TaskID] [nvarchar](50) NULL,
-  [LogDate] [datetime] NULL,
+  [Date] [datetime] NULL,
   [Uri] [nvarchar](255) NULL,
   [Params] [nvarchar](max) NULL,
   [MethodType] [nvarchar](255) NULL,
@@ -31,28 +34,28 @@ CREATE TABLE [dbo].[LogRequests](
   [Headers] [nvarchar](max) NULL,
   [RemoteIP] [nvarchar](255) NULL,
   [VersionID] [int] NOT NULL,
-  CONSTRAINT [PK_LogRequests] PRIMARY KEY CLUSTERED ([ID] ASC)
+  CONSTRAINT [PK_Requests] PRIMARY KEY CLUSTERED ([ID] ASC)
 )
 GO
 
-ALTER TABLE [dbo].[LogRequests] ADD CONSTRAINT [DF_LogRequests_ID] DEFAULT (0) FOR [ID]
-ALTER TABLE [dbo].[LogRequests] ADD CONSTRAINT [DF_LogRequests_TaskID] DEFAULT (N'') FOR [TaskID]
-ALTER TABLE [dbo].[LogRequests] ADD CONSTRAINT [DF_LogRequests_Uri] DEFAULT (N'') FOR [Uri]
-ALTER TABLE [dbo].[LogRequests] ADD CONSTRAINT [DF_LogRequests_MethodType] DEFAULT (N'') FOR [MethodType]
-ALTER TABLE [dbo].[LogRequests] ADD CONSTRAINT [DF_LogRequests_RemoteIP] DEFAULT (N'') FOR [RemoteIP]
-ALTER TABLE [dbo].[LogRequests] ADD CONSTRAINT [DF_LogRequests_VersionID] DEFAULT (0) FOR [VersionID]
+ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_ID] DEFAULT (0) FOR [ID]
+ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_TaskID] DEFAULT (N'') FOR [TaskID]
+ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_Uri] DEFAULT (N'') FOR [Uri]
+ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_MethodType] DEFAULT (N'') FOR [MethodType]
+ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_RemoteIP] DEFAULT (N'') FOR [RemoteIP]
+ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_VersionID] DEFAULT (0) FOR [VersionID]
 GO
 
-CREATE SEQUENCE [dbo].[LogRequestsID]
+CREATE SEQUENCE [log].[RequestsID]
  AS [int]
  START WITH 1
  INCREMENT BY 1
 GO
 
-CREATE TABLE [dbo].[LogResponses](
+CREATE TABLE [log].[Responses](
   [ID] [int] NOT NULL,
   [TaskID] [nvarchar](50) NULL,
-  [LogDate] [datetime] NULL,
+  [Date] [datetime] NULL,
   [Username] [nvarchar](255) NULL,
   [UserAreas] [nvarchar](max) NULL,
   [StatusCode] [smallint] NULL,
@@ -61,20 +64,20 @@ CREATE TABLE [dbo].[LogResponses](
   [Content] [nvarchar](max) NULL,
   [BinaryContent] [nvarchar](max) NULL,
   [VersionID] [int] NOT NULL,
-  CONSTRAINT [PK_LogResponses] PRIMARY KEY CLUSTERED ([ID] ASC)
+  CONSTRAINT [PK_Responses] PRIMARY KEY CLUSTERED ([ID] ASC)
 )
 GO
 
-ALTER TABLE [dbo].[LogResponses] ADD CONSTRAINT [DF_LogResponses_ID] DEFAULT (0) FOR [ID]
-ALTER TABLE [dbo].[LogResponses] ADD CONSTRAINT [DF_LogResponses_TaskID] DEFAULT (N'') FOR [TaskID]
-ALTER TABLE [dbo].[LogResponses] ADD CONSTRAINT [DF_LogResponses_Username] DEFAULT (N'') FOR [Username]
-ALTER TABLE [dbo].[LogResponses] ADD CONSTRAINT [DF_LogResponses_StatusCode] DEFAULT ((0)) FOR [StatusCode]
-ALTER TABLE [dbo].[LogResponses] ADD CONSTRAINT [DF_LogResponses_ContentType] DEFAULT (N'') FOR [ContentType]
-ALTER TABLE [dbo].[LogResponses] ADD CONSTRAINT [DF_LogResponses_ContentEncoding] DEFAULT (N'') FOR [ContentEncoding]
-ALTER TABLE [dbo].[LogResponses] ADD CONSTRAINT [DF_LogResponses_VersionID] DEFAULT (0) FOR [VersionID]
+ALTER TABLE [log].[Responses] ADD CONSTRAINT [DF_Responses_ID] DEFAULT (0) FOR [ID]
+ALTER TABLE [log].[Responses] ADD CONSTRAINT [DF_Responses_TaskID] DEFAULT (N'') FOR [TaskID]
+ALTER TABLE [log].[Responses] ADD CONSTRAINT [DF_Responses_Username] DEFAULT (N'') FOR [Username]
+ALTER TABLE [log].[Responses] ADD CONSTRAINT [DF_Responses_StatusCode] DEFAULT ((0)) FOR [StatusCode]
+ALTER TABLE [log].[Responses] ADD CONSTRAINT [DF_Responses_ContentType] DEFAULT (N'') FOR [ContentType]
+ALTER TABLE [log].[Responses] ADD CONSTRAINT [DF_Responses_ContentEncoding] DEFAULT (N'') FOR [ContentEncoding]
+ALTER TABLE [log].[Responses] ADD CONSTRAINT [DF_Responses_VersionID] DEFAULT (0) FOR [VersionID]
 GO
 
-CREATE SEQUENCE [dbo].[LogResponsesID]
+CREATE SEQUENCE [log].[ResponsesID]
  AS [int]
  START WITH 1
  INCREMENT BY 1

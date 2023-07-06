@@ -62,9 +62,6 @@ type
   strict protected
     function CreateSyntaxClasses: TTSyntaxClasses; override;
   public
-    function GetDatabaseObjectName(
-      const ADatabaseObjectName: String): String; override;
-  public
     class procedure RegisterConnection(
       const AName: String;
       const AServer: String;
@@ -141,12 +138,6 @@ end;
 class destructor TTSqlServerConnection.ClassDestroy;
 begin
   FDriver.Free;
-end;
-
-function TTSqlServerConnection.GetDatabaseObjectName(
-  const ADatabaseObjectName: String): String;
-begin
-   result := Format('[%s]', [ADatabaseObjectName]);
 end;
 
 function TTSqlServerConnection.CreateSyntaxClasses: TTSyntaxClasses;

@@ -25,8 +25,8 @@ type
 
 { TLogAction }
 
-  [TTable('LogActions')]
-  [TSequence('LogActionsID')]
+  [TTable('log.Actions')]
+  [TSequence('log.ActionsID')]
   TLogAction = class
   strict private
     [TPrimaryKey]
@@ -57,8 +57,8 @@ type
 
 { TLogRequest }
 
-  [TTable('LogRequests')]
-  [TSequence('LogRequestsID')]
+  [TTable('log.Requests')]
+  [TSequence('log.RequestsID')]
   TLogRequest = class
   strict private
     [TPrimaryKey]
@@ -109,8 +109,8 @@ type
 
 { TLogResponses }
 
-  [TTable('LogResponses')]
-  [TSequence('LogResponsesID')]
+  [TTable('log.Responses')]
+  [TSequence('log.ResponsesID')]
   TLogResponse = class
   strict private
     [TPrimaryKey]
