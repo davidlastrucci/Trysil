@@ -36,8 +36,8 @@ type
     [TColumn('TaskID')]
     FTaskID: String;
 
-    [TColumn('LogDate')]
-    FLogDate: TDateTime;
+    [TColumn('Date')]
+    FDate: TDateTime;
 
     [TColumn('Action')]
     FAction: String;
@@ -50,7 +50,7 @@ type
 
     property ID: TTPrimaryKey read FID;
     property TaskID: String read FTaskID;
-    property LogDate: TDateTime read FLogDate;
+    property Date: TDateTime read FDate;
     property Action: String read FAction;
     property VersionID: TTVersion read FVersionID;
   end;
@@ -68,8 +68,8 @@ type
     [TColumn('TaskID')]
     FTaskID: String;
 
-    [TColumn('LogDate')]
-    FLogDate: TDateTime;
+    [TColumn('Date')]
+    FDate: TDateTime;
 
     [TColumn('Uri')]
     FUri: String;
@@ -97,7 +97,7 @@ type
 
     property ID: TTPrimaryKey read FID;
     property TaskID: String read FTaskID;
-    property LogDate: TDateTime read FLogDate;
+    property Date: TDateTime read FDate;
     property Uri: String read FUri;
     property Params: String read FParams;
     property MethodType: String read FMethodType;
@@ -120,8 +120,8 @@ type
     [TColumn('TaskID')]
     FTaskID: String;
 
-    [TColumn('LogDate')]
-    FLogDate: TDateTime;
+    [TColumn('Date')]
+    FDate: TDateTime;
 
     [TColumn('Username')]
     FUsername: String;
@@ -152,7 +152,7 @@ type
 
     property ID: TTPrimaryKey read FID;
     property TaskID: String read FTaskID;
-    property LogDate: TDateTime read FLogDate;
+    property Date: TDateTime read FDate;
     property Username: String read FUsername;
     property UserAreas: String read FUserAreas;
     property StatusCode: Integer read FStatusCode;
@@ -170,7 +170,7 @@ implementation
 procedure TLogAction.SetValues(const AAction: TTHttpLogAction);
 begin
   FTaskID := AAction.TaskID;
-  FLogDate := AAction.DateTime;
+  FDate := AAction.DateTime;
   FAction := AAction.Action;
 end;
 
@@ -179,7 +179,7 @@ end;
 procedure TLogRequest.SetValues(const ARequest: TTHttpLogRequest);
 begin
   FTaskID := ARequest.TaskID.ToString;
-  FLogDate := ARequest.DateTime;
+  FDate := ARequest.DateTime;
   FUri := ARequest.Uri;
   FParams := ARequest.Params.ToString;
   FMethodType := ARequest.MethodType;;
@@ -193,7 +193,7 @@ end;
 procedure TLogResponse.SetValues(const AResponse: TTHttpLogResponse);
 begin
   FTaskID := AResponse.TaskID.ToString;
-  FLogDate := AResponse.DateTime;
+  FDate := AResponse.DateTime;
   FUsername := AResponse.User.Username;
   FUserAreas := AResponse.User.Areas.ToString;
   FStatusCode := AResponse.StatusCode;

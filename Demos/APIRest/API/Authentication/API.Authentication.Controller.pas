@@ -50,6 +50,7 @@ type
       const ARequest: TTHttpRequest;
       const AResponse: TTHttpResponse); override;
     destructor Destroy; override;
+
     [TPost]
     procedure Logon;
   end;
