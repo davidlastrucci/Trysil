@@ -119,6 +119,7 @@ type
     FFilter: TTFilter;
 
     function GetColumns: String; virtual;
+    function GetWhere: String; virtual;
     function GetOrderBy: String; virtual;
 
     function InternalGetSqlSyntax(
@@ -365,10 +366,33 @@ begin
   end;
 end;
 
+function TTSelectSyntax.GetWhere: String;
+var
+  LResult: TStringBuilder;
+begin
+  LResult := TStringBuilder.Create;
+  try
+    if not FTableMap.WhereClause.IsEmpty then
+      LResult.AppendFormat('(%s)', [FTableMap.WhereClause]);
+
+    if not FFilter.Where.IsEmpty then
+    begin
+      if LResult.Length > 0 then
+        LResult.Append(' AND ');
+      LResult.AppendFormat('(%s)', [FFilter.Where]);
+    end;
+
+    result := LResult.ToString();
+  finally
+    LResult.Free;
+  end;
+end;
+
 function TTSelectSyntax.InternalGetSqlSyntax(
   const AWhereColumns: TArray<TTColumnMap>): String;
 var
   LResult: TStringBuilder;
+  LWhere: String;
 begin
   LResult := TStringBuilder.Create;
   try
@@ -376,8 +400,9 @@ begin
     LResult.Append(GetColumns());
     LResult.AppendFormat(' FROM %s', [
       FConnection.GetDatabaseObjectName(FTableMap.Name)]);
-    if not FFilter.Where.IsEmpty then
-      LResult.AppendFormat(' WHERE %s', [FFilter.Where]);
+    LWhere := GetWhere();
+    if not LWhere.IsEmpty then
+      LResult.AppendFormat(' WHERE %s', [LWhere]);
     LResult.Append(GetOrderBy());
     if not FFilter.Paging.IsEmpty then
       LResult.AppendFormat(' %s', [GetFilterPagingSyntax()]);

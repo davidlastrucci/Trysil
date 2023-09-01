@@ -78,6 +78,17 @@ type
     property IsCascade: Boolean read FIsCascade;
   end;
 
+{ TWhereClauseAttribute }
+
+  TWhereClauseAttribute = class(TCustomAttribute)
+  strict private
+    FWhere: String;
+  public
+    constructor Create(const AWhere: String);
+
+    property Where: String read FWhere;
+  end;
+
 implementation
 
 { TNamedAttribute }
@@ -108,6 +119,14 @@ begin
   FTableName := ATableName;
   FColumnName := AColumnName;
   FIsCascade := AIsCascade;
+end;
+
+{ TWhereClauseAttribute }
+
+constructor TWhereClauseAttribute.Create(const AWhere: String);
+begin
+  inherited Create;
+  FWhere := AWhere;
 end;
 
 end.

@@ -18,6 +18,7 @@ resourcestring
   SInvalidRttiObjectType = 'TRttiObject type is not valid.';
   SDuplicateTableAttribute = 'Duplicate TTable Attribute.';
   SDuplicateSequenceAttribute = 'Duplicate TSequence Attribute.';
+  SDuplicateWhereClauseAttribute = 'Duplicate TWhereClause Attribute.';
   SDuplicatePrimaryKeyAttribute = 'Duplicate TPrimaryKey Attribute.';
   SDuplicateVersionColumnAttribute = 'Duplicate TVersionColumn Attribute.';
   SInsertEventAttribute = 'Duplicate TInsertEventAttribute Attribute.';

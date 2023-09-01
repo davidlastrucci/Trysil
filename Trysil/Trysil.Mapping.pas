@@ -238,6 +238,7 @@ type
 
     FName: String;
     FSequenceName: String;
+    FWhereClause: String;
     FPrimaryKey: TTColumnMap;
     FVersionColumn: TTColumnMap;
     FColumns: TTColumnsMap;
@@ -248,6 +249,7 @@ type
 
     procedure SetTableName(const AName: String);
     procedure SetSequenceName(const AName: String);
+    procedure SetWhereClause(const AWhereClause: String);
 
     procedure InitializeTable(const AType: TRttiType);
     procedure InitializeColumns(const AType: TRttiType);
@@ -272,6 +274,7 @@ type
 
     property Name: String read FName;
     property SequenceName: String read FSequenceName;
+    property WhereClause: String read FWhereClause;
     property PrimaryKey: TTColumnMap read FPrimaryKey;
     property VersionColumn: TTColumnMap read FVersionColumn;
     property Columns: TTColumnsMap read FColumns;
@@ -664,6 +667,13 @@ begin
   FSequenceName := AName;
 end;
 
+procedure TTTableMap.SetWhereClause(const AWhereClause: String);
+begin
+  if not FWhereClause.IsEmpty then
+    raise ETException.Create(SDuplicateWhereClauseAttribute);
+  FWhereClause := AWhereClause;
+end;
+
 procedure TTTableMap.InitializeTable(const AType: TRttiType);
 var
   LAttribute: TCustomAttribute;
@@ -673,6 +683,8 @@ begin
       SetTableName(TTableAttribute(LAttribute).Name)
     else if LAttribute is TSequenceAttribute then
       SetSequenceName(TSequenceAttribute(LAttribute).Name)
+    else if LAttribute is TWhereClauseAttribute then
+      SetWhereClause(TWhereClauseAttribute(LAttribute).Where)
     else if LAttribute is TRelationAttribute then
       FRelations.Add(
         TTRelationMap.Create(
