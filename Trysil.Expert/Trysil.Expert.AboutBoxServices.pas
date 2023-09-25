@@ -77,7 +77,7 @@ begin
   ForceDemandLoadState(dlDisable);
   LBitmap := TBitmap.Create;
   try
-    LBitmap.LoadFromResourceName(HInstance, 'TRYSIL');
+    LBitmap.LoadFromResourceName(HInstance, 'TRYSIL_24');
     SplashScreenServices.AddPluginBitmap(
       SWizardTitle,
       LBitmap.Handle,
@@ -101,7 +101,8 @@ begin
         BorlandIDEServices.GetService(IOTAAboutBoxServices)
           as IOTAAboutBoxServices;
 
-      LProductImage := LoadBitmap(FindResourceHInstance(HInstance), 'TRYSIL');
+      LProductImage := LoadBitmap(
+        FindResourceHInstance(HInstance), 'TRYSIL_24');
       FAboutBoxIndex := FAboutBoxServices.AddPluginInfo(
         SWizardTitle,
         SWizardDescription,

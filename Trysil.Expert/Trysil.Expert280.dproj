@@ -225,6 +225,11 @@
         <DCCReference Include="UI\Trysil.Expert.UI.About.pas">
             <Form>TAboutForm</Form>
         </DCCReference>
+        <DCCReference Include="UI\Trysil.Expert.UI.Images.pas">
+            <Form>TImagesDataModule</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -272,7 +277,7 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Win32\Release\Trysil.Expert280.dll" Configuration="Release" Class="ProjectOutput">
+                <DeployFile LocalName="Win32\Trysil.Expert280.dll" Configuration="Release" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>Trysil_Expert280.dll</RemoteName>
                         <Overwrite>true</Overwrite>

@@ -27,7 +27,8 @@ uses
 
   Trysil.Expert.Consts,
   Trysil.Expert.Validator,
-  Trysil.Expert.Model;
+  Trysil.Expert.Model,
+  Trysil.Expert.UI.Images;
 
 type
 
@@ -88,6 +89,7 @@ end;
 procedure TTDesignEntityForm.AfterConstruction;
 begin
   inherited AfterConstruction;
+  TrysilImage.Picture.Assign(TTImagesDataModule.Instance.Logo);
   EntityToControls;
 end;
 

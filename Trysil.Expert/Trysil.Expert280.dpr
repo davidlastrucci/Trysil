@@ -38,7 +38,8 @@ uses
   Trysil.Expert.UI.GenerateSQL in 'UI\Trysil.Expert.UI.GenerateSQL.pas' {TGenerateSQL},
   Trysil.Expert.UI.GenerateModel in 'UI\Trysil.Expert.UI.GenerateModel.pas' {TGenerateModel},
   Trysil.Expert.UI.Settings in 'UI\Trysil.Expert.UI.Settings.pas' {TSettingsForm},
-  Trysil.Expert.UI.About in 'UI\Trysil.Expert.UI.About.pas' {TAboutForm};
+  Trysil.Expert.UI.About in 'UI\Trysil.Expert.UI.About.pas' {TAboutForm},
+  Trysil.Expert.UI.Images in 'UI\Trysil.Expert.UI.Images.pas' {TImagesDataModule: TDataModule};
 
 {$R *.res}
 

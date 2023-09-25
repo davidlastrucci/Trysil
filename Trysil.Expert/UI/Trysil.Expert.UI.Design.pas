@@ -18,7 +18,6 @@ uses
   System.SysUtils,
   System.Variants,
   System.Classes,
-  System.ImageList,
   Vcl.Graphics,
   Vcl.Controls,
   Vcl.Forms,
@@ -28,12 +27,12 @@ uses
   Vcl.ComCtrls,
   Vcl.Buttons,
   Vcl.AppEvnts,
-  Vcl.ImgList,
 
   Trysil.Expert.Consts,
   Trysil.Expert.Project,
   Trysil.Expert.Config,
   Trysil.Expert.Model,
+  Trysil.Expert.UI.Images,
   Trysil.Expert.UI.Classes,
   Trysil.Expert.UI.DesignEntity,
   Trysil.Expert.UI.DesignColumn,
@@ -48,7 +47,6 @@ type
   TTDesignForm = class(TForm)
     TrysilImage: TImage;
     ApplicationEvents: TApplicationEvents;
-    ImageList: TImageList;
     TreeViewPanel: TPanel;
     TreeViewTitlePanel: TPanel;
     TreeViewToolBarPanel: TPanel;
@@ -86,6 +84,8 @@ type
     FDirectory: String;
     FEntities: TTEntities;
 
+    procedure SetImages;
+
     procedure ShowEntities;
     procedure ShowColumns;
   public
@@ -119,7 +119,21 @@ end;
 procedure TTDesignForm.AfterConstruction;
 begin
   inherited AfterConstruction;
+  SetImages;
+  ListView.SmallImages := TTImagesDataModule.Instance.Images;
   FEntities.LoadFromDirectory(FDirectory);
+end;
+
+procedure TTDesignForm.SetImages;
+begin
+  TrysilImage.Picture.Assign(TTImagesDataModule.Instance.Logo);
+  TreeView.Images := TTImagesDataModule.Instance.Images;
+  AddNewEntityButton.Images := TTImagesDataModule.Instance.ButtonsImages;
+  EditEntityButton.Images := TTImagesDataModule.Instance.ButtonsImages;
+  DeleteEntityButton.Images := TTImagesDataModule.Instance.ButtonsImages;
+  AddNewColumnButton.Images := TTImagesDataModule.Instance.ButtonsImages;
+  EditColumnButton.Images := TTImagesDataModule.Instance.ButtonsImages;
+  DeleteColumnButton.Images := TTImagesDataModule.Instance.ButtonsImages;
 end;
 
 procedure TTDesignForm.ApplicationEventsIdle(

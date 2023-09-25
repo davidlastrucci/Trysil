@@ -18,7 +18,6 @@ uses
   System.SysUtils,
   System.Variants,
   System.Classes,
-  System.ImageList,
   Vcl.Graphics,
   Vcl.Controls,
   Vcl.Forms,
@@ -26,9 +25,9 @@ uses
   Vcl.StdCtrls,
   Vcl.ExtCtrls,
   Vcl.ComCtrls,
-  Vcl.ImgList,
 
   Trysil.Expert.Model,
+  Trysil.Expert.UI.Images,
   Trysil.Expert.UI.DesignColumn.DataTypeColumn,
   Trysil.Expert.UI.DesignColumn.EntityTypeColumn,
   Trysil.Expert.UI.DesignColumn.EntityListTypeColumn;
@@ -42,7 +41,6 @@ type
     ColumnTypeLabel: TLabel;
     OkeyButton: TButton;
     CancelButton: TButton;
-    ImageList: TImageList;
     TreeView: TTreeView;
     procedure OkeyButtonClick(Sender: TObject);
   strict private
@@ -79,6 +77,8 @@ end;
 procedure TTDesignColumnForm.AfterConstruction;
 begin
   inherited AfterConstruction;
+  TrysilImage.Picture.Assign(TTImagesDataModule.Instance.Logo);
+  TreeView.Images := TTImagesDataModule.Instance.Images;
   TreeView.Selected := TreeView.Items[0];
 end;
 

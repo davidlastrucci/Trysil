@@ -25,7 +25,9 @@ uses
   Vcl.Dialogs,
   Vcl.StdCtrls,
   Vcl.ExtCtrls,
-  Vcl.ComCtrls;
+  Vcl.ComCtrls,
+
+  Trysil.Expert.UI.Images;
 
 type
 
@@ -51,12 +53,20 @@ type
     procedure GitHubLabelClick(Sender: TObject);
   strict private
   public
+    procedure AfterConstruction; override;
+
     class procedure ShowDialog;
   end;
 
 implementation
 
 {$R *.dfm}
+
+procedure TTAboutForm.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  TrysilImage.Picture.Assign(TTImagesDataModule.Instance.Logo);
+end;
 
 procedure TTAboutForm.HyperLinkOn(Sender: TObject);
 begin

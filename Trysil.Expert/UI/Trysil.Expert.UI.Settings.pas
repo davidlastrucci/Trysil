@@ -25,7 +25,8 @@ uses
   Vcl.ExtCtrls,
   Vcl.StdCtrls,
 
-  Trysil.Expert.Config;
+  Trysil.Expert.Config,
+  Trysil.Expert.UI.Images;
 
 type
 
@@ -60,6 +61,7 @@ implementation
 procedure TTSettingsForm.AfterConstruction;
 begin
   inherited AfterConstruction;
+  TrysilImage.Picture.Assign(TTImagesDataModule.Instance.Logo);
   ConfigToControls;
 end;
 

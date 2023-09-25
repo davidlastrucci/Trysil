@@ -20,7 +20,6 @@ uses
   System.Classes,
   System.IOUtils,
   System.Generics.Collections,
-  System.ImageList,
   Vcl.Graphics,
   Vcl.Controls,
   Vcl.Forms,
@@ -28,15 +27,16 @@ uses
   Vcl.StdCtrls,
   Vcl.ExtCtrls,
   Vcl.ComCtrls,
-  Vcl.ImgList,
+  Vcl.Menus,
 
   Trysil.Expert.Consts,
   Trysil.Expert.Classes,
   Trysil.Expert.Project,
   Trysil.Expert.Config,
   Trysil.Expert.Model,
+  Trysil.Expert.UI.Images,
   Trysil.Expert.UI.Classes,
-  Trysil.Expert.SQLCreator, Vcl.Menus;
+  Trysil.Expert.SQLCreator;
 
 type
 
@@ -44,7 +44,6 @@ type
 
   TTGenerateSQL = class(TForm)
     TrysilImage: TImage;
-    ImageList: TImageList;
     SaveDialog: TSaveDialog;
     DatabaseTypeLabel: TLabel;
     DatabaseTypeCombobox: TComboBox;
@@ -96,6 +95,8 @@ end;
 procedure TTGenerateSQL.AfterConstruction;
 begin
   inherited AfterConstruction;
+  TrysilImage.Picture.Assign(TTImagesDataModule.Instance.Logo);
+  EntitiesListView.SmallImages := TTImagesDataModule.Instance.Images;
   FEntities.LoadFromDirectory(TTUtils.TrysilFolder(FProject.Directory));
 end;
 

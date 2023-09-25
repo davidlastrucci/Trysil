@@ -19,7 +19,6 @@ uses
   System.Variants,
   System.Classes,
   System.Generics.Collections,
-  System.ImageList,
   Vcl.Graphics,
   Vcl.Controls,
   Vcl.Forms,
@@ -27,15 +26,16 @@ uses
   Vcl.ExtCtrls,
   Vcl.ComCtrls,
   Vcl.StdCtrls,
-  Vcl.ImgList,
+  Vcl.Menus,
 
   Trysil.Expert.Consts,
   Trysil.Expert.Classes,
   Trysil.Expert.Project,
   Trysil.Expert.Config,
   Trysil.Expert.Model,
+  Trysil.Expert.UI.Images,
   Trysil.Expert.UI.Classes,
-  Trysil.Expert.PascalCreator, Vcl.Menus;
+  Trysil.Expert.PascalCreator;
 
 type
 
@@ -43,7 +43,6 @@ type
 
   TTGenerateModel = class(TForm)
     TrysilImage: TImage;
-    ImageList: TImageList;
     ModelDirectoryLabel: TLabel;
     ModelDirectoryTextbox: TEdit;
     UnitFilenamesLabel: TLabel;
@@ -97,6 +96,8 @@ end;
 procedure TTGenerateModel.AfterConstruction;
 begin
   inherited AfterConstruction;
+  TrysilImage.Picture.Assign(TTImagesDataModule.Instance.Logo);
+  EntitiesListView.SmallImages := TTImagesDataModule.Instance.Images;
   ConfigToControls;
   FEntities.LoadFromDirectory(TTUtils.TrysilFolder(FProject.Directory));
 end;
