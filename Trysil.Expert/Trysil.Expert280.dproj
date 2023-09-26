@@ -4,7 +4,7 @@
         <ProjectVersion>19.5</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>1</TargetedPlatforms>
         <AppType>Library</AppType>
@@ -191,6 +191,7 @@
         <DCCReference Include="Model\Trysil.Expert.Config.pas"/>
         <DCCReference Include="Model\Trysil.Expert.Model.pas"/>
         <DCCReference Include="Model\Trysil.Expert.Project.pas"/>
+        <DCCReference Include="UI\Trysil.Expert.UI.Themes.pas"/>
         <DCCReference Include="UI\Trysil.Expert.UI.Classes.pas"/>
         <DCCReference Include="UI\Trysil.Expert.UI.Design.pas">
             <Form>TDesignForm</Form>

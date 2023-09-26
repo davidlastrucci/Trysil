@@ -26,6 +26,7 @@ uses
   Vcl.StdCtrls,
 
   Trysil.Expert.Config,
+  Trysil.Expert.UI.Themes,
   Trysil.Expert.UI.Images;
 
 type
@@ -61,6 +62,7 @@ implementation
 procedure TTSettingsForm.AfterConstruction;
 begin
   inherited AfterConstruction;
+  TTThemingServices.Instance.ApplyTheme(Self);
   TrysilImage.Picture.Assign(TTImagesDataModule.Instance.Logo);
   ConfigToControls;
 end;

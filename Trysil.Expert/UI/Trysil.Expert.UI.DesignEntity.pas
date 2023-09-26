@@ -28,6 +28,7 @@ uses
   Trysil.Expert.Consts,
   Trysil.Expert.Validator,
   Trysil.Expert.Model,
+  Trysil.Expert.UI.Themes,
   Trysil.Expert.UI.Images;
 
 type
@@ -89,6 +90,7 @@ end;
 procedure TTDesignEntityForm.AfterConstruction;
 begin
   inherited AfterConstruction;
+  TTThemingServices.Instance.ApplyTheme(Self);
   TrysilImage.Picture.Assign(TTImagesDataModule.Instance.Logo);
   EntityToControls;
 end;

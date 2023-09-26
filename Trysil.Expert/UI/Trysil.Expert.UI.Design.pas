@@ -32,6 +32,7 @@ uses
   Trysil.Expert.Project,
   Trysil.Expert.Config,
   Trysil.Expert.Model,
+  Trysil.Expert.UI.Themes,
   Trysil.Expert.UI.Images,
   Trysil.Expert.UI.Classes,
   Trysil.Expert.UI.DesignEntity,
@@ -119,6 +120,7 @@ end;
 procedure TTDesignForm.AfterConstruction;
 begin
   inherited AfterConstruction;
+  TTThemingServices.Instance.ApplyTheme(Self);
   SetImages;
   ListView.SmallImages := TTImagesDataModule.Instance.Images;
   FEntities.LoadFromDirectory(FDirectory);
@@ -247,14 +249,17 @@ var
   LNode: TTreeNode;
   LEntityNode: TTEntityTreeNode absolute LNode;
 begin
-  LNode := TreeView.Selected;
-  if Assigned(LNode) then
-    if TTDesignEntityForm.ShowDialog(FEntities, LEntityNode.Value) then
-    begin
-      LNode.Text := LEntityNode.Value.Name;
-      TreeView.Items.AlphaSort(False);
-      TreeView.Selected := LNode;
-    end;
+  if EditEntityButton.Enabled then
+  begin
+    LNode := TreeView.Selected;
+    if Assigned(LNode) then
+      if TTDesignEntityForm.ShowDialog(FEntities, LEntityNode.Value) then
+      begin
+        LNode.Text := LEntityNode.Value.Name;
+        TreeView.Items.AlphaSort(False);
+        TreeView.Selected := LNode;
+      end;
+  end;
 end;
 
 procedure TTDesignForm.DeleteEntityButtonClick(Sender: TObject);
@@ -298,28 +303,31 @@ var
   LColumn: TTAbstractColumn;
   LResult: Boolean;
 begin
-  LNode := TreeView.Selected;
-  if Assigned(LNode) then
+  if EditColumnButton.Enabled then
   begin
-    LEntity := LEntityNode.Value;
-    LItem := ListView.Selected;
-    if Assigned(LItem) then
+    LNode := TreeView.Selected;
+    if Assigned(LNode) then
     begin
-      LColumn := LColumnItem.Value;
-      if LColumn is TTColumn then
-        LResult := TTDesignDataTypeColumnForm.ShowDialog(
-          LEntity, TTColumn(LColumn))
-      else if LColumn is TTLazyColumn then
-        LResult := TTDesignEntityTypeColumnForm.ShowDialog(
-          FEntities, LEntity, TTLazyColumn(LColumn))
-      else if LColumn is TTLazyListColumn then
-        LResult := TTDesignEntityListTypeColumnForm.ShowDialog(
-          FEntities, LEntity, TTLazyListColumn(LColumn))
-      else
-        LResult := False;
+      LEntity := LEntityNode.Value;
+      LItem := ListView.Selected;
+      if Assigned(LItem) then
+      begin
+        LColumn := LColumnItem.Value;
+        if LColumn is TTColumn then
+          LResult := TTDesignDataTypeColumnForm.ShowDialog(
+            LEntity, TTColumn(LColumn))
+        else if LColumn is TTLazyColumn then
+          LResult := TTDesignEntityTypeColumnForm.ShowDialog(
+            FEntities, LEntity, TTLazyColumn(LColumn))
+        else if LColumn is TTLazyListColumn then
+          LResult := TTDesignEntityListTypeColumnForm.ShowDialog(
+            FEntities, LEntity, TTLazyListColumn(LColumn))
+        else
+          LResult := False;
 
-      if LResult then
-        ShowColumns;
+        if LResult then
+          ShowColumns;
+      end;
     end;
   end;
 end;

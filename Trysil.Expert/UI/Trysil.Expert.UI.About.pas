@@ -27,6 +27,7 @@ uses
   Vcl.ExtCtrls,
   Vcl.ComCtrls,
 
+  Trysil.Expert.UI.Themes,
   Trysil.Expert.UI.Images;
 
 type
@@ -65,6 +66,7 @@ implementation
 procedure TTAboutForm.AfterConstruction;
 begin
   inherited AfterConstruction;
+  TTThemingServices.Instance.ApplyTheme(Self);
   TrysilImage.Picture.Assign(TTImagesDataModule.Instance.Logo);
 end;
 

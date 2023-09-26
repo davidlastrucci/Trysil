@@ -33,6 +33,7 @@ uses
   Trysil.Expert.Project,
   Trysil.Expert.Config,
   Trysil.Expert.Model,
+  Trysil.Expert.UI.Themes,
   Trysil.Expert.UI.Images,
   Trysil.Expert.UI.Classes,
   Trysil.Expert.PascalCreator;
@@ -96,6 +97,7 @@ end;
 procedure TTGenerateModel.AfterConstruction;
 begin
   inherited AfterConstruction;
+  TTThemingServices.Instance.ApplyTheme(Self);
   TrysilImage.Picture.Assign(TTImagesDataModule.Instance.Logo);
   EntitiesListView.SmallImages := TTImagesDataModule.Instance.Images;
   ConfigToControls;
