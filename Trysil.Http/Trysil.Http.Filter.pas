@@ -174,9 +174,9 @@ begin
   begin
     SetLength(FList, AJSon.Count);
     for LIndex := 0 to AJSon.Count - 1 do
-      if AJSon[Lindex] is TJSonObject then
+      if AJSon.Items[LIndex] is TJSonObject then
         FList[LIndex] := TTHttpFilterWhere.Create(
-          TJSonObject(AJSon[Lindex]), ATableMetadata);
+          TJSonObject(AJSon.Items[LIndex]), ATableMetadata);
   end;
 end;
 
@@ -237,9 +237,9 @@ begin
   begin
     SetLength(FList, AJSon.Count);
     for LIndex := 0 to AJSon.Count - 1 do
-      if AJSon[Lindex] is TJSonObject then
+      if AJSon.Items[LIndex] is TJSonObject then
         FList[LIndex] := TTHttpFilterOrderBy.Create(
-          TJSonObject(AJSon[Lindex]), ATableMetadata);
+          TJSonObject(AJSon.Items[LIndex]), ATableMetadata);
   end;
 end;
 
