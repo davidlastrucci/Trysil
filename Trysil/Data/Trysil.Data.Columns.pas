@@ -270,7 +270,7 @@ end;
 
 function TTGuidColumn.GetValue: TTValue;
 begin
-  result := TTValue.From<TGuid>(FField.AsGuid);
+  result := TTValue.From<TGuid>(TGUID.Create(FField.AsString));
 end;
 
 function TTGuidColumn.GetNullableValue: TTValue;
@@ -280,7 +280,7 @@ begin
   if FField.IsNull then
     LValue := nil
   else
-    LValue := FField.AsGuid;
+    LValue := TGUID.Create(FField.AsString);
   result := TTValue.From<TTNullable<TGuid>>(LValue);
 end;
 
