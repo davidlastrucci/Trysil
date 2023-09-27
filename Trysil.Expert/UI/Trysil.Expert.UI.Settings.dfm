@@ -1,13 +1,13 @@
 inherited TSettingsForm: TTSettingsForm
-  ClientHeight = 297
+  ClientHeight = 302
   ClientWidth = 509
   Color = clWhite
   ExplicitWidth = 525
-  ExplicitHeight = 336
+  ExplicitHeight = 341
   TextHeight = 15
   inherited ContentPanel: TPanel
     Width = 509
-    Height = 248
+    Height = 253
     ExplicitLeft = 0
     ExplicitTop = 0
     ExplicitWidth = 509
@@ -17,18 +17,18 @@ inherited TSettingsForm: TTSettingsForm
       Top = 12
       Width = 425
       Height = 89
-      Caption = 'Trysil'
+      Caption = 'Trysil  '
       TabOrder = 0
       object TrysilDirectoryLabel: TLabel
         Left = 24
-        Top = 24
+        Top = 28
         Width = 51
         Height = 15
         Caption = 'Directory:'
       end
       object TrysilDirectoryTextbox: TEdit
         Left = 24
-        Top = 45
+        Top = 49
         Width = 380
         Height = 23
         TabOrder = 0
@@ -40,25 +40,25 @@ inherited TSettingsForm: TTSettingsForm
       Top = 107
       Width = 425
       Height = 138
-      Caption = 'Entities'
+      Caption = 'Entities  '
       TabOrder = 1
       object ModelDirectoryLabel: TLabel
         Left = 24
-        Top = 24
+        Top = 28
         Width = 51
         Height = 15
         Caption = 'Directory:'
       end
       object UnitFilenamesLabel: TLabel
         Left = 24
-        Top = 74
+        Top = 78
         Width = 79
         Height = 15
         Caption = 'Unit filenames:'
       end
       object ModelDirectoryTextbox: TEdit
         Left = 24
-        Top = 45
+        Top = 49
         Width = 380
         Height = 23
         TabOrder = 0
@@ -66,7 +66,7 @@ inherited TSettingsForm: TTSettingsForm
       end
       object UnitFilenamesTextbox: TEdit
         Left = 24
-        Top = 95
+        Top = 99
         Width = 380
         Height = 23
         TabOrder = 1
@@ -75,7 +75,7 @@ inherited TSettingsForm: TTSettingsForm
     end
   end
   inherited ButtonsPanel: TPanel
-    Top = 248
+    Top = 253
     Width = 509
     ExplicitTop = 248
     ExplicitWidth = 509

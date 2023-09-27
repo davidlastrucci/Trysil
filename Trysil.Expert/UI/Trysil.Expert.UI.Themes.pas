@@ -18,46 +18,27 @@ uses
   System.UITypes,
   System.Generics.Collections,
   ToolsAPI,
+  Winapi.Windows,
   Vcl.Graphics,
   Vcl.Controls,
   Vcl.Forms;
 
 type
 
-{ TTStyleServicesNotifier }
-
-  TTStyleServicesNotifier = class(
-    TInterfacedObject, IOTANotifier, INTAIDEThemingServicesNotifier)
-  strict private
-    FThemingServices: IOTAIDEThemingServices;
-    FFormClasses: TList<TFormClass>;
-
-    // IOTANotifier
-    procedure AfterSave;
-    procedure BeforeSave;
-    procedure Destroyed;
-    procedure Modified;
-
-    // INTAIDEThemingServiceNotifier
-    procedure ChangedTheme;
-    procedure ChangingTheme;
-  public
-    constructor Create(
-      const AThemingServices: IOTAIDEThemingServices;
-      const AFormClasses: TList<TFormClass>);
-  end;
-
 { TTThemingServices }
 
   TTThemingServices = class
   strict private
     class var FInstance: TTThemingServices;
+
     class constructor ClassCreate;
     class destructor ClassDestroy;
   strict private
     FFormClasses: TList<TFormClass>;
     FThemingServices: IOTAIDEThemingServices;
 
+    function GetThemingEnabled: Boolean;
+    procedure ThemeChanged(const AIsDarkTheme: Boolean);
     procedure RegisterFormClass(const AFormClass: TFormClass);
   public
     constructor Create;
@@ -73,15 +54,71 @@ type
 
 implementation
 
+type
+
+{ TTStyleServicesNotifierChangedEvent }
+
+  TTStyleServicesNotifierChangedEvent =
+    procedure(const AIsDarkTheme: Boolean) of object;
+
 { TTStyleServicesNotifier }
+
+  TTStyleServicesNotifier = class(
+    TInterfacedObject, IOTANotifier, INTAIDEThemingServicesNotifier)
+  strict private
+    FThemingServices: IOTAIDEThemingServices;
+    FChangedEvent: TTStyleServicesNotifierChangedEvent;
+
+    function GetIsDarkTheme: Boolean;
+    function GetThemingEnabled: Boolean;
+
+    // IOTANotifier
+    procedure AfterSave;
+    procedure BeforeSave;
+    procedure Destroyed;
+    procedure Modified;
+
+    // INTAIDEThemingServiceNotifier
+    procedure ChangedTheme;
+    procedure ChangingTheme;
+  public
+    constructor Create(
+      const AThemingServices: IOTAIDEThemingServices;
+      const AChangedEvent: TTStyleServicesNotifierChangedEvent);
+
+      property IsDarkTheme: Boolean read GetIsDarkTheme;
+  end;
 
 constructor TTStyleServicesNotifier.Create(
   const AThemingServices: IOTAIDEThemingServices;
-  const AFormClasses: TList<TFormClass>);
+  const AChangedEvent: TTStyleServicesNotifierChangedEvent);
 begin
   inherited Create;
   FThemingServices := AThemingServices;
-  FFormClasses := AFormClasses;
+  FChangedEvent := FChangedEvent;
+end;
+
+function TTStyleServicesNotifier.GetIsDarkTheme: Boolean;
+var
+  LColor: TColor;
+  LRed, LGreen, LBlue: Byte;
+begin
+  if GetThemingEnabled then
+    LColor := FThemingServices.StyleServices.GetSystemColor(clWindow)
+  else
+    LColor := clWindow;
+
+  LRed := GetRValue(LColor);
+  LGreen := GetGValue(LColor);
+  LBlue := GetBValue(LColor);
+
+  result := (((LRed + LGreen + LBlue) div 3) < 127);
+end;
+
+function TTStyleServicesNotifier.GetThemingEnabled: Boolean;
+begin
+  result := Assigned(FThemingServices) and
+    (FThemingServices.IDEThemingEnabled);
 end;
 
 procedure TTStyleServicesNotifier.AfterSave;
@@ -105,15 +142,10 @@ begin
 end;
 
 procedure TTStyleServicesNotifier.ChangedTheme;
-var
-  LFormClass: TFormClass;
 begin
-  if Assigned(FThemingServices) and
-    (FThemingServices.IDEThemingEnabled) then
-  begin
-    for LFormClass in FFormClasses do
-      FThemingServices.RegisterFormClass(LFormClass);
-  end;
+  if GetThemingEnabled then
+    if Assigned(FChangedEvent) then
+      FChangedEvent(GetIsDarkTheme);
 end;
 
 procedure TTStyleServicesNotifier.ChangingTheme;
@@ -154,13 +186,28 @@ begin
     FThemingServices := (BorlandIDEServices as IOTAIDEThemingServices);
     if FThemingServices.IDEThemingEnabled then
       FThemingServices.AddNotifier(
-        TTStyleServicesNotifier.Create(FThemingServices, FFormClasses));
+        TTStyleServicesNotifier.Create(FThemingServices, ThemeChanged));
   end;
+end;
+
+function TTThemingServices.GetThemingEnabled: Boolean;
+begin
+  result := Assigned(FThemingServices) and
+    (FThemingServices.IDEThemingEnabled);
+end;
+
+procedure TTThemingServices.ThemeChanged(const AIsDarkTheme: Boolean);
+var
+  LFormClass: TFormClass;
+begin
+  if GetThemingEnabled then
+    for LFormClass in FFormClasses do
+      FThemingServices.RegisterFormClass(LFormClass);
 end;
 
 procedure TTThemingServices.RegisterFormClass(const AFormClass: TFormClass);
 begin
-  if not FFormClasses.Contains(AFormClass) then
+  if GetThemingEnabled and (not FFormClasses.Contains(AFormClass)) then
   begin
     FThemingServices.RegisterFormClass(AFormClass);
     FFormClasses.Add(AFormClass);
@@ -169,8 +216,7 @@ end;
 
 procedure TTThemingServices.ApplyTheme(const AForm: TForm);
 begin
-  if Assigned(FThemingServices) and
-    (FThemingServices.IDEThemingEnabled) then
+  if GetThemingEnabled then
   begin
     RegisterFormClass(TFormClass(AForm.ClassType));
     FThemingServices.ApplyTheme(AForm);
@@ -179,8 +225,7 @@ end;
 
 function TTThemingServices.GetSystemColor(const AColor: TColor): TColor;
 begin
-  if Assigned(FThemingServices) and
-    (FThemingServices.IDEThemingEnabled) then
+  if GetThemingEnabled then
     result := FThemingServices.StyleServices.GetSystemColor(AColor)
   else
     result := AColor;
