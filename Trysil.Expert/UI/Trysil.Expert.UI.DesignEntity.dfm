@@ -1,101 +1,101 @@
-object TDesignEntityForm: TTDesignEntityForm
-  Left = 0
-  Top = 0
-  BorderIcons = [biSystemMenu]
-  BorderStyle = bsDialog
-  Caption = 'Trysil - Delphi ORM'
-  ClientHeight = 212
-  ClientWidth = 464
+inherited TDesignEntityForm: TTDesignEntityForm
+  ClientHeight = 229
+  ClientWidth = 463
   Color = clWhite
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -12
-  Font.Name = 'Segoe UI'
-  Font.Style = []
-  Position = poScreenCenter
+  ExplicitWidth = 479
+  ExplicitHeight = 268
   TextHeight = 15
-  object TrysilImage: TImage
-    Left = 8
-    Top = 8
-    Width = 48
-    Height = 48
+  inherited ContentPanel: TPanel
+    Width = 463
+    Height = 180
+    ExplicitLeft = 0
+    ExplicitTop = 0
+    ExplicitWidth = 464
+    ExplicitHeight = 163
+    object NameLabel: TLabel
+      Left = 72
+      Top = 16
+      Width = 66
+      Height = 15
+      Caption = 'Entity name:'
+    end
+    object SequenceNameLabel: TLabel
+      Left = 73
+      Top = 120
+      Width = 87
+      Height = 15
+      Caption = 'Sequence name:'
+    end
+    object TableNameLabel: TLabel
+      Left = 72
+      Top = 70
+      Width = 63
+      Height = 15
+      Caption = 'Table name:'
+    end
+    object NameTextbox: TEdit
+      Left = 73
+      Top = 37
+      Width = 380
+      Height = 23
+      MaxLength = 128
+      TabOrder = 0
+      Text = 'Name'
+    end
+    object SequenceNameTextbox: TEdit
+      Left = 73
+      Top = 140
+      Width = 380
+      Height = 23
+      MaxLength = 128
+      TabOrder = 2
+      Text = 'SequenceName'
+    end
+    object TableNameTextbox: TEdit
+      Left = 73
+      Top = 91
+      Width = 380
+      Height = 23
+      MaxLength = 128
+      TabOrder = 1
+      Text = 'TableName'
+    end
   end
-  object NameLabel: TLabel
-    Left = 68
-    Top = 16
-    Width = 66
-    Height = 15
-    Caption = 'Entity name:'
-  end
-  object TableNameLabel: TLabel
-    Left = 68
-    Top = 70
-    Width = 63
-    Height = 15
-    Caption = 'Table name:'
-  end
-  object SequenceNameLabel: TLabel
-    Left = 69
-    Top = 120
-    Width = 87
-    Height = 15
-    Caption = 'Sequence name:'
-  end
-  object NameTextbox: TEdit
-    Left = 69
-    Top = 37
-    Width = 380
-    Height = 23
-    MaxLength = 128
-    TabOrder = 0
-    Text = 'Name'
-  end
-  object TableNameTextbox: TEdit
-    Left = 69
-    Top = 91
-    Width = 380
-    Height = 23
-    MaxLength = 128
-    TabOrder = 1
-    Text = 'TableName'
-  end
-  object SequenceNameTextbox: TEdit
-    Left = 69
-    Top = 141
-    Width = 380
-    Height = 23
-    MaxLength = 128
-    TabOrder = 2
-    Text = 'SequenceName'
-  end
-  object SaveButton: TButton
-    AlignWithMargins = True
-    Left = 295
-    Top = 176
-    Width = 75
-    Height = 25
-    Margins.Left = 0
-    Margins.Top = 0
-    Margins.Right = 4
-    Margins.Bottom = 9
-    Caption = '&Save'
-    Default = True
-    TabOrder = 3
-    OnClick = SaveButtonClick
-  end
-  object CancelButton: TButton
-    AlignWithMargins = True
-    Left = 374
-    Top = 176
-    Width = 75
-    Height = 25
-    Margins.Left = 0
-    Margins.Top = 0
-    Margins.Right = 0
-    Margins.Bottom = 9
-    Cancel = True
-    Caption = '&Cancel'
-    ModalResult = 2
-    TabOrder = 4
+  inherited ButtonsPanel: TPanel
+    Top = 180
+    Width = 463
+    ExplicitTop = 163
+    ExplicitWidth = 464
+    object CancelButton: TButton
+      Left = 376
+      Top = 12
+      Width = 75
+      Height = 25
+      Align = alRight
+      Cancel = True
+      Caption = '&Cancel'
+      ModalResult = 2
+      TabOrder = 1
+      ExplicitLeft = 374
+      ExplicitTop = 24
+    end
+    object SaveButton: TButton
+      AlignWithMargins = True
+      Left = 297
+      Top = 12
+      Width = 75
+      Height = 25
+      Margins.Left = 0
+      Margins.Top = 0
+      Margins.Right = 4
+      Margins.Bottom = 0
+      Align = alRight
+      Caption = '&Save'
+      Default = True
+      TabOrder = 0
+      OnClick = SaveButtonClick
+      ExplicitLeft = 295
+      ExplicitTop = 24
+    end
   end
 end

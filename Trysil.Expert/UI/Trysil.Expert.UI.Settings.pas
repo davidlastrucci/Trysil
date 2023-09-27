@@ -26,17 +26,17 @@ uses
   Vcl.StdCtrls,
 
   Trysil.Expert.Config,
-  Trysil.Expert.UI.Themes,
-  Trysil.Expert.UI.Images;
+  Trysil.Expert.UI.Themed;
 
 type
 
 { TTSettingsForm }
 
-  TTSettingsForm = class(TForm)
-    TrysilImage: TImage;
+  TTSettingsForm = class(TTThemedForm)
+    TrysilGroupbox: TGroupBox;
     TrysilDirectoryLabel: TLabel;
     TrysilDirectoryTextbox: TEdit;
+    EntitiesGroupbox: TGroupBox;
     ModelDirectoryLabel: TLabel;
     ModelDirectoryTextbox: TEdit;
     UnitFilenamesLabel: TLabel;
@@ -62,8 +62,6 @@ implementation
 procedure TTSettingsForm.AfterConstruction;
 begin
   inherited AfterConstruction;
-  TTThemingServices.Instance.ApplyTheme(Self);
-  TrysilImage.Picture.Assign(TTImagesDataModule.Instance.Logo);
   ConfigToControls;
 end;
 

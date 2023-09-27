@@ -29,6 +29,8 @@ uses
   Trysil.Expert.Model in 'Model\Trysil.Expert.Model.pas',
   Trysil.Expert.Project in 'Model\Trysil.Expert.Project.pas',
   Trysil.Expert.UI.Themes in 'UI\Trysil.Expert.UI.Themes.pas',
+  Trysil.Expert.UI.Images in 'UI\Trysil.Expert.UI.Images.pas' {TImagesDataModule: TDataModule},
+  Trysil.Expert.UI.Themed in 'UI\Trysil.Expert.UI.Themed.pas' {TThemedForm},
   Trysil.Expert.UI.Classes in 'UI\Trysil.Expert.UI.Classes.pas',
   Trysil.Expert.UI.Design in 'UI\Trysil.Expert.UI.Design.pas' {TDesignForm},
   Trysil.Expert.UI.DesignEntity in 'UI\Trysil.Expert.UI.DesignEntity.pas' {TDesignEntityForm},
@@ -39,8 +41,7 @@ uses
   Trysil.Expert.UI.GenerateSQL in 'UI\Trysil.Expert.UI.GenerateSQL.pas' {TGenerateSQL},
   Trysil.Expert.UI.GenerateModel in 'UI\Trysil.Expert.UI.GenerateModel.pas' {TGenerateModel},
   Trysil.Expert.UI.Settings in 'UI\Trysil.Expert.UI.Settings.pas' {TSettingsForm},
-  Trysil.Expert.UI.About in 'UI\Trysil.Expert.UI.About.pas' {TAboutForm},
-  Trysil.Expert.UI.Images in 'UI\Trysil.Expert.UI.Images.pas' {TImagesDataModule: TDataModule};
+  Trysil.Expert.UI.About in 'UI\Trysil.Expert.UI.About.pas' {TAboutForm};
 
 {$R *.res}
 

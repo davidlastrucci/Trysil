@@ -72,6 +72,13 @@ type
       const AAction: TAction;
       const AMenuItem: TMenuItem);
 
+    procedure AddToolbar(const AServices: INTAServices);
+    procedure AddToolbarButtons(const AServices: INTAServices);
+    procedure AddToolbarButton(
+      const AServices: INTAServices;
+      const AName: String;
+      const AAction: TAction);
+
     function ActiveProject: IOTAProject;
     function IsActiveProject: Boolean;
     function ActiveTrysilProject: TTProject;
@@ -85,7 +92,8 @@ type
 resourcestring
   SMenuCaption = 'Trysil';
   SMenuName = 'TrysilMenuItem';
-  SMenuAfterName = 'ToolsMenu';
+  SToolbarName = 'TrysilToolbar';
+  SToolbarTitle = 'Trysil - Delphi ORM';
 
 implementation
 
@@ -117,8 +125,18 @@ begin
   begin
     LServices.AddImages(ImageList);
     AddMainMenu(LServices);
-    AddSubMenuItems(LServices);
+    AddToolbar(LServices);
   end;
+end;
+
+procedure TTActionsMenuDatamodule.AddMainMenu(const AServices: INTAServices);
+begin
+  FTrysilMenuItem.Caption := SMenuCaption;
+  FTrysilMenuItem.Name := SMenuName;
+  AServices.AddActionMenu(
+    'ToolsMenu', nil, FTrysilMenuItem, False, False);
+
+  AddSubMenuItems(AServices);
 end;
 
 procedure TTActionsMenuDatamodule.AddSubMenuItems(const AServices: INTAServices);
@@ -142,12 +160,31 @@ begin
     FTrysilMenuItem.Name, AAction, AMenuItem, True, True);
 end;
 
-procedure TTActionsMenuDatamodule.AddMainMenu(const AServices: INTAServices);
+procedure TTActionsMenuDatamodule.AddToolbar(const AServices: INTAServices);
 begin
-  FTrysilMenuItem.Caption := SMenuCaption;
-  FTrysilMenuItem.Name := SMenuName;
-  AServices.AddActionMenu(
-    SMenuAfterName, nil, FTrysilMenuItem, False, False);
+  AServices.NewToolbar(SToolbarName, SToolbarTitle);
+  AddToolbarButtons(AServices);
+end;
+
+procedure TTActionsMenuDatamodule.AddToolbarButtons(
+  const AServices: INTAServices);
+begin
+  AddToolbarButton(AServices, 'TrysilDesignToolbarButton', TTEDesignAction);
+  AddToolbarButton(AServices, 'TrysilToolbarSeparator01', nil);
+  AddToolbarButton(AServices, 'TrysilSQLToolbarButton', TTEGenerateSQLAction);
+  AddToolbarButton(AServices, 'TrysilModelToolbarButton', TTEGenerateModelAction);
+  AddToolbarButton(AServices, 'TrysilDesignToolbarSeparator02', nil);
+  AddToolbarButton(AServices, 'TrysilSettingsToolbarButton', TTESettingsAction);
+  AddToolbarButton(AServices, 'TrysilToolbarSeparator03', nil);
+  AddToolbarButton(AServices, 'TrysilAboutToolbarButton', TTEAboutAction);
+end;
+
+procedure TTActionsMenuDatamodule.AddToolbarButton(
+  const AServices: INTAServices;
+  const AName: String;
+  const AAction: TAction);
+begin
+  AServices.AddToolButton(SToolbarName, AName, AAction, not Assigned(AAction));
 end;
 
 function TTActionsMenuDatamodule.ActiveProject: IOTAProject;

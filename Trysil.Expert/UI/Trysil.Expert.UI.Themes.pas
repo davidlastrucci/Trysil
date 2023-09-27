@@ -29,6 +29,7 @@ type
   TTStyleServicesNotifier = class(
     TInterfacedObject, IOTANotifier, INTAIDEThemingServicesNotifier)
   strict private
+    FThemingServices: IOTAIDEThemingServices;
     FFormClasses: TList<TFormClass>;
 
     // IOTANotifier
@@ -41,7 +42,9 @@ type
     procedure ChangedTheme;
     procedure ChangingTheme;
   public
-    constructor Create(const AFormClasses: TList<TFormClass>);
+    constructor Create(
+      const AThemingServices: IOTAIDEThemingServices;
+      const AFormClasses: TList<TFormClass>);
   end;
 
 { TTThemingServices }
@@ -63,6 +66,7 @@ type
     procedure AfterConstruction; override;
 
     procedure ApplyTheme(const AForm: TForm);
+    function GetSystemColor(const AColor: TColor): TColor;
 
     class property Instance: TTThemingServices read FInstance;
   end;
@@ -72,36 +76,49 @@ implementation
 { TTStyleServicesNotifier }
 
 constructor TTStyleServicesNotifier.Create(
+  const AThemingServices: IOTAIDEThemingServices;
   const AFormClasses: TList<TFormClass>);
 begin
   inherited Create;
+  FThemingServices := AThemingServices;
   FFormClasses := AFormClasses;
 end;
 
 procedure TTStyleServicesNotifier.AfterSave;
 begin
+  // Do nothing
 end;
 
 procedure TTStyleServicesNotifier.BeforeSave;
 begin
+  // Do nothing
 end;
 
 procedure TTStyleServicesNotifier.Destroyed;
 begin
+  // Do nothing
 end;
 
 procedure TTStyleServicesNotifier.Modified;
 begin
+  // Do nothing
 end;
 
 procedure TTStyleServicesNotifier.ChangedTheme;
+var
+  LFormClass: TFormClass;
 begin
-  FFormClasses.Clear;
+  if Assigned(FThemingServices) and
+    (FThemingServices.IDEThemingEnabled) then
+  begin
+    for LFormClass in FFormClasses do
+      FThemingServices.RegisterFormClass(LFormClass);
+  end;
 end;
 
 procedure TTStyleServicesNotifier.ChangingTheme;
 begin
-  FFormClasses.Clear;
+  // Do nothing
 end;
 
 { TTThemingServices }
@@ -137,7 +154,7 @@ begin
     FThemingServices := (BorlandIDEServices as IOTAIDEThemingServices);
     if FThemingServices.IDEThemingEnabled then
       FThemingServices.AddNotifier(
-        TTStyleServicesNotifier.Create(FFormClasses));
+        TTStyleServicesNotifier.Create(FThemingServices, FFormClasses));
   end;
 end;
 
@@ -158,6 +175,15 @@ begin
     RegisterFormClass(TFormClass(AForm.ClassType));
     FThemingServices.ApplyTheme(AForm);
   end;
+end;
+
+function TTThemingServices.GetSystemColor(const AColor: TColor): TColor;
+begin
+  if Assigned(FThemingServices) and
+    (FThemingServices.IDEThemingEnabled) then
+    result := FThemingServices.StyleServices.GetSystemColor(AColor)
+  else
+    result := AColor;
 end;
 
 end.

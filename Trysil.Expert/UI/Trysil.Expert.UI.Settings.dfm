@@ -1,98 +1,110 @@
-object TSettingsForm: TTSettingsForm
-  Left = 0
-  Top = 0
-  BorderIcons = [biSystemMenu]
-  BorderStyle = bsDialog
-  Caption = 'Trysil - Delphi ORM'
-  ClientHeight = 219
-  ClientWidth = 459
+inherited TSettingsForm: TTSettingsForm
+  ClientHeight = 297
+  ClientWidth = 509
   Color = clWhite
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -12
-  Font.Name = 'Segoe UI'
-  Font.Style = []
-  Position = poScreenCenter
+  ExplicitWidth = 525
+  ExplicitHeight = 336
   TextHeight = 15
-  object TrysilImage: TImage
-    Left = 8
-    Top = 8
-    Width = 48
-    Height = 48
+  inherited ContentPanel: TPanel
+    Width = 509
+    Height = 248
+    ExplicitLeft = 0
+    ExplicitTop = 0
+    ExplicitWidth = 509
+    ExplicitHeight = 248
+    object TrysilGroupbox: TGroupBox
+      Left = 72
+      Top = 12
+      Width = 425
+      Height = 89
+      Caption = 'Trysil'
+      TabOrder = 0
+      object TrysilDirectoryLabel: TLabel
+        Left = 24
+        Top = 24
+        Width = 51
+        Height = 15
+        Caption = 'Directory:'
+      end
+      object TrysilDirectoryTextbox: TEdit
+        Left = 24
+        Top = 45
+        Width = 380
+        Height = 23
+        TabOrder = 0
+        Text = '__trysil'
+      end
+    end
+    object EntitiesGroupbox: TGroupBox
+      Left = 72
+      Top = 107
+      Width = 425
+      Height = 138
+      Caption = 'Entities'
+      TabOrder = 1
+      object ModelDirectoryLabel: TLabel
+        Left = 24
+        Top = 24
+        Width = 51
+        Height = 15
+        Caption = 'Directory:'
+      end
+      object UnitFilenamesLabel: TLabel
+        Left = 24
+        Top = 74
+        Width = 79
+        Height = 15
+        Caption = 'Unit filenames:'
+      end
+      object ModelDirectoryTextbox: TEdit
+        Left = 24
+        Top = 45
+        Width = 380
+        Height = 23
+        TabOrder = 0
+        Text = 'Model'
+      end
+      object UnitFilenamesTextbox: TEdit
+        Left = 24
+        Top = 95
+        Width = 380
+        Height = 23
+        TabOrder = 1
+        Text = '{ProjectName}.Model.{EntityName}'
+      end
+    end
   end
-  object ModelDirectoryLabel: TLabel
-    Left = 68
-    Top = 70
-    Width = 87
-    Height = 15
-    Caption = 'Model directory:'
-  end
-  object UnitFilenamesLabel: TLabel
-    Left = 68
-    Top = 120
-    Width = 79
-    Height = 15
-    Caption = 'Unit filenames:'
-  end
-  object TrysilDirectoryLabel: TLabel
-    Left = 68
-    Top = 16
-    Width = 79
-    Height = 15
-    Caption = 'Trysil directory:'
-  end
-  object ModelDirectoryTextbox: TEdit
-    Left = 68
-    Top = 91
-    Width = 380
-    Height = 23
-    TabOrder = 1
-    Text = 'Model'
-  end
-  object UnitFilenamesTextbox: TEdit
-    Left = 68
-    Top = 141
-    Width = 380
-    Height = 23
-    TabOrder = 2
-    Text = '{ProjectName}.Model.{EntityName}'
-  end
-  object SaveButton: TButton
-    AlignWithMargins = True
-    Left = 294
-    Top = 178
-    Width = 75
-    Height = 25
-    Margins.Left = 0
-    Margins.Top = 0
-    Margins.Right = 4
-    Margins.Bottom = 9
-    Caption = '&Save'
-    Default = True
-    TabOrder = 3
-    OnClick = SaveButtonClick
-  end
-  object CancelButton: TButton
-    AlignWithMargins = True
-    Left = 373
-    Top = 178
-    Width = 75
-    Height = 25
-    Margins.Left = 0
-    Margins.Top = 0
-    Margins.Right = 0
-    Margins.Bottom = 9
-    Cancel = True
-    Caption = '&Cancel'
-    ModalResult = 2
-    TabOrder = 4
-  end
-  object TrysilDirectoryTextbox: TEdit
-    Left = 68
-    Top = 37
-    Width = 380
-    Height = 23
-    TabOrder = 0
-    Text = '__trysil'
+  inherited ButtonsPanel: TPanel
+    Top = 248
+    Width = 509
+    ExplicitTop = 248
+    ExplicitWidth = 509
+    object CancelButton: TButton
+      Left = 422
+      Top = 12
+      Width = 75
+      Height = 25
+      Align = alRight
+      Cancel = True
+      Caption = '&Cancel'
+      ModalResult = 2
+      TabOrder = 1
+    end
+    object SaveButton: TButton
+      AlignWithMargins = True
+      Left = 343
+      Top = 12
+      Width = 75
+      Height = 25
+      Margins.Left = 0
+      Margins.Top = 0
+      Margins.Right = 4
+      Margins.Bottom = 0
+      Align = alRight
+      Caption = '&Save'
+      Default = True
+      TabOrder = 0
+      OnClick = SaveButtonClick
+    end
   end
 end

@@ -27,7 +27,7 @@ uses
   Vcl.ComCtrls,
 
   Trysil.Expert.Model,
-  Trysil.Expert.UI.Themes,
+  Trysil.Expert.UI.Themed,
   Trysil.Expert.UI.Images,
   Trysil.Expert.UI.DesignColumn.DataTypeColumn,
   Trysil.Expert.UI.DesignColumn.EntityTypeColumn,
@@ -37,8 +37,7 @@ type
 
 { TTDesignColumnForm }
 
-  TTDesignColumnForm = class(TForm)
-    TrysilImage: TImage;
+  TTDesignColumnForm = class(TTThemedForm)
     ColumnTypeLabel: TLabel;
     OkeyButton: TButton;
     CancelButton: TButton;
@@ -78,8 +77,6 @@ end;
 procedure TTDesignColumnForm.AfterConstruction;
 begin
   inherited AfterConstruction;
-  TTThemingServices.Instance.ApplyTheme(Self);
-  TrysilImage.Picture.Assign(TTImagesDataModule.Instance.Logo);
   TreeView.Images := TTImagesDataModule.Instance.Images;
   TreeView.Selected := TreeView.Items[0];
 end;

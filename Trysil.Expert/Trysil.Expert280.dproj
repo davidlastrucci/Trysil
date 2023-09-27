@@ -4,7 +4,7 @@
         <ProjectVersion>19.5</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Config Condition="'$(Config)'==''">Release</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>1</TargetedPlatforms>
         <AppType>Library</AppType>
@@ -192,6 +192,13 @@
         <DCCReference Include="Model\Trysil.Expert.Model.pas"/>
         <DCCReference Include="Model\Trysil.Expert.Project.pas"/>
         <DCCReference Include="UI\Trysil.Expert.UI.Themes.pas"/>
+        <DCCReference Include="UI\Trysil.Expert.UI.Images.pas">
+            <Form>TImagesDataModule</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="UI\Trysil.Expert.UI.Themed.pas">
+            <Form>TThemedForm</Form>
+        </DCCReference>
         <DCCReference Include="UI\Trysil.Expert.UI.Classes.pas"/>
         <DCCReference Include="UI\Trysil.Expert.UI.Design.pas">
             <Form>TDesignForm</Form>
@@ -225,11 +232,6 @@
         </DCCReference>
         <DCCReference Include="UI\Trysil.Expert.UI.About.pas">
             <Form>TAboutForm</Form>
-        </DCCReference>
-        <DCCReference Include="UI\Trysil.Expert.UI.Images.pas">
-            <Form>TImagesDataModule</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TDataModule</DesignClass>
         </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

@@ -24,20 +24,17 @@ uses
   Vcl.Dialogs,
   Vcl.StdCtrls,
   Vcl.ExtCtrls,
-  Vcl.NumberBox,
 
   Trysil.Expert.Consts,
   Trysil.Expert.Validator,
   Trysil.Expert.Model,
-  Trysil.Expert.UI.Themes,
-  Trysil.Expert.UI.Images;
+  Trysil.Expert.UI.Themed;
 
 type
 
 { TTDesignDataTypeColumnForm }
 
-  TTDesignDataTypeColumnForm = class(TForm)
-    TrysilImage: TImage;
+  TTDesignDataTypeColumnForm = class(TTThemedForm)
     NameLabel: TLabel;
     NameTextbox: TEdit;
     ColumnNameLabel: TLabel;
@@ -45,7 +42,7 @@ type
     DataTypeLabel: TLabel;
     DataTypeComboBox: TComboBox;
     DataSizeLabel: TLabel;
-    DataSizeTextbox: TNumberBox;
+    DataSizeTextbox: TEdit;
     RequiredCheckbox: TCheckBox;
     SaveButton: TButton;
     CancelButton: TButton;
@@ -96,8 +93,6 @@ end;
 procedure TTDesignDataTypeColumnForm.AfterConstruction;
 begin
   inherited AfterConstruction;
-  TTThemingServices.Instance.ApplyTheme(Self);
-  TrysilImage.Picture.Assign(TTImagesDataModule.Instance.Logo);
   ColumnToControls;
 end;
 
@@ -105,7 +100,7 @@ procedure TTDesignDataTypeColumnForm.SetSizeEnabled;
 begin
   DataSizeTextbox.Enabled := (DataTypeComboBox.ItemIndex = 0);
   if not DataSizeTextbox.Enabled then
-    DataSizeTextbox.ValueInt := 0;
+    DataSizeTextbox.Text := '0';
 end;
 
 procedure TTDesignDataTypeColumnForm.DataTypeComboBoxChange(Sender: TObject);
@@ -119,7 +114,8 @@ begin
   ColumnNameTextbox.Text := FColumn.ColumnName;
   DataTypeComboBox.ItemIndex := (Ord(FColumn.DataType) - 1);
   SetSizeEnabled;
-  DataSizeTextbox.ValueInt := FColumn.Size;
+  DataSizeTextbox.Text := FColumn.Size.ToString();
+  RequiredCheckbox.Checked := FColumn.Required;
 end;
 
 procedure TTDesignDataTypeColumnForm.CheckColumn;
@@ -129,7 +125,8 @@ begin
     String(ColumnNameTextbox.Text).IsEmpty, SColumnColumnNameEmpty);
   FValidator.Check(DataTypeComboBox.ItemIndex < 0, SInvalidDataType);
   FValidator.Check(
-    (DataTypeComboBox.ItemIndex = 0) and (DataSizeTextbox.ValueInt <= 0),
+    (DataTypeComboBox.ItemIndex = 0) and
+      (Integer.Parse(DataSizeTextbox.Text) <= 0),
     SStringSizeError);
 end;
 
@@ -155,7 +152,8 @@ begin
   FColumn.Name := NameTextbox.Text;
   FColumn.ColumnName := ColumnNameTextbox.Text;
   FColumn.DataType := TTDataType(DataTypeComboBox.ItemIndex + 1);
-  FColumn.Size := DataSizeTextbox.ValueInt;
+  FColumn.Size := Integer.Parse(DataSizeTextbox.Text);
+  FColumn.Required := RequiredCheckbox.Checked;
 end;
 
 procedure TTDesignDataTypeColumnForm.SaveButtonClick(Sender: TObject);

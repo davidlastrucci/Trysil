@@ -28,15 +28,13 @@ uses
   Trysil.Expert.Consts,
   Trysil.Expert.Validator,
   Trysil.Expert.Model,
-  Trysil.Expert.UI.Themes,
-  Trysil.Expert.UI.Images;
+  Trysil.Expert.UI.Themed;
 
 type
 
 { TTDesignEntityListTypeColumnForm }
 
-  TTDesignEntityListTypeColumnForm = class(TForm)
-    TrysilImage: TImage;
+  TTDesignEntityListTypeColumnForm = class(TTThemedForm)
     NameLabel: TLabel;
     NameTextbox: TEdit;
     ColumnNameLabel: TLabel;
@@ -102,8 +100,6 @@ end;
 procedure TTDesignEntityListTypeColumnForm.AfterConstruction;
 begin
   inherited AfterConstruction;
-  TTThemingServices.Instance.ApplyTheme(Self);
-  TrysilImage.Picture.Assign(TTImagesDataModule.Instance.Logo);
   ShowEntities;
   ColumnToControls;
 end;

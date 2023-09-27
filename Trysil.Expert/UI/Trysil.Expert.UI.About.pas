@@ -27,15 +27,13 @@ uses
   Vcl.ExtCtrls,
   Vcl.ComCtrls,
 
-  Trysil.Expert.UI.Themes,
-  Trysil.Expert.UI.Images;
+  Trysil.Expert.UI.Themed;
 
 type
 
 { TTAboutForm }
 
-  TTAboutForm = class(TForm)
-    TrysilImage: TImage;
+  TTAboutForm = class(TTThemedForm)
     TitleLabel: TLabel;
     DescriptionLabel: TLabel;
     CopyrightLabel: TLabel;
@@ -54,21 +52,12 @@ type
     procedure GitHubLabelClick(Sender: TObject);
   strict private
   public
-    procedure AfterConstruction; override;
-
     class procedure ShowDialog;
   end;
 
 implementation
 
 {$R *.dfm}
-
-procedure TTAboutForm.AfterConstruction;
-begin
-  inherited AfterConstruction;
-  TTThemingServices.Instance.ApplyTheme(Self);
-  TrysilImage.Picture.Assign(TTImagesDataModule.Instance.Logo);
-end;
 
 procedure TTAboutForm.HyperLinkOn(Sender: TObject);
 begin

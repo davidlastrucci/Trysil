@@ -33,7 +33,7 @@ uses
   Trysil.Expert.Project,
   Trysil.Expert.Config,
   Trysil.Expert.Model,
-  Trysil.Expert.UI.Themes,
+  Trysil.Expert.UI.Themed,
   Trysil.Expert.UI.Images,
   Trysil.Expert.UI.Classes,
   Trysil.Expert.PascalCreator;
@@ -42,8 +42,7 @@ type
 
 { TTGenerateModel }
 
-  TTGenerateModel = class(TForm)
-    TrysilImage: TImage;
+  TTGenerateModel = class(TTThemedForm)
     ModelDirectoryLabel: TLabel;
     ModelDirectoryTextbox: TEdit;
     UnitFilenamesLabel: TLabel;
@@ -97,8 +96,6 @@ end;
 procedure TTGenerateModel.AfterConstruction;
 begin
   inherited AfterConstruction;
-  TTThemingServices.Instance.ApplyTheme(Self);
-  TrysilImage.Picture.Assign(TTImagesDataModule.Instance.Logo);
   EntitiesListView.SmallImages := TTImagesDataModule.Instance.Images;
   ConfigToControls;
   FEntities.LoadFromDirectory(TTUtils.TrysilFolder(FProject.Directory));

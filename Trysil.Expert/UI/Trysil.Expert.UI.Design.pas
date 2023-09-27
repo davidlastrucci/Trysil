@@ -32,7 +32,7 @@ uses
   Trysil.Expert.Project,
   Trysil.Expert.Config,
   Trysil.Expert.Model,
-  Trysil.Expert.UI.Themes,
+  Trysil.Expert.UI.Themed,
   Trysil.Expert.UI.Images,
   Trysil.Expert.UI.Classes,
   Trysil.Expert.UI.DesignEntity,
@@ -45,8 +45,7 @@ type
 
 { TTDesignForm }
 
-  TTDesignForm = class(TForm)
-    TrysilImage: TImage;
+  TTDesignForm = class(TTThemedForm)
     ApplicationEvents: TApplicationEvents;
     TreeViewPanel: TPanel;
     TreeViewTitlePanel: TPanel;
@@ -62,7 +61,6 @@ type
     EditColumnButton: TSpeedButton;
     DeleteColumnButton: TSpeedButton;
     ListView: TListView;
-    BottomPanel: TPanel;
     SaveButton: TButton;
     CancelButton: TButton;
     procedure ApplicationEventsIdle(Sender: TObject; var Done: Boolean);
@@ -120,7 +118,6 @@ end;
 procedure TTDesignForm.AfterConstruction;
 begin
   inherited AfterConstruction;
-  TTThemingServices.Instance.ApplyTheme(Self);
   SetImages;
   ListView.SmallImages := TTImagesDataModule.Instance.Images;
   FEntities.LoadFromDirectory(FDirectory);
@@ -128,7 +125,6 @@ end;
 
 procedure TTDesignForm.SetImages;
 begin
-  TrysilImage.Picture.Assign(TTImagesDataModule.Instance.Logo);
   TreeView.Images := TTImagesDataModule.Instance.Images;
   AddNewEntityButton.Images := TTImagesDataModule.Instance.ButtonsImages;
   EditEntityButton.Images := TTImagesDataModule.Instance.ButtonsImages;

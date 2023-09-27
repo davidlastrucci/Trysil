@@ -34,7 +34,7 @@ uses
   Trysil.Expert.Project,
   Trysil.Expert.Config,
   Trysil.Expert.Model,
-  Trysil.Expert.UI.Themes,
+  Trysil.Expert.UI.Themed,
   Trysil.Expert.UI.Images,
   Trysil.Expert.UI.Classes,
   Trysil.Expert.SQLCreator;
@@ -43,8 +43,7 @@ type
 
 { TTGenerateSQL }
 
-  TTGenerateSQL = class(TForm)
-    TrysilImage: TImage;
+  TTGenerateSQL = class(TTThemedForm)
     SaveDialog: TSaveDialog;
     DatabaseTypeLabel: TLabel;
     DatabaseTypeCombobox: TComboBox;
@@ -96,8 +95,6 @@ end;
 procedure TTGenerateSQL.AfterConstruction;
 begin
   inherited AfterConstruction;
-  TTThemingServices.Instance.ApplyTheme(Self);
-  TrysilImage.Picture.Assign(TTImagesDataModule.Instance.Logo);
   EntitiesListView.SmallImages := TTImagesDataModule.Instance.Images;
   FEntities.LoadFromDirectory(TTUtils.TrysilFolder(FProject.Directory));
 end;
