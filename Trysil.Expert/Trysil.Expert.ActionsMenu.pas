@@ -140,7 +140,7 @@ begin
   FTrysilMenuItem.Caption := SMenuCaption;
   FTrysilMenuItem.Name := SMenuName;
   AServices.AddActionMenu(
-    'ToolsMenu', nil, FTrysilMenuItem, False, False);
+    'ProjectMenu', nil, FTrysilMenuItem, False, False);
 
   AddSubMenuItems(AServices);
 end;

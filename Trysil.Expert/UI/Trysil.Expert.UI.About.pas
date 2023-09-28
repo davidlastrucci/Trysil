@@ -37,7 +37,19 @@ type
     TitleLabel: TLabel;
     DescriptionLabel: TLabel;
     CopyrightLabel: TLabel;
-    Bevel: TBevel;
+    Bevel01: TBevel;
+    Trysil00Label: TLabel;
+    Trysil01Label: TLabel;
+    Trysil02Label: TLabel;
+    Trysil03Label: TLabel;
+    Trysil04Label: TLabel;
+    Bevel02: TBevel;
+    SupportedDatabaseLabel: TLabel;
+    FirebirdLabel: TLabel;
+    MSSQLLabel: TLabel;
+    PostgreSQLLabel: TLabel;
+    SQLiteLabel: TLabel;
+    Bevel03: TBevel;
     WebLabelLabel: TLabel;
     WebLabel: TLabel;
     EmailLabelLabel: TLabel;
@@ -50,6 +62,7 @@ type
     procedure WebLabelClick(Sender: TObject);
     procedure EmailLabelClick(Sender: TObject);
     procedure GitHubLabelClick(Sender: TObject);
+    procedure Trysil04LabelClick(Sender: TObject);
   strict private
   public
     class procedure ShowDialog;
@@ -69,6 +82,17 @@ procedure TTAboutForm.HyperLinkOff(Sender: TObject);
 begin
   if Sender is TLabel then
     TLabel(Sender).Font.Style := [];
+end;
+
+procedure TTAboutForm.Trysil04LabelClick(Sender: TObject);
+begin
+  ShellExecute(
+    Application.Handle,
+    nil,
+    'https://codenames.info/operation/orm',
+    nil,
+    nil,
+    SW_SHOW);
 end;
 
 procedure TTAboutForm.WebLabelClick(Sender: TObject);
