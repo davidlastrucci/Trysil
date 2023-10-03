@@ -18,6 +18,7 @@ uses
   System.SysUtils,
   System.Variants,
   System.Classes,
+  System.Generics.Defaults,
   Vcl.Graphics,
   Vcl.Controls,
   Vcl.Forms,
@@ -44,8 +45,8 @@ type
     ColumnNameCombobox: TComboBox;
     SaveButton: TButton;
     CancelButton: TButton;
-    procedure SaveButtonClick(Sender: TObject);
     procedure EntityTypeComboboxChange(Sender: TObject);
+    procedure SaveButtonClick(Sender: TObject);
   strict private
     FEntities: TTEntities;
     FEntity: TTEntity;
@@ -106,8 +107,15 @@ end;
 
 procedure TTDesignEntityListTypeColumnForm.ShowEntities;
 var
+	LComparison: TComparison<TTEntity>;
   LEntity: TTEntity;
 begin
+	LComparison := function (const ALeft, ARight: TTEntity): Integer
+  begin
+    result := String.Compare(ALeft.Name, ARight.Name, True);
+  end;
+  FEntities.Entities.Sort(TComparer<TTEntity>.Construct(LComparison));
+
   for LEntity in FEntities.Entities do
   begin
     EntityTypeCombobox.Items.Add(LEntity.Name);

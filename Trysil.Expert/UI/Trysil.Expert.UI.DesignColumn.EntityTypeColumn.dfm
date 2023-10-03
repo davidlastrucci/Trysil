@@ -65,6 +65,7 @@ inherited TDesignEntityTypeColumnForm: TTDesignEntityTypeColumnForm
       Height = 23
       TabOrder = 0
       Text = 'Name'
+      OnChange = NameTextboxChange
     end
     object RequiredCheckbox: TCheckBox
       Left = 72

@@ -10,8 +10,8 @@ inherited TDesignEntityListTypeColumnForm: TTDesignEntityListTypeColumnForm
     Height = 182
     ExplicitLeft = 0
     ExplicitTop = 0
-    ExplicitWidth = 464
-    ExplicitHeight = 164
+    ExplicitWidth = 466
+    ExplicitHeight = 182
     object ColumnNameLabel: TLabel
       Left = 72
       Top = 120
@@ -71,8 +71,8 @@ inherited TDesignEntityListTypeColumnForm: TTDesignEntityListTypeColumnForm
   inherited ButtonsPanel: TPanel
     Top = 182
     Width = 466
-    ExplicitTop = 164
-    ExplicitWidth = 464
+    ExplicitTop = 182
+    ExplicitWidth = 466
     object SaveButton: TButton
       AlignWithMargins = True
       Left = 300
@@ -88,7 +88,6 @@ inherited TDesignEntityListTypeColumnForm: TTDesignEntityListTypeColumnForm
       Default = True
       TabOrder = 0
       OnClick = SaveButtonClick
-      ExplicitLeft = 352
     end
     object CancelButton: TButton
       Left = 379
@@ -100,7 +99,6 @@ inherited TDesignEntityListTypeColumnForm: TTDesignEntityListTypeColumnForm
       Caption = '&Cancel'
       ModalResult = 2
       TabOrder = 1
-      ExplicitLeft = 381
     end
   end
 end

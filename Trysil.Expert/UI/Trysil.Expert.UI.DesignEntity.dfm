@@ -10,8 +10,8 @@ inherited TDesignEntityForm: TTDesignEntityForm
     Height = 180
     ExplicitLeft = 0
     ExplicitTop = 0
-    ExplicitWidth = 464
-    ExplicitHeight = 163
+    ExplicitWidth = 463
+    ExplicitHeight = 180
     object NameLabel: TLabel
       Left = 72
       Top = 16
@@ -41,6 +41,7 @@ inherited TDesignEntityForm: TTDesignEntityForm
       MaxLength = 128
       TabOrder = 0
       Text = 'Name'
+      OnChange = NameTextboxChange
     end
     object SequenceNameTextbox: TEdit
       Left = 73
@@ -59,13 +60,14 @@ inherited TDesignEntityForm: TTDesignEntityForm
       MaxLength = 128
       TabOrder = 1
       Text = 'TableName'
+      OnChange = TableNameTextboxChange
     end
   end
   inherited ButtonsPanel: TPanel
     Top = 180
     Width = 463
-    ExplicitTop = 163
-    ExplicitWidth = 464
+    ExplicitTop = 180
+    ExplicitWidth = 463
     object CancelButton: TButton
       Left = 376
       Top = 12
@@ -76,8 +78,6 @@ inherited TDesignEntityForm: TTDesignEntityForm
       Caption = '&Cancel'
       ModalResult = 2
       TabOrder = 1
-      ExplicitLeft = 374
-      ExplicitTop = 24
     end
     object SaveButton: TButton
       AlignWithMargins = True
@@ -94,8 +94,6 @@ inherited TDesignEntityForm: TTDesignEntityForm
       Default = True
       TabOrder = 0
       OnClick = SaveButtonClick
-      ExplicitLeft = 295
-      ExplicitTop = 24
     end
   end
 end

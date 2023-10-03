@@ -43,6 +43,8 @@ type
     SequenceNameTextbox: TEdit;
     SaveButton: TButton;
     CancelButton: TButton;
+    procedure NameTextboxChange(Sender: TObject);
+    procedure TableNameTextboxChange(Sender: TObject);
     procedure SaveButtonClick(Sender: TObject);
   strict private
     FEntities: TTEntities;
@@ -89,6 +91,16 @@ procedure TTDesignEntityForm.AfterConstruction;
 begin
   inherited AfterConstruction;
   EntityToControls;
+end;
+
+procedure TTDesignEntityForm.NameTextboxChange(Sender: TObject);
+begin
+  TableNameTextbox.Text := NameTextbox.Text;
+end;
+
+procedure TTDesignEntityForm.TableNameTextboxChange(Sender: TObject);
+begin
+  SequenceNameTextbox.Text := Format('%sID', [TableNameTextbox.Text]);
 end;
 
 procedure TTDesignEntityForm.EntityToControls;

@@ -46,8 +46,9 @@ type
     RequiredCheckbox: TCheckBox;
     SaveButton: TButton;
     CancelButton: TButton;
-    procedure SaveButtonClick(Sender: TObject);
+    procedure NameTextboxChange(Sender: TObject);
     procedure DataTypeComboBoxChange(Sender: TObject);
+    procedure SaveButtonClick(Sender: TObject);
   strict private
     FEntity: TTEntity;
     FColumn: TTColumn;
@@ -88,6 +89,11 @@ destructor TTDesignDataTypeColumnForm.Destroy;
 begin
   FValidator.Free;
   inherited Destroy;
+end;
+
+procedure TTDesignDataTypeColumnForm.NameTextboxChange(Sender: TObject);
+begin
+  ColumnNameTextbox.Text := NameTextbox.Text;
 end;
 
 procedure TTDesignDataTypeColumnForm.AfterConstruction;

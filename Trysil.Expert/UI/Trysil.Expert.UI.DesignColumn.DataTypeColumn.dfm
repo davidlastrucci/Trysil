@@ -11,7 +11,7 @@ inherited TDesignDataTypeColumnForm: TTDesignDataTypeColumnForm
     ExplicitLeft = 0
     ExplicitTop = 0
     ExplicitWidth = 466
-    ExplicitHeight = 251
+    ExplicitHeight = 258
     object ColumnNameLabel: TLabel
       Left = 72
       Top = 70
@@ -79,6 +79,7 @@ inherited TDesignDataTypeColumnForm: TTDesignDataTypeColumnForm
       MaxLength = 128
       TabOrder = 0
       Text = 'Name'
+      OnChange = NameTextboxChange
     end
     object RequiredCheckbox: TCheckBox
       Left = 72
@@ -102,7 +103,7 @@ inherited TDesignDataTypeColumnForm: TTDesignDataTypeColumnForm
   inherited ButtonsPanel: TPanel
     Top = 258
     Width = 466
-    ExplicitTop = 251
+    ExplicitTop = 258
     ExplicitWidth = 466
     object CancelButton: TButton
       Left = 379
