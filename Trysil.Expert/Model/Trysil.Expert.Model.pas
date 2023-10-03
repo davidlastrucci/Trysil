@@ -716,8 +716,8 @@ begin
       LVersion.ColumnName := 'VersionID';
       LVersion.DataType := TTDataType.dtVersion;
 
-      AEntity.Columns.AddColumn(LPrimaryKey);
       AEntity.Columns.AddColumn(LVersion);
+      AEntity.Columns.AddColumn(LPrimaryKey);
     except
       LVersion.Free;
       raise;
