@@ -83,7 +83,7 @@ begin
   FEntity := AEntity;
 
   FValidator := TTValidator.Create;
-  FNamePrompter := TTPrompter.Create(NameTextbox, TableNameTextbox, '%s');
+  FNamePrompter := TTPrompter.Create(NameTextbox, TableNameTextbox);
   FTableNamePrompter := TTPrompter.Create(
     TableNameTextbox, SequenceNameTextbox, '%sID');
 end;

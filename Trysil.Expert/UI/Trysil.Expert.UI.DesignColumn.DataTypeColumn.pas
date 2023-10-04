@@ -86,7 +86,7 @@ begin
   FColumn := AColumn;
 
   FValidator := TTValidator.Create;
-  FNamePrompter := TTPrompter.Create(NameTextbox, ColumnNameTextbox, '%s');
+  FNamePrompter := TTPrompter.Create(NameTextbox, ColumnNameTextbox);
 end;
 
 destructor TTDesignDataTypeColumnForm.Destroy;
@@ -124,6 +124,8 @@ begin
   NameTextbox.Text := FColumn.Name;
   ColumnNameTextbox.Text := FColumn.ColumnName;
   DataTypeComboBox.ItemIndex := (Ord(FColumn.DataType) - 1);
+  if DataTypeComboBox.ItemIndex < 0 then
+    DataTypeComboBox.ItemIndex := 0;
   SetSizeEnabled;
   DataSizeTextbox.Text := FColumn.Size.ToString();
   RequiredCheckbox.Checked := FColumn.Required;

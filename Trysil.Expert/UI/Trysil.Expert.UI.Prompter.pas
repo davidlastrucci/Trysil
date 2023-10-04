@@ -30,8 +30,12 @@ type
   public
     constructor Create(
       const ASourceTextbox: TEdit;
+      const ADestinationTextbox: TEdit); overload;
+
+    constructor Create(
+      const ASourceTextbox: TEdit;
       const ADestinationTextbox: TEdit;
-      const ASuggestionFormat: String);
+      const ASuggestionFormat: String); overload;
 
     procedure Start;
     procedure DoChanged;
@@ -40,6 +44,11 @@ type
 implementation
 
 { TTPrompter }
+
+constructor TTPrompter.Create(const ASourceTextbox, ADestinationTextbox: TEdit);
+begin
+  Create(ASourceTextbox, ADestinationTextbox, '%s');
+end;
 
 constructor TTPrompter.Create(
   const ASourceTextbox: TEdit;
