@@ -28,7 +28,8 @@ uses
   Trysil.Expert.Consts,
   Trysil.Expert.Validator,
   Trysil.Expert.Model,
-  Trysil.Expert.UI.Themed;
+  Trysil.Expert.UI.Themed,
+  Trysil.Expert.UI.Prompter;
 
 type
 
@@ -53,6 +54,7 @@ type
     FEntity: TTEntity;
     FColumn: TTColumn;
     FValidator: TTValidator;
+    FNamePrompter: TTPrompter;
 
     procedure SetSizeEnabled;
     procedure ColumnToControls;
@@ -82,24 +84,27 @@ begin
   inherited Create(nil);
   FEntity := AEntity;
   FColumn := AColumn;
+
   FValidator := TTValidator.Create;
+  FNamePrompter := TTPrompter.Create(NameTextbox, ColumnNameTextbox, '%s');
 end;
 
 destructor TTDesignDataTypeColumnForm.Destroy;
 begin
+  FNamePrompter.Free;
   FValidator.Free;
   inherited Destroy;
-end;
-
-procedure TTDesignDataTypeColumnForm.NameTextboxChange(Sender: TObject);
-begin
-  ColumnNameTextbox.Text := NameTextbox.Text;
 end;
 
 procedure TTDesignDataTypeColumnForm.AfterConstruction;
 begin
   inherited AfterConstruction;
   ColumnToControls;
+end;
+
+procedure TTDesignDataTypeColumnForm.NameTextboxChange(Sender: TObject);
+begin
+  FNamePrompter.DoChanged;
 end;
 
 procedure TTDesignDataTypeColumnForm.SetSizeEnabled;
@@ -122,6 +127,8 @@ begin
   SetSizeEnabled;
   DataSizeTextbox.Text := FColumn.Size.ToString();
   RequiredCheckbox.Checked := FColumn.Required;
+
+  FNamePrompter.Start;
 end;
 
 procedure TTDesignDataTypeColumnForm.CheckColumn;

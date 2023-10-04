@@ -32,6 +32,7 @@ uses
   Trysil.Expert.UI.Images in 'UI\Trysil.Expert.UI.Images.pas' {TImagesDataModule: TDataModule},
   Trysil.Expert.UI.Themed in 'UI\Trysil.Expert.UI.Themed.pas' {TThemedForm},
   Trysil.Expert.UI.Classes in 'UI\Trysil.Expert.UI.Classes.pas',
+  Trysil.Expert.UI.Prompter in 'UI\Trysil.Expert.UI.Prompter.pas',
   Trysil.Expert.UI.Design in 'UI\Trysil.Expert.UI.Design.pas' {TDesignForm},
   Trysil.Expert.UI.DesignEntity in 'UI\Trysil.Expert.UI.DesignEntity.pas' {TDesignEntityForm},
   Trysil.Expert.UI.DesignColumn in 'UI\Trysil.Expert.UI.DesignColumn.pas' {TDesignColumnForm},

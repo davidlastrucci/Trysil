@@ -28,7 +28,8 @@ uses
   Trysil.Expert.Consts,
   Trysil.Expert.Validator,
   Trysil.Expert.Model,
-  Trysil.Expert.UI.Themed;
+  Trysil.Expert.UI.Themed,
+  Trysil.Expert.UI.Prompter;
 
 type
 
@@ -50,6 +51,8 @@ type
     FEntities: TTEntities;
     FEntity: TTEntity;
     FValidator: TTValidator;
+    FNamePrompter: TTPrompter;
+    FTableNamePrompter: TTPrompter;
 
     procedure EntityToControls;
     procedure CheckEntity;
@@ -78,11 +81,17 @@ begin
   inherited Create(nil);
   FEntities := AEntities;
   FEntity := AEntity;
+
   FValidator := TTValidator.Create;
+  FNamePrompter := TTPrompter.Create(NameTextbox, TableNameTextbox, '%s');
+  FTableNamePrompter := TTPrompter.Create(
+    TableNameTextbox, SequenceNameTextbox, '%sID');
 end;
 
 destructor TTDesignEntityForm.Destroy;
 begin
+  FTableNamePrompter.Free;
+  FNamePrompter.Free;
   FValidator.Free;
   inherited Destroy;
 end;
@@ -95,12 +104,12 @@ end;
 
 procedure TTDesignEntityForm.NameTextboxChange(Sender: TObject);
 begin
-  TableNameTextbox.Text := NameTextbox.Text;
+  FNamePrompter.DoChanged;
 end;
 
 procedure TTDesignEntityForm.TableNameTextboxChange(Sender: TObject);
 begin
-  SequenceNameTextbox.Text := Format('%sID', [TableNameTextbox.Text]);
+  FTableNamePrompter.DoChanged;
 end;
 
 procedure TTDesignEntityForm.EntityToControls;
@@ -108,6 +117,9 @@ begin
   NameTextbox.Text := FEntity.Name;
   TableNameTextbox.Text := FEntity.TableName;
   SequenceNameTextbox.Text := FEntity.SequenceName;
+
+  FNamePrompter.Start;
+  FTableNamePrompter.Start;
 end;
 
 procedure TTDesignEntityForm.CheckEntity;

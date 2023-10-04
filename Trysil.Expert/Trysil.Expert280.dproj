@@ -200,6 +200,7 @@
             <Form>TThemedForm</Form>
         </DCCReference>
         <DCCReference Include="UI\Trysil.Expert.UI.Classes.pas"/>
+        <DCCReference Include="UI\Trysil.Expert.UI.Prompter.pas"/>
         <DCCReference Include="UI\Trysil.Expert.UI.Design.pas">
             <Form>TDesignForm</Form>
         </DCCReference>

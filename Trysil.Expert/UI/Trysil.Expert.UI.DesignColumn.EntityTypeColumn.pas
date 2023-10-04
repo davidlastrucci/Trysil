@@ -29,7 +29,8 @@ uses
   Trysil.Expert.Consts,
   Trysil.Expert.Validator,
   Trysil.Expert.Model,
-  Trysil.Expert.UI.Themed;
+  Trysil.Expert.UI.Themed,
+  Trysil.Expert.UI.Prompter;
 
 type
 
@@ -53,6 +54,7 @@ type
     FEntity: TTEntity;
     FColumn: TTLazyColumn;
     FValidator: TTValidator;
+    FNamePrompter: TTPrompter;
 
     procedure ShowEntities;
     procedure ColumnToControls;
@@ -89,11 +91,14 @@ begin
   FEntities := AEntities;
   FEntity := AEntity;
   FColumn := AColumn;
+
   FValidator := TTValidator.Create;
+  FNamePrompter := TTPrompter.Create(NameTextbox, ColumnNameTextbox, '%sID');
 end;
 
 destructor TTDesignEntityTypeColumnForm.Destroy;
 begin
+  FNamePrompter.Free;
   FValidator.Free;
   inherited Destroy;
 end;
@@ -107,7 +112,7 @@ end;
 
 procedure TTDesignEntityTypeColumnForm.NameTextboxChange(Sender: TObject);
 begin
-  ColumnNameTextbox.Text := Format('%sID', [NameTextbox.Text]);
+  FNamePrompter.DoChanged;
 end;
 
 procedure TTDesignEntityTypeColumnForm.ShowEntities;
@@ -135,6 +140,8 @@ begin
   EntityTypeCombobox.ItemIndex :=
     EntityTypeListbox.Items.IndexOf(FColumn.DataType);
   RequiredCheckbox.Checked := FColumn.Required;
+
+  FNamePrompter.Start;
 end;
 
 procedure TTDesignEntityTypeColumnForm.CheckColumn;
