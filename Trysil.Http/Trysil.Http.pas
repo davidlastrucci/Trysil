@@ -60,6 +60,7 @@ type
     procedure Log(const AText: String);
 
     function GetStarted: Boolean;
+    procedure SetBaseUri(const AValue: String);
     procedure SetPort(const AValue: Word);
     function GetCorsConfig: TTHttpCorsConfig;
 
@@ -99,7 +100,7 @@ type
     procedure Stop;
 
     property Started: Boolean read GetStarted;
-    property BaseUri: String read FBaseUri write FBaseUri;
+    property BaseUri: String read FBaseUri write SetBaseUri;
     property Port: Word read FPort write SetPort;
     property CorsConfig: TTHttpCorsConfig read GetCorsConfig;
   end;
@@ -294,6 +295,16 @@ end;
 function TTHttpServer<C>.GetStarted: Boolean;
 begin
   result := FHttpServer.Active;
+end;
+
+procedure TTHttpServer<C>.SetBaseUri(const AValue: String);
+begin
+  if FHttpServer.Active then
+    raise ETHttpServerException.Create(SAlreadyStarted);
+  if (not AValue.IsEmpty) and (not AValue.StartsWith('/')) then
+    FBaseUri := Format('/%s', [AValue])
+  else
+    FBaseUri := AValue;
 end;
 
 procedure TTHttpServer<C>.SetPort(const AValue: Word);
