@@ -28,6 +28,7 @@ uses
   Vcl.ComCtrls,
   Vcl.StdCtrls,
   Vcl.Menus,
+  ToolsAPI,
 
   Trysil.Expert.IOTA,
   Trysil.Expert.Consts,
@@ -38,6 +39,7 @@ uses
   Trysil.Expert.UI.Themed,
   Trysil.Expert.UI.Images,
   Trysil.Expert.UI.Classes,
+  Trysil.Expert.Validator,
   Trysil.Expert.ModelCreator,
   Trysil.Expert.ControllerCreator,
   Trysil.Expert.APIHttpModifier;
@@ -74,6 +76,7 @@ type
     procedure ConfigToControls;
     procedure ControlsToConfig;
     procedure AddSelectedEntities(const AEntities: TList<TTEntity>);
+    function CheckOverwrite(const AEntities: TList<TTEntity>): Boolean;
     procedure SelectAllEntities(const ASelect: Boolean);
     procedure CreateModels(const AEntities: TList<TTEntity>);
     procedure CreateControllers(const AEntities: TList<TTEntity>);
@@ -158,6 +161,56 @@ begin
 
   if AEntities.Count < 1 then
     raise ETExpertException.Create(SSelectOneEntity);
+end;
+
+function TTGenerateModel.CheckOverwrite(
+  const AEntities: TList<TTEntity>): Boolean;
+var
+  LValidator: TTValidator;
+  LProject: IOTAProject;
+  LProjectName, LModuleName: String;
+  LEntity: TTEntity;
+  LModuleInfo: IOTAModuleInfo;
+begin
+  result := True;
+  LValidator := TTValidator.Create('These units will be overwritten:');
+  try
+    LProject := TTIOTA.ActiveProject;
+    if Assigned(LProject) then
+    begin
+      LProjectName := TPath.GetFileNameWithoutExtension(LProject.FileName);
+      for LEntity in AEntities do
+      begin
+        LModuleName := TPath.Combine(
+          ModelDirectoryTextbox.Text,
+          TTUtils.UnitName(
+            UnitFilenamesTextbox.Text, LProjectName, LEntity.Name));
+        LModuleInfo := TTIOTA.SearchModule(LModuleName);
+        LValidator.Check(Assigned(LModuleInfo), LModuleName);
+
+        if APIControllersCheckbox.Enabled and
+          APIControllersCheckbox.Checked then
+        begin
+          LModuleName := TPath.Combine(
+            TPath.Combine('API', 'Controllers'),
+              Format('API.Controller.%s', [LEntity.Name]));
+          LModuleInfo := TTIOTA.SearchModule(LModuleName);
+          LValidator.Check(Assigned(LModuleInfo), LModuleName);
+        end;
+      end;
+
+      result := LValidator.IsValid;
+      if not result then
+        result := MessageDlg(
+          LValidator.Messages + #10#10 + 'Continue?',
+          TMsgDlgType.mtConfirmation,
+          [mbYes, mbNo],
+          0,
+          mbNo) = mrYes;
+    end;
+  finally
+    LValidator.Free;
+  end;
 end;
 
 procedure TTGenerateModel.FormShow(Sender: TObject);
@@ -252,27 +305,31 @@ procedure TTGenerateModel.SaveButtonClick(Sender: TObject);
 var
   LEntities: TList<TTEntity>;
 begin
-  Screen.Cursor := crHourglass;
+  LEntities := TList<TTEntity>.Create;
   try
-    FEntities.CalculateUsesAndRelations;
-    LEntities := TList<TTEntity>.Create;
-    try
-      AddSelectedEntities(LEntities);
-      CreateModels(LEntities);
-      if APIControllersCheckbox.Enabled and APIControllersCheckbox.Checked then
-      begin
-        CreateControllers(LEntities);
-        ModifyAPIHttp(LEntities);
+    AddSelectedEntities(LEntities);
+    if CheckOverwrite(LEntities) then
+    begin
+      Screen.Cursor := crHourglass;
+      try
+        FEntities.CalculateUsesAndRelations;
+        CreateModels(LEntities);
+        if APIControllersCheckbox.Enabled and
+          APIControllersCheckbox.Checked then
+        begin
+          CreateControllers(LEntities);
+          ModifyAPIHttp(LEntities);
+        end;
+      finally
+        Screen.Cursor := crDefault;
       end;
-    finally
-      LEntities.Free;
+
+      ControlsToConfig;
+      ModalResult := mrOk;
     end;
   finally
-    Screen.Cursor := crDefault;
+    LEntities.Free;
   end;
-
-  ControlsToConfig;
-  ModalResult := mrOk;
 end;
 
 class procedure TTGenerateModel.ShowDialog(const AProject: TTProject);

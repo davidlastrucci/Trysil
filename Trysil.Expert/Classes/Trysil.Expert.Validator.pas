@@ -25,11 +25,13 @@ type
 
   TTValidator = class
   strict private
+    FMessage: String;
     FErrors: TList<String>;
     function GetIsValid: Boolean;
     function GetMessages: String;
   public
-    constructor Create;
+    constructor Create; overload;
+    constructor Create(const AMessage: String); overload;
     destructor Destroy; override;
 
     procedure Clear;
@@ -45,7 +47,13 @@ implementation
 
 constructor TTValidator.Create;
 begin
+  Create(SErrors);
+end;
+
+constructor TTValidator.Create(const AMessage: String);
+begin
   inherited Create;
+  FMessage := AMessage;
   FErrors := TList<String>.Create;;
 end;
 
@@ -80,7 +88,7 @@ begin
   begin
     LResult := TStringBuilder.Create;
     try
-      LResult.AppendLine(SErrors).AppendLine;
+      LResult.AppendLine(FMessage).AppendLine;
       for LError in FErrors do
         LResult.AppendFormat('- %s', [LError]).AppendLine;
       result := LResult.ToString;
