@@ -8,7 +8,7 @@
   http://codenames.info/operation/orm/
 
 *)
-unit Trysil.Expert.PascalCreator;
+unit Trysil.Expert.ModelCreator;
 
 interface
 
@@ -22,13 +22,13 @@ uses
   Trysil.Expert.Config,
   Trysil.Expert.SourceWriter,
   Trysil.Expert.Model,
-  Trysil.Expert.ModuleCreator;
+  Trysil.Expert.IOTA.ModuleCreator;
 
 type
 
-{ TTPascalCreator }
+{ TTModelCreator }
 
-  TTPascalCreator = class
+  TTModelCreator = class
   strict private
     FProjectName: String;
     FUnitNames: String;
@@ -53,7 +53,7 @@ type
       const ASource: TTSourceWriter;
       const AEntity: TTEntity);
 
-    procedure CreateEntity(
+    procedure CreateModel(
       const AEntity: TTEntity;
       const AUses: TEnumerable<TTEntity>;
       const ARelations: TEnumerable<TTRelation>);
@@ -66,15 +66,15 @@ type
       const AUnitNames: String;
       const APascalDirectory: String);
 
-    procedure CreateEntities(
+    procedure CreateModels(
       const AAll: TTEntities; const ASelected: TList<TTEntity>);
   end;
 
 implementation
 
-{ TTPascalCreator }
+{ TTModelCreator }
 
-constructor TTPascalCreator.Create(
+constructor TTModelCreator.Create(
   const AProjectName: String;
   const AUnitNames: String;
   const APascalDirectory: String);
@@ -85,17 +85,17 @@ begin
   FPascalDirectory := APascalDirectory;
 end;
 
-procedure TTPascalCreator.CreateEntities(
+procedure TTModelCreator.CreateModels(
   const AAll: TTEntities; const ASelected: TList<TTEntity>);
 var
   LEntity: TTEntity;
 begin
   for LEntity in ASelected do
-    CreateEntity(
+    CreateModel(
       LEntity, AAll.EntityUses[LEntity], AAll.EntityRelations[LEntity]);
 end;
 
-procedure TTPascalCreator.AddUses(
+procedure TTModelCreator.AddUses(
   const ASource: TTSourceWriter;
   const AColumns: TEnumerable<TTAbstractColumn>;
   const AUses: TEnumerable<TTEntity>);
@@ -153,7 +153,7 @@ begin
   end;
 end;
 
-procedure TTPascalCreator.AddRelations(
+procedure TTModelCreator.AddRelations(
   const ASource: TTSourceWriter; const ARelations: TEnumerable<TTRelation>);
 const
   BoolValues: array [boolean] of String = ('False', 'True');
@@ -167,7 +167,7 @@ begin
       BoolValues[LRelation.Cascade]]);
 end;
 
-procedure TTPascalCreator.AddFields(
+procedure TTModelCreator.AddFields(
   const ASource: TTSourceWriter;
   const AColumns: TEnumerable<TTAbstractColumn>);
 var
@@ -212,7 +212,7 @@ begin
   end;
 end;
 
-procedure TTPascalCreator.AddGetterAndSetter(const ASource: TTSourceWriter;
+procedure TTModelCreator.AddGetterAndSetter(const ASource: TTSourceWriter;
   const AColumns: TEnumerable<TTAbstractColumn>);
 var
   LFirst: Boolean;
@@ -239,7 +239,7 @@ begin
     end;
 end;
 
-procedure TTPascalCreator.AddProperties(
+procedure TTModelCreator.AddProperties(
   const ASource: TTSourceWriter;
   const AColumns: TEnumerable<TTAbstractColumn>);
 var
@@ -264,7 +264,7 @@ begin
           LColumn.Name, TTObjectColumn(LColumn).ObjectName]);
 end;
 
-procedure TTPascalCreator.AddGetterAndSetterImplementation(
+procedure TTModelCreator.AddGetterAndSetterImplementation(
   const ASource: TTSourceWriter; const AEntity: TTEntity);
 var
   LFirst: Boolean;
@@ -308,7 +308,7 @@ begin
     end;
 end;
 
-procedure TTPascalCreator.CreateEntity(
+procedure TTModelCreator.CreateModel(
   const AEntity: TTEntity;
   const AUses: TEnumerable<TTEntity>;
   const ARelations: TEnumerable<TTRelation>);
@@ -354,7 +354,7 @@ begin
   end;
 end;
 
-procedure TTPascalCreator.CreateUnit(
+procedure TTModelCreator.CreateUnit(
   const AName: String; const ASource: TTSourceWriter);
 var
   LModuleServices: IOTAModuleServices;

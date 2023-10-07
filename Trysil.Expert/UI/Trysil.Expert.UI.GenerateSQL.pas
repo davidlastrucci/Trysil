@@ -49,11 +49,11 @@ type
     DatabaseTypeCombobox: TComboBox;
     EntitiesLabel: TLabel;
     EntitiesListView: TListView;
-    SaveButton: TButton;
     CancelButton: TButton;
     EntitiesPopupMenu: TPopupMenu;
     SelectAllEntitiesMenuItem: TMenuItem;
     UnselectAllEntitiesMenuItem: TMenuItem;
+    SaveButton: TButton;
     procedure FormShow(Sender: TObject);
     procedure EntitiesListViewCreateItemClass(
       Sender: TCustomListView; var ItemClass: TListItemClass);
@@ -62,7 +62,11 @@ type
     procedure SaveButtonClick(Sender: TObject);
   strict private
     FProject: TTProject;
+    FConfig: TTLocalConfig;
     FEntities: TTEntities;
+
+    procedure ConfigToControls;
+    procedure ControlsToConfig;
 
     procedure AddSelectedEntities(const AEntities: TList<TTEntity>);
     procedure SelectAllEntities(const ASelect: Boolean);
@@ -83,12 +87,15 @@ constructor TTGenerateSQL.Create(const AProject: TTProject);
 begin
   inherited Create(nil);
   FProject := AProject;
+
+  FConfig := TTLocalConfig.Create;
   FEntities := TTEntities.Create;
 end;
 
 destructor TTGenerateSQL.Destroy;
 begin
   FEntities.Free;
+  FConfig.Free;
   inherited Destroy;
 end;
 
@@ -96,7 +103,19 @@ procedure TTGenerateSQL.AfterConstruction;
 begin
   inherited AfterConstruction;
   EntitiesListView.SmallImages := TTImagesDataModule.Instance.Images;
+  ConfigToControls;
   FEntities.LoadFromDirectory(TTUtils.TrysilFolder(FProject.Directory));
+end;
+
+procedure TTGenerateSQL.ConfigToControls;
+begin
+  DatabaseTypeCombobox.ItemIndex := FConfig.DatabaseType;
+end;
+
+procedure TTGenerateSQL.ControlsToConfig;
+begin
+  FConfig.DatabaseType := DatabaseTypeCombobox.ItemIndex;
+  FConfig.Save;
 end;
 
 procedure TTGenerateSQL.AddSelectedEntities(const AEntities: TList<TTEntity>);
@@ -176,8 +195,6 @@ begin
         finally
           LSQLCreator.Free;
         end;
-
-        ModalResult := mrOk;
       end;
     finally
       LEntities.Free;
@@ -185,6 +202,9 @@ begin
   finally
     Screen.Cursor := crDefault;
   end;
+
+  ControlsToConfig;
+  ModalResult := mrOk;
 end;
 
 class procedure TTGenerateSQL.ShowDialog(const AProject: TTProject);

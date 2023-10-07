@@ -16,8 +16,8 @@ uses
   System.SysUtils,
   System.Classes,
   ToolsAPI,
-  DesignIntf,
 
+  Trysil.Expert.IOTA.Services,
   Trysil.Expert;
 
 { WizardEntryPoint }
@@ -37,22 +37,14 @@ const
 var
   FExpertIndex: Integer = InvalidIndex;
 
-function GetWizardServices: IOTAWizardServices;
-begin
-  Assert(Assigned(BorlandIDEServices));
-  result := nil;
-  if BorlandIDEServices.SupportsService(IOTAWizardServices) then
-    result := BorlandIDEServices as IOTAWizardServices;
-  Assert(Assigned(result));
-end;
-
 procedure FinalizeWizard;
 var
   LWizardServices: IOTAWizardServices;
 begin
   if FExpertIndex > InvalidIndex then
   begin
-    LWizardServices := GetWizardServices;
+    LWizardServices := TTIOTAServices.WizardServices;
+    Assert(Assigned(LWizardServices));
     LWizardServices.RemoveWizard(FExpertIndex);
     FExpertIndex := InvalidIndex;
   end;
@@ -65,7 +57,8 @@ function InitWizard(
 var
   LWizardServices: IOTAWizardServices;
 begin
-  LWizardServices := GetWizardServices;
+  LWizardServices := TTIOTAServices.WizardServices;
+  Assert(Assigned(LWizardServices));
   FExpertIndex := LWizardServices.AddWizard(TTExpert.Create as IOTAWizard);
   result := (FExpertIndex > InvalidIndex);
   if result then

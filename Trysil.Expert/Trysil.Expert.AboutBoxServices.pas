@@ -15,10 +15,12 @@ interface
 uses
   System.SysUtils,
   System.Classes,
-  ToolsAPI,
   DesignIntf,
   Winapi.Windows,
-  Vcl.Graphics;
+  Vcl.Graphics,
+  ToolsAPI,
+
+  Trysil.Expert.IOTA.Services;
 
 type
 
@@ -78,7 +80,7 @@ begin
   LBitmap := TBitmap.Create;
   try
     LBitmap.LoadFromResourceName(HInstance, 'TRYSIL_24');
-    SplashScreenServices.AddPluginBitmap(
+    TTIOTAServices.SplashScreenServices.AddPluginBitmap(
       SWizardTitle,
       LBitmap.Handle,
       False,
@@ -95,12 +97,9 @@ var
 begin
   if FAboutBoxIndex <= InvalidIndex then
   begin
-    if BorlandIDEServices.SupportsService(IOTAAboutBoxServices) then
+    FAboutBoxServices := TTIOTAServices.AboutBoxServices;
+    if Assigned(FAboutBoxServices) then
     begin
-      FAboutBoxServices :=
-        BorlandIDEServices.GetService(IOTAAboutBoxServices)
-          as IOTAAboutBoxServices;
-
       LProductImage := LoadBitmap(
         FindResourceHInstance(HInstance), 'TRYSIL_24');
       FAboutBoxIndex := FAboutBoxServices.AddPluginInfo(
@@ -116,7 +115,7 @@ end;
 
 procedure TTExpertAbout.UnregisterAboutBox;
 begin
-  if FAboutBoxIndex > InvalidIndex then
+  if (FAboutBoxIndex > InvalidIndex) and Assigned(FAboutBoxServices) then
   begin
     FAboutBoxServices.RemovePluginInfo(FAboutBoxIndex);
     FAboutBoxIndex := InvalidIndex;

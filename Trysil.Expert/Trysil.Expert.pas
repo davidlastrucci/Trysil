@@ -15,12 +15,12 @@ interface
 uses
   System.SysUtils,
   System.Classes,
-  ToolsAPI,
   DesignIntf,
   Winapi.Windows,
   Winapi.Messages,
   Vcl.Forms,
   Vcl.Graphics,
+  ToolsAPI,
 
   Trysil.Expert.ActionsMenu;
 

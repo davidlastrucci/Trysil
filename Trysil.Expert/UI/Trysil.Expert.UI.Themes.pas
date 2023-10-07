@@ -21,7 +21,9 @@ uses
   Winapi.Windows,
   Vcl.Graphics,
   Vcl.Controls,
-  Vcl.Forms;
+  Vcl.Forms,
+
+  Trysil.Expert.IOTA.Services;
 
 type
 
@@ -181,9 +183,9 @@ end;
 procedure TTThemingServices.AfterConstruction;
 begin
   inherited AfterConstruction;
-  if BorlandIDEServices.SupportsService(IOTAIDEThemingServices) then
+  FThemingServices := TTIOTAServices.IDEThemingServices;
+  if Assigned(FThemingServices) then
   begin
-    FThemingServices := (BorlandIDEServices as IOTAIDEThemingServices);
     if FThemingServices.IDEThemingEnabled then
       FThemingServices.AddNotifier(
         TTStyleServicesNotifier.Create(FThemingServices, ThemeChanged));

@@ -18,6 +18,7 @@ uses
   System.SysUtils,
   System.Variants,
   System.Classes,
+  System.IOUtils,
   System.Generics.Collections,
   Vcl.Graphics,
   Vcl.Controls,
@@ -28,6 +29,7 @@ uses
   Vcl.StdCtrls,
   Vcl.Menus,
 
+  Trysil.Expert.IOTA,
   Trysil.Expert.Consts,
   Trysil.Expert.Classes,
   Trysil.Expert.Project,
@@ -36,24 +38,27 @@ uses
   Trysil.Expert.UI.Themed,
   Trysil.Expert.UI.Images,
   Trysil.Expert.UI.Classes,
-  Trysil.Expert.PascalCreator;
+  Trysil.Expert.ModelCreator,
+  Trysil.Expert.ControllerCreator,
+  Trysil.Expert.APIHttpModifier;
 
 type
 
 { TTGenerateModel }
 
   TTGenerateModel = class(TTThemedForm)
+    EntitiesPopupMenu: TPopupMenu;
+    SelectAllEntitiesMenuItem: TMenuItem;
+    UnselectAllEntitiesMenuItem: TMenuItem;
     ModelDirectoryLabel: TLabel;
     ModelDirectoryTextbox: TEdit;
     UnitFilenamesLabel: TLabel;
     UnitFilenamesTextbox: TEdit;
     EntitiesLabel: TLabel;
     EntitiesListView: TListView;
+    APIControllersCheckbox: TCheckBox;
     SaveButton: TButton;
     CancelButton: TButton;
-    EntitiesPopupMenu: TPopupMenu;
-    SelectAllEntitiesMenuItem: TMenuItem;
-    UnselectAllEntitiesMenuItem: TMenuItem;
     procedure FormShow(Sender: TObject);
     procedure EntitiesListViewCreateItemClass(
       Sender: TCustomListView; var ItemClass: TListItemClass);
@@ -62,11 +67,17 @@ type
     procedure SaveButtonClick(Sender: TObject);
   strict private
     FProject: TTProject;
+    FConfig: TTLocalConfig;
     FEntities: TTEntities;
 
+    procedure CheckIsAPIRestApplication;
     procedure ConfigToControls;
+    procedure ControlsToConfig;
     procedure AddSelectedEntities(const AEntities: TList<TTEntity>);
     procedure SelectAllEntities(const ASelect: Boolean);
+    procedure CreateModels(const AEntities: TList<TTEntity>);
+    procedure CreateControllers(const AEntities: TList<TTEntity>);
+    procedure ModifyAPIHttp(const AEntities: TList<TTEntity>);
   public
     constructor Create(const AProject: TTProject); reintroduce;
     destructor Destroy; override;
@@ -84,12 +95,15 @@ constructor TTGenerateModel.Create(const AProject: TTProject);
 begin
   inherited Create(nil);
   FProject := AProject;
+
+  FConfig := TTLocalConfig.Create;
   FEntities := TTEntities.Create;
 end;
 
 destructor TTGenerateModel.Destroy;
 begin
   FEntities.Free;
+  FConfig.Free;
   inherited Destroy;
 end;
 
@@ -97,14 +111,39 @@ procedure TTGenerateModel.AfterConstruction;
 begin
   inherited AfterConstruction;
   EntitiesListView.SmallImages := TTImagesDataModule.Instance.Images;
+  CheckIsAPIRestApplication;
   ConfigToControls;
   FEntities.LoadFromDirectory(TTUtils.TrysilFolder(FProject.Directory));
 end;
 
+procedure TTGenerateModel.CheckIsAPIRestApplication;
+var
+  LHttpModule, LControllerModule: IInterface;
+begin
+  APIControllersCheckbox.Enabled := False;
+
+  LHttpModule := TTIOTA.SearchModule('API\API.Http');
+  LControllerModule := TTIOTA.SearchModule('API\Controllers\API.Controller');
+
+  APIControllersCheckbox.Enabled :=
+    Assigned(LHttpModule) and Assigned(LControllerModule);
+end;
+
 procedure TTGenerateModel.ConfigToControls;
 begin
-  ModelDirectoryTextbox.Text := TTConfig.Instance.ModelDirectory;
-  UnitFilenamesTextbox.Text := TTConfig.Instance.UnitFilenames;
+  ModelDirectoryTextbox.Text := FConfig.ModelDirectory;
+  UnitFilenamesTextbox.Text := FConfig.UnitFilenames;
+  APIControllersCheckbox.Checked :=
+    APIControllersCheckbox.Enabled and FConfig.Controllers;
+end;
+
+procedure TTGenerateModel.ControlsToConfig;
+begin
+  FConfig.ModelDirectory := ModelDirectoryTextbox.Text;
+  FConfig.UnitFilenames := UnitFilenamesTextbox.Text;
+  FConfig.Controllers :=
+    APIControllersCheckbox.Enabled and APIControllersCheckbox.Checked;
+  FConfig.Save;
 end;
 
 procedure TTGenerateModel.AddSelectedEntities(const AEntities: TList<TTEntity>);
@@ -164,10 +203,54 @@ begin
   SelectAllEntities(False);
 end;
 
+procedure TTGenerateModel.CreateModels(const AEntities: TList<TTEntity>);
+var
+  LCreator: TTModelCreator;
+begin
+  LCreator := TTModelCreator.Create(
+    FProject.Name,
+    UnitFilenamesTextbox.Text,
+    TTUtils.ModelFolder(FProject.Directory, ModelDirectoryTextbox.Text));
+  try
+    LCreator.CreateModels(FEntities, AEntities);
+  finally
+    LCreator.Free;
+  end;
+end;
+
+procedure TTGenerateModel.CreateControllers(const AEntities: TList<TTEntity>);
+var
+  LDirectory: String;
+  LCreator: TTControllerCreator;
+begin
+  LDirectory :=
+    TPath.Combine(
+      TPath.Combine(FProject.Directory, 'API'), 'Controllers');
+
+  LCreator := TTControllerCreator.Create(
+    FProject.Name, UnitFilenamesTextbox.Text, LDirectory);
+  try
+    LCreator.CreateControllers(AEntities);
+  finally
+    LCreator.Free;
+  end;
+end;
+
+procedure TTGenerateModel.ModifyAPIHttp(const AEntities: TList<TTEntity>);
+var
+  LModifier: TTAPIHttpModifier;
+begin
+  LModifier := TTAPIHttpModifier.Create(AEntities);
+  try
+    LModifier.Modify;
+  finally
+    LModifier.Free;
+  end;
+end;
+
 procedure TTGenerateModel.SaveButtonClick(Sender: TObject);
 var
   LEntities: TList<TTEntity>;
-  LPascalCreator: TTPascalCreator;
 begin
   Screen.Cursor := crHourglass;
   try
@@ -175,14 +258,11 @@ begin
     LEntities := TList<TTEntity>.Create;
     try
       AddSelectedEntities(LEntities);
-      LPascalCreator := TTPascalCreator.Create(
-        FProject.Name,
-        UnitFilenamesTextbox.Text,
-        TTUtils.ModelFolder(FProject.Directory, ModelDirectoryTextbox.Text));
-      try
-        LPascalCreator.CreateEntities(FEntities, LEntities);
-      finally
-        LPascalCreator.Free;
+      CreateModels(LEntities);
+      if APIControllersCheckbox.Enabled and APIControllersCheckbox.Checked then
+      begin
+        CreateControllers(LEntities);
+        ModifyAPIHttp(LEntities);
       end;
     finally
       LEntities.Free;
@@ -191,6 +271,7 @@ begin
     Screen.Cursor := crDefault;
   end;
 
+  ControlsToConfig;
   ModalResult := mrOk;
 end;
 

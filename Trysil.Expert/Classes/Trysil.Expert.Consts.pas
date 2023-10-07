@@ -26,7 +26,7 @@ resourcestring
   SDuplicateSequenceName = 'Entity "%s" has the same sequence name.';
   SSequenceSameTable = 'Entity "%s" has the sequence name same as this table name.';
   STableSameSequence = 'Entity "%s" has the table name same as this sequence name.';
-  SColumnNameEmpty = 'Name name cannot be empty.';
+  SColumnNameEmpty = 'Name cannot be empty.';
   SColumnColumnNameEmpty = 'Column name cannot be empty.';
   SInvalidDataType = 'Invalid data type.';
   SStringSizeError = 'Strings columns must be larger than zero.';

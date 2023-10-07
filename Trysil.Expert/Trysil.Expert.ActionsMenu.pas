@@ -18,16 +18,21 @@ uses
   System.IOUtils,
   System.ImageList,
   System.Actions,
+  Winapi.Windows,
+  Vcl.Dialogs,
   Vcl.ImgList,
   Vcl.ActnList,
   Vcl.Controls,
   Vcl.Menus,
   ToolsAPI,
 
+  Trysil.Expert.IOTA,
+  Trysil.Expert.IOTA.Services,
   Trysil.Expert.Project,
   Trysil.Expert.UI.Design,
   Trysil.Expert.UI.GenerateSQL,
   Trysil.Expert.UI.GenerateModel,
+  Trysil.Expert.UI.APIRest,
   Trysil.Expert.UI.Settings,
   Trysil.Expert.UI.About;
 
@@ -41,16 +46,19 @@ type
     TTEDesignAction: TAction;
     TTEGenerateSQLAction: TAction;
     TTEGenerateModelAction: TAction;
+    TTENewAPIRESTAction: TAction;
     TTESettingsAction: TAction;
     TTEAboutAction: TAction;
     PopupMenu: TPopupMenu;
     TTEDesignMenuItem: TMenuItem;
     TTESeparator01MenuItem: TMenuItem;
-    TTEGenerateModelMenuItem: TMenuItem;
     TTEGenerateSQLMenuItem: TMenuItem;
+    TTEGenerateModelMenuItem: TMenuItem;
     TTESeparator02MenuItem: TMenuItem;
-    TTESettingsMenuItem: TMenuItem;
+    TTENewAPIRestMenuItem: TMenuItem;
     TTESeparator03MenuItem: TMenuItem;
+    TTESettingsMenuItem: TMenuItem;
+    TTESeparator04MenuItem: TMenuItem;
     TTEAboutMenuItem: TMenuItem;
     procedure TTEDesignActionUpdate(Sender: TObject);
     procedure TTEDesignActionExecute(Sender: TObject);
@@ -58,8 +66,10 @@ type
     procedure TTEGenerateSQLActionExecute(Sender: TObject);
     procedure TTEGenerateModelActionUpdate(Sender: TObject);
     procedure TTEGenerateModelActionExecute(Sender: TObject);
+    procedure TTENewAPIRESTActionExecute(Sender: TObject);
     procedure TTESettingsActionExecute(Sender: TObject);
     procedure TTEAboutActionExecute(Sender: TObject);
+    procedure TTENewAPIRESTActionUpdate(Sender: TObject);
   strict private
     const JSonFolder: String = '__trysil.model';
   strict private
@@ -79,8 +89,6 @@ type
     procedure AddToolbarButton(
       const AServices: INTAServices; const AAction: TAction);
 
-    function ActiveProject: IOTAProject;
-    function IsActiveProject: Boolean;
     function ActiveTrysilProject: TTProject;
   public
     constructor Create(AOwner: TComponent); override;
@@ -126,9 +134,8 @@ var
   LServices: INTAServices;
 begin
   inherited AfterConstruction;
-  if BorlandIDEServices.SupportsService(INTAServices) then
+  LServices := TTIOTAServices.INTAServices;
   begin
-    LServices := (BorlandIDEServices as INTAServices);
     LServices.AddImages(ImageList);
     AddMainMenu(LServices);
     AddToolbar(LServices);
@@ -152,8 +159,10 @@ begin
   AddSubMenuItem(AServices, TTEGenerateSQLAction, TTEGenerateSQLMenuItem);
   AddSubMenuItem(AServices, TTEGenerateModelAction, TTEGenerateModelMenuItem);
   AddSubMenuItem(AServices, nil, TTESeparator02MenuItem);
-  AddSubMenuItem(AServices, TTESettingsAction, TTESettingsMenuItem);
+  AddSubMenuItem(AServices, TTENewAPIRESTAction, TTENewAPIRestMenuItem);
   AddSubMenuItem(AServices, nil, TTESeparator03MenuItem);
+  AddSubMenuItem(AServices, TTESettingsAction, TTESettingsMenuItem);
+  AddSubMenuItem(AServices, nil, TTESeparator04MenuItem);
   AddSubMenuItem(AServices, TTEAboutAction, TTEAboutMenuItem);
 end;
 
@@ -193,63 +202,59 @@ begin
     False);
 end;
 
-function TTActionsMenuDatamodule.ActiveProject: IOTAProject;
-begin
-  result := nil;
-  if BorlandIDEServices.SupportsService(IOTAModuleServices) then
-    result := (BorlandIDEServices as IOTAModuleServices).GetActiveProject;
-end;
-
-function TTActionsMenuDatamodule.IsActiveProject: Boolean;
-var
-  LProject: IOTAProject;
-begin
-  LProject := ActiveProject;
-  result := Assigned(LProject);
-  if result then
-    result := TFile.Exists(LProject.FileName);
-end;
-
 function TTActionsMenuDatamodule.ActiveTrysilProject: TTProject;
 var
   LProject: IOTAProject;
 begin
-  LProject := ActiveProject;
+  LProject := TTIOTA.ActiveProject;
   if Assigned(LProject) then
     result := TTProject.Create(LProject.FileName);
 end;
 
 procedure TTActionsMenuDatamodule.TTEDesignActionUpdate(Sender: TObject);
 begin
-  TTEDesignAction.Enabled := IsActiveProject;
+  TTEDesignAction.Enabled := TTIOTA.IsActiveProject;
 end;
 
 procedure TTActionsMenuDatamodule.TTEDesignActionExecute(Sender: TObject);
 begin
-  if IsActiveProject then
+  if TTIOTA.IsActiveProject then
     TTDesignForm.ShowDialog(ActiveTrysilProject);
 end;
 
 procedure TTActionsMenuDatamodule.TTEGenerateSQLActionUpdate(Sender: TObject);
 begin
-  TTEGenerateSQLAction.Enabled := IsActiveProject;
+  TTEGenerateSQLAction.Enabled := TTIOTA.IsActiveProject;
 end;
 
 procedure TTActionsMenuDatamodule.TTEGenerateSQLActionExecute(Sender: TObject);
 begin
-  if IsActiveProject then
+  if TTIOTA.IsActiveProject then
     TTGenerateSQL.ShowDialog(ActiveTrysilProject);
 end;
 
 procedure TTActionsMenuDatamodule.TTEGenerateModelActionUpdate(Sender: TObject);
 begin
-  TTEGenerateModelAction.Enabled := IsActiveProject;
+  TTEGenerateModelAction.Enabled := TTIOTA.IsActiveProject;
 end;
 
 procedure TTActionsMenuDatamodule.TTEGenerateModelActionExecute(Sender: TObject);
 begin
-  if IsActiveProject then
+  if TTIOTA.IsActiveProject then
     TTGenerateModel.ShowDialog(ActiveTrysilProject);
+end;
+
+procedure TTActionsMenuDatamodule.TTENewAPIRESTActionUpdate(Sender: TObject);
+var
+  LProject: IOTAProject;
+begin
+  LProject := TTIOTA.ActiveProject;
+  TTENewAPIRESTAction.Enabled := not Assigned(LProject);
+end;
+
+procedure TTActionsMenuDatamodule.TTENewAPIRESTActionExecute(Sender: TObject);
+begin
+  TTAPIRestForm.ShowDialog;
 end;
 
 procedure TTActionsMenuDatamodule.TTESettingsActionExecute(Sender: TObject);

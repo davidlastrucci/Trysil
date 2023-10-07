@@ -1,18 +1,18 @@
 inherited TGenerateModel: TTGenerateModel
-  ClientHeight = 391
+  ClientHeight = 414
   ClientWidth = 555
   Color = clWhite
   OnShow = FormShow
   ExplicitWidth = 571
-  ExplicitHeight = 430
+  ExplicitHeight = 453
   TextHeight = 15
   inherited ContentPanel: TPanel
     Width = 555
-    Height = 342
+    Height = 365
     ExplicitLeft = 0
     ExplicitTop = 0
-    ExplicitWidth = 550
-    ExplicitHeight = 332
+    ExplicitWidth = 555
+    ExplicitHeight = 365
     object EntitiesLabel: TLabel
       Left = 72
       Top = 120
@@ -63,12 +63,20 @@ inherited TGenerateModel: TTGenerateModel
       TabOrder = 1
       Text = '{ProjectName}.Model.{EntityName}'
     end
+    object APIControllersCheckbox: TCheckBox
+      Left = 72
+      Top = 335
+      Width = 237
+      Height = 17
+      Caption = 'Generate && register API REST controllers'
+      TabOrder = 3
+    end
   end
   inherited ButtonsPanel: TPanel
-    Top = 342
+    Top = 365
     Width = 555
-    ExplicitTop = 332
-    ExplicitWidth = 550
+    ExplicitTop = 365
+    ExplicitWidth = 555
     object CancelButton: TButton
       Left = 468
       Top = 12
@@ -79,8 +87,6 @@ inherited TGenerateModel: TTGenerateModel
       Caption = '&Cancel'
       ModalResult = 2
       TabOrder = 1
-      ExplicitLeft = 463
-      ExplicitTop = 24
     end
     object SaveButton: TButton
       AlignWithMargins = True
@@ -97,8 +103,6 @@ inherited TGenerateModel: TTGenerateModel
       Default = True
       TabOrder = 0
       OnClick = SaveButtonClick
-      ExplicitLeft = 384
-      ExplicitTop = 24
     end
   end
   object EntitiesPopupMenu: TPopupMenu

@@ -8,7 +8,7 @@
   http://codenames.info/operation/orm/
 
 *)
-unit Trysil.Expert.ModuleCreator;
+unit Trysil.Expert.IOTA.ModuleCreator;
 
 interface
 
@@ -18,7 +18,8 @@ uses
   ToolsAPI,
   DesignIntf,
 
-  Trysil.Expert.SourceFile;
+  Trysil.Expert.IOTA.Services,
+  Trysil.Expert.IOTA.SourceFile;
 
 type
 
@@ -118,11 +119,14 @@ var
   LModule, LResult: IOTAModule;
 begin
   result := nil;
-  LModuleServices := (BorlandIDEServices as IOTAModuleServices);
-  LModule := LModuleServices.CurrentModule;
-  if Assigned(LModule) then
-    if LModule.QueryInterface(IOTAProject, LResult) = S_OK then
-      result := LResult;
+  LModuleServices := TTIOTAServices.ModuleServices;
+  if Assigned(LModuleServices) then
+  begin
+    LModule := LModuleServices.CurrentModule;
+    if Assigned(LModule) then
+      if LModule.QueryInterface(IOTAProject, LResult) = S_OK then
+        result := LResult;
+  end;
 end;
 
 function TTModuleCreator.GetShowForm: Boolean;

@@ -175,6 +175,10 @@
         </DelphiCompile>
         <DCCReference Include="Classes\Trysil.Expert.Consts.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.Classes.pas"/>
+        <DCCReference Include="IOTA\Trysil.Expert.IOTA.Services.pas"/>
+        <DCCReference Include="IOTA\Trysil.Expert.IOTA.SourceFile.pas"/>
+        <DCCReference Include="IOTA\Trysil.Expert.IOTA.ModuleCreator.pas"/>
+        <DCCReference Include="IOTA\Trysil.Expert.IOTA.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.Validator.pas"/>
         <DCCReference Include="Trysil.Expert.EntryPoint.pas"/>
         <DCCReference Include="Trysil.Expert.pas"/>
@@ -183,11 +187,12 @@
             <Form>TActionsMenuDatamodule</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
-        <DCCReference Include="Classes\Trysil.Expert.SourceFile.pas"/>
-        <DCCReference Include="Classes\Trysil.Expert.ModuleCreator.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.SourceWriter.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.SQLCreator.pas"/>
-        <DCCReference Include="Classes\Trysil.Expert.PascalCreator.pas"/>
+        <DCCReference Include="Classes\Trysil.Expert.ModelCreator.pas"/>
+        <DCCReference Include="Classes\Trysil.Expert.ControllerCreator.pas"/>
+        <DCCReference Include="Classes\Trysil.Expert.APIHttpModifier.pas"/>
+        <DCCReference Include="Classes\Trysil.Expert.APIRestCreator.pas"/>
         <DCCReference Include="Model\Trysil.Expert.Config.pas"/>
         <DCCReference Include="Model\Trysil.Expert.Model.pas"/>
         <DCCReference Include="Model\Trysil.Expert.Project.pas"/>
@@ -227,6 +232,9 @@
         </DCCReference>
         <DCCReference Include="UI\Trysil.Expert.UI.GenerateModel.pas">
             <Form>TGenerateModel</Form>
+        </DCCReference>
+        <DCCReference Include="UI\Trysil.Expert.UI.APIREST.pas">
+            <Form>TAPIRestForm</Form>
         </DCCReference>
         <DCCReference Include="UI\Trysil.Expert.UI.Settings.pas">
             <Form>TSettingsForm</Form>

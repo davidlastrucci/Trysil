@@ -11,8 +11,8 @@ inherited TGenerateSQL: TTGenerateSQL
     Height = 291
     ExplicitLeft = 0
     ExplicitTop = 0
-    ExplicitWidth = 550
-    ExplicitHeight = 285
+    ExplicitWidth = 554
+    ExplicitHeight = 291
     object DatabaseTypeLabel: TLabel
       Left = 72
       Top = 16
@@ -59,8 +59,8 @@ inherited TGenerateSQL: TTGenerateSQL
   inherited ButtonsPanel: TPanel
     Top = 291
     Width = 554
-    ExplicitTop = 285
-    ExplicitWidth = 550
+    ExplicitTop = 291
+    ExplicitWidth = 554
     object CancelButton: TButton
       Left = 467
       Top = 12
@@ -70,9 +70,7 @@ inherited TGenerateSQL: TTGenerateSQL
       Cancel = True
       Caption = '&Cancel'
       ModalResult = 2
-      TabOrder = 1
-      ExplicitLeft = 463
-      ExplicitTop = 24
+      TabOrder = 0
     end
     object SaveButton: TButton
       AlignWithMargins = True
@@ -87,10 +85,8 @@ inherited TGenerateSQL: TTGenerateSQL
       Align = alRight
       Caption = '&OK'
       Default = True
-      TabOrder = 0
+      TabOrder = 1
       OnClick = SaveButtonClick
-      ExplicitLeft = 384
-      ExplicitTop = 24
     end
   end
   object SaveDialog: TSaveDialog
