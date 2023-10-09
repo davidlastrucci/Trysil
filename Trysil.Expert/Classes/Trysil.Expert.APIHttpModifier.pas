@@ -110,7 +110,7 @@ begin
     begin
       for LEntity in FEntities do
         FDestination.Add(Format(
-          '  FServer.RegisterController<TAPI%sController>();', [
+          '  FServer.RegisterController<T%sController>();', [
           LEntity.Name]));
       FDestination.Add(FSource[LIndex]);
       LInRegister := False;
