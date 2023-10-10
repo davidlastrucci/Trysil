@@ -70,7 +70,7 @@ inherited TGenerateSQL: TTGenerateSQL
       Cancel = True
       Caption = '&Cancel'
       ModalResult = 2
-      TabOrder = 0
+      TabOrder = 1
     end
     object SaveButton: TButton
       AlignWithMargins = True
@@ -85,7 +85,7 @@ inherited TGenerateSQL: TTGenerateSQL
       Align = alRight
       Caption = '&OK'
       Default = True
-      TabOrder = 1
+      TabOrder = 0
       OnClick = SaveButtonClick
     end
   end
