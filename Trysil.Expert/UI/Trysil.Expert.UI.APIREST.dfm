@@ -205,8 +205,6 @@ inherited TAPIRestForm: TTAPIRestForm
       BevelOuter = bvNone
       ShowCaption = False
       TabOrder = 0
-      ExplicitWidth = 230
-      ExplicitHeight = 145
       object ProjectPageGroupBox: TGroupBox
         AlignWithMargins = True
         Left = 2
@@ -220,8 +218,6 @@ inherited TAPIRestForm: TTAPIRestForm
         Align = alClient
         Caption = 'Project  '
         TabOrder = 0
-        ExplicitWidth = 226
-        ExplicitHeight = 137
         object ProjectDirectoryLabel: TLabel
           Left = 24
           Top = 28

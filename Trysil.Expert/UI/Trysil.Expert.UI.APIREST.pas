@@ -445,9 +445,9 @@ begin
     finally
       LParameters.Free;
     end;
-  end;
 
-  ModalResult := mrOk;
+    ModalResult := mrOk;
+  end;
 end;
 
 class procedure TTAPIRestForm.ShowDialog;
