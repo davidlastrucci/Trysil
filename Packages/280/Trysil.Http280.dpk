@@ -1,0 +1,64 @@
+package Trysil.Http280;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  IndySystem,
+  IndyProtocols,
+  IndyCore,
+  Trysil280,
+  Trysil.JSon280;
+
+contains
+  Trysil.Http.Attributes in '..\..\Trysil.Http\Trysil.Http.Attributes.pas',
+  Trysil.Http.Classes in '..\..\Trysil.Http\Trysil.Http.Classes.pas',
+  Trysil.Http.Consts in '..\..\Trysil.Http\Trysil.Http.Consts.pas',
+  Trysil.Http.Context in '..\..\Trysil.Http\Trysil.Http.Context.pas',
+  Trysil.Http.Controller in '..\..\Trysil.Http\Trysil.Http.Controller.pas',
+  Trysil.Http.Cors in '..\..\Trysil.Http\Trysil.Http.Cors.pas',
+  Trysil.Http.Exceptions in '..\..\Trysil.Http\Trysil.Http.Exceptions.pas',
+  Trysil.Http.Filter in '..\..\Trysil.Http\Trysil.Http.Filter.pas',
+  Trysil.Http.Listener in '..\..\Trysil.Http\Trysil.Http.Listener.pas',
+  Trysil.Http in '..\..\Trysil.Http\Trysil.Http.pas',
+  Trysil.Http.Resolver in '..\..\Trysil.Http\Trysil.Http.Resolver.pas',
+  Trysil.Http.Rtti in '..\..\Trysil.Http\Trysil.Http.Rtti.pas',
+  Trysil.Http.Types in '..\..\Trysil.Http\Trysil.Http.Types.pas',
+  Trysil.Http.Authentication.Basic in '..\..\Trysil.Http\Authentication\Trysil.Http.Authentication.Basic.pas',
+  Trysil.Http.Authentication.Bearer in '..\..\Trysil.Http\Authentication\Trysil.Http.Authentication.Bearer.pas',
+  Trysil.Http.Authentication.Digest in '..\..\Trysil.Http\Authentication\Trysil.Http.Authentication.Digest.pas',
+  Trysil.Http.Authentication in '..\..\Trysil.Http\Authentication\Trysil.Http.Authentication.pas',
+  Trysil.Http.JWT in '..\..\Trysil.Http\Authentication\Trysil.Http.JWT.pas',
+  Trysil.Http.Log.Classes in '..\..\Trysil.Http\Log\Trysil.Http.Log.Classes.pas',
+  Trysil.Http.Log.Consts in '..\..\Trysil.Http\Log\Trysil.Http.Log.Consts.pas',
+  Trysil.Http.Log in '..\..\Trysil.Http\Log\Trysil.Http.Log.pas',
+  Trysil.Http.Log.Threading in '..\..\Trysil.Http\Log\Trysil.Http.Log.Threading.pas',
+  Trysil.Http.Log.Types in '..\..\Trysil.Http\Log\Trysil.Http.Log.Types.pas',
+  Trysil.Http.Log.Writer in '..\..\Trysil.Http\Log\Trysil.Http.Log.Writer.pas';
+
+end.

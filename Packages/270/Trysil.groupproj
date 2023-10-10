@@ -1,0 +1,60 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{BA9CD0D8-9DF9-4953-9D0B-FB0728CFF650}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Trysil270.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Trysil.JSon270.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Trysi.Httpl270.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="Trysil270">
+        <MSBuild Projects="Trysil270.dproj"/>
+    </Target>
+    <Target Name="Trysil270:Clean">
+        <MSBuild Projects="Trysil270.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil270:Make">
+        <MSBuild Projects="Trysil270.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Trysil_JSon270">
+        <MSBuild Projects="Trysil.JSon270.dproj"/>
+    </Target>
+    <Target Name="Trysil_JSon270:Clean">
+        <MSBuild Projects="Trysil.JSon270.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil_JSon270:Make">
+        <MSBuild Projects="Trysil.JSon270.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Trysi_Httpl270">
+        <MSBuild Projects="Trysi.Httpl270.dproj"/>
+    </Target>
+    <Target Name="Trysi_Httpl270:Clean">
+        <MSBuild Projects="Trysi.Httpl270.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysi_Httpl270:Make">
+        <MSBuild Projects="Trysi.Httpl270.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="Trysil270;Trysil_JSon270;Trysi_Httpl270"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="Trysil270:Clean;Trysil_JSon270:Clean;Trysi_Httpl270:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="Trysil270:Make;Trysil_JSon270:Make;Trysi_Httpl270:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
