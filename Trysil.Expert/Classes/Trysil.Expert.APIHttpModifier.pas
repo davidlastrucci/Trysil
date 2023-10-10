@@ -107,7 +107,7 @@ begin
   begin
     LRow := FSource[LIndex].ToUpper().Trim();
 
-    if LRow.Equals('PROCEDURE TAPIHTTP.REGISTERCONTROLLERS;') then
+    if LRow.Equals('PROCEDURE THTTP.REGISTERCONTROLLERS;') then
       LInRegister := True;
 
     if LInRegister and (LRow.EndsWith('END;')) then
@@ -129,7 +129,8 @@ var
   LSourceEditor: IOTASourceEditor;
   LIndex: Integer;
 begin
-  LSourceEditor := TTIOTA.ShowSourceEditor('API\API.Http');
+  LSourceEditor := TTIOTA.ShowSourceEditor(
+    Format('API\%s.Http', [FProjectName]));
   if Assigned(LSourceEditor) then
   begin
     FSource.Text := TTIOTA.GetSourceFile(LSourceEditor);

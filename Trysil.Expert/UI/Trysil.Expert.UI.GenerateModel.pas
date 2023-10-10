@@ -195,7 +195,7 @@ begin
         begin
           LModuleName := TPath.Combine(
             TPath.Combine('API', 'Controllers'),
-              Format('API.Controller.%s', [LEntity.Name]));
+              Format('%s.Controller.%s', [LProjectName, LEntity.Name]));
           LModuleInfo := TTIOTA.SearchModule(LModuleName);
           LValidator.Check(Assigned(LModuleInfo), LModuleName);
         end;
