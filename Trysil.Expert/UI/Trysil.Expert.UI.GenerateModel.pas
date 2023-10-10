@@ -121,12 +121,16 @@ end;
 
 procedure TTGenerateModel.CheckIsAPIRestApplication;
 var
+  LProjectName: String;
   LHttpModule, LControllerModule: IInterface;
 begin
   APIControllersCheckbox.Enabled := False;
 
-  LHttpModule := TTIOTA.SearchModule('API\API.Http');
-  LControllerModule := TTIOTA.SearchModule('API\Controllers\API.Controller');
+  LProjectName := TTIOTA.ActiveProjectName;
+  LHttpModule := TTIOTA.SearchModule(
+    Format('API\%s.Http', [LProjectName]));
+  LControllerModule := TTIOTA.SearchModule(
+    Format('API\Controllers\%s.Controller', [LProjectName]));
 
   APIControllersCheckbox.Enabled :=
     Assigned(LHttpModule) and Assigned(LControllerModule);
@@ -167,7 +171,6 @@ function TTGenerateModel.CheckOverwrite(
   const AEntities: TList<TTEntity>): Boolean;
 var
   LValidator: TTValidator;
-  LProject: IOTAProject;
   LProjectName, LModuleName: String;
   LEntity: TTEntity;
   LModuleInfo: IOTAModuleInfo;
@@ -175,10 +178,9 @@ begin
   result := True;
   LValidator := TTValidator.Create('These units will be overwritten:');
   try
-    LProject := TTIOTA.ActiveProject;
-    if Assigned(LProject) then
+    LProjectName := TTIOTA.ActiveProjectName;
+    if not LProjectName.IsEmpty then
     begin
-      LProjectName := TPath.GetFileNameWithoutExtension(LProject.FileName);
       for LEntity in AEntities do
       begin
         LModuleName := TPath.Combine(
@@ -293,7 +295,7 @@ procedure TTGenerateModel.ModifyAPIHttp(const AEntities: TList<TTEntity>);
 var
   LModifier: TTAPIHttpModifier;
 begin
-  LModifier := TTAPIHttpModifier.Create(AEntities);
+  LModifier := TTAPIHttpModifier.Create(TTIOTA.ActiveProjectName, AEntities);
   try
     LModifier.Modify;
   finally

@@ -29,6 +29,7 @@ type
   TTIOTA = class
   public
     class function ActiveProject: IOTAProject;
+    class function ActiveProjectName: String;
     class function IsActiveProject: Boolean;
 
     class function SearchModule(const AFileName: String): IOTAModuleInfo;
@@ -50,6 +51,16 @@ begin
   result := nil;
   if BorlandIDEServices.SupportsService(IOTAModuleServices) then
     result := (BorlandIDEServices as IOTAModuleServices).GetActiveProject;
+end;
+
+class function TTIOTA.ActiveProjectName: String;
+var
+  LProject: IOTAProject;
+begin
+  result := String.Empty;
+  LProject := ActiveProject;
+  if Assigned(LProject) then
+    result := TPath.GetFileNameWithoutExtension(LProject.FileName);
 end;
 
 class function TTIOTA.IsActiveProject: Boolean;

@@ -27,6 +27,7 @@ type
 
   TTAPIHttpModifier = class
   strict private
+    FProjectName: String;
     FEntities: TList<TTEntity>;
     FSource: TStrings;
     FDestination: TStrings;
@@ -34,7 +35,8 @@ type
     function ModifyUses: Integer;
     procedure ModifyRegister(const AIndex: Integer);
   public
-    constructor Create(AEntities: TList<TTEntity>);
+    constructor Create(
+      const AProjectName: String; const AEntities: TList<TTEntity>);
     destructor Destroy; override;
 
     procedure Modify;
@@ -44,9 +46,11 @@ implementation
 
 { TTAPIHttpModifier }
 
-constructor TTAPIHttpModifier.Create(AEntities: TList<TTEntity>);
+constructor TTAPIHttpModifier.Create(
+  const AProjectName: String; const AEntities: TList<TTEntity>);
 begin
   inherited Create;
+  FProjectName := AProjectName;
   FEntities := AEntities;
   FSource := TStringList.Create;
   FDestination := TStringList.Create;
@@ -81,7 +85,7 @@ begin
     begin
       FDestination.Add(FSource[LIndex].Replace(';', ','));
       for LEntity in FEntities do
-        FDestination.Add(Format('  API.Controller.%s,', [LEntity.Name]));
+        FDestination.Add(Format('  %s.Controller.%s,', [FProjectName, LEntity.Name]));
       FDestination[FDestination.Count - 1] :=
         FDestination[FDestination.Count - 1].Replace(',', ';');
       Break;

@@ -3,11 +3,15 @@
   Trysil
   Copyright © David Lastrucci
   All rights reserved
+
   Trysil - Operation ORM (World War II)
   http://codenames.info/operation/orm/
+
 *)
 unit Trysil.Expert.ControllerCreator;
+
 interface
+
 uses
   System.SysUtils,
   System.Classes,
@@ -18,8 +22,11 @@ uses
   Trysil.Expert.SourceWriter,
   Trysil.Expert.Model,
   Trysil.Expert.IOTA.ModuleCreator;
+
 type
+
 { TTControllerCreator }
+
   TTControllerCreator = class
   strict private
     FProjectName: String;
@@ -33,10 +40,14 @@ type
       const AProjectName: String;
       const AUnitNames: String;
       const APascalDirectory: String);
+
     procedure CreateControllers(const ASelected: TList<TTEntity>);
   end;
+
 implementation
+
 { TTControllerCreator }
+
 constructor TTControllerCreator.Create(
   const AProjectName: String;
   const AUnitNames: String;
@@ -56,6 +67,7 @@ begin
   for LEntity in ASelected do
     CreateController(LEntity);
 end;
+
 procedure TTControllerCreator.CreateController(const AEntity: TTEntity);
 var
   LSource: TTSourceWriter;
@@ -63,7 +75,7 @@ var
 begin
   LSource := TTSourceWriter.Create;
   try
-    LUnitName := Format('API.Controller.%s', [AEntity.Name]);
+    LUnitName := Format('%s.Controller.%s', [FProjectName, AEntity.Name]);
     LSource.Append('unit %s;', [LUnitName]);
     LSource.AppendLine;
     LSource.Append('{$WARN UNKNOWN_CUSTOM_ATTRIBUTE ERROR}');
@@ -75,7 +87,7 @@ begin
     LSource.Append('  System.SysUtils,');
     LSource.Append('  Trysil.Http.Attributes,');
     LSource.AppendLine;
-    LSource.Append('  API.Controller,');
+    LSource.Append('  %s.Controller,', [FProjectName]);
     LSource.Append('  %s;', [TTUtils.UnitName(FUnitNames, FProjectName, AEntity.Name)]);
     LSource.AppendLine;
     LSource.Append('type');
@@ -83,7 +95,7 @@ begin
     LSource.Append('{ T%sController }', [AEntity.Name]);
     LSource.AppendLine;
     LSource.Append('  [TUri(''/%s'')]', [AEntity.Name.ToLower]);
-    LSource.Append('  T%0:sController = class(TAPIReadWriteController<T%0:s>)', [AEntity.Name]);
+    LSource.Append('  T%0:sController = class(TReadWriteController<T%0:s>)', [AEntity.Name]);
     LSource.Append('  end;');
     LSource.AppendLine;
     LSource.Append('implementation');
@@ -94,6 +106,7 @@ begin
     LSource.Free;
   end;
 end;
+
 procedure TTControllerCreator.CreateUnit(
   const AName: String; const ASource: TTSourceWriter);
 var
@@ -112,9 +125,9 @@ begin
       if Assigned(LModule) then
       begin
         LProject.AddFile(LModule.FileName, True);
-        // LModule.Save(False, True);
       end;
     end;
   end;
 end;
+
 end.
