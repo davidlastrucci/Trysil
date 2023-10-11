@@ -27,7 +27,6 @@ type
   TTApiRestProjectParameters = class
   strict private
     FDirectory: String;
-    FProjectGuid: String;
     FProjectName: String;
     FJWTSecret: String;
 
@@ -36,7 +35,6 @@ type
     procedure AfterConstruction; override;
 
     property Directory: String read FDirectory write FDirectory;
-    property ProjectGuid: String read FProjectGuid;
     property ProjectName: String read FProjectName write FProjectName;
     property JWTSecret: String read FJWTSecret write FJWTSecret;
   end;
@@ -116,7 +114,6 @@ implementation
 procedure TTApiRestProjectParameters.AfterConstruction;
 begin
   inherited AfterConstruction;
-  FProjectGuid := TGuid.NewGuid.ToString;
   FJWTSecret := CalculateRandomSecret;
 end;
 
@@ -194,14 +191,16 @@ begin
   result := LExtension.Equals('.pas') or
     LExtension.Equals('.dpr') or
     LExtension.Equals('.dproj') or
+    LExtension.Equals('.groupproj') or
     LExtension.Equals('.json');
 end;
 
 function TTAPIRestCreator.ModifySourceLine(const ALine: String): String;
 begin
   result := ALine
-    .Replace('{{ProjectGuid}}', FParameters.Project.ProjectGuid, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{ProjectGuid}}', TGuid.NewGuid.ToString, [rfReplaceAll, rfIgnoreCase])
     .Replace('{{ProjectName}}', FParameters.Project.ProjectName, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{ProjectName_}}', FParameters.Project.ProjectName.Replace('.', '_', [rfReplaceAll]), [rfReplaceAll, rfIgnoreCase])
     .Replace('{{JWTSecret}}', FParameters.Project.JWTSecret, [rfReplaceAll, rfIgnoreCase])
     .Replace('{{BaseUri}}', FParameters.API.BaseUri, [rfReplaceAll, rfIgnoreCase])
     .Replace('{{Port}}', FParameters.API.Port.ToString, [rfReplaceAll, rfIgnoreCase])
@@ -294,7 +293,7 @@ end;
 procedure TTAPIRestCreator.OpenProject;
 begin
   TTIOTA.OpenProject(
-    Format('%s.dproj', [
+    Format('%sGroup.groupproj', [
       TPath.Combine(
         FParameters.Project.Directory,
         FParameters.Project.ProjectName)]));

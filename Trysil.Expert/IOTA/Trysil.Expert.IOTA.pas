@@ -105,7 +105,7 @@ var
 begin
   LActionServices := TTIOTAServices.ActionServices;
   if Assigned(LActionServices) then
-    LActionServices.OpenProject(AFileName, True);
+    LActionServices.OpenProject(AFileName, False);
 end;
 
 class function TTIOTA.ShowSourceEditor(const AFileName: String): IOTASourceEditor;
