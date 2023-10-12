@@ -441,7 +441,7 @@ procedure TTHttpResponse.AfterConstruction;
 begin
   inherited AfterConstruction;
   FResponseInfo.Server :=
-    'API REST made simple by Trysil - https://github.com/davidlastrucci/Trysil';
+    'API REST made simple by Trysil Delphi ORM - https://github.com/davidlastrucci/Trysil';
 end;
 
 procedure TTHttpResponse.AddHeader(const AName, AValue: String);
