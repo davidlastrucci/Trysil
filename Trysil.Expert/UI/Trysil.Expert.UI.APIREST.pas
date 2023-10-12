@@ -26,10 +26,11 @@ uses
   Vcl.Dialogs,
   Vcl.StdCtrls,
   Vcl.ExtCtrls,
+  Vcl.Buttons,
 
   Trysil.Expert.Validator,
   Trysil.Expert.UI.Themed,
-  Trysil.Expert.APIRestCreator, Vcl.Buttons;
+  Trysil.Expert.APIRestCreator;
 
 type
 
@@ -86,12 +87,14 @@ type
 { TTAPIRestForm }
 
   TTAPIRestForm = class(TTThemedForm)
+    SaveDialog: TSaveDialog;
     ProjectPagePanel: TPanel;
     ProjectPageGroupBox: TGroupBox;
     ProjectDirectoryLabel: TLabel;
     ProjectDirectoryTextbox: TEdit;
     ProjectNameLabel: TLabel;
     ProjectNameTextBox: TEdit;
+    ProjectNameButton: TSpeedButton;
     APIPagePanel: TPanel;
     APIPageGroupbox: TGroupBox;
     APIBaseUriLabel: TLabel;
@@ -101,6 +104,14 @@ type
     APIUrlLabel: TLabel;
     APIAuthorizationCheckbox: TCheckBox;
     APILogCheckbox: TCheckBox;
+    ServicePagePanel: TPanel;
+    ServicePageGroupBox: TGroupBox;
+    ServiceNameLabel: TLabel;
+    ServiceNameTextbox: TEdit;
+    ServiceDisplayNameLabel: TLabel;
+    ServiceDisplayNameTextbox: TEdit;
+    ServiceDescriptionLabel: TLabel;
+    ServiceDescriptionTextbox: TEdit;
     DatabasePagePanel: TPanel;
     DatabasePageGroupBox: TGroupBox;
     DBConnectionNameLabel: TLabel;
@@ -117,8 +128,6 @@ type
     NextButton: TButton;
     FinishButton: TButton;
     CancelButton: TButton;
-    SaveDialog: TSaveDialog;
-    ProjectNameButton: TSpeedButton;
     procedure ProjectNameButtonClick(Sender: TObject);
     procedure NextButtonClick(Sender: TObject);
     procedure BackButtonClick(Sender: TObject);
@@ -131,6 +140,7 @@ type
 
     function CheckProject: Boolean;
     function CheckAPI: Boolean;
+    function CheckService: Boolean;
     function CheckDatabase: Boolean;
   public
     constructor Create; reintroduce;
@@ -282,6 +292,8 @@ begin
   FWizard.AddPage(TTWizardPage.Create(
     APIPagePanel, APIBaseUriTextbox, CheckAPI));
   FWizard.AddPage(TTWizardPage.Create(
+    ServicePagePanel, ServiceNameTextbox, CheckService));
+  FWizard.AddPage(TTWizardPage.Create(
     DatabasePagePanel, DBConnectionNameTextbox, CheckDatabase));
 
   FWizard.Start;
@@ -383,6 +395,31 @@ begin
   end;
 end;
 
+function TTAPIRestForm.CheckService: Boolean;
+var
+  LValidator: TTValidator;
+begin
+  LValidator := TTValidator.Create;
+  try
+    LValidator.Check(
+      String(ServiceNameTextbox.Text).IsEmpty,
+      'Service name cannot be empty.');
+    LValidator.Check(
+      String(ServiceNameTextbox.Text).Equals(ProjectNameTextBox.Text),
+      'Service name cannot be the same as project name.');
+    LValidator.Check(
+      String(ServiceDisplayNameTextbox.Text).IsEmpty,
+      'Display name cannot be empty.');
+
+    result := LValidator.IsValid;
+    if not result then
+      MessageDlg(
+        LValidator.Messages, TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0);
+  finally
+    LValidator.Free;
+  end;
+end;
+
 procedure TTAPIRestForm.ProjectNameButtonClick(Sender: TObject);
 begin
   if SaveDialog.Execute then
@@ -422,6 +459,10 @@ begin
       LParameters.API.Port := Integer.Parse(APIPortTextbox.Text);
       LParameters.API.Authorization := APIAuthorizationCheckbox.Checked;
       LParameters.API.Log := APILogCheckbox.Checked;
+
+      LParameters.Service.Name := ServiceNameTextbox.Text;
+      LParameters.Service.DisplayName := ServiceDisplayNameTextbox.Text;
+      LParameters.Service.Description := ServiceDescriptionTextbox.Text;
 
       LParameters.Database.ConnectionName := DBConnectionNameTextbox.Text;
       LParameters.Database.Host :=

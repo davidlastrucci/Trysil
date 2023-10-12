@@ -95,9 +95,9 @@ inherited TAPIRestForm: TTAPIRestForm
     object DatabasePagePanel: TPanel
       AlignWithMargins = True
       Left = 358
-      Top = 12
+      Top = 152
       Width = 230
-      Height = 369
+      Height = 229
       Margins.Left = 70
       Margins.Top = 8
       Margins.Right = 8
@@ -110,7 +110,7 @@ inherited TAPIRestForm: TTAPIRestForm
         Left = 2
         Top = 4
         Width = 226
-        Height = 361
+        Height = 221
         Margins.Left = 2
         Margins.Top = 4
         Margins.Right = 2
@@ -118,6 +118,7 @@ inherited TAPIRestForm: TTAPIRestForm
         Align = alClient
         Caption = 'Database  '
         TabOrder = 0
+        ExplicitHeight = 361
         object DBConnectionNameLabel: TLabel
           Left = 24
           Top = 28
@@ -195,13 +196,12 @@ inherited TAPIRestForm: TTAPIRestForm
       AlignWithMargins = True
       Left = 70
       Top = 8
-      Width = 546
-      Height = 376
+      Width = 232
+      Height = 149
       Margins.Left = 70
       Margins.Top = 8
       Margins.Right = 8
       Margins.Bottom = 8
-      Align = alClient
       BevelOuter = bvNone
       ShowCaption = False
       TabOrder = 0
@@ -209,8 +209,8 @@ inherited TAPIRestForm: TTAPIRestForm
         AlignWithMargins = True
         Left = 2
         Top = 4
-        Width = 542
-        Height = 368
+        Width = 228
+        Height = 141
         Margins.Left = 2
         Margins.Top = 4
         Margins.Right = 2
@@ -218,6 +218,8 @@ inherited TAPIRestForm: TTAPIRestForm
         Align = alClient
         Caption = 'Project  '
         TabOrder = 0
+        ExplicitWidth = 163
+        ExplicitHeight = 180
         object ProjectDirectoryLabel: TLabel
           Left = 24
           Top = 28
@@ -313,6 +315,78 @@ inherited TAPIRestForm: TTAPIRestForm
           Width = 468
           Height = 23
           TabOrder = 1
+        end
+      end
+    end
+    object ServicePagePanel: TPanel
+      AlignWithMargins = True
+      Left = 358
+      Top = 8
+      Width = 232
+      Height = 149
+      Margins.Left = 70
+      Margins.Top = 8
+      Margins.Right = 8
+      Margins.Bottom = 8
+      BevelOuter = bvNone
+      ShowCaption = False
+      TabOrder = 3
+      object ServicePageGroupBox: TGroupBox
+        AlignWithMargins = True
+        Left = 2
+        Top = 4
+        Width = 228
+        Height = 141
+        Margins.Left = 2
+        Margins.Top = 4
+        Margins.Right = 2
+        Margins.Bottom = 4
+        Align = alClient
+        Caption = 'Service  '
+        TabOrder = 0
+        ExplicitLeft = 222
+        ExplicitTop = 8
+        object ServiceNameLabel: TLabel
+          Left = 24
+          Top = 28
+          Width = 35
+          Height = 15
+          Caption = 'Name:'
+        end
+        object ServiceDisplayNameLabel: TLabel
+          Left = 24
+          Top = 78
+          Width = 74
+          Height = 15
+          Caption = 'Display name:'
+        end
+        object ServiceDescriptionLabel: TLabel
+          Left = 24
+          Top = 128
+          Width = 63
+          Height = 15
+          Caption = 'Description:'
+        end
+        object ServiceNameTextbox: TEdit
+          Left = 24
+          Top = 49
+          Width = 497
+          Height = 23
+          TabOrder = 0
+        end
+        object ServiceDisplayNameTextbox: TEdit
+          Left = 24
+          Top = 99
+          Width = 497
+          Height = 23
+          TabOrder = 1
+        end
+        object ServiceDescriptionTextbox: TEdit
+          Left = 24
+          Top = 148
+          Width = 497
+          Height = 23
+          TabOrder = 2
         end
       end
     end

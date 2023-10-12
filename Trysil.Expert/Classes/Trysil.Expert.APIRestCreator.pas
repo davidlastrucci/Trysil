@@ -54,6 +54,19 @@ type
     property Log: Boolean read FLog write FLog;
   end;
 
+{ TTApiRestServiceParameters }
+
+  TTApiRestServiceParameters = class
+  strict private
+    FName: String;
+    FDisplayName: String;
+    FDescription: String;
+  public
+    property Name: String read FName write FName;
+    property DisplayName: String read FDisplayName write FDisplayName;
+    property Description: String read FDescription write FDescription;
+  end;
+
 { TTApiRestDatabaseParameters }
 
   TTApiRestDatabaseParameters = class
@@ -77,6 +90,7 @@ type
   strict private
     FProject: TTApiRestProjectParameters;
     FAPI: TTApiRestAPIParameters;
+    FService: TTApiRestServiceParameters;
     FDatabase: TTApiRestDatabaseParameters;
   public
     constructor Create;
@@ -84,6 +98,7 @@ type
 
     property Project: TTApiRestProjectParameters read FProject;
     property API: TTApiRestAPIParameters read FAPI;
+    property Service: TTApiRestServiceParameters read FService;
     property Database: TTApiRestDatabaseParameters read FDatabase;
   end;
 
@@ -138,12 +153,14 @@ begin
   inherited Create;
   FProject := TTApiRestProjectParameters.Create;
   FAPI := TTApiRestAPIParameters.Create;
+  FService := TTApiRestServiceParameters.Create;
   FDatabase := TTApiRestDatabaseParameters.Create;
 end;
 
 destructor TTApiRestParameters.Destroy;
 begin
   FDatabase.Free;
+  FService.Free;
   FAPI.Free;
   FProject.Free;
   inherited Destroy;
@@ -189,6 +206,7 @@ var
 begin
   LExtension := TPath.GetExtension(AFileName).ToLower();
   result := LExtension.Equals('.pas') or
+    LExtension.Equals('.dfm') or
     LExtension.Equals('.dpr') or
     LExtension.Equals('.dproj') or
     LExtension.Equals('.groupproj') or
@@ -204,6 +222,9 @@ begin
     .Replace('{{JWTSecret}}', FParameters.Project.JWTSecret, [rfReplaceAll, rfIgnoreCase])
     .Replace('{{BaseUri}}', FParameters.API.BaseUri, [rfReplaceAll, rfIgnoreCase])
     .Replace('{{Port}}', FParameters.API.Port.ToString, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{ServiceName}}', FParameters.Service.Name, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{ServiceDisplayName}}', FParameters.Service.DisplayName, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{ServiceDescription}}', FParameters.Service.Description, [rfReplaceAll, rfIgnoreCase])
     .Replace('{{Database_ConnectionName}}', FParameters.Database.ConnectionName, [rfReplaceAll, rfIgnoreCase])
     .Replace('{{Database_Host}}', FParameters.Database.Host, [rfReplaceAll, rfIgnoreCase])
     .Replace('{{Database_Username}}', FParameters.Database.Username, [rfReplaceAll, rfIgnoreCase])
