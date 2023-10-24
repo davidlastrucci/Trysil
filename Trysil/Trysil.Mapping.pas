@@ -272,6 +272,7 @@ type
 
     procedure AfterConstruction; override;
 
+    property EntityTypeInfo: PTypeInfo read FTypeInfo;
     property Name: String read FName;
     property SequenceName: String read FSequenceName;
     property WhereClause: String read FWhereClause;
