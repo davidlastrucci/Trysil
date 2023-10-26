@@ -17,7 +17,9 @@ uses
   System.Classes,
   System.Generics.Collections,
 
+  Trysil.Consts,
   Trysil.Types,
+  Trysil.Exceptions,
   Trysil.Filter,
   Trysil.Generics.Collections,
   Trysil.Data,
@@ -42,6 +44,7 @@ type
       const AList: TTList<T>; const AApplyAllMethod: TTApplyAllMethod<T>);
 
     function GetInTransaction: Boolean;
+    function GetSupportTransaction: Boolean;
     function GetUseIdentityMap: Boolean;
   strict protected
     FConnection: TTConnection;
@@ -87,6 +90,7 @@ type
     procedure DeleteAll<T: class>(const AList: TTList<T>);
 
     property InTransaction: Boolean read GetInTransaction;
+    property SupportTransaction: Boolean read GetSupportTransaction;
     property UseIdentityMap: Boolean read GetUseIdentityMap;
   end;
 
@@ -135,6 +139,11 @@ begin
   result := FConnection.InTransaction;
 end;
 
+function TTContext.GetSupportTransaction: Boolean;
+begin
+  result := FConnection.SupportTransaction;
+end;
+
 function TTContext.GetUseIdentityMap: Boolean;
 begin
   result := FProvider.UseIdentityMap;
@@ -152,6 +161,8 @@ end;
 
 function TTContext.CreateTransaction: TTTransaction;
 begin
+  if not FConnection.SupportTransaction then
+    raise ETException.Create(STransactionNotSupported);
   result := TTTransaction.Create(FConnection);
 end;
 

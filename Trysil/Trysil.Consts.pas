@@ -61,6 +61,7 @@ resourcestring
   SPrimaryKeyNotDefined = 'Primary key not defined for class %0:s';
   SRecordChanged = 'Entity modified by another user.';
   SSyntaxError = 'Incorrect syntax: too many records affected.';
+  STransactionNotSupported = 'The connection does not support transactions.';
   SInTransaction = '%0:s: transaction already started.';
   SNotInTransaction = '%0:s: transaction not yet started.';
   SNotValidTransaction = 'Transaction is no longer valid.';

@@ -105,6 +105,7 @@ type
     function InternalCreateDataSet(
       const ASQL: String; const AFilter: TTFilter): TDataSet; override;
     function GetInTransaction: Boolean; override;
+    function GetSupportTransaction: Boolean; override;
   public
     constructor Create(const AConnectionName: String);
     destructor Destroy; override;
@@ -321,6 +322,11 @@ end;
 function TTFireDACConnection.GetInTransaction: Boolean;
 begin
   result := FConnection.InTransaction;
+end;
+
+function TTFireDACConnection.GetSupportTransaction: Boolean;
+begin
+  result := True;
 end;
 
 procedure TTFireDACConnection.SetParameter(

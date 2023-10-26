@@ -124,6 +124,7 @@ type
     function InternalCreateDataSet(
       const ASQL: String; const AFilter: TTFilter): TDataSet; virtual; abstract;
     function GetInTransaction: Boolean; virtual; abstract;
+    function GetSupportTransaction: Boolean; virtual; abstract;
     function CheckExists(
       const ATableMap: TTTableMap;
       const ATableName: String;
@@ -181,6 +182,7 @@ type
 
     property DatabaseVersion: String read GetDatabaseVersion;
     property InTransaction: Boolean read GetInTransaction;
+    property SupportTransaction: Boolean read GetSupportTransaction;
     property UpdateMode: TTUpdateMode read FUpdateMode write FUpdateMode;
   end;
 
