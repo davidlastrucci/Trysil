@@ -65,7 +65,8 @@ end;
 
 procedure TTTransaction.Start;
 begin
-  FLocalTransaction := not FConnection.InTransaction;
+  FLocalTransaction :=
+    FConnection.SupportTransaction and (not FConnection.InTransaction);
   if FLocalTransaction then
     FConnection.StartTransaction;
 end;
