@@ -254,10 +254,14 @@ begin
     try
       MapEntity(LTableMap, nil, result);
       for LColumnMap in LTableMap.Columns do
-        LColumnMap.Member.SetValue(result, LColumnMap.Member.GetValue(AEntity));
+        if LColumnMap.Member.IsClass then
+          LColumnMap.Member.CloneLazyID(result, AEntity)
+        else
+          LColumnMap.Member.SetValue(
+            result, LColumnMap.Member.GetValue(AEntity));
+
       for LDetailColumnMap in LTableMap.DetailColums do
-        LDetailColumnMap.Member.SetValue(
-          result, LDetailColumnMap.Member.GetValue(AEntity));
+        LDetailColumnMap.Member.CloneLazyID(result, AEntity);
     except
       result.Free;
       raise;

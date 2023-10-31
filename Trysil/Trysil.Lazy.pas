@@ -117,6 +117,8 @@ end;
 
 procedure TTLazy<T>.NotifyChangedID;
 begin
+  if (not FContext.UseIdentityMap) and Assigned(FEntity) then
+    FEntity.Free;
   FEntity := nil;
 end;
 
@@ -141,6 +143,9 @@ var
 begin
   if FEntity <> AEntity then
   begin
+    if (not FContext.UseIdentityMap) and Assigned(FEntity) then
+      FEntity.Free;
+
     FEntity := AEntity;
     LTableMap := TTMapper.Instance.Load<T>();
     if Assigned(LTableMap.PrimaryKey) then

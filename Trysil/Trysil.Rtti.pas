@@ -114,6 +114,8 @@ type
     procedure SetValue(
       const AInstance: TObject; const AValue: TTValue); virtual; abstract;
 
+    procedure CloneLazyID(const AClone: TObject; const AOriginal: TObject);
+
     property Name: String read FName;
     property RttiType: TRttiType read FRttiType;
     property IsClass: Boolean read FIsClass;
@@ -447,9 +449,43 @@ begin
     LType := LContext.GetType(AObject.ClassType.ClassInfo);
     LProperty := LType.GetProperty('ID');
     if Assigned(LProperty) then
-      LProperty.SetValue(AObject, AID)
+      LProperty.SetValue(AObject, AID);
   finally
     LContext.Free;
+  end;
+end;
+
+procedure TTRttiMember.CloneLazyID(
+  const AClone: TObject; const AOriginal: TObject);
+var
+  LValue1, LValue2: TTValue;
+  LObject1, LObject2: TObject;
+  LContext: TRttiContext;
+  LType: TRttiType;
+  LProperty: TRttiProperty;
+begin
+  if AClone.ClassType = AOriginal.ClassType then
+  begin
+    LValue1 := GetValue(AClone);
+    if LValue1.IsType<TObject>() then
+      LObject1 := LValue1.AsType<TObject>();
+
+    LValue2 := GetValue(AOriginal);
+    if LValue2.IsType<TObject>() then
+      LObject2 := LValue2.AsType<TObject>();
+
+    if LObject1.ClassType = LObject2.ClassType then
+    begin
+      LContext := TRttiContext.Create;
+      try
+        LType := LContext.GetType(LObject1.ClassType.ClassInfo);
+        LProperty := LType.GetProperty('ID');
+        if Assigned(LProperty) then
+          LProperty.SetValue(LObject1, LProperty.GetValue(LObject2));
+      finally
+        LContext.Free;
+      end;
+    end;
   end;
 end;
 
@@ -478,11 +514,11 @@ begin
     LValue := InternalCreateObject(AContext, AColumnName);
     SetValue(AInstance, LValue);
     if LValue.IsType<TObject>() then
-    begin
       result := LValue.AsType<TObject>();
-      SetID(result, AValue);
-    end;
   end;
+
+  if LValue.IsType<TObject>() then
+    SetID(LValue.AsType<TObject>(), AValue);
 
   if (not LIsLazy) and (not Assigned(result)) and LValue.IsType<TObject>() then
     result := LValue.AsType<TObject>();
