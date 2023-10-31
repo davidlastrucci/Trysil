@@ -467,14 +467,18 @@ begin
   if AClone.ClassType = AOriginal.ClassType then
   begin
     LValue1 := GetValue(AClone);
+    LObject1 := nil;
     if LValue1.IsType<TObject>() then
       LObject1 := LValue1.AsType<TObject>();
 
     LValue2 := GetValue(AOriginal);
+    LObject2 := nil;
     if LValue2.IsType<TObject>() then
       LObject2 := LValue2.AsType<TObject>();
 
-    if LObject1.ClassType = LObject2.ClassType then
+    if Assigned(LObject1) and
+      Assigned(LObject2) and
+      (LObject1.ClassType = LObject2.ClassType) then
     begin
       LContext := TRttiContext.Create;
       try
