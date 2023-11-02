@@ -83,6 +83,10 @@ type
     FControllerID: TTHttpControllerID;
     FAuthorizationType: TTHttpAuthorizationType;
     FAreas: TList<String>;
+
+    function GetName: String;
+  private // internal
+    property Name: String read GetName;
   public
     constructor Create(
       const AMethod: TRttiMethod;
@@ -117,11 +121,15 @@ type
       const AUriAttribute: TUriAttribute;
       const AMethodAttribute: THttpMethodAttribute): Boolean;
 
-    procedure SearchAttributes(
+    procedure SearchHttpMethodAttribute(
       const AUriAttribute: TUriAttribute;
       const AAuthAttribute: TAuthorizationTypeAttribute;
       const AAreas: TList<String>;
       const AMethod: TRttiMethod);
+
+    procedure SearchMethodsAreasAttributes;
+    procedure SearchAreasAttributes(const AMethod: TTHttpRttiMethod);
+
     procedure SearchMethods;
   strict protected
     function GetConstructorParamTypes: TArray<PTypeInfo>; override;
@@ -313,7 +321,6 @@ end;
 procedure TTHttpRttiMethod.AfterConstruction;
 var
   LAttributeUri, LUri: String;
-  LAttribute: TCustomAttribute;
 begin
   inherited AfterConstruction;
   LAttributeUri := String.Empty;
@@ -322,10 +329,11 @@ begin
   LUri := Format('%s%s%s', [FBaseUri, LAttributeUri, FMethodAttribute.Uri]);
   FControllerID := TTHttpControllerID.Create(
     LUri, FMethodAttribute.MethodType);
+end;
 
-  for LAttribute in FMethod.GetAttributes do
-    if LAttribute is TAreaAttribute then
-      FAreas.Add(TAreaAttribute(LAttribute).Area.ToLower());
+function TTHttpRttiMethod.GetName: String;
+begin
+  result := FMethod.Name;
 end;
 
 procedure TTHttpRttiMethod.Execute(
@@ -367,6 +375,7 @@ procedure TTHttpRttiController<C>.AfterConstruction;
 begin
   inherited AfterConstruction;
   SearchMethods;
+  SearchMethodsAreasAttributes;
 end;
 
 function TTHttpRttiController<C>.CheckParameters(
@@ -396,7 +405,7 @@ begin
     end;
 end;
 
-procedure TTHttpRttiController<C>.SearchAttributes(
+procedure TTHttpRttiController<C>.SearchHttpMethodAttribute(
   const AUriAttribute: TUriAttribute;
   const AAuthAttribute: TAuthorizationTypeAttribute;
   const AAreas: TList<String>;
@@ -443,10 +452,31 @@ begin
 
     for LMethod in FType.GetMethods do
       if not LMethod.IsClassMethod then
-        SearchAttributes(LUriAttribute, LAuthAttribute, LAreas, LMethod);
+        SearchHttpMethodAttribute(
+          LUriAttribute, LAuthAttribute, LAreas, LMethod);
   finally
     LAreas.Free;
   end;
+end;
+
+procedure TTHttpRttiController<C>.SearchMethodsAreasAttributes;
+var
+  LMethod: TTHttpRttiMethod;
+begin
+  for LMethod in FMethods do
+    SearchAreasAttributes(LMethod);
+end;
+
+procedure TTHttpRttiController<C>.SearchAreasAttributes(
+  const AMethod: TTHttpRttiMethod);
+var
+  LMethod: TRttiMethod;
+  LAttribute: TCustomAttribute;
+begin
+  for LMethod in FType.GetMethods(AMethod.Name) do
+    for LAttribute in LMethod.GetAttributes do
+      if LAttribute is TAreaAttribute then
+        AMethod.Areas.Add(TAreaAttribute(LAttribute).Area.ToLower());
 end;
 
 function TTHttpRttiController<C>.GetConstructorParamTypes: TArray<PTypeInfo>;
