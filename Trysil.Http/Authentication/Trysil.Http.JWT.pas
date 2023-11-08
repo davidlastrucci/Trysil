@@ -169,7 +169,6 @@ function TTHttpJWT<P>.LoadFromToken(const AToken: String): Boolean;
 var
   LParts: TArray<String>;
   LSignature, LHeader, LPayload: String;
-  LJSon: TJSonValue;
 begin
   result := True;
 

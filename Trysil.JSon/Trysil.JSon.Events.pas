@@ -195,8 +195,6 @@ var
   LEvent: TRttiType;
   LEntity: PTypeInfo;
   LRttiMethod: TRttiMethod;
-  LParams: TArray<TValue>;
-  LResult: TValue;
 begin
   LEvent := FContext.GetType(TypeInfo(E));
   LEntity := TypeInfo(T);

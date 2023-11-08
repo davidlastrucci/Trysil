@@ -383,7 +383,7 @@ function TTHttpRttiController<C>.CheckParameters(
   const AUriAttribute: TUriAttribute;
   const AMethodAttribute: THttpMethodAttribute): Boolean;
 var
-  LAttributeUri, LUri, LUriPart: String;
+  LAttributeUri, LUri: String;
   LUriParts: TTHttpUriParts;
   LParameters: TArray<TRttiParameter>;
   LParameter: TRttiParameter;
@@ -570,6 +570,7 @@ var
   LRequestUri, LControllerUri: TTHttpUriParts;
   LUri: String;
 begin
+  result := False;
   LRequestUri := TTHttpUriParts.Create(AUri);
   for LUri in FControllerMethods.Keys do
   begin

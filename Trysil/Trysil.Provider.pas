@@ -197,6 +197,7 @@ begin
     try
       result := LRttiEntity.CreateEntity(FContext);
       try
+        LPrimaryKey := 0;
         if not FInLoading then
           LPrimaryKey := SetPrimaryKey<T>(LTableMap, result);
         MapEntity(LTableMap, nil, result);

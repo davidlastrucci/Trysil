@@ -63,7 +63,6 @@ procedure TTHttpContext.Delete<T>(
 var
   LTableMap: TTTableMap;
   LEntity: T;
-  LVersionID: TTVersion;
 begin
   LTableMap := TTMapper.Instance.Load<T>();
   LEntity := Get<T>(AID);
