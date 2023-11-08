@@ -1,0 +1,46 @@
+package Trysil.JSon290;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  Trysil290;
+
+contains
+  Trysil.JSon.Consts in '..\..\Trysil.JSon\Trysil.JSon.Consts.pas',
+  Trysil.JSon.Context in '..\..\Trysil.JSon\Trysil.JSon.Context.pas',
+  Trysil.JSon.Deserializer.Classes in '..\..\Trysil.JSon\Trysil.JSon.Deserializer.Classes.pas',
+  Trysil.JSon.Deserializer in '..\..\Trysil.JSon\Trysil.JSon.Deserializer.pas',
+  Trysil.JSon.Events in '..\..\Trysil.JSon\Trysil.JSon.Events.pas',
+  Trysil.JSon.Exceptions in '..\..\Trysil.JSon\Trysil.JSon.Exceptions.pas',
+  Trysil.JSon.Rtti in '..\..\Trysil.JSon\Trysil.JSon.Rtti.pas',
+  Trysil.JSon.Serializer.Classes in '..\..\Trysil.JSon\Trysil.JSon.Serializer.Classes.pas',
+  Trysil.JSon.Serializer in '..\..\Trysil.JSon\Trysil.JSon.Serializer.pas',
+  Trysil.JSon.Types in '..\..\Trysil.JSon\Trysil.JSon.Types.pas';
+
+end.
