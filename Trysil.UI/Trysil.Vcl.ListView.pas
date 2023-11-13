@@ -679,8 +679,7 @@ procedure TTListView<T>.BindData(
   const AItems: TTList<T>;
   const APredicate: TTPredicate<T>);
 var
-  LSelectedEntity, LEntityItem: T;
-  LListItem: TListItem;
+  LSelectedEntity: T;
 begin
   LSelectedEntity := SelectedEntity;
 

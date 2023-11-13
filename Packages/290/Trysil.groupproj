@@ -60,20 +60,20 @@
     <ItemGroup Condition="'$(BuildGroup)'=='All target and configuration'">
         <BuildGroupProject Include="Trysil290.dproj">
             <ProjectGuid>{1748AC5D-443B-416C-84CF-6B793F11DA16}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win64</Platforms>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="Trysil.Http290.dproj">
             <ProjectGuid>{982EA5B6-75D0-4C2E-9309-4A59BD6B8292}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win64</Platforms>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="Trysil.JSon290.dproj">
             <ProjectGuid>{EC0DB951-39B5-4B47-9D5F-E6C6CC6EED87}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win64</Platforms>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
     </ItemGroup>
