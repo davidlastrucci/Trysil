@@ -79,7 +79,7 @@ begin
   ForceDemandLoadState(dlDisable);
   LBitmap := TBitmap.Create;
   try
-    LBitmap.LoadFromResourceName(HInstance, 'TRYSIL_24');
+    LBitmap.LoadFromResourceName(HInstance, 'TRYSIL_SPLASH');
     TTIOTAServices.SplashScreenServices.AddPluginBitmap(
       SWizardTitle,
       LBitmap.Handle,
@@ -101,7 +101,7 @@ begin
     if Assigned(FAboutBoxServices) then
     begin
       LProductImage := LoadBitmap(
-        FindResourceHInstance(HInstance), 'TRYSIL_24');
+        FindResourceHInstance(HInstance), 'TRYSIL_ABOUTBOX');
       FAboutBoxIndex := FAboutBoxServices.AddPluginInfo(
         SWizardTitle,
         SWizardDescription,

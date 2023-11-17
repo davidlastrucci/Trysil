@@ -80,7 +80,7 @@ end;
 procedure TTImagesDataModule.AfterConstruction;
 begin
   inherited AfterConstruction;
-  FLogo.LoadFromResourceName(HInstance, 'TRYSIL_48');
+  FLogo.LoadFromResourceName(HInstance, 'TRYSIL_DIALOG');
 end;
 
 end.
