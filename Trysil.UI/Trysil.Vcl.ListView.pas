@@ -47,6 +47,8 @@ type
 
     procedure SortListView; overload;
     procedure SortListView(const AColumnIndex: Integer); overload;
+    procedure SortListView(
+      const AColumnIndex: Integer; const ASortType: Integer); overload;
 
     property SortColumn: Integer read FSortColumn;
     property SortType: Integer read FSortType;
@@ -229,6 +231,7 @@ type
     property DefaultColumnOrder: Integer
       read FDefaultColumnOrder write FDefaultColumnOrder;
     property ImageIndex: Integer read FImageIndex write FImageIndex;
+    property Helper: TTListViewHelper read FHelper;
     property SelectedEntity: T read GetSelectedEntity;
     property OnItemChanged: TTListViewOnItemChanged<T>
       read FOnItemChanged write FOnItemChanged;
@@ -312,6 +315,27 @@ begin
     FSortType := 1;
     FSortColumn := AColumnIndex;
   end;
+
+  AddHeaderSortImage;
+
+  FListView.Items.BeginUpdate;
+  try
+    FListView.AlphaSort;
+    if Assigned(FListView.Selected) then
+      FListView.Selected.MakeVisible(True);
+  finally
+    FListView.Items.EndUpdate;
+  end;
+end;
+
+procedure TTListViewHelper.SortListView(
+  const AColumnIndex: Integer; const ASortType: Integer);
+begin
+  if FSortColumn >= 0 then
+    RemoveHeaderSortImage;
+
+  FSortColumn := AColumnIndex;
+  FSortType := ASortType;
 
   AddHeaderSortImage;
 
