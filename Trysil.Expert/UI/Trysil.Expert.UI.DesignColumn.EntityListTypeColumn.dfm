@@ -2,6 +2,7 @@ inherited TDesignEntityListTypeColumnForm: TTDesignEntityListTypeColumnForm
   ClientHeight = 231
   ClientWidth = 466
   Color = clWhite
+  StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 482
   ExplicitHeight = 270
   TextHeight = 15
@@ -29,9 +30,9 @@ inherited TDesignEntityListTypeColumnForm: TTDesignEntityListTypeColumnForm
     object NameLabel: TLabel
       Left = 72
       Top = 16
-      Width = 35
+      Width = 77
       Height = 15
-      Caption = 'Name:'
+      Caption = 'Propery name:'
     end
     object ColumnNameCombobox: TComboBox
       Left = 72

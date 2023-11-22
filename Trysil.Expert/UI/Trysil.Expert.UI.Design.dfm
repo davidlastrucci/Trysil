@@ -2,6 +2,7 @@ inherited TDesignForm: TTDesignForm
   ClientHeight = 651
   ClientWidth = 1044
   Color = clWhite
+  StyleElements = [seFont, seClient, seBorder]
   OnDblClick = EditEntityButtonClick
   OnShow = FormShow
   ExplicitWidth = 1060
@@ -10,10 +11,10 @@ inherited TDesignForm: TTDesignForm
   inherited ContentPanel: TPanel
     Width = 1044
     Height = 602
-    ExplicitLeft = 320
+    ExplicitLeft = 0
     ExplicitTop = 0
-    ExplicitWidth = 724
-    ExplicitHeight = 564
+    ExplicitWidth = 1044
+    ExplicitHeight = 602
     object ListViewPanel: TPanel
       AlignWithMargins = True
       Left = 322
@@ -59,7 +60,6 @@ inherited TDesignForm: TTDesignForm
         ViewStyle = vsReport
         OnCreateItemClass = ListViewCreateItemClass
         OnDblClick = EditColumnButtonClick
-        ExplicitHeight = 494
       end
       object ListViewTitlePanel: TPanel
         AlignWithMargins = True
@@ -74,7 +74,7 @@ inherited TDesignForm: TTDesignForm
         Align = alTop
         Alignment = taLeftJustify
         BevelOuter = bvNone
-        Caption = 'Columns'
+        Caption = 'Properties'
         TabOrder = 1
       end
       object ListViewToolBarPanel: TPanel
@@ -283,7 +283,7 @@ inherited TDesignForm: TTDesignForm
   inherited ButtonsPanel: TPanel
     Top = 602
     Width = 1044
-    ExplicitTop = 564
+    ExplicitTop = 602
     ExplicitWidth = 1044
     object SaveButton: TButton
       AlignWithMargins = True
@@ -300,9 +300,6 @@ inherited TDesignForm: TTDesignForm
       Default = True
       TabOrder = 0
       OnClick = SaveButtonClick
-      ExplicitLeft = 773
-      ExplicitTop = 3
-      ExplicitHeight = 16
     end
     object CancelButton: TButton
       Left = 957
@@ -314,8 +311,6 @@ inherited TDesignForm: TTDesignForm
       Caption = '&Cancel'
       ModalResult = 2
       TabOrder = 1
-      ExplicitLeft = 897
-      ExplicitTop = 0
     end
   end
   object ApplicationEvents: TApplicationEvents
