@@ -119,19 +119,13 @@ procedure TTDesignForm.AfterConstruction;
 begin
   inherited AfterConstruction;
   SetImages;
-  ListView.SmallImages := TTImagesDataModule.Instance.Images;
   FEntities.LoadFromDirectory(FDirectory);
 end;
 
 procedure TTDesignForm.SetImages;
 begin
   TreeView.Images := TTImagesDataModule.Instance.Images;
-  AddNewEntityButton.Images := TTImagesDataModule.Instance.ButtonsImages;
-  EditEntityButton.Images := TTImagesDataModule.Instance.ButtonsImages;
-  DeleteEntityButton.Images := TTImagesDataModule.Instance.ButtonsImages;
-  AddNewColumnButton.Images := TTImagesDataModule.Instance.ButtonsImages;
-  EditColumnButton.Images := TTImagesDataModule.Instance.ButtonsImages;
-  DeleteColumnButton.Images := TTImagesDataModule.Instance.ButtonsImages;
+  ListView.SmallImages := TTImagesDataModule.Instance.Images;
 end;
 
 procedure TTDesignForm.ApplicationEventsIdle(

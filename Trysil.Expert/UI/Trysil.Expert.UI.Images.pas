@@ -27,7 +27,6 @@ type
 
   TTImagesDataModule = class(TDataModule)
     ImageList: TImageList;
-    ButtonsImageList: TImageList;
   strict private
     class var FInstance: TTImagesDataModule;
     class constructor ClassCreate;
@@ -42,7 +41,6 @@ type
 
     property Logo: TBitmap read FLogo;
     property Images: TImageList read ImageList;
-    property ButtonsImages: TImageList read ButtonsImageList;
 
     class property Instance: TTImagesDataModule read FInstance;
   end;

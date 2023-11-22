@@ -199,21 +199,27 @@ begin
 end;
 
 procedure TTThemingServices.ThemeChanged(const AIsDarkTheme: Boolean);
+{$IF CompilerVersion >= 34}
 var
   LFormClass: TFormClass;
+{$ENDIF}
 begin
+{$IF CompilerVersion >= 34}
   if GetThemingEnabled then
     for LFormClass in FFormClasses do
       FThemingServices.RegisterFormClass(LFormClass);
+{$ENDIF}
 end;
 
 procedure TTThemingServices.RegisterFormClass(const AFormClass: TFormClass);
 begin
+{$IF CompilerVersion >= 34}
   if GetThemingEnabled and (not FFormClasses.Contains(AFormClass)) then
   begin
     FThemingServices.RegisterFormClass(AFormClass);
     FFormClasses.Add(AFormClass);
   end;
+{$ENDIF}
 end;
 
 procedure TTThemingServices.ApplyTheme(const AForm: TForm);
