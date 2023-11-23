@@ -23,20 +23,19 @@ $ git pull trysil master
 
 ### Build Lib
 Open **Trysil.groupproj** in Packages\\[Version] directory and Build packages (Trysil, Trysil.JSon and Trysil.Http) in all configurations and platforms you need.<br><br>
-The Lib\\[Version]\$(Platform)\$(Config) directory now contains all Bpl, Dcp and Dcu. 
+The Lib\\[Version]\\\$(Platform)\\\$(Config) directory now contains all Bpl, Dcp and Dcu. 
 
 ### Environment Variables
 In Tools->Options->Environment Variables add a new User Variable:<br><br>
-Variable name: **Trysil**
+Variable name: **Trysil**<br>
 Variable value: **C:\Trysil\Lib\\[Version]**
 
 ### Expert
 Open **Trysil.Expert[Version].dproj** in Trysil.Expert directory, build the project and close Delphi.<br><br>
-Run Regedit and go to HKCU\SOFTWARE\Embarcadero\BDS\\[Registry Version]\Expert; add a new string value:<br><br>
+Run Regedit and go to HKCU\SOFTWARE\Embarcadero\BDS\\[Registry Version]\Expert. Add a new string value:<br><br>
 Name: **Trysil**<br>
 Value: **C:\Trysil\Trysil.Expert\Win32\Trysil.Expert[Version].dll**<br><br>
-Restart Delphi.<br><br>
-In the splash screen you can see Trysil and in the main menu there is now Trysil item .
+Restart Delphi. In the splash screen you can see Trysil and in the main menu there is now Trysil item.
 
 ### New Delphi Project
 Create a new Delphi Project and in Project->Options->Building->Delphi Compiler select All configurations - All Platforms and in Search Path write **\$(Trysil)\\\$(Platform)\\\$(Config)**.
