@@ -39,14 +39,22 @@ uses
   Trysil.Expert.UI.DesignColumn,
   Trysil.Expert.UI.DesignColumn.DataTypeColumn,
   Trysil.Expert.UI.DesignColumn.EntityTypeColumn,
-  Trysil.Expert.UI.DesignColumn.EntityListTypeColumn;
+  Trysil.Expert.UI.DesignColumn.EntityListTypeColumn, System.Actions,
+  Vcl.ActnList, System.ImageList, Vcl.ImgList;
 
 type
 
 { TTDesignForm }
 
   TTDesignForm = class(TTThemedForm)
-    ApplicationEvents: TApplicationEvents;
+    ImageList: TImageList;
+    ActionList: TActionList;
+    AddNewEntityAction: TAction;
+    EditEntityAction: TAction;
+    DeleteEntityAction: TAction;
+    AddNewPropertyAction: TAction;
+    EditPropertyAction: TAction;
+    DeletePropertyAction: TAction;
     TreeViewPanel: TPanel;
     TreeViewTitlePanel: TPanel;
     TreeViewToolBarPanel: TPanel;
@@ -57,24 +65,24 @@ type
     ListViewPanel: TPanel;
     ListViewTitlePanel: TPanel;
     ListViewToolBarPanel: TPanel;
-    AddNewColumnButton: TSpeedButton;
-    EditColumnButton: TSpeedButton;
-    DeleteColumnButton: TSpeedButton;
+    AddNewPropertyButton: TSpeedButton;
+    EditPropertyButton: TSpeedButton;
+    DeletePropertyButton: TSpeedButton;
     ListView: TListView;
     SaveButton: TButton;
     CancelButton: TButton;
-    procedure ApplicationEventsIdle(Sender: TObject; var Done: Boolean);
+    procedure ActionListUpdate(Action: TBasicAction; var Handled: Boolean);
     procedure FormShow(Sender: TObject);
     procedure TreeViewCreateNodeClass(
       Sender: TCustomTreeView; var NodeClass: TTreeNodeClass);
     procedure ListViewCreateItemClass(
       Sender: TCustomListView; var ItemClass: TListItemClass);
-    procedure AddNewEntityButtonClick(Sender: TObject);
-    procedure EditEntityButtonClick(Sender: TObject);
-    procedure DeleteEntityButtonClick(Sender: TObject);
-    procedure AddNewColumnButtonClick(Sender: TObject);
-    procedure EditColumnButtonClick(Sender: TObject);
-    procedure DeleteColumnButtonClick(Sender: TObject);
+    procedure AddNewEntity(Sender: TObject);
+    procedure EditEntity(Sender: TObject);
+    procedure DeleteEntity(Sender: TObject);
+    procedure AddNewProperty(Sender: TObject);
+    procedure EditProperty(Sender: TObject);
+    procedure DeleteProperty(Sender: TObject);
     procedure TreeViewChange(Sender: TObject; Node: TTreeNode);
     procedure SaveButtonClick(Sender: TObject);
   strict private
@@ -128,26 +136,26 @@ begin
   ListView.SmallImages := TTImagesDataModule.Instance.Images;
 end;
 
-procedure TTDesignForm.ApplicationEventsIdle(
-  Sender: TObject; var Done: Boolean);
+procedure TTDesignForm.ActionListUpdate(
+  Action: TBasicAction; var Handled: Boolean);
 var
   LItem: TListItem;
   LColumnItem: TTColumnListItem absolute LItem;
   LEnabled: Boolean;
 begin
-  EditEntityButton.Enabled := Assigned(TreeView.Selected);
-  DeleteEntityButton.Enabled := EditEntityButton.Enabled;
+  EditEntityAction.Enabled := Assigned(TreeView.Selected);
+  DeleteEntityAction.Enabled := EditEntityAction.Enabled;
 
-  AddNewColumnButton.Enabled := EditEntityButton.Enabled;
+  AddNewPropertyAction.Enabled := EditEntityAction.Enabled;
 
   LItem := ListView.Selected;
   LEnabled := Assigned(LItem) and
     ((not (LColumnItem.Value is TTColumn)) or
     (not (TTColumn(LColumnItem.Value).DataType in [dtPrimaryKey, dtVersion])));
-  EditColumnButton.Enabled := LEnabled;
-  DeleteColumnButton.Enabled := LEnabled;
+  EditPropertyAction.Enabled := LEnabled;
+  DeletePropertyAction.Enabled := LEnabled;
 
-  Done := True;
+  Handled := True;
 end;
 
 procedure TTDesignForm.ShowEntities;
@@ -208,7 +216,7 @@ begin
   ItemClass := TTColumnListItem;
 end;
 
-procedure TTDesignForm.AddNewEntityButtonClick(Sender: TObject);
+procedure TTDesignForm.AddNewEntity(Sender: TObject);
 var
   FAdded: Boolean;
   LEntity: TTEntity;
@@ -234,7 +242,7 @@ begin
   end;
 end;
 
-procedure TTDesignForm.EditEntityButtonClick(Sender: TObject);
+procedure TTDesignForm.EditEntity(Sender: TObject);
 var
   LNode: TTreeNode;
   LEntityNode: TTEntityTreeNode absolute LNode;
@@ -252,7 +260,7 @@ begin
   end;
 end;
 
-procedure TTDesignForm.DeleteEntityButtonClick(Sender: TObject);
+procedure TTDesignForm.DeleteEntity(Sender: TObject);
 var
   LNode: TTreeNode;
   LEntityNode: TTEntityTreeNode absolute LNode;
@@ -272,7 +280,7 @@ begin
     end;
 end;
 
-procedure TTDesignForm.AddNewColumnButtonClick(Sender: TObject);
+procedure TTDesignForm.AddNewProperty(Sender: TObject);
 var
   LNode: TTreeNode;
   LEntityNode: TTEntityTreeNode absolute LNode;
@@ -283,7 +291,7 @@ begin
       ShowColumns;
 end;
 
-procedure TTDesignForm.EditColumnButtonClick(Sender: TObject);
+procedure TTDesignForm.EditProperty(Sender: TObject);
 var
   LNode: TTreeNode;
   LEntityNode: TTEntityTreeNode absolute LNode;
@@ -293,7 +301,7 @@ var
   LColumn: TTAbstractColumn;
   LResult: Boolean;
 begin
-  if EditColumnButton.Enabled then
+  if EditPropertyAction.Enabled then
   begin
     LNode := TreeView.Selected;
     if Assigned(LNode) then
@@ -322,7 +330,7 @@ begin
   end;
 end;
 
-procedure TTDesignForm.DeleteColumnButtonClick(Sender: TObject);
+procedure TTDesignForm.DeleteProperty(Sender: TObject);
 var
   LNode: TTreeNode;
   LEntityNode: TTEntityTreeNode absolute LNode;
