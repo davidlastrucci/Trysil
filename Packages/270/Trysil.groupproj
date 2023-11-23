@@ -57,4 +57,24 @@
         <CallTarget Targets="Trysil270:Make;Trysil_JSon270:Make;Trysi_Httpl270:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+    <ItemGroup Condition="'$(BuildGroup)'=='All target and configuration'">
+        <BuildGroupProject Include="Trysi.Httpl270.dproj">
+            <ProjectGuid>{1F3CD306-0A96-4D5A-B562-9E641619E333}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil270.dproj">
+            <ProjectGuid>{ED0C237C-FCB5-4ECD-8882-4D4FE40D687F}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.JSon270.dproj">
+            <ProjectGuid>{1327E9B8-5D46-4C4B-847E-3CF1DEB63A18}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
 </Project>
