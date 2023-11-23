@@ -10,8 +10,8 @@
 > *Trysil* - Operation ORM (World War II)<br>
 > http://codenames.info/operation/orm/
 
-### Setup
-# Git Bush
+# Setup
+### Git Bush
 <pre>
 $ cd C:/
 $ mkdir Trysil
