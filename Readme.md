@@ -25,6 +25,7 @@ Database drivers:
 
 For further information:
 
+- [Setup](https://github.com/davidlastrucci/Trysil/blob/master/Docs/Setup.md)
 - [Simple sample](https://github.com/davidlastrucci/Trysil/blob/master/Docs/Sample.md)
 - [Getting started](https://github.com/davidlastrucci/Trysil/blob/master/Docs/GettingStarted.md)
 - [Run Simple Demo in Demos/Simple folder](https://github.com/davidlastrucci/Trysil/blob/master/Docs/RunSimpleDemo.md)
