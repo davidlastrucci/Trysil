@@ -30,20 +30,20 @@ In Tools->Options->Environment Variables add a new User Variable:<br><br>
 Variable name: **Trysil**
 Variable value: **C:\Trysil\Lib\\[Version]**
 
-## Expert
-Open **Trysil.Expert[Version].dproj** in Trysil.Expert directory and Build the project and close Delphi.<br><br>
-Execute Regedit and go to HKCU\SOFTWARE\Embarcadero\BDS\[RegistryVersion]\Expert; add a new string value:<br><br>
-Name: **Trysil**
+### Expert
+Open **Trysil.Expert[Version].dproj** in Trysil.Expert directory, build the project and close Delphi.<br><br>
+Run Regedit and go to HKCU\SOFTWARE\Embarcadero\BDS\\[RegistryVersion]\Expert; add a new string value:<br><br>
+Name: **Trysil**<br />
 Value: **C:\Trysil\Trysil.Expert\Win32\Trysil.Expert[Version].dll**<br><br>
 Restart Delphi.<br><br>
-In the splash screen you can see Trysil and in the main menu of delphi there is now the item Trysil.
+In the splash screen you can see Trysil and in the main menu there is now Trysil item .
 
-## New Delphi Project
+### New Delphi Project
 Create a new Delphi Project and in Project->Options->Building->Delphi Compiler select All configurations - All Platforms and in Search Path write **$(Trysil)\$(Platform)\$(Config)**.
 
 **Use Trysil and enjoy**
 
-## Versions
+### Versions
 |Delphi version|Version|RegistryVersion|
 |-|-|-|
 |Delphi 10.3 Rio|260|20.0|
