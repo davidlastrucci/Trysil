@@ -24,5 +24,5 @@ Don't write code like [this](https://github.com/davidlastrucci/Trysil/blob/maste
 
 ---
 
+Make With ❤ @davidlastrucci<br>
 [https://www.lastrucci.net/](https://www.lastrucci.net)
-

@@ -51,5 +51,5 @@ Create a new Delphi Project and in Project->Options->Building->Delphi Compiler s
 |Delphi 12 Athens|290|23.0|
 ---
 
+Make With ❤ @davidlastrucci<br>
 [https://www.lastrucci.net/](https://www.lastrucci.net)
-

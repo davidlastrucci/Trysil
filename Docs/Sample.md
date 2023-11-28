@@ -90,4 +90,5 @@ Using **Trysil** you can define a model that map a database table into a class.
 
 ---
 
+Make With ❤ @davidlastrucci<br>
 [https://www.lastrucci.net/](https://www.lastrucci.net)

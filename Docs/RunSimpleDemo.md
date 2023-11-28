@@ -52,5 +52,5 @@ Alternatively you can use the sample project located in the **Demos/Simple.SQLit
 
 ---
 
+Make With ❤ @davidlastrucci<br>
 [https://www.lastrucci.net/](https://www.lastrucci.net)
-

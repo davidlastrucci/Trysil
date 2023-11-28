@@ -44,5 +44,5 @@ ALTER TABLE [dbo].[PersonalData]ADD CONSTRAINT [DF_PersonalData_VersionID] DEFAU
 
 ---
 
+Make With ❤ @davidlastrucci<br>
 [https://www.lastrucci.net/](https://www.lastrucci.net)
-
