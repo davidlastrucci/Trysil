@@ -39,5 +39,5 @@ I would appreciate it!
 
 ---
 
-Make With ❤ @davidlastrucci
+Make With ❤ @davidlastrucci<br>
 [https://www.lastrucci.net/](https://www.lastrucci.net)
