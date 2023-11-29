@@ -12,13 +12,13 @@
 
 ### Run Simple Demo
 
-Trysil it's an ORM for Delphi (for **Microsoft SQL Server**, **Firebird** and **SQLite**).
+Trysil it's an ORM for Delphi (for **Microsoft SQL Server**, **Firebird**, **PostgreSQL** and **SQLite**).
 
 For run demo project in **Demos/Simple** folder, you have to do:
 
 - Create a SQL Server database and execute the script [Demo.sql](https://github.com/davidlastrucci/Trysil/blob/master/Demos/Simple/Sql/Demo.sql) in **Demos/Simple/Sql** folder
-- Edit the [Demo.config.json](https://github.com/davidlastrucci/Trysil/blob/master/Demos/Simple/Demo.config.json) file in **Demos/Simple** folder for change connection to SQL Server database
-- Copy the [Demo.config.json](https://github.com/davidlastrucci/Trysil/blob/master/Demos/Simple/Demo.config.json) in **$(Platform)/$(Config)** folder (the executable folder)
+- Edit the [Demo.config.json](https://github.com/davidlastrucci/Trysil/blob/master/Demos/Simple/Demo.config.json) file in **Demos\\Simple** folder for change connection to SQL Server database
+- Copy the [Demo.config.json](https://github.com/davidlastrucci/Trysil/blob/master/Demos/Simple/Demo.config.json) in **\$(Platform)\\\$(Config)** folder (the executable folder)
 
 **Demo.config.json (OS authentication)**
 <pre>
