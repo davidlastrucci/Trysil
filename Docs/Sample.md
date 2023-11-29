@@ -1,6 +1,7 @@
 <p align="center">
   <img width="300" height="107" src="https://github.com/davidlastrucci/Trysil/blob/master/Docs/Trysil.png" title="Trysil - Operation ORM">
 </p>
+
 > *Copyright © [David Lastrucci](https://www.lastrucci.net/)*<br>
 > *All rights reserved*<br>
 > <br>
