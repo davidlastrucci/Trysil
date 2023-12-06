@@ -1,5 +1,9 @@
 <p align="center">
-  <img width="300" height="107" src="https://github.com/davidlastrucci/Trysil/blob/master/Docs/Trysil.png" title="Trysil - Operation ORM">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/davidlastrucci/Trysil/blob/master/Docs/Trysil_dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="https://github.com/davidlastrucci/Trysil/blob/master/Docs/Trysil_light.png">
+    width="300" height="107" src="https://github.com/davidlastrucci/Trysil/blob/master/Docs/Trysil.png" title="Trysil - Delphi ORM"
+  </picture>
 </p>
 
 > *Copyright © [David Lastrucci](https://www.lastrucci.net/)*<br>
@@ -12,7 +16,7 @@ During world war II, **ORM** was a British operation to establish a reception ba
 
 That's why I called **Trysil** my **ORM**.
 
-***Trysil Operation ORM***
+***Trysil - Delphi ORM***
 
 Database drivers:
 
