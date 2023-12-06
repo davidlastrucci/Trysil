@@ -2,7 +2,7 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/davidlastrucci/Trysil/blob/master/Docs/Trysil_dark.png">
     <source media="(prefers-color-scheme: light)" srcset="https://github.com/davidlastrucci/Trysil/blob/master/Docs/Trysil_light.png">
-    width="300" height="107" src="https://github.com/davidlastrucci/Trysil/blob/master/Docs/Trysil.png" title="Trysil - Delphi ORM"
+    <img width="300" height="107" src="https://github.com/davidlastrucci/Trysil/blob/master/Docs/Trysil.png" title="Trysil - Delphi ORM">
   </picture>
 </p>
 
