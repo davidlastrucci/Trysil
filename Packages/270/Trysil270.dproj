@@ -135,13 +135,9 @@
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="dbrtl.dcp"/>
         <DCCReference Include="FireDAC.dcp"/>
-        <DCCReference Include="FireDACCommonDriver.dcp"/>
         <DCCReference Include="FireDACCommon.dcp"/>
-        <DCCReference Include="FireDACPgDriver.dcp"/>
+        <DCCReference Include="FireDACCommonDriver.dcp"/>
         <DCCReference Include="FireDACCommonODBC.dcp"/>
-        <DCCReference Include="FireDACIBDriver.dcp"/>
-        <DCCReference Include="FireDACSqliteDriver.dcp"/>
-        <DCCReference Include="FireDACMSSQLDriver.dcp"/>
         <DCCReference Include="..\..\Trysil\Trysil.Attributes.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Cache.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Classes.pas"/>
@@ -174,18 +170,10 @@
         <DCCReference Include="..\..\Trysil\Data\Trysil.Data.Connection.pas"/>
         <DCCReference Include="..\..\Trysil\Data\Trysil.Data.Parameters.pas"/>
         <DCCReference Include="..\..\Trysil\Data\Trysil.Data.pas"/>
-        <DCCReference Include="..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.FirebirdSQL.pas"/>
         <DCCReference Include="..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.pas"/>
-        <DCCReference Include="..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.PostgreSQL.pas"/>
-        <DCCReference Include="..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.SQLite.pas"/>
-        <DCCReference Include="..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.SqlServer.pas"/>
         <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.Common.pas"/>
         <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.ConnectionPool.pas"/>
-        <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.FirebirdSQL.pas"/>
         <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.pas"/>
-        <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.PostgreSQL.pas"/>
-        <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.SQLite.pas"/>
-        <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.SqlServer.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

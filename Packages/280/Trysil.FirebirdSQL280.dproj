@@ -1,12 +1,12 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{1748AC5D-443B-416C-84CF-6B793F11DA16}</ProjectGuid>
-        <MainSource>Trysil280.dpk</MainSource>
+        <ProjectGuid>{1336BAC2-51D7-4FAA-8A01-024D8D4A591D}</ProjectGuid>
+        <MainSource>Trysil.FirebirdSQL280.dpk</MainSource>
         <ProjectVersion>19.5</ProjectVersion>
         <FrameworkType>None</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Package</AppType>
     </PropertyGroup>
@@ -59,18 +59,6 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
-        <Cfg_2_Win32>true</Cfg_2_Win32>
-        <CfgParent>Cfg_2</CfgParent>
-        <Cfg_2>true</Cfg_2>
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win64)'!=''">
-        <Cfg_2_Win64>true</Cfg_2_Win64>
-        <CfgParent>Cfg_2</CfgParent>
-        <Cfg_2>true</Cfg_2>
-        <Base>true</Base>
-    </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
         <DCC_DcuOutput>..\..\Lib\280\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
@@ -81,13 +69,13 @@
         <DCC_K>false</DCC_K>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
+        <SanitizedProjectName>Trysil_FirebirdSQL280</SanitizedProjectName>
         <DCC_DcpOutput>..\..\Lib\280\$(Platform)\$(Config)</DCC_DcpOutput>
-        <SanitizedProjectName>Trysil280</SanitizedProjectName>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <DCC_BplOutput>..\..\Lib\280\$(Platform)\$(Config)</DCC_BplOutput>
+        <DCC_UnitSearchPath>..\..\Lib\280\$(Platform)\$(Config);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <VerInfo_Locale>1040</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=David Lastrucci;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=$(MSBuildProjectName);LegalCopyright=David Lastrucci;LegalTrademarks=David Lastrucci;OriginalFilename=$(MSBuildProjectName);ProgramID=net.Lastrucci.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
-        <DCC_UnitSearchPath>..\..\Lib\280\$(Platform)\$(Config);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android)'!=''">
         <DCC_CBuilderOutput>None</DCC_CBuilderOutput>
@@ -105,12 +93,12 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
@@ -125,22 +113,14 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
         <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
         <DCC_DebugInformation>0</DCC_DebugInformation>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Locale>1033</VerInfo_Locale>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
-        <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
@@ -152,42 +132,10 @@
         <DCCReference Include="FireDACCommon.dcp"/>
         <DCCReference Include="FireDACCommonDriver.dcp"/>
         <DCCReference Include="FireDACCommonODBC.dcp"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Attributes.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Cache.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Classes.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Consts.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Context.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Events.Abstract.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Events.Attributes.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Events.Factory.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Events.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Exceptions.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Factory.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Filter.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Generics.Collections.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.IdentityMap.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Lazy.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.LoadBalancing.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Logger.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Mapping.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Metadata.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Provider.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Resolver.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Rtti.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Session.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Sync.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Transaction.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Types.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Validation.Attributes.pas"/>
-        <DCCReference Include="..\..\Trysil\Trysil.Validation.pas"/>
-        <DCCReference Include="..\..\Trysil\Data\Trysil.Data.Columns.pas"/>
-        <DCCReference Include="..\..\Trysil\Data\Trysil.Data.Connection.pas"/>
-        <DCCReference Include="..\..\Trysil\Data\Trysil.Data.Parameters.pas"/>
-        <DCCReference Include="..\..\Trysil\Data\Trysil.Data.pas"/>
-        <DCCReference Include="..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.pas"/>
-        <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.Common.pas"/>
-        <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.ConnectionPool.pas"/>
-        <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.pas"/>
+        <DCCReference Include="FireDACIBDriver.dcp"/>
+        <DCCReference Include="Trysil280.dcp"/>
+        <DCCReference Include="..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.FirebirdSQL.pas"/>
+        <DCCReference Include="..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.FirebirdSQL.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -206,7 +154,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">Trysil280.dpk</Source>
+                    <Source Name="MainSource">Trysil.FirebirdSQL280.dpk</Source>
                 </Source>
                 <Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k280.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
@@ -229,15 +177,9 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\Lib\Win32\Release\Trysil280.bpl" Configuration="Release" Class="ProjectOutput">
+                <DeployFile LocalName="..\..\Lib\280\Win32\Debug\Trysil.FirebirdSQL280.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
-                        <RemoteName>Trysil280.bpl</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\Trysil280.bpl" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Win32">
-                        <RemoteName>Trysil280.bpl</RemoteName>
+                        <RemoteName>Trysil_FirebirdSQL280.bpl</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

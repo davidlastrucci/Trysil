@@ -6,6 +6,18 @@
         <Projects Include="Trysil280.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="Trysil.FirebirdSQL280.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Trysil.PostgreSQL280.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Trysil.SQLite280.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Trysil.SqlServer280.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="Trysil.JSon280.dproj">
             <Dependencies/>
         </Projects>
@@ -29,6 +41,42 @@
     <Target Name="Trysil280:Make">
         <MSBuild Projects="Trysil280.dproj" Targets="Make"/>
     </Target>
+    <Target Name="Trysil_FirebirdSQL280">
+        <MSBuild Projects="Trysil.FirebirdSQL280.dproj"/>
+    </Target>
+    <Target Name="Trysil_FirebirdSQL280:Clean">
+        <MSBuild Projects="Trysil.FirebirdSQL280.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil_FirebirdSQL280:Make">
+        <MSBuild Projects="Trysil.FirebirdSQL280.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Trysil_PostgreSQL280">
+        <MSBuild Projects="Trysil.PostgreSQL280.dproj"/>
+    </Target>
+    <Target Name="Trysil_PostgreSQL280:Clean">
+        <MSBuild Projects="Trysil.PostgreSQL280.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil_PostgreSQL280:Make">
+        <MSBuild Projects="Trysil.PostgreSQL280.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Trysil_SQLite280">
+        <MSBuild Projects="Trysil.SQLite280.dproj"/>
+    </Target>
+    <Target Name="Trysil_SQLite280:Clean">
+        <MSBuild Projects="Trysil.SQLite280.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil_SQLite280:Make">
+        <MSBuild Projects="Trysil.SQLite280.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Trysil_SqlServer280">
+        <MSBuild Projects="Trysil.SqlServer280.dproj"/>
+    </Target>
+    <Target Name="Trysil_SqlServer280:Clean">
+        <MSBuild Projects="Trysil.SqlServer280.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil_SqlServer280:Make">
+        <MSBuild Projects="Trysil.SqlServer280.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Trysil_JSon280">
         <MSBuild Projects="Trysil.JSon280.dproj"/>
     </Target>
@@ -48,18 +96,42 @@
         <MSBuild Projects="Trysil.Http280.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="Trysil280;Trysil_JSon280;Trysil_Http280"/>
+        <CallTarget Targets="Trysil280;Trysil_FirebirdSQL280;Trysil_PostgreSQL280;Trysil_SQLite280;Trysil_SqlServer280;Trysil_JSon280;Trysil_Http280"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Trysil280:Clean;Trysil_JSon280:Clean;Trysil_Http280:Clean"/>
+        <CallTarget Targets="Trysil280:Clean;Trysil_FirebirdSQL280:Clean;Trysil_PostgreSQL280:Clean;Trysil_SQLite280:Clean;Trysil_SqlServer280:Clean;Trysil_JSon280:Clean;Trysil_Http280:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Trysil280:Make;Trysil_JSon280:Make;Trysil_Http280:Make"/>
+        <CallTarget Targets="Trysil280:Make;Trysil_FirebirdSQL280:Make;Trysil_PostgreSQL280:Make;Trysil_SQLite280:Make;Trysil_SqlServer280:Make;Trysil_JSon280:Make;Trysil_Http280:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='All target and configuration'">
         <BuildGroupProject Include="Trysil280.dproj">
             <ProjectGuid>{1748AC5D-443B-416C-84CF-6B793F11DA16}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.Http280.dproj">
+            <ProjectGuid>{982EA5B6-75D0-4C2E-9309-4A59BD6B8292}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.PostgreSQL280.dproj">
+            <ProjectGuid>{DA3473D7-4A92-4149-BBDA-B293B66079A3}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.SQLite280.dproj">
+            <ProjectGuid>{92EEF433-95B8-4727-AA52-A04D19A3FAE3}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.SqlServer280.dproj">
+            <ProjectGuid>{3C8CD65F-578B-48CD-8508-EE3D40C9C2F0}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
@@ -70,8 +142,8 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Trysil.Http280.dproj">
-            <ProjectGuid>{982EA5B6-75D0-4C2E-9309-4A59BD6B8292}</ProjectGuid>
+        <BuildGroupProject Include="Trysil.FirebirdSQL280.dproj">
+            <ProjectGuid>{1336BAC2-51D7-4FAA-8A01-024D8D4A591D}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
