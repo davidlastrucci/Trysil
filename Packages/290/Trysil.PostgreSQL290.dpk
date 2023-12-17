@@ -33,7 +33,6 @@ requires
   FireDAC,
   FireDACCommon,
   FireDACCommonDriver,
-  FireDACCommonODBC,
   FireDACPgDriver,
   Trysil290;
 
