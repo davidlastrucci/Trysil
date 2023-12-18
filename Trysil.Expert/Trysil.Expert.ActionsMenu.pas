@@ -66,10 +66,11 @@ type
     procedure TTEGenerateSQLActionExecute(Sender: TObject);
     procedure TTEGenerateModelActionUpdate(Sender: TObject);
     procedure TTEGenerateModelActionExecute(Sender: TObject);
+    procedure TTENewAPIRESTActionUpdate(Sender: TObject);
     procedure TTENewAPIRESTActionExecute(Sender: TObject);
+    procedure TTESettingsActionUpdate(Sender: TObject);
     procedure TTESettingsActionExecute(Sender: TObject);
     procedure TTEAboutActionExecute(Sender: TObject);
-    procedure TTENewAPIRESTActionUpdate(Sender: TObject);
   strict private
     const JSonFolder: String = '__trysil.model';
   strict private
@@ -257,9 +258,15 @@ begin
   TTAPIRestForm.ShowDialog;
 end;
 
+procedure TTActionsMenuDatamodule.TTESettingsActionUpdate(Sender: TObject);
+begin
+  TTESettingsAction.Enabled := TTIOTA.IsActiveProject;
+end;
+
 procedure TTActionsMenuDatamodule.TTESettingsActionExecute(Sender: TObject);
 begin
-  TTSettingsForm.ShowDialog;
+  if TTIOTA.IsActiveProject then
+    TTSettingsForm.ShowDialog;
 end;
 
 procedure TTActionsMenuDatamodule.TTEAboutActionExecute(Sender: TObject);

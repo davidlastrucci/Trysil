@@ -320,6 +320,7 @@ object TActionsMenuDatamodule: TTActionsMenuDatamodule
       Hint = 'Trysil settings'
       ImageIndex = 4
       OnExecute = TTESettingsActionExecute
+      OnUpdate = TTESettingsActionUpdate
     end
     object TTEAboutAction: TAction
       Category = 'Trysil'
