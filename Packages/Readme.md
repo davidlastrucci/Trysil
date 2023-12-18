@@ -1,4 +1,3 @@
-
 # Trysil packages
 
 ## Delphi versions 
@@ -13,10 +12,10 @@
 ## Delphi editions
 |Project|Community|Professional|Enterprise|Architect|
 |-|-|-|-|-|
-|Trysil|<center>:heavy_check_mark:</center>|<center>:heavy_check_mark:</center>|<center>:heavy_check_mark:</center>|<center>:heavy_check_mark:</center>|
-|Trysil.FirebirdSQL|||<center>:heavy_check_mark:</center>|<center>:heavy_check_mark:</center>|
-|Trysil.PostgreSQL|||<center>:heavy_check_mark:</center>|<center>:heavy_check_mark:</center>|
-|Trysil.SQLite|<center>:heavy_check_mark:</center>|<center>:heavy_check_mark:</center>|<center>:heavy_check_mark:</center>|<center>:heavy_check_mark:</center>|
-|Trysil.SqlServer|||<center>:heavy_check_mark:</center>|<center>:heavy_check_mark:</center>|
-|Trysil.JSon|<center>:heavy_check_mark:</center>|<center>:heavy_check_mark:</center>|<center>:heavy_check_mark:</center>|<center>:heavy_check_mark:</center>|
-|Trysil.Http|<center>:heavy_check_mark:</center>|<center>:heavy_check_mark:</center>|<center>:heavy_check_mark:</center>|<center>:heavy_check_mark:</center>|
+|Trysil|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|
+|Trysil.FirebirdSQL|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|
+|Trysil.PostgreSQL|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|
+|Trysil.SQLite|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|
+|Trysil.SqlServer|||<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|
+|Trysil.JSon|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|
+|Trysil.Http|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|
