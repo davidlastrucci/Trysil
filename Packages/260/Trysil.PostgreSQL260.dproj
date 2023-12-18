@@ -137,7 +137,6 @@
         <DCCReference Include="FireDAC.dcp"/>
         <DCCReference Include="FireDACCommon.dcp"/>
         <DCCReference Include="FireDACCommonDriver.dcp"/>
-        <DCCReference Include="FireDACCommonODBC.dcp"/>
         <DCCReference Include="FireDACPgDriver.dcp"/>
         <DCCReference Include="Trysil260.dcp"/>
         <DCCReference Include="..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.PostgreSQL.pas"/>

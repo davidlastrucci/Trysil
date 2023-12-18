@@ -129,7 +129,6 @@
         <DCCReference Include="FireDAC.dcp"/>
         <DCCReference Include="FireDACCommon.dcp"/>
         <DCCReference Include="FireDACCommonDriver.dcp"/>
-        <DCCReference Include="FireDACCommonODBC.dcp"/>
         <DCCReference Include="FireDACSqliteDriver.dcp"/>
         <DCCReference Include="Trysil270.dcp"/>
         <DCCReference Include="..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.SQLite.pas"/>

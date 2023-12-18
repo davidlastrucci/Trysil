@@ -137,7 +137,6 @@
         <DCCReference Include="FireDAC.dcp"/>
         <DCCReference Include="FireDACCommon.dcp"/>
         <DCCReference Include="FireDACCommonDriver.dcp"/>
-        <DCCReference Include="FireDACCommonODBC.dcp"/>
         <DCCReference Include="..\..\Trysil\Trysil.Attributes.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Cache.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Classes.pas"/>

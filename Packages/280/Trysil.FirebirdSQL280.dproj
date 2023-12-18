@@ -131,7 +131,6 @@
         <DCCReference Include="FireDAC.dcp"/>
         <DCCReference Include="FireDACCommon.dcp"/>
         <DCCReference Include="FireDACCommonDriver.dcp"/>
-        <DCCReference Include="FireDACCommonODBC.dcp"/>
         <DCCReference Include="FireDACIBDriver.dcp"/>
         <DCCReference Include="Trysil280.dcp"/>
         <DCCReference Include="..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.FirebirdSQL.pas"/>

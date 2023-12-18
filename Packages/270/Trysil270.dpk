@@ -32,8 +32,7 @@ requires
   dbrtl,
   FireDAC,
   FireDACCommon,
-  FireDACCommonDriver,
-  FireDACCommonODBC;
+  FireDACCommonDriver;
 
 contains
   Trysil.Attributes in '..\..\Trysil\Trysil.Attributes.pas',
