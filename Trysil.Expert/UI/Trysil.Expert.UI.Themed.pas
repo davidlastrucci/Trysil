@@ -25,7 +25,7 @@ uses
   Vcl.ExtCtrls,
 
   Trysil.Expert.UI.Themes,
-  Trysil.Expert.UI.Images;
+  Trysil.Expert.UI.Images, Vcl.Imaging.pngimage;
 
 type
 
@@ -51,16 +51,15 @@ procedure TTThemedForm.AfterConstruction;
 begin
   inherited AfterConstruction;
   ApplyThemes;
-  TrysilImage.Picture.Assign(TTImagesDataModule.Instance.Logo);
 end;
 
 procedure TTThemedForm.ApplyThemes;
 begin
   TTThemingServices.Instance.ApplyTheme(Self);
   ContentPanel.Color :=
-    TTThemingServices.Instance.GetSystemColor(clWindow);
-  ButtonsPanel.Color :=
     TTThemingServices.Instance.GetSystemColor(clBtnFace);
+  ButtonsPanel.Color :=
+    TTThemingServices.Instance.GetSystemColor(clWindow);
 end;
 
 end.
