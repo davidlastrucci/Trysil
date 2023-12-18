@@ -13,8 +13,8 @@
 |Project|Community|Professional|Enterprise|Architect|
 |-|-|-|-|-|
 |Trysil|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|
-|Trysil.FirebirdSQL|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|
-|Trysil.PostgreSQL|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|
+|Trysil.FirebirdSQL|<p align="center">:heavy_check_mark:<br />(localhost)</p>|<p align="center">:heavy_check_mark:<br/>(localhost)</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|
+|Trysil.PostgreSQL|<p align="center">:heavy_check_mark:<br />(localhost)</p>|<p align="center">:heavy_check_mark:<br/>(localhost)</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|
 |Trysil.SQLite|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|
 |Trysil.SqlServer|||<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|
 |Trysil.JSon|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|
