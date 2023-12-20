@@ -19,6 +19,7 @@ uses
   System.Rtti,
 
   Trysil.Consts,
+  Trysil.Types,
   Trysil.Exceptions,
   Trysil.Classes,
   Trysil.Events.Abstract,
@@ -229,6 +230,35 @@ type
     property DeleteEventClass: TTEventClass read FDeleteEventClass;
   end;
 
+{ TTTableEventMethodMap }
+
+  TTTableEventMethodMap = class
+  strict private
+    FEventMethodType: TTEventMethodType;
+    FMethod: TRttiMethod;
+  public
+    constructor Create(
+      const AEventMethodType: TTEventMethodType; const AMethod: TRttiMethod);
+
+    property EventMethodType: TTEventMethodType read FEventMethodType;
+    property Method: TRttiMethod read FMethod;
+  end;
+
+{ TTTableEventMethodsMap }
+
+  TTTableEventMethodsMap = class
+  strict private
+    FMethods: TTObjectList<TTTableEventMethodMap>;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure Add(
+      const AEventMethodType: TTEventMethodType; const AMethod: TRttiMethod);
+
+    function GetEnumerator(): TTListEnumerator<TTTableEventMethodMap>;
+  end;
+
 { TTTableMap }
 
   TTTableMap = class
@@ -246,6 +276,7 @@ type
     FRelations: TTRelationsMap;
     FValidators: TTValidatorsMap;
     FEvents: TTEventsMap;
+    FEventMethods: TTTableEventMethodsMap;
 
     procedure SetTableName(const AName: String);
     procedure SetSequenceName(const AName: String);
@@ -254,6 +285,8 @@ type
     procedure InitializeTable(const AType: TRttiType);
     procedure InitializeColumns(const AType: TRttiType);
     procedure InitializeValidators(const AType: TRttiType);
+    procedure InitializeEvents(const AType: TRttiType);
+
     function CreateColumnMap(
       const AName: String; const AObject: TRttiObject): TTColumnMap;
     function CreateDetailColumnMap(
@@ -282,7 +315,9 @@ type
     property DetailColums: TTDetailColumnsMap read FDetailColumns;
     property Relations: TTRelationsMap read FRelations;
     property Validators: TTValidatorsMap read FValidators;
+
     property Events: TTEventsMap read FEvents;
+    property EventMethods: TTTableEventMethodsMap read FEventMethods;
   end;
 
 { TTMapper }
@@ -613,6 +648,49 @@ begin
     SetDeleteTypeInfo(AAttribute);
 end;
 
+{ TTTableEventMethodMap }
+
+constructor TTTableEventMethodMap.Create(
+  const AEventMethodType: TTEventMethodType; const AMethod: TRttiMethod);
+begin
+  inherited Create;
+  FEventMethodType := AEventMethodType;
+  FMethod := AMethod;
+end;
+
+{ TTTableEventMethodsMap }
+
+constructor TTTableEventMethodsMap.Create;
+begin
+  inherited Create;
+  FMethods := TTObjectList<TTTableEventMethodMap>.Create(True);
+end;
+
+destructor TTTableEventMethodsMap.Destroy;
+begin
+  FMethods.Free;
+  inherited Destroy;
+end;
+
+procedure TTTableEventMethodsMap.Add(
+  const AEventMethodType: TTEventMethodType; const AMethod: TRttiMethod);
+var
+  LMethod: TTTableEventMethodMap;
+begin
+  LMethod := TTTableEventMethodMap.Create(AEventMethodType, AMethod);
+  try
+    FMethods.Add(LMethod);
+  except
+    LMethod.Free;
+    raise;
+  end;
+end;
+
+function TTTableEventMethodsMap.GetEnumerator: TTListEnumerator<TTTableEventMethodMap>;
+begin
+  result := TTListEnumerator<TTTableEventMethodMap>.Create(FMethods);
+end;
+
 { TTTableMap }
 
 constructor TTTableMap.Create(
@@ -631,10 +709,12 @@ begin
   FRelations := TTRelationsMap.Create;
   FValidators := TTValidatorsMap.Create;
   FEvents := TTEventsMap.Create;
+  FEventMethods := TTTableEventMethodsMap.Create;
 end;
 
 destructor TTTableMap.Destroy;
 begin
+  FEventMethods.Free;
   FEvents.Free;
   FValidators.Free;
   FRelations.Free;
@@ -652,6 +732,7 @@ begin
   InitializeTable(LType);
   InitializeColumns(LType);
   InitializeValidators(LType);
+  InitializeEvents(LType);
 end;
 
 procedure TTTableMap.SetTableName(const AName: String);
@@ -716,6 +797,28 @@ begin
     LAttribute := LMethod.GetAttribute<TValidatorAttribute>;
     if Assigned(LAttribute) then
       FValidators.Add(TTValidatorMap.Create(LMethod));
+  end;
+end;
+
+procedure TTTableMap.InitializeEvents(const AType: TRttiType);
+var
+  LMethod: TRttiMethod;
+  LParameters: TArray<TRttiParameter>;
+  LAttribute: TCustomAttribute;
+  LEventMethodAttribute: TEventMethodAttribute;
+begin
+  for LMethod in AType.GetMethods do
+  begin
+    LParameters := LMethod.GetParameters;
+    if Length(LParameters) = 0 then
+    begin
+      for LAttribute in LMethod.GetAttributes do
+        if LAttribute is TEventMethodAttribute then
+        begin
+          LEventMethodAttribute := TEventMethodAttribute(LAttribute);
+          FEventMethods.Add(LEventMethodAttribute.EventMethodType, LMethod);
+        end;
+    end;
   end;
 end;
 

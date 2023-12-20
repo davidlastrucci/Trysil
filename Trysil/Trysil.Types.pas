@@ -79,6 +79,16 @@ type
     property IsNull: Boolean read GetIsNull;
   end;
 
+{ TEventMethodType }
+
+  TTEventMethodType = (
+    BeforeInsert,
+    AfterInsert,
+    BeforeUpdate,
+    AfterUpdate,
+    BeforeDelete,
+    AfterDelete);
+
 implementation
 
 { TTPrimaryKeyHelper }

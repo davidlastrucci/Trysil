@@ -111,15 +111,25 @@ type
   strict protected
     FConnection: TTGenericConnection;
 
+    procedure InvokeEvents(
+      const AEntity: TObject;
+      const AEventMethodType: TTEventMethodType); virtual;
+
     procedure BeforeExecute(
-      const AEntity: TObject; const AEvent: TTEvent); virtual;
+      const AEntity: TObject;
+      const AEvent: TTEvent;
+      const AEventMethodType: TTEventMethodType); virtual;
     procedure AfterExecute(
-      const AEntity: TObject; const AEvent: TTEvent); virtual;
+      const AEntity: TObject;
+      const AEvent: TTEvent;
+      const AEventMethodType: TTEventMethodType); virtual;
 
     procedure ExecuteCommand(
       const ASQL: String;
       const AEntity: TObject;
-      const AEvent: TTEvent);
+      const AEvent: TTEvent;
+      const ABeforeEventMethodType: TTEventMethodType;
+      const AAfterEventMethodType: TTEventMethodType);
   public
     constructor Create(
       const AConnection: TTGenericConnection;
@@ -134,7 +144,7 @@ type
   public
     procedure Execute(
       const AEntity: TObject; const AEvent: TTEvent); override;
-end;
+  end;
 
 { TTGenericUpdateCommand }
 
@@ -142,18 +152,20 @@ end;
   public
     procedure Execute(
       const AEntity: TObject; const AEvent: TTEvent); override;
-end;
+  end;
 
 { TTGenericDeleteCommand }
 
   TTGenericDeleteCommand = class(TTGenericCommand)
   strict protected
     procedure BeforeExecute(
-      const AEntity: TObject; const AEvent: TTEvent); override;
+      const AEntity: TObject;
+      const AEvent: TTEvent;
+      const AEventMethodType: TTEventMethodType); override;
   public
     procedure Execute(
       const AEntity: TObject; const AEvent: TTEvent); override;
-end;
+  end;
 
 implementation
 
@@ -392,24 +404,42 @@ begin
   FConnection := AConnection;
 end;
 
+procedure TTGenericCommand.InvokeEvents(
+  const AEntity: TObject; const AEventMethodType: TTEventMethodType);
+var
+  LEventMethodMap: TTTableEventMethodMap;
+begin
+  for LEventMethodMap in FTableMap.EventMethods do
+    if AEventMethodType = LEventMethodMap.EventMethodType then
+      LEventMethodMap.Method.Invoke(AEntity, []);
+end;
+
 procedure TTGenericCommand.BeforeExecute(
-  const AEntity: TObject; const AEvent: TTEvent);
+  const AEntity: TObject;
+  const AEvent: TTEvent;
+  const AEventMethodType: TTEventMethodType);
 begin
   if Assigned(AEvent) then
     AEvent.DoBefore;
+  InvokeEvents(AEntity, AEventMethodType);
 end;
 
 procedure TTGenericCommand.AfterExecute(
-  const AEntity: TObject; const AEvent: TTEvent);
+  const AEntity: TObject;
+  const AEvent: TTEvent;
+  const AEventMethodType: TTEventMethodType);
 begin
   if Assigned(AEvent) then
     AEvent.DoAfter;
+  InvokeEvents(AEntity, AEventMethodType);
 end;
 
 procedure TTGenericCommand.ExecuteCommand(
   const ASQL: String;
   const AEntity: TObject;
-  const AEvent: TTEvent);
+  const AEvent: TTEvent;
+  const ABeforeEventMethodType: TTEventMethodType;
+  const AAfterEventMethodType: TTEventMethodType);
 var
   LTransaction: TTTransaction;
   LRowsAffected: Integer;
@@ -417,7 +447,7 @@ begin
   LTransaction := TTTransaction.Create(FConnection);
   try
     try
-      BeforeExecute(AEntity, AEvent);
+      BeforeExecute(AEntity, AEvent, ABeforeEventMethodType);
 
       TTLogger.Instance.LogCommand(ASQL);
 
@@ -432,7 +462,7 @@ begin
       else if LRowsAffected > 1 then
         raise ETException.Create(SSyntaxError);
 
-      AfterExecute(AEntity, AEvent);
+      AfterExecute(AEntity, AEvent, AAfterEventMethodType);
     except
       LTransaction.Rollback;
       raise;
@@ -452,7 +482,12 @@ begin
   LSyntax := FConnection.SyntaxClasses.Insert.Create(
     FConnection, FTableMap, FTableMetadata);
   try
-    ExecuteCommand(LSyntax.GetSqlSyntax([]), AEntity, AEvent);
+    ExecuteCommand(
+      LSyntax.GetSqlSyntax([]),
+      AEntity,
+      AEvent,
+      TTEventMethodType.BeforeInsert,
+      TTEventMethodType.AfterInsert);
   finally
     LSyntax.Free;
   end;
@@ -468,7 +503,12 @@ begin
   LSyntax := FConnection.SyntaxClasses.Update.Create(
     FConnection, FTableMap, FTableMetadata);
   try
-    ExecuteCommand(LSyntax.GetSqlSyntax(GetWhereColumns), AEntity, AEvent);
+    ExecuteCommand(
+      LSyntax.GetSqlSyntax(GetWhereColumns),
+      AEntity,
+      AEvent,
+      TTEventMethodType.BeforeUpdate,
+      TTEventMethodType.AfterUpdate);
   finally
     LSyntax.Free;
   end;
@@ -477,14 +517,16 @@ end;
 { TTGenericDeleteCommand }
 
 procedure TTGenericDeleteCommand.BeforeExecute(
-  const AEntity: TObject; const AEvent: TTEvent);
+  const AEntity: TObject;
+  const AEvent: TTEvent;
+  const AEventMethodType: TTEventMethodType);
 var
   LID: TTPrimaryKey;
   LSyntax: TTDeleteCascadeSyntax;
   LSQL: String;
   LRelation: TTRelationMap;
 begin
-  inherited BeforeExecute(AEntity, AEvent);
+  inherited BeforeExecute(AEntity, AEvent, AEventMethodType);
   LID := FTableMap.PrimaryKey.Member.GetValue(AEntity).AsType<TTPrimaryKey>();
   LSyntax := FConnection.SyntaxClasses.DeleteCascade.Create;
   try
@@ -510,7 +552,12 @@ begin
   LSyntax := FConnection.SyntaxClasses.Delete.Create(
     FConnection, FTableMap, FTableMetadata);
   try
-    ExecuteCommand(LSyntax.GetSqlSyntax(GetWhereColumns), AEntity, AEvent);
+    ExecuteCommand(
+      LSyntax.GetSqlSyntax(GetWhereColumns),
+      AEntity,
+      AEvent,
+      TTEventMethodType.BeforeDelete,
+      TTEventMethodType.AfterDelete);
   finally
     LSyntax.Free;
   end;
