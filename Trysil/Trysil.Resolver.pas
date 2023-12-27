@@ -41,6 +41,9 @@ type
     FEntity: TObject;
     FErrors: TTValidationErrors;
 
+    procedure TryInvoke(
+      const AValidatorMap: TTValidatorMap; const AArgs: TArray<TTValue>);
+
     procedure ValidateColumns;
     procedure ValidateMethods;
   public
@@ -104,6 +107,17 @@ begin
   ValidateMethods;
 end;
 
+procedure TTResolverValidator.TryInvoke(
+  const AValidatorMap: TTValidatorMap; const AArgs: TArray<TTValue>);
+begin
+  try
+    AValidatorMap.Method.Invoke(FEntity, AArgs);
+  except
+    on E: Exception do
+      FErrors.Add(String.Empty, E.Message);
+  end;
+end;
+
 procedure TTResolverValidator.ValidateColumns;
 var
   LColumnMap: TTColumnMap;
@@ -121,24 +135,28 @@ begin
   for LValidatorMap in FTableMap.Validators do
   begin
     LLength := Length(LValidatorMap.Parameters);
-    if LLength = 0 then
-      LValidatorMap.Method.Invoke(FEntity, [])
-    else
+    LIsValid := (LLength = 0);
+    if LIsValid then
+      TryInvoke(LValidatorMap, [])
+    else if LLength = 1 then
     begin
-      LIsValid := (LLength = 2);
+      LIsValid := TTRtti.InheritsFrom(
+        FErrors, LValidatorMap.Parameters[0].ParamType);
       if LIsValid then
-        LIsValid :=
-          TTRtti.InheritsFrom(
-            FContext, LValidatorMap.Parameters[0].ParamType) and
-          TTRtti.InheritsFrom(
-            FErrors, LValidatorMap.Parameters[1].ParamType);
-      if not LIsValid then
-        FErrors.Add(
-          String.Empty,
-          Format(SNotValidValidator, [
-            LValidatorMap.Method.Name, FEntity.ClassName]));
-      LValidatorMap.Method.Invoke(FEntity, [FContext, FErrors])
+        TryInvoke(LValidatorMap, [FErrors]);
+    end
+    else if LLength = 2 then
+    begin
+      LIsValid :=
+        TTRtti.InheritsFrom(FContext, LValidatorMap.Parameters[0].ParamType) and
+        TTRtti.InheritsFrom(FErrors, LValidatorMap.Parameters[1].ParamType);
+      if LIsValid then
+        TryInvoke(LValidatorMap, [FContext, FErrors])
     end;
+
+    if not LIsValid then
+      FErrors.Add(String.Empty, Format(SNotValidValidator, [
+        LValidatorMap.Method.Name, FEntity.ClassName]));
   end;
 end;
 
