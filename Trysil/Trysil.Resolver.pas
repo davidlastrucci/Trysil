@@ -120,9 +120,9 @@ begin
   if result then
     TryInvoke(AValidatorMap, [])
   else if LLength = 1 then
-    begin
-      result := TTRtti.InheritsFrom(
-        FErrors, AValidatorMap.Parameters[0].ParamType);
+  begin
+    result := TTRtti.InheritsFrom(
+      FErrors, AValidatorMap.Parameters[0].ParamType);
     if result then
       TryInvoke(AValidatorMap, [FErrors]);
   end
