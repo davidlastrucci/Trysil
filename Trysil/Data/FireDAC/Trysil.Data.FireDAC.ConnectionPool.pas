@@ -23,9 +23,9 @@ uses
 
 type
 
-{ FireDACConfigConnectionPool }
+{ TFireDACConfigConnectionPool }
 
-  FireDACConfigConnectionPool = class
+  TFireDACConfigConnectionPool = class
   strict private
     FEnabled: Boolean;
     FMaximumItems: Integer;
@@ -51,7 +51,7 @@ type
     class function GetInstance: TTFireDACConnectionPool; static;
   strict private
     FManager: TFDManager;
-    FConfig: FireDACConfigConnectionPool;
+    FConfig: TFireDACConfigConnectionPool;
 
     procedure AddConnectionPooling(const AParameters: TStrings);
   public
@@ -65,16 +65,16 @@ type
       const ADriver: String;
       const AParameters: TStrings);
 
-    property Config: FireDACConfigConnectionPool read FConfig;
+    property Config: TFireDACConfigConnectionPool read FConfig;
 
     class property Instance: TTFireDACConnectionPool read GetInstance;
   end;
 
 implementation
 
-{ FireDACConfigConnectionPool }
+{ TFireDACConfigConnectionPool }
 
-constructor FireDACConfigConnectionPool.Create;
+constructor TFireDACConfigConnectionPool.Create;
 begin
   inherited Create;
   FEnabled := False;
