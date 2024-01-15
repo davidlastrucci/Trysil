@@ -40,6 +40,7 @@ type
 
   TTLoggerItem = record
   strict private
+    FThreadID: TThreadID;
     FEvent: TTLoggerEvent;
     FValues: TArray<String>;
   public
@@ -50,6 +51,7 @@ type
     constructor Create(
       const AEvent: TTLoggerEvent; const AValues: TArray<String>); overload;
 
+    property ThreadID: TThreadID read FThreadID;
     property Event: TTLoggerEvent read FEvent;
     property Values: TArray<String> read FValues;
   end;
@@ -83,14 +85,20 @@ type
 
     procedure SetTerminated;
   strict protected
-    procedure LogStartTransaction; virtual; abstract;
-    procedure LogCommit; virtual; abstract;
-    procedure LogRollback; virtual; abstract;
+    procedure LogStartTransaction(
+      const AThreadID: TThreadID); virtual; abstract;
+    procedure LogCommit(const AThreadID: TThreadID); virtual; abstract;
+    procedure LogRollback(const AThreadID: TThreadID); virtual; abstract;
     procedure LogParameter(
-      const AName: String; const AValue: String); virtual; abstract;
-    procedure LogSyntax(const ASyntax: String); virtual; abstract;
-    procedure LogCommand(const ASyntax: String); virtual; abstract;
-    procedure LogError(const AMessage: String); virtual; abstract;
+      const AThreadID: TThreadID;
+      const AName: String;
+      const AValue: String); virtual; abstract;
+    procedure LogSyntax(
+      const AThreadID: TThreadID; const ASyntax: String); virtual; abstract;
+    procedure LogCommand(
+      const AThreadID: TThreadID; const ASyntax: String); virtual; abstract;
+    procedure LogError(
+      const AThreadID: TThreadID; const AMessage: String); virtual; abstract;
 
     procedure Execute; override;
   public
@@ -153,6 +161,7 @@ end;
 constructor TTLoggerItem.Create(
   const AEvent: TTLoggerEvent; const AValues: TArray<String>);
 begin
+  FThreadID := TThread.Current.ThreadID;
   FEvent := AEvent;
   FValues := Copy(AValues, Low(AValues), Length(AValues));
 end;
@@ -259,13 +268,14 @@ end;
 procedure TTLoggerThread.Log(const AItem: TTLoggerItem);
 begin
   case AItem.Event of
-    TTLoggerEvent.StartTransaction: LogStartTransaction;
-    TTLoggerEvent.Commit: LogCommit;
-    TTLoggerEvent.Rollback: LogRollback;
-    TTLoggerEvent.Parameter: LogParameter(AItem.Values[0], AItem.Values[1]);
-    TTLoggerEvent.Syntax: LogSyntax(AItem.Values[0]);
-    TTLoggerEvent.Command: LogCommand(AItem.Values[0]);
-    TTLoggerEvent.Error: LogError(AItem.Values[0]);
+    TTLoggerEvent.StartTransaction: LogStartTransaction(AItem.ThreadID);
+    TTLoggerEvent.Commit: LogCommit(AItem.ThreadID);
+    TTLoggerEvent.Rollback: LogRollback(AItem.ThreadID);
+    TTLoggerEvent.Parameter:
+      LogParameter(AItem.ThreadID, AItem.Values[0], AItem.Values[1]);
+    TTLoggerEvent.Syntax: LogSyntax(AItem.ThreadID, AItem.Values[0]);
+    TTLoggerEvent.Command: LogCommand(AItem.ThreadID, AItem.Values[0]);
+    TTLoggerEvent.Error: LogError(AItem.ThreadID, AItem.Values[0]);
   end;
 end;
 
@@ -306,7 +316,7 @@ var
 begin
   LThread := FThreads.Next;
   if Assigned(LThread) then
-    LThread.AddLog(AItem);
+    LThread.AddLog( AItem);
 end;
 
 procedure TTLogger.LogStartTransaction;
