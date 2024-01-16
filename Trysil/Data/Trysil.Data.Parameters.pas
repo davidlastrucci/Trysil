@@ -32,12 +32,18 @@ type
 { TTParameter }
 
   TTParameter = class abstract
+  strict private
+    FConnectionID: String;
   strict protected
     FParam: TTParam;
     FColumnMap: TTColumnMap;
+
+    procedure LogParameter(const AName: String; const AValue: String);
   public
-    constructor Create(const AParam: TTParam); overload;
     constructor Create(
+      const AConnectionID: String; const AParam: TTParam); overload;
+    constructor Create(
+      const AConnectionID: String;
       const AParam: TTParam;
       const AColumnMap: TTColumnMap); overload;
 
@@ -132,9 +138,11 @@ type
       const AFieldType: TFieldType);
 
     function CreateParameter(
+      const AConnectionID: String;
       const AFieldType: TFieldType;
       const AParam: TTParam): TTParameter; overload;
     function CreateParameter(
+      const AConnectionID: String;
       const AFieldType: TFieldType;
       const AParam: TTParam;
       const AColumnMap: TTColumnMap): TTParameter; overload;
@@ -153,18 +161,26 @@ implementation
 
 { TTParameter }
 
-constructor TTParameter.Create(const AParam: TTParam);
+constructor TTParameter.Create(
+  const AConnectionID: String; const AParam: TTParam);
 begin
-  Create(AParam, nil);
+  Create(FConnectionID, AParam, nil);
 end;
 
 constructor TTParameter.Create(
+  const AConnectionID: String;
   const AParam: TTParam;
   const AColumnMap: TTColumnMap);
 begin
   inherited Create;
+  FConnectionID := AConnectionID;
   FParam := AParam;
   FColumnMap := AColumnMap;
+end;
+
+procedure TTParameter.LogParameter(const AName: String; const AValue: String);
+begin
+  TTLogger.Instance.LogParameter(FConnectionID, AName, AValue);
 end;
 
 { TTStringParameter }
@@ -199,13 +215,13 @@ begin
   else
     SetParameterValue(AEntity, LValue.AsType<String>());
 
-  TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsString);
+  LogParameter(FColumnMap.Name, FParam.AsString);
 end;
 
 procedure TTStringParameter.SetValue(const AValue: TTValue);
 begin
   SetParameterValue(nil, AValue.AsType<String>());
-  TTLogger.Instance.LogParameter(FParam.Name, FParam.AsString);
+  LogParameter(FParam.Name, FParam.AsString);
 end;
 
 { TTIntegerParameter }
@@ -232,13 +248,13 @@ begin
     FParam.AsInteger := LValue.AsType<Integer>();
 
   if not LIsClass then
-    TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsInteger.ToString);
+    LogParameter(FColumnMap.Name, FParam.AsInteger.ToString);
 end;
 
 procedure TTIntegerParameter.SetValue(const AValue: TTValue);
 begin
   FParam.AsInteger := AValue.AsType<Integer>();
-  TTLogger.Instance.LogParameter(FParam.Name, FParam.AsInteger.ToString);
+  LogParameter(FParam.Name, FParam.AsInteger.ToString);
 end;
 
 procedure TTIntegerParameter.SetValueFromObject(const AObject: TObject);
@@ -259,7 +275,7 @@ begin
   end;
   FParam.AsInteger := LValue.AsType<Integer>();
 
-  TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsInteger.ToString);
+  LogParameter(FColumnMap.Name, FParam.AsInteger.ToString);
 end;
 
 { TTLargeIntegerParameter }
@@ -281,13 +297,13 @@ begin
   else
     FParam.AsLargeInt := LValue.AsType<Int64>();
 
-  TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsLargeInt.ToString);
+  LogParameter(FColumnMap.Name, FParam.AsLargeInt.ToString);
 end;
 
 procedure TTLargeIntegerParameter.SetValue(const AValue: TTValue);
 begin
   FParam.AsLargeInt := AValue.AsType<Int64>();
-  TTLogger.Instance.LogParameter(FParam.Name, FParam.AsLargeInt.ToString);
+  LogParameter(FParam.Name, FParam.AsLargeInt.ToString);
 end;
 
 { TTDoubleParameter }
@@ -309,13 +325,13 @@ begin
   else
     FParam.AsDouble := LValue.AsType<Double>();
 
-  TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsDouble.ToString);
+  LogParameter(FColumnMap.Name, FParam.AsDouble.ToString);
 end;
 
 procedure TTDoubleParameter.SetValue(const AValue: TTValue);
 begin
   FParam.AsDouble := AValue.AsType<Double>();
-  TTLogger.Instance.LogParameter(FParam.Name, FParam.AsDouble.ToString);
+  LogParameter(FParam.Name, FParam.AsDouble.ToString);
 end;
 
 { TTBooleanParameter }
@@ -337,13 +353,13 @@ begin
   else
     FParam.AsBoolean := LValue.AsType<Boolean>();
 
-  TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsBoolean.ToString);
+  LogParameter(FColumnMap.Name, FParam.AsBoolean.ToString);
 end;
 
 procedure TTBooleanParameter.SetValue(const AValue: TTValue);
 begin
   FParam.AsBoolean := AValue.AsType<Boolean>();
-  TTLogger.Instance.LogParameter(FParam.Name, FParam.AsBoolean.ToString);
+  LogParameter(FParam.Name, FParam.AsBoolean.ToString);
 end;
 
 { TTDateTimeParameter }
@@ -365,14 +381,13 @@ begin
   else
     FParam.AsDateTime := LValue.AsType<TDateTime>();
 
-  TTLogger.Instance.LogParameter(
-    FColumnMap.Name, DateTimeToStr(FParam.AsDateTime));
+  LogParameter(FColumnMap.Name, DateTimeToStr(FParam.AsDateTime));
 end;
 
 procedure TTDateTimeParameter.SetValue(const AValue: TTValue);
 begin
   FParam.AsDateTime := AValue.AsType<TDateTime>();
-  TTLogger.Instance.LogParameter(FParam.Name, DateTimeToStr(FParam.AsDateTime));
+  LogParameter(FParam.Name, DateTimeToStr(FParam.AsDateTime));
 end;
 
 { TTGuidParameter }
@@ -394,13 +409,13 @@ begin
   else
     FParam.AsGuid := LValue.AsType<TGuid>();
 
-  TTLogger.Instance.LogParameter(FColumnMap.Name, FParam.AsGuid.ToString);
+  LogParameter(FColumnMap.Name, FParam.AsGuid.ToString);
 end;
 
 procedure TTGuidParameter.SetValue(const AValue: TTValue);
 begin
   FParam.AsGuid := AValue.AsType<TGuid>();
-  TTLogger.Instance.LogParameter(FParam.Name, FParam.AsGuid.ToString);
+  LogParameter(FParam.Name, FParam.AsGuid.ToString);
 end;
 
 { TTBlobParameter }
@@ -447,12 +462,15 @@ begin
 end;
 
 function TTParameterFactory.CreateParameter(
-  const AFieldType: TFieldType; const AParam: TTParam): TTParameter;
+  const AConnectionID: String;
+  const AFieldType: TFieldType;
+  const AParam: TTParam): TTParameter;
 begin
-  result := CreateParameter(AFieldType, AParam, nil);
+  result := CreateParameter(AConnectionID, AFieldType, AParam, nil);
 end;
 
 function TTParameterFactory.CreateParameter(
+  const AConnectionID: String;
   const AFieldType: TFieldType;
   const AParam: TTParam;
   const AColumnMap: TTColumnMap): TTParameter;
@@ -462,7 +480,7 @@ begin
   if not FParameterTypes.TryGetValue(AFieldType, LClass) then
     raise ETException.CreateFmt(SParameterTypeError, [
       TRttiEnumerationType.GetName<TFieldType>(AFieldType)]);
-  result := TTParameterClass(LClass).Create(AParam, AColumnMap);
+  result := TTParameterClass(LClass).Create(AConnectionID, AParam, AColumnMap);
 end;
 
 { TTParameterRegister }

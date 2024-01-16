@@ -347,7 +347,7 @@ begin
     LParam := TTFDParam.Create(LFireDACParam);
     try
       LParameter := TTParameterFactory.Instance.CreateParameter(
-        AParameter.DataType, LParam);
+        ConnectionID, AParameter.DataType, LParam);
       try
         LParameter.SetValue(AParameter.Value);
       finally
@@ -383,6 +383,7 @@ begin
       LParam := TTFDParam.Create(LFireDACParam);
       try
         LParameter := TTParameterFactory.Instance.CreateParameter(
+          ConnectionID,
           LColumn.DataType,
           LParam,
           GetColumnMap(ATableMap, LColumn.ColumnName));

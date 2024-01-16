@@ -35,6 +35,7 @@ type
 
   TTGenericConnection = class abstract(TTConnection)
   strict private
+    FConnectionID: String;
     FSyntaxClasses: TTSyntaxClasses;
   strict protected
     function CreateSyntaxClasses: TTSyntaxClasses; virtual; abstract;
@@ -84,6 +85,7 @@ type
 
     function GetSequenceID(const ATableMap: TTTableMap): TTPrimaryKey; override;
 
+    property ConnectionID: String read FConnectionID;
     property SyntaxClasses: TTSyntaxClasses read FSyntaxClasses;
   end;
 
@@ -174,6 +176,7 @@ implementation
 constructor TTGenericConnection.Create;
 begin
   inherited Create;
+  FConnectionID := TGUID.NewGuid().ToString().ToLower().Substring(1, 36);
   FSyntaxClasses := CreateSyntaxClasses;
 end;
 
@@ -187,21 +190,21 @@ procedure TTGenericConnection.StartTransaction;
 begin
   if InTransaction then
     raise ETException.CreateFmt(SInTransaction, ['StartTransaction']);
-  TTLogger.Instance.LogStartTransaction;
+  TTLogger.Instance.LogStartTransaction(FConnectionID);
 end;
 
 procedure TTGenericConnection.CommitTransaction;
 begin
   if not InTransaction then
     raise ETException.CreateFmt(SNotInTransaction, ['CommitTransaction']);
-  TTLogger.Instance.LogCommit;
+  TTLogger.Instance.LogCommit(FConnectionID);
 end;
 
 procedure TTGenericConnection.RollbackTransaction;
 begin
   if not InTransaction then
     raise ETException.CreateFmt(SNotInTransaction, ['RollbackTransaction']);
-  TTLogger.Instance.LogRollback;
+  TTLogger.Instance.LogRollback(FConnectionID);
 end;
 
 function TTGenericConnection.SelectCount(
@@ -283,7 +286,7 @@ begin
   try
     LDataset := CreateDataSet(LSyntax.SQL, TTFilter.Empty);
     try
-      TTLogger.Instance.LogSyntax(LSyntax.SQL);
+      TTLogger.Instance.LogSyntax(FConnectionID, LSyntax.SQL);
       if not LDataSet.IsEmpty then
         result := LDataSet.Fields[0].AsString;
     finally
@@ -330,7 +333,7 @@ begin
   try
     LDataset := CreateDataSet(LSyntax.SQL, TTFilter.Empty);
     try
-      TTLogger.Instance.LogSyntax(LSyntax.SQL);
+      TTLogger.Instance.LogSyntax(FConnectionID, LSyntax.SQL);
       result := LDataset.Fields[0].AsInteger;
     finally
       LDataset.Free;
@@ -389,7 +392,7 @@ end;
 function TTGenericReader.GetDataset: TDataset;
 begin
   result := FConnection.CreateDataset(FSyntax.SQL, FFilter);
-  TTLogger.Instance.LogSyntax(FSyntax.SQL);
+  TTLogger.Instance.LogSyntax(FConnection.ConnectionID, FSyntax.SQL);
 end;
 
 { TTGenericCommand }
@@ -449,7 +452,7 @@ begin
     try
       BeforeExecute(AEntity, AEvent, ABeforeEventMethodType);
 
-      TTLogger.Instance.LogCommand(ASQL);
+      TTLogger.Instance.LogCommand(FConnection.ConnectionID, ASQL);
 
       LRowsAffected := FConnection.Execute(
         ASQL,

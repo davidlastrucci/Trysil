@@ -36,22 +36,40 @@ type
     Command,
     Error);
 
+{ TTLoggerItemID }
+
+  TTLoggerItemID = record
+  strict private
+    FConnectionID: String;
+    FThreadID: TThreadID;
+  public
+    constructor Create(const AConnectionID: String);
+
+    property ConnectionID: String read FConnectionID;
+    property ThreadID: TThreadID read FThreadID;
+  end;
+
 { TTLoggerItem }
 
   TTLoggerItem = record
   strict private
-    FThreadID: TThreadID;
+    FID: TTLoggerItemID;
     FEvent: TTLoggerEvent;
     FValues: TArray<String>;
   public
     constructor Create(
+      const AConnectionID: String;
       const AEvent: TTLoggerEvent); overload;
     constructor Create(
-      const AEvent: TTLoggerEvent; const AValue: String); overload;
+      const AConnectionID: String;
+      const AEvent: TTLoggerEvent;
+      const AValue: String); overload;
     constructor Create(
-      const AEvent: TTLoggerEvent; const AValues: TArray<String>); overload;
+      const AConnectionID: String;
+      const AEvent: TTLoggerEvent;
+      const AValues: TArray<String>); overload;
 
-    property ThreadID: TThreadID read FThreadID;
+    property ID: TTLoggerItemID read FID;
     property Event: TTLoggerEvent read FEvent;
     property Values: TArray<String> read FValues;
   end;
@@ -85,20 +103,19 @@ type
 
     procedure SetTerminated;
   strict protected
-    procedure LogStartTransaction(
-      const AThreadID: TThreadID); virtual; abstract;
-    procedure LogCommit(const AThreadID: TThreadID); virtual; abstract;
-    procedure LogRollback(const AThreadID: TThreadID); virtual; abstract;
+    procedure LogStartTransaction(const AID: TTLoggerItemID); virtual; abstract;
+    procedure LogCommit(const AID: TTLoggerItemID); virtual; abstract;
+    procedure LogRollback(const AID: TTLoggerItemID); virtual; abstract;
     procedure LogParameter(
-      const AThreadID: TThreadID;
+      const AID: TTLoggerItemID;
       const AName: String;
       const AValue: String); virtual; abstract;
     procedure LogSyntax(
-      const AThreadID: TThreadID; const ASyntax: String); virtual; abstract;
+      const AID: TTLoggerItemID; const ASyntax: String); virtual; abstract;
     procedure LogCommand(
-      const AThreadID: TThreadID; const ASyntax: String); virtual; abstract;
+      const AID: TTLoggerItemID; const ASyntax: String); virtual; abstract;
     procedure LogError(
-      const AThreadID: TThreadID; const AMessage: String); virtual; abstract;
+      const AID: TTLoggerItemID; const AMessage: String); virtual; abstract;
 
     procedure Execute; override;
   public
@@ -129,12 +146,15 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    procedure LogStartTransaction;
-    procedure LogCommit;
-    procedure LogRollback;
-    procedure LogParameter(const AName: String; const AValue: String);
-    procedure LogSyntax(const ASyntax: String);
-    procedure LogCommand(const ASyntax: String);
+    procedure LogStartTransaction(const AConnectionID: String);
+    procedure LogCommit(const AConnectionID: String);
+    procedure LogRollback(const AConnectionID: String);
+    procedure LogParameter(
+      const AConnectionID: String;
+      const AName: String;
+      const AValue: String);
+    procedure LogSyntax(const AConnectionID: String; const ASyntax: String);
+    procedure LogCommand(const AConnectionID: String; const ASyntax: String);
 
     procedure RegisterLogger<T: TTLoggerThread>(); overload;
     procedure RegisterLogger<T: TTLoggerThread>(
@@ -145,23 +165,36 @@ type
 
 implementation
 
+{ TTLoggerItemID }
+
+constructor TTLoggerItemID.Create(const AConnectionID: String);
+begin
+  FConnectionID := AConnectionID;
+  FThreadID := TThread.Current.ThreadID;
+end;
+
 { TTLoggerItem }
 
-constructor TTLoggerItem.Create(const AEvent: TTLoggerEvent);
+constructor TTLoggerItem.Create(
+  const AConnectionID: String; const AEvent: TTLoggerEvent);
 begin
-  Create(AEvent, []);
+  Create(AConnectionID, AEvent, []);
 end;
 
 constructor TTLoggerItem.Create(
-  const AEvent: TTLoggerEvent; const AValue: String);
+  const AConnectionID: String;
+  const AEvent: TTLoggerEvent;
+  const AValue: String);
 begin
-  Create(AEvent, [AValue]);
+  Create(AConnectionID, AEvent, [AValue]);
 end;
 
 constructor TTLoggerItem.Create(
-  const AEvent: TTLoggerEvent; const AValues: TArray<String>);
+  const AConnectionID: String;
+  const AEvent: TTLoggerEvent;
+  const AValues: TArray<String>);
 begin
-  FThreadID := TThread.Current.ThreadID;
+  FID := TTLoggerItemID.Create(AConnectionID);
   FEvent := AEvent;
   FValues := Copy(AValues, Low(AValues), Length(AValues));
 end;
@@ -246,14 +279,7 @@ begin
       try
         Log(FQueue.Dequeue);
       except
-        on E: Exception do
-        begin
-          try
-            Log(TTLoggerItem.Create(TTLoggerEvent.Error, E.Message));
-          except
-            // Thread should not crash in case of exception
-          end;
-        end;
+        // Thread should not crash in case of exception
       end;
     end;
 
@@ -268,14 +294,14 @@ end;
 procedure TTLoggerThread.Log(const AItem: TTLoggerItem);
 begin
   case AItem.Event of
-    TTLoggerEvent.StartTransaction: LogStartTransaction(AItem.ThreadID);
-    TTLoggerEvent.Commit: LogCommit(AItem.ThreadID);
-    TTLoggerEvent.Rollback: LogRollback(AItem.ThreadID);
+    TTLoggerEvent.StartTransaction: LogStartTransaction(AItem.ID);
+    TTLoggerEvent.Commit: LogCommit(AItem.ID);
+    TTLoggerEvent.Rollback: LogRollback(AItem.ID);
     TTLoggerEvent.Parameter:
-      LogParameter(AItem.ThreadID, AItem.Values[0], AItem.Values[1]);
-    TTLoggerEvent.Syntax: LogSyntax(AItem.ThreadID, AItem.Values[0]);
-    TTLoggerEvent.Command: LogCommand(AItem.ThreadID, AItem.Values[0]);
-    TTLoggerEvent.Error: LogError(AItem.ThreadID, AItem.Values[0]);
+      LogParameter(AItem.ID, AItem.Values[0], AItem.Values[1]);
+    TTLoggerEvent.Syntax: LogSyntax(AItem.ID, AItem.Values[0]);
+    TTLoggerEvent.Command: LogCommand(AItem.ID, AItem.Values[0]);
+    TTLoggerEvent.Error: LogError(AItem.ID, AItem.Values[0]);
   end;
 end;
 
@@ -319,34 +345,36 @@ begin
     LThread.AddLog( AItem);
 end;
 
-procedure TTLogger.LogStartTransaction;
+procedure TTLogger.LogStartTransaction(const AConnectionID: String);
 begin
-  Log(TTLoggerItem.Create(TTLoggerEvent.StartTransaction));
+  Log(TTLoggerItem.Create(AConnectionID, TTLoggerEvent.StartTransaction));
 end;
 
-procedure TTLogger.LogCommit;
+procedure TTLogger.LogCommit(const AConnectionID: String);
 begin
-  Log(TTLoggerItem.Create(TTLoggerEvent.Commit));
+  Log(TTLoggerItem.Create(AConnectionID, TTLoggerEvent.Commit));
 end;
 
-procedure TTLogger.LogRollback;
+procedure TTLogger.LogRollback(const AConnectionID: String);
 begin
-  Log(TTLoggerItem.Create(TTLoggerEvent.Rollback));
+  Log(TTLoggerItem.Create(AConnectionID, TTLoggerEvent.Rollback));
 end;
 
-procedure TTLogger.LogParameter(const AName: String; const AValue: String);
+procedure TTLogger.LogParameter(
+  const AConnectionID: String; const AName: String; const AValue: String);
 begin
-  Log(TTLoggerItem.Create(TTLoggerEvent.Parameter, [AName, AValue]));
+  Log(TTLoggerItem.Create(
+    AConnectionID, TTLoggerEvent.Parameter, [AName, AValue]));
 end;
 
-procedure TTLogger.LogSyntax(const ASyntax: String);
+procedure TTLogger.LogSyntax(const AConnectionID: String; const ASyntax: String);
 begin
-  Log(TTLoggerItem.Create(TTLoggerEvent.Syntax, ASyntax));
+  Log(TTLoggerItem.Create(AConnectionID, TTLoggerEvent.Syntax, ASyntax));
 end;
 
-procedure TTLogger.LogCommand(const ASyntax: String);
+procedure TTLogger.LogCommand(const AConnectionID: String; const ASyntax: String);
 begin
-  Log(TTLoggerItem.Create(TTLoggerEvent.Command, ASyntax));
+  Log(TTLoggerItem.Create(AConnectionID, TTLoggerEvent.Command, ASyntax));
 end;
 
 procedure TTLogger.RegisterLogger<T>;
