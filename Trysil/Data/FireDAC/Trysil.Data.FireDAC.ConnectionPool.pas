@@ -64,6 +64,7 @@ type
       const AName: String;
       const ADriver: String;
       const AParameters: TStrings);
+    procedure UnregisterConnection(const AName: String);
 
     property Config: TTFireDACConfigConnectionPool read FConfig;
 
@@ -156,6 +157,11 @@ begin
   finally
     LParameters.Free;
   end;
+end;
+
+procedure TTFireDACConnectionPool.UnregisterConnection(const AName: String);
+begin
+  FManager.DeleteConnectionDef(AName);
 end;
 
 end.

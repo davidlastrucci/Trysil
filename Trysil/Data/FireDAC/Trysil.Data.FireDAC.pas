@@ -121,6 +121,8 @@ type
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata;
       const AEntity: TObject): Integer; override;
+
+    class procedure UnregisterConnection(const AName: String);
   end;
 
 implementation
@@ -417,6 +419,11 @@ begin
     raise;
   end;
   result := LDataSet;
+end;
+
+class procedure TTFireDACConnection.UnregisterConnection(const AName: String);
+begin
+  TTFireDACConnectionPool.Instance.UnregisterConnection(AName);
 end;
 
 end.
