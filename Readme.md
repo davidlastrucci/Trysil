@@ -31,6 +31,10 @@ For further information:
 - [Simple sample](https://github.com/davidlastrucci/Trysil/blob/master/Docs/Sample.md)
 - [Run Simple Demo in Demos/Simple folder](https://github.com/davidlastrucci/Trysil/blob/master/Docs/RunSimpleDemo.md)
 
+#Trysil manuals
+- [English](https://www.lastrucci.net/trysil/trysil-en.pdf)
+- [Italiano](https://www.lastrucci.net/trysil/trysil-it.pdf)
+
 # Give it a star
 If you use my ORM, please, "star" this project in GitHub! It costs nothing but helps to reference the code.
 
