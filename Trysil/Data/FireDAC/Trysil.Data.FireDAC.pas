@@ -122,7 +122,7 @@ type
       const ATableMetadata: TTTableMetadata;
       const AEntity: TObject): Integer; override;
 
-    class procedure UnregisterConnection(const AName: String);
+    class procedure UnregisterConnection(const AName: String); virtual;
   end;
 
 implementation
