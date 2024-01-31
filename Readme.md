@@ -31,7 +31,7 @@ For further information:
 - [Simple sample](https://github.com/davidlastrucci/Trysil/blob/master/Docs/Sample.md)
 - [Run Simple Demo in Demos/Simple folder](https://github.com/davidlastrucci/Trysil/blob/master/Docs/RunSimpleDemo.md)
 
-#Trysil manuals
+# Trysil manuals
 - [English](https://www.lastrucci.net/trysil/trysil-en.pdf)
 - [Italiano](https://www.lastrucci.net/trysil/trysil-it.pdf)
 
