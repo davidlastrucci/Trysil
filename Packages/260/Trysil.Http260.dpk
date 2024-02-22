@@ -59,6 +59,9 @@ contains
   Trysil.Http.Log in '..\..\Trysil.Http\Log\Trysil.Http.Log.pas',
   Trysil.Http.Log.Threading in '..\..\Trysil.Http\Log\Trysil.Http.Log.Threading.pas',
   Trysil.Http.Log.Types in '..\..\Trysil.Http\Log\Trysil.Http.Log.Types.pas',
-  Trysil.Http.Log.Writer in '..\..\Trysil.Http\Log\Trysil.Http.Log.Writer.pas';
+  Trysil.Http.Log.Writer in '..\..\Trysil.Http\Log\Trysil.Http.Log.Writer.pas',
+  Trysil.Http.MultiTenant.Config in '..\..\Trysil.Http\MultiTenant\Trysil.Http.MultiTenant.Config.pas',
+  Trysil.Http.MultiTenant.Connection in '..\..\Trysil.Http\MultiTenant\Trysil.Http.MultiTenant.Connection.pas',
+  Trysil.Http.MultiTenant in '..\..\Trysil.Http\MultiTenant\Trysil.Http.MultiTenant.pas';
 
 end.

@@ -35,3 +35,23 @@ MSBuild ".\260\Trysil.Http260.dproj" /t:Build /p:Config=Debug /p:platform=Win32
 MSBuild ".\260\Trysil.Http260.dproj" /t:Build /p:Config=Release /p:platform=Win32
 MSBuild ".\260\Trysil.Http260.dproj" /t:Build /p:Config=Debug /p:platform=Win64
 MSBuild ".\260\Trysil.Http260.dproj" /t:Build /p:Config=Release /p:platform=Win64
+
+MSBuild ".\260\Trysil.Http.FirebirdSQL260.dproj" /t:Build /p:Config=Debug /p:platform=Win32
+MSBuild ".\260\Trysil.Http.FirebirdSQL260.dproj" /t:Build /p:Config=Release /p:platform=Win32
+MSBuild ".\260\Trysil.Http.FirebirdSQL260.dproj" /t:Build /p:Config=Debug /p:platform=Win64
+MSBuild ".\260\Trysil.Http.FirebirdSQL260.dproj" /t:Build /p:Config=Release /p:platform=Win64
+
+MSBuild ".\260\Trysil.Http.PostgreSQL260.dproj" /t:Build /p:Config=Debug /p:platform=Win32
+MSBuild ".\260\Trysil.Http.PostgreSQL260.dproj" /t:Build /p:Config=Release /p:platform=Win32
+MSBuild ".\260\Trysil.Http.PostgreSQL260.dproj" /t:Build /p:Config=Debug /p:platform=Win64
+MSBuild ".\260\Trysil.Http.PostgreSQL260.dproj" /t:Build /p:Config=Release /p:platform=Win64
+
+MSBuild ".\260\Trysil.Http.SQLite260.dproj" /t:Build /p:Config=Debug /p:platform=Win32
+MSBuild ".\260\Trysil.Http.SQLite260.dproj" /t:Build /p:Config=Release /p:platform=Win32
+MSBuild ".\260\Trysil.Http.SQLite260.dproj" /t:Build /p:Config=Debug /p:platform=Win64
+MSBuild ".\260\Trysil.Http.SQLite260.dproj" /t:Build /p:Config=Release /p:platform=Win64
+
+MSBuild ".\260\Trysil.Http.SqlServer260.dproj" /t:Build /p:Config=Debug /p:platform=Win32
+MSBuild ".\260\Trysil.Http.SqlServer260.dproj" /t:Build /p:Config=Release /p:platform=Win32
+MSBuild ".\260\Trysil.Http.SqlServer260.dproj" /t:Build /p:Config=Debug /p:platform=Win64
+MSBuild ".\260\Trysil.Http.SqlServer260.dproj" /t:Build /p:Config=Release /p:platform=Win64

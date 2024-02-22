@@ -6,7 +6,7 @@
         <FrameworkType>None</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Package</AppType>
     </PropertyGroup>
@@ -175,6 +175,9 @@
         <DCCReference Include="..\..\Trysil.Http\Log\Trysil.Http.Log.Threading.pas"/>
         <DCCReference Include="..\..\Trysil.Http\Log\Trysil.Http.Log.Types.pas"/>
         <DCCReference Include="..\..\Trysil.Http\Log\Trysil.Http.Log.Writer.pas"/>
+        <DCCReference Include="..\..\Trysil.Http\MultiTenant\Trysil.Http.MultiTenant.Config.pas"/>
+        <DCCReference Include="..\..\Trysil.Http\MultiTenant\Trysil.Http.MultiTenant.Connection.pas"/>
+        <DCCReference Include="..\..\Trysil.Http\MultiTenant\Trysil.Http.MultiTenant.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -216,13 +219,13 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\Lib\Win32\Release\Trysil.Http280.bpl" Configuration="Release" Class="ProjectOutput">
+                <DeployFile LocalName="..\..\Lib\280\Win32\Debug\Trysil.Http280.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>Trysil_Http280.bpl</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\Trysil.Http280.bpl" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="..\..\Lib\Win32\Release\Trysil.Http280.bpl" Configuration="Release" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>Trysil_Http280.bpl</RemoteName>
                         <Overwrite>true</Overwrite>

@@ -168,6 +168,9 @@
         <DCCReference Include="..\..\Trysil.Http\Log\Trysil.Http.Log.Threading.pas"/>
         <DCCReference Include="..\..\Trysil.Http\Log\Trysil.Http.Log.Types.pas"/>
         <DCCReference Include="..\..\Trysil.Http\Log\Trysil.Http.Log.Writer.pas"/>
+        <DCCReference Include="..\..\Trysil.Http\MultiTenant\Trysil.Http.MultiTenant.Config.pas"/>
+        <DCCReference Include="..\..\Trysil.Http\MultiTenant\Trysil.Http.MultiTenant.Connection.pas"/>
+        <DCCReference Include="..\..\Trysil.Http\MultiTenant\Trysil.Http.MultiTenant.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -210,7 +213,7 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\20.0\Bpl\Trysil.Http260.bpl" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="..\..\Lib\260\Win32\Debug\Trysil.Http260.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>Trysil_Http260.bpl</RemoteName>
                         <Overwrite>true</Overwrite>

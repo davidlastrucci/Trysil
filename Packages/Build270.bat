@@ -35,3 +35,23 @@ MSBuild ".\270\Trysil.Http270.dproj" /t:Build /p:Config=Debug /p:platform=Win32
 MSBuild ".\270\Trysil.Http270.dproj" /t:Build /p:Config=Release /p:platform=Win32
 MSBuild ".\270\Trysil.Http270.dproj" /t:Build /p:Config=Debug /p:platform=Win64
 MSBuild ".\270\Trysil.Http270.dproj" /t:Build /p:Config=Release /p:platform=Win64
+
+MSBuild ".\270\Trysil.Http.FirebirdSQL270.dproj" /t:Build /p:Config=Debug /p:platform=Win32
+MSBuild ".\270\Trysil.Http.FirebirdSQL270.dproj" /t:Build /p:Config=Release /p:platform=Win32
+MSBuild ".\270\Trysil.Http.FirebirdSQL270.dproj" /t:Build /p:Config=Debug /p:platform=Win64
+MSBuild ".\270\Trysil.Http.FirebirdSQL270.dproj" /t:Build /p:Config=Release /p:platform=Win64
+
+MSBuild ".\270\Trysil.Http.PostgreSQL270.dproj" /t:Build /p:Config=Debug /p:platform=Win32
+MSBuild ".\270\Trysil.Http.PostgreSQL270.dproj" /t:Build /p:Config=Release /p:platform=Win32
+MSBuild ".\270\Trysil.Http.PostgreSQL270.dproj" /t:Build /p:Config=Debug /p:platform=Win64
+MSBuild ".\270\Trysil.Http.PostgreSQL270.dproj" /t:Build /p:Config=Release /p:platform=Win64
+
+MSBuild ".\270\Trysil.Http.SQLite270.dproj" /t:Build /p:Config=Debug /p:platform=Win32
+MSBuild ".\270\Trysil.Http.SQLite270.dproj" /t:Build /p:Config=Release /p:platform=Win32
+MSBuild ".\270\Trysil.Http.SQLite270.dproj" /t:Build /p:Config=Debug /p:platform=Win64
+MSBuild ".\270\Trysil.Http.SQLite270.dproj" /t:Build /p:Config=Release /p:platform=Win64
+
+MSBuild ".\270\Trysil.Http.SqlServer270.dproj" /t:Build /p:Config=Debug /p:platform=Win32
+MSBuild ".\270\Trysil.Http.SqlServer270.dproj" /t:Build /p:Config=Release /p:platform=Win32
+MSBuild ".\270\Trysil.Http.SqlServer270.dproj" /t:Build /p:Config=Debug /p:platform=Win64
+MSBuild ".\270\Trysil.Http.SqlServer270.dproj" /t:Build /p:Config=Release /p:platform=Win64
