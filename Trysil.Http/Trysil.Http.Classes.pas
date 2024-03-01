@@ -118,6 +118,7 @@ type
     FTaskID: TTHttpTaskID;
     FRequestInfo: TIdHttpRequestInfo;
     FEncoding: TTHttpEncoding;
+    FHost: String;
     FControllerID: TTHttpControllerID;
     FParameters: TTHttpParameters;
     FJSonContent: TJSonValue;
@@ -137,6 +138,7 @@ type
     destructor Destroy; override;
 
     property TaskID: TTHttpTaskID read FTaskID;
+    property Host: String read FHost;
     property ControllerID: TTHttpControllerID read FControllerID;
     property UrlParams: String read GetUrlParams;
     property Parameters: TTHttpParameters read GetParameters;
@@ -323,6 +325,7 @@ begin
   FEncoding := TTHttpEncoding.Create;
   FControllerID := TTHttpControllerID.Create(
     FRequestInfo.Uri, FRequestInfo.CommandType);
+  FHost := FRequestInfo.Host;
   FParameters := nil;
   FJSonContent := nil;
   FHeaders := nil;

@@ -38,7 +38,6 @@ type
     constructor Create(const AConfig: TTTenantConfig); virtual;
 
     procedure AfterConstruction; override;
-    procedure BeforeDestruction; override;
 
     function CreateConnection: TTConnection;
   end;
@@ -57,12 +56,6 @@ procedure TTTenantConnection.AfterConstruction;
 begin
   inherited AfterConstruction;
   RegisterConnection;
-end;
-
-procedure TTTenantConnection.BeforeDestruction;
-begin
-  TTFireDACConnection.UnregisterConnection(FConfig.ConnectionName);
-  inherited BeforeDestruction;
 end;
 
 function TTTenantConnection.CreateConnection: TTConnection;
