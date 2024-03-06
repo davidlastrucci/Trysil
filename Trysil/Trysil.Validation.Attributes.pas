@@ -45,6 +45,7 @@ type
       const AColumnName: String;
       const AValue: TValue;
       const AErrors: TTValidationErrors): Boolean;
+    function NullableValueToString(const AValue: TValue): TValue;
     function GetErrorMessage(const AMessage: String): String;
   public
     constructor Create(const AErrorMessage: String);
@@ -333,6 +334,15 @@ begin
     result := AMessage;
 end;
 
+function TValidationAttribute.NullableValueToString(
+  const AValue: TValue): TValue;
+begin
+  if AValue.IsNullable then
+    result := TValue.From<String>(AValue.NullableValueToString)
+  else
+    result := AValue;
+end;
+
 { TRequiredAttribute }
 
 constructor TRequiredAttribute.Create;
@@ -411,9 +421,12 @@ procedure TLengthAttribute.Validate(
   const AColumnName: String;
   const AValue: TValue;
   const AErrors: TTValidationErrors);
+var
+  LValue: TValue;
 begin
-  if CheckType<String>(AColumnName, AValue, AErrors) and
-    (not IsValid(AValue.AsType<String>())) then
+  LValue := NullableValueToString(AValue);
+  if CheckType<String>(AColumnName, LValue, AErrors) and
+    (not IsValid(LValue.AsType<String>())) then
       AddValidationError(AColumnName, AErrors);
 end;
 
@@ -738,15 +751,17 @@ procedure TRegexAttribute.Validate(
   const AValue: TValue;
   const AErrors: TTValidationErrors);
 var
-  LValue: String;
+  LValue: TValue;
+  LString: String;
 begin
-  if CheckType<String>(AColumnName, AValue, AErrors) then
+  LValue := NullableValueToString(AValue);
+  if CheckType<String>(AColumnName, LValue, AErrors) then
   begin
-    LValue := AValue.AsType<String>();
-    if (not LValue.IsEmpty) and not TRegEx.IsMatch(LValue, FRegex) then
+    LString := LValue.AsType<String>();
+    if (not LString.IsEmpty) and not TRegEx.IsMatch(LString, FRegex) then
       AErrors.Add(
         AColumnName,
-        Format(GetErrorMessage(SRegexValidation), [AColumnName, LValue]));
+        Format(GetErrorMessage(SRegexValidation), [AColumnName, LString]));
   end;
 end;
 
