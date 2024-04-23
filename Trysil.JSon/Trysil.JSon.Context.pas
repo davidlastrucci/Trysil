@@ -47,6 +47,13 @@ type
     constructor Create(
       const AConnection: TTConnection;
       const AUseIdentityMap: Boolean); overload; override;
+    constructor Create(
+      const AReadConnection: TTConnection;
+      const AWriteConnection: TTConnection); overload; override;
+    constructor Create(
+      const AReadConnection: TTConnection;
+      const AWriteConnection: TTConnection;
+      const AUseIdentityMap: Boolean); overload; override;
 
     destructor Destroy; override;
 
@@ -75,13 +82,28 @@ implementation
 
 constructor TTJSonContext.Create(const AConnection: TTConnection);
 begin
-  Create(AConnection, False);
+  Create(AConnection, AConnection, False);
 end;
 
 constructor TTJSonContext.Create(
   const AConnection: TTConnection; const AUseIdentityMap: Boolean);
 begin
-  inherited Create(AConnection, AUseIdentityMap);
+  Create(AConnection, AConnection, AUseIdentityMap);
+end;
+
+constructor TTJSonContext.Create(
+  const AReadConnection: TTConnection;
+  const AWriteConnection: TTConnection);
+begin
+  Create(AReadConnection, AWriteConnection, False);
+end;
+
+constructor TTJSonContext.Create(
+  const AReadConnection: TTConnection;
+  const AWriteConnection: TTConnection;
+  const AUseIdentityMap: Boolean);
+begin
+  inherited Create(AReadConnection, AWriteConnection, AUseIdentityMap);
   if AUseIdentityMap then
     raise ETJSonException.Create(SNoIdentityMap);
 
@@ -90,7 +112,6 @@ begin
   FSerializer := TTJSonSerializer.Create;
   FDeserializer := TTJSonDeserializer.Create;
 end;
-
 
 destructor TTJSonContext.Destroy;
 begin

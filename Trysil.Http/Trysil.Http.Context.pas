@@ -45,7 +45,7 @@ implementation
 
 function TTHttpContext.CreateResolver: TTResolver;
 begin
-  result := TTHttpResolver.Create(FConnection, Self, FMetadata);
+  result := TTHttpResolver.Create(FWriteConnection, Self, FMetadata);
 end;
 
 function TTHttpContext.GetID<T>(const AEntity: T): TTPrimaryKey;

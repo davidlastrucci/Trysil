@@ -47,7 +47,8 @@ type
     function GetSupportTransaction: Boolean;
     function GetUseIdentityMap: Boolean;
   strict protected
-    FConnection: TTConnection;
+    FReadConnection: TTConnection;
+    FWriteConnection: TTConnection;
     FMetadata: TTMetadata;
     FProvider: TTProvider;
     FResolver: TTResolver;
@@ -58,6 +59,13 @@ type
     constructor Create(const AConnection: TTConnection); overload; virtual;
     constructor Create(
       const AConnection: TTConnection;
+      const AUseIdentityMap: Boolean); overload; virtual;
+    constructor Create(
+      const AReadConnection: TTConnection;
+      const AWriteConnection: TTConnection); overload; virtual;
+    constructor Create(
+      const AReadConnection: TTConnection;
+      const AWriteConnection: TTConnection;
       const AUseIdentityMap: Boolean); overload; virtual;
     destructor Destroy; override;
 
@@ -100,19 +108,35 @@ implementation
 
 constructor TTContext.Create(const AConnection: TTConnection);
 begin
-  Create(AConnection, True);
+  Create(AConnection, AConnection, True);
 end;
 
 constructor TTContext.Create(
   const AConnection: TTConnection; const AUseIdentityMap: Boolean);
 begin
-  inherited Create;
-  FConnection := AConnection;
+  Create(AConnection, AConnection, AUseIdentityMap);
+end;
 
-  FMetadata := TTMetadata.Create(FConnection);
+constructor TTContext.Create(
+  const AReadConnection: TTConnection;
+  const AWriteConnection: TTConnection);
+begin
+  Create(AReadConnection, AWriteConnection, True);
+end;
+
+constructor TTContext.Create(
+  const AReadConnection: TTConnection;
+  const AWriteConnection: TTConnection;
+  const AUseIdentityMap: Boolean);
+begin
+  inherited Create;
+  FReadConnection := AReadConnection;
+  FWriteConnection := AWriteConnection;
+
+  FMetadata := TTMetadata.Create(FReadConnection);
 
   FProvider := TTProvider.Create(
-    FConnection, Self, FMetadata, AUseIdentityMap);
+    FReadConnection, Self, FMetadata, AUseIdentityMap);
   FResolver := CreateResolver;
 end;
 
@@ -126,7 +150,7 @@ end;
 
 function TTContext.CreateResolver: TTResolver;
 begin
-  result := TTResolver.Create(FConnection, Self, FMetadata);
+  result := TTResolver.Create(FWriteConnection, Self, FMetadata);
 end;
 
 function TTContext.InLoading: Boolean;
@@ -136,12 +160,12 @@ end;
 
 function TTContext.GetInTransaction: Boolean;
 begin
-  result := FConnection.InTransaction;
+  result := FWriteConnection.InTransaction;
 end;
 
 function TTContext.GetSupportTransaction: Boolean;
 begin
-  result := FConnection.SupportTransaction;
+  result := FWriteConnection.SupportTransaction;
 end;
 
 function TTContext.GetUseIdentityMap: Boolean;
@@ -161,14 +185,14 @@ end;
 
 function TTContext.CreateTransaction: TTTransaction;
 begin
-  if not FConnection.SupportTransaction then
+  if not FWriteConnection.SupportTransaction then
     raise ETException.Create(STransactionNotSupported);
-  result := TTTransaction.Create(FConnection);
+  result := TTTransaction.Create(FWriteConnection);
 end;
 
 function TTContext.CreateSession<T>(const AList: TList<T>): TTSession<T>;
 begin
-  result := TTSession<T>.Create(FConnection, FProvider, FResolver, AList);
+  result := TTSession<T>.Create(FWriteConnection, FProvider, FResolver, AList);
 end;
 
 function TTContext.GetMetadata<T>(): TTTableMetadata;
@@ -215,7 +239,7 @@ var
 begin
   if Assigned(AApplyAllMethod) then
   begin
-    LTransaction := TTTransaction.Create(FConnection);
+    LTransaction := TTTransaction.Create(FWriteConnection);
     try
       try
         for LEntity in AList do
