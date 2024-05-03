@@ -82,6 +82,7 @@ type
     FFilter: TTFilter;
 
     function GetSQL: String; virtual;
+    function GetWhere: String;
   public
     constructor Create(
       const AConnection: TTConnection;
@@ -290,11 +291,36 @@ begin
 end;
 
 function TTSelectCountSyntax.GetSQL: String;
+var
+  LWhere: String;
 begin
   result := Format('SELECT COUNT(*) FROM %0:s', [
     FConnection.GetDatabaseObjectName(FTableMap.Name)]);
-  if not FFilter.Where.IsEmpty then
-    result := Format('%s WHERE %s', [result, FFilter.Where]);
+  LWhere := GetWhere;
+  if not LWhere.IsEmpty then
+    result := Format('%s WHERE %s', [result, LWhere]);
+end;
+
+function TTSelectCountSyntax.GetWhere: String;
+var
+  LResult: TStringBuilder;
+begin
+  LResult := TStringBuilder.Create;
+  try
+    if not FTableMap.WhereClause.IsEmpty then
+      LResult.AppendFormat('(%s)', [FTableMap.WhereClause]);
+
+    if not FFilter.Where.IsEmpty then
+    begin
+      if LResult.Length > 0 then
+        LResult.Append(' AND ');
+      LResult.AppendFormat('(%s)', [FFilter.Where]);
+    end;
+
+    result := LResult.ToString();
+  finally
+    LResult.Free;
+  end;
 end;
 
 { TTAbstractSyntax }
