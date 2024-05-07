@@ -147,16 +147,9 @@ end;
 
 function TTHttpUriParts.GetIntegerParam(
   const AIndex: Integer; const AParam: String; out AValue: Integer): Boolean;
-var
-  LValue: TJSonValue;
 begin
   if (AIndex = 0) and TTJSonSqids.Instance.UseSqids then
-  begin
-    result := TTJSonSqids.Instance.TryDecode(
-      TJSonString.Create(AParam), LValue);
-    if result then
-      AValue := LValue.GetValue<Integer>();
-  end
+    result := TTJSonSqids.Instance.TryDecode(AParam, AValue)
   else
     result := Integer.TryParse(AParam, AValue);
 end;

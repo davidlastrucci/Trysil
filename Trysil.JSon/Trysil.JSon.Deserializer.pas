@@ -95,7 +95,7 @@ begin
   begin
     LLazy := TTRttiLazy.Create(AObject);
     try
-      LLazy.ID := TTJSonSqids.Instance.Decode(LValue).GetValue<Integer>();
+      LLazy.ID := TTJSonSqids.Instance.Decode(LValue.ToString());
     finally
       LLazy.Free;
     end;
@@ -226,11 +226,13 @@ begin
         SetObjectValue(LName, LObject, AJSon);
       end;
     end
-    else if LColumnMap = LTableMap.PrimaryKey then
+    else if TTJSonSqids.Instance.UseSqids and
+      (LColumnMap = LTableMap.PrimaryKey) then
       SetValue(
         LColumnMap,
         AObject,
-        TTJSonSqids.Instance.Decode(AJSon.GetValue<TJSonValue>(LName, nil)))
+        TJSonNumber.Create(TTJSonSqids.Instance.Decode(
+          AJSon.GetValue<String>(LName, String.Empty))))
     else
       SetValue(LColumnMap, AObject, AJSon.GetValue<TJSonValue>(LName, nil));
   end;

@@ -14,11 +14,12 @@ interface
 
 uses
   System.SysUtils,
-  System.Classes,
 {$IF CompilerVersion >= 36} // Delphi 12 Athens
-  System.NetEncoding.Sqids,
+  System.Classes,
+  System.NetEncoding.Sqids;
+{$ELSE}
+  System.Classes;
 {$ENDIF}
-  System.JSon;
 
 type
 
@@ -32,7 +33,7 @@ type
     class destructor ClassDestroy;
 {$IF CompilerVersion >= 36} // Delphi 12 Athens
   strict private
-    const Alphabet: String = '8J2LD03ZR67AXESKWT4FQGM9PCBH1Y5IONVU';
+    const Alphabet: String = '8j2ld03zr67axeskwt4fqgm9pcbh1y5ionvu';
     const Length: Integer = 8;
   strict private
     FSqids: TSqidsEncoding;
@@ -47,10 +48,9 @@ type
     constructor Create;
     destructor Destroy; override;
 {$ENDIF}
-    function Decode(const AValue: TJSonValue): TJSonValue;
-    function TryDecode(
-      const AValue: TJSonValue; out AResult: TJSonValue): Boolean;
-    function Encode(const AValue: TJSonValue): TJSonValue;
+    function Decode(const AValue: String): Integer;
+    function TryDecode(const AValue: String; out AResult: Integer): Boolean;
+    function Encode(const AValue: Integer): String;
 
     property UseSqids: Boolean read GetUseSqids write SetUseSqids;
 
@@ -96,55 +96,40 @@ end;
 
 {$ENDIF}
 
-function TTJSonSqids.Decode(const AValue: TJSonValue): TJSonValue;
+function TTJSonSqids.Decode(const AValue: String): Integer;
 begin
 {$IF CompilerVersion >= 36} // Delphi 12 Athens
   if FUseSqids then
-    result := TJSonNumber.Create(
-      GetSqids().DecodeSingle(AValue.GetValue<String>().ToUpper()))
+    result := GetSqids().DecodeSingle(AValue.ToLower())
   else
-    result := AValue;
+    result := Integer.Parse(AValue);
 {$ELSE}
-  result := AValue;
+  result := Integer.Parse(AValue);
 {$ENDIF}
 end;
 
 function TTJSonSqids.TryDecode(
-  const AValue: TJSonValue; out AResult: TJSonValue): Boolean;
-{$IF CompilerVersion >= 36} // Delphi 12 Athens
-var
-  LResult: Integer;
-{$ENDIF}
+  const AValue: String; out AResult: Integer): Boolean;
 begin
 {$IF CompilerVersion >= 36} // Delphi 12 Athens
   if FUseSqids then
-  begin
-    result := GetSqids().TryDecodeSingle(
-      AValue.GetValue<String>().ToUpper(), LResult);
-    if result then
-      AResult := TJSonNumber.Create(LResult);
-  end
+    result := GetSqids().TryDecodeSingle(AValue.ToLower(), AResult)
   else
-  begin
-    AResult := AValue;
-    result := True;
-  end;
+    result := Integer.TryParse(AValue, AResult);
 {$ELSE}
-  AResult := AValue;
-  result := True;
+  result := Integer.TryParse(AValue, AResult);
 {$ENDIF}
 end;
 
-function TTJSonSqids.Encode(const AValue: TJSonValue): TJSonValue;
+function TTJSonSqids.Encode(const AValue: Integer): String;
 begin
 {$IF CompilerVersion >= 36} // Delphi 12 Athens
   if FUseSqids then
-    result := TJSonString.Create(
-      GetSqids().Encode(AValue.GetValue<Integer>()).ToLower())
+    result := GetSqids().Encode(AValue).ToLower()
   else
-    result := AValue;
+    result := AValue.ToString();
 {$ELSE}
-  result := AValue;
+  result := AValue.ToString();
 {$ENDIF}
 end;
 

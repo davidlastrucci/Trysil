@@ -102,8 +102,7 @@ begin
   LLazy := TTRttiLazy.Create(AObject);
   try
     AJSon.AddPair(
-      Format('%sID', [AName]),
-      TTJSonSqids.Instance.Encode(TJSonNumber.Create(LLazy.ID)));
+      Format('%sID', [AName]), TTJSonSqids.Instance.Encode(LLazy.ID));
   finally
     LLazy.Free;
   end;
@@ -230,9 +229,11 @@ begin
         AddLazyID(LObject, LName, AResult);
       LValue := GetJSonObjectOrArrayValue(LObject);
     end
-    else if LColumnMap = LTableMap.PrimaryKey then
-      LValue := TTJSonSqids.Instance.Encode(
-        GetJSonValue(LColumnMap.Member.GetValue(AObject)))
+    else if TTJSonSqids.Instance.UseSqids and
+      (LColumnMap = LTableMap.PrimaryKey) then
+      LValue := TJSonString.Create(
+        TTJSonSqids.Instance.Encode(
+          LColumnMap.Member.GetValue(AObject).AsType<Integer>))
     else
       LValue := GetJSonValue(LColumnMap.Member.GetValue(AObject));
 
