@@ -17,7 +17,9 @@ uses
   System.Classes,
   System.Generics.Collections,
   System.Rtti,
+  System.JSon,
   IdCustomHttpServer,
+  Trysil.JSon.Sqids,
 
   Trysil.Http.Consts,
   Trysil.Http.Exceptions;
@@ -40,6 +42,11 @@ type
   strict private
     FParts: TArray<String>;
     FParamsCount: Integer;
+
+    function GetIntegerParam(
+      const AIndex: Integer;
+      const AParam: String;
+      out AValue: Integer): Boolean;
   public
     constructor Create(const AUri: String);
 
@@ -110,29 +117,48 @@ end;
 function TTHttpUriParts.Equals(
   const AOther: TTHttpUriParts; const AParams: TList<Integer>): Boolean;
 var
-  LIndex: Integer;
+  LParamIndex, LIndex: Integer;
   LParam: Integer;
 begin
   if Assigned(AParams) then
     AParams.Clear;
+  LParamIndex := 0;
   result := (Low(Self.FParts) = Low(AOther.FParts)) and
     (High(Self.FParts) = High(AOther.FParts));
   if result then
     for LIndex := Low(Self.FParts) to High(Self.FParts) do
     begin
-      result := (Self.FParts[LIndex] = AOther.FParts[LIndex]);
+      result := (Self.FParts[LIndex].Equals(AOther.FParts[LIndex]));
       if not result then
       begin
         if Self.FParts[LIndex].Equals('?') then
-          result := Integer.TryParse(AOther.FParts[LIndex], LParam)
+          result := GetIntegerParam(LParamIndex, AOther.FParts[LIndex], LParam)
         else if AOther.FParts[LIndex].Equals('?') then
-          result := Integer.TryParse(Self.FParts[LIndex], LParam);
+          result := GetIntegerParam(LParamIndex, Self.FParts[LIndex], LParam);
         if result and Assigned(AParams) then
           AParams.Add(LParam);
+
+        Inc(LParamIndex);
       end;
       if not result then
         Break;
     end;
+end;
+
+function TTHttpUriParts.GetIntegerParam(
+  const AIndex: Integer; const AParam: String; out AValue: Integer): Boolean;
+var
+  LValue: TJSonValue;
+begin
+  if (AIndex = 0) and TTJSonSqids.Instance.UseSqids then
+  begin
+    result := TTJSonSqids.Instance.TryDecode(
+      TJSonString.Create(AParam), LValue);
+    if result then
+      AValue := LValue.GetValue<Integer>();
+  end
+  else
+    result := Integer.TryParse(AParam, AValue);
 end;
 
 { TTHttpControllerID }

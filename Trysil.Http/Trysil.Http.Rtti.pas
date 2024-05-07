@@ -19,6 +19,7 @@ uses
   System.TypInfo,
   System.Rtti,
   Trysil.Rtti,
+  Trysil.JSon.Sqids,
 
   Trysil.Http.Consts,
   Trysil.Http.Exceptions,
@@ -400,7 +401,7 @@ begin
     for LParameter in LParameters do
     begin
       result := (LParameter.ParamType.TypeKind = TTypeKind.tkInteger);
-      if result then
+      if not result then
         Break;
     end;
 end;

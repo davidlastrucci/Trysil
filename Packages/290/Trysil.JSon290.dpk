@@ -41,6 +41,7 @@ contains
   Trysil.JSon.Rtti in '..\..\Trysil.JSon\Trysil.JSon.Rtti.pas',
   Trysil.JSon.Serializer.Classes in '..\..\Trysil.JSon\Trysil.JSon.Serializer.Classes.pas',
   Trysil.JSon.Serializer in '..\..\Trysil.JSon\Trysil.JSon.Serializer.pas',
+  Trysil.JSon.Sqids in '..\..\Trysil.JSon\Trysil.JSon.Sqids.pas',
   Trysil.JSon.Types in '..\..\Trysil.JSon\Trysil.JSon.Types.pas';
 
 end.

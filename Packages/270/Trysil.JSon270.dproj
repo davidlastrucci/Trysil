@@ -143,6 +143,7 @@
         <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Rtti.pas"/>
         <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Serializer.Classes.pas"/>
         <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Serializer.pas"/>
+        <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Sqids.pas"/>
         <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Types.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

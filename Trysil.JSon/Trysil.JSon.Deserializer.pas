@@ -25,6 +25,7 @@ uses
   Trysil.JSon.Types,
   Trysil.JSon.Rtti,
   Trysil.JSon.Events,
+  Trysil.JSon.Sqids,
   Trysil.JSon.Deserializer.Classes;
 
 type
@@ -86,16 +87,15 @@ procedure TTJSonDeserializer.SetLazyID(
   const AObject: TObject;
   const AJSon: TJSonValue);
 var
-  LValue: TTPrimaryKey;
+  LValue: TJSonValue;
   LLazy: TTRttiLazy;
 begin
-  LValue := AJSon.GetValue<TTPrimaryKey>(
-    Format('%sID', [GetName(AName)]), TTPrimaryKey.MinValue);
-  if LValue > TTPrimaryKey.MinValue then
+  LValue := AJSon.GetValue<TJSonValue>(Format('%sID', [GetName(AName)]), nil);
+  if Assigned(LValue) then
   begin
     LLazy := TTRttiLazy.Create(AObject);
     try
-      LLazy.ID := LValue;
+      LLazy.ID := TTJSonSqids.Instance.Decode(LValue).GetValue<Integer>();
     finally
       LLazy.Free;
     end;
@@ -226,6 +226,11 @@ begin
         SetObjectValue(LName, LObject, AJSon);
       end;
     end
+    else if LColumnMap = LTableMap.PrimaryKey then
+      SetValue(
+        LColumnMap,
+        AObject,
+        TTJSonSqids.Instance.Decode(AJSon.GetValue<TJSonValue>(LName, nil)))
     else
       SetValue(LColumnMap, AObject, AJSon.GetValue<TJSonValue>(LName, nil));
   end;

@@ -26,6 +26,7 @@ uses
   Trysil.JSon.Types,
   Trysil.JSon.Rtti,
   Trysil.JSon.Events,
+  Trysil.JSon.Sqids,
   Trysil.JSon.Serializer.Classes;
 
 type
@@ -100,7 +101,9 @@ var
 begin
   LLazy := TTRttiLazy.Create(AObject);
   try
-    AJSon.AddPair(Format('%sID', [AName]), TJSonNumber.Create(LLazy.ID));
+    AJSon.AddPair(
+      Format('%sID', [AName]),
+      TTJSonSqids.Instance.Encode(TJSonNumber.Create(LLazy.ID)));
   finally
     LLazy.Free;
   end;
@@ -227,6 +230,9 @@ begin
         AddLazyID(LObject, LName, AResult);
       LValue := GetJSonObjectOrArrayValue(LObject);
     end
+    else if LColumnMap = LTableMap.PrimaryKey then
+      LValue := TTJSonSqids.Instance.Encode(
+        GetJSonValue(LColumnMap.Member.GetValue(AObject)))
     else
       LValue := GetJSonValue(LColumnMap.Member.GetValue(AObject));
 
