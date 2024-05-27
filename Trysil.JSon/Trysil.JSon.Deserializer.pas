@@ -208,6 +208,7 @@ var
   LColumnMap: TTColumnMap;
   LName: String;
   LObject: TObject;
+  LJSonNumber: TJSonNumber;
 begin
   LTableMap := TTMapper.Instance.Load(AObject.ClassInfo);
   for LColumnMap in LTableMap.Columns do
@@ -228,11 +229,15 @@ begin
     end
     else if TTJSonSqids.Instance.UseSqids and
       (LColumnMap = LTableMap.PrimaryKey) then
-      SetValue(
-        LColumnMap,
-        AObject,
-        TJSonNumber.Create(TTJSonSqids.Instance.Decode(
-          AJSon.GetValue<String>(LName, String.Empty))))
+    begin
+      LJSonNumber := TJSonNumber.Create(TTJSonSqids.Instance.Decode(
+        AJSon.GetValue<String>(LName, String.Empty)));
+      try
+        SetValue(LColumnMap, AObject, LJSonNumber);
+      finally
+        LJSonNumber.Free;
+      end;
+    end
     else
       SetValue(LColumnMap, AObject, AJSon.GetValue<TJSonValue>(LName, nil));
   end;
