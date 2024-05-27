@@ -210,12 +210,35 @@ end;
 procedure TTHttpCors.AddCorsHeaders(
   const AUri: String; const AResponse: TTHttpResponse);
 var
+  LUris: TArray<String>;
+  LLength, LIndex, LIdx: Integer;
+  LUri: String;
   LController: TTHttpCorsController;
 begin
-  if FControllers.TryGetValue(AUri, LController) then
+  LUris := AUri.Split(['/']);
+  LLength := Length(LUris);
+  LIndex := LLength - 1;
+
+  LUri := AUri;
+  while True do
   begin
-    AddAllowHeaders(LController, AResponse);
-    AddAllowMethods(LController, AResponse);
+    if FControllers.TryGetValue(LUri, LController) then
+    begin
+      AddAllowHeaders(LController, AResponse);
+      AddAllowMethods(LController, AResponse);
+      Break;
+    end
+    else
+    begin
+      LUris[LIndex] := '?';
+      Dec(LIndex);
+      if LIndex < 0 then
+        Break;
+
+      LUri := String.Empty;
+      for LIdx := 1 to LLength - 1 do
+        LUri := Format('%s/%s', [LUri, LUris[LIdx]]);
+    end;
   end;
 end;
 
