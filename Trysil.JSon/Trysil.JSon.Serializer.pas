@@ -231,9 +231,8 @@ begin
     end
     else if TTJSonSqids.Instance.UseSqids and
       (LColumnMap = LTableMap.PrimaryKey) then
-      LValue := TJSonString.Create(
-        TTJSonSqids.Instance.Encode(
-          LColumnMap.Member.GetValue(AObject).AsType<Integer>))
+      LValue := TTJSonSqids.Instance.Encode(
+        LColumnMap.Member.GetValue(AObject).AsType<Integer>)
     else
       LValue := GetJSonValue(LColumnMap.Member.GetValue(AObject));
 

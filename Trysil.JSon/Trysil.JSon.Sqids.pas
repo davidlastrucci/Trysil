@@ -14,11 +14,12 @@ interface
 
 uses
   System.SysUtils,
-{$IF CompilerVersion >= 36} // Delphi 12 Athens
   System.Classes,
+{$IF CompilerVersion >= 36} // Delphi 12 Athens
+  System.JSon,
   System.NetEncoding.Sqids;
 {$ELSE}
-  System.Classes;
+  System.JSon;
 {$ENDIF}
 
 type
@@ -50,7 +51,7 @@ type
 {$ENDIF}
     function Decode(const AValue: String): Integer;
     function TryDecode(const AValue: String; out AResult: Integer): Boolean;
-    function Encode(const AValue: Integer): String;
+    function Encode(const AValue: Integer): TJSonValue;
 
     property UseSqids: Boolean read GetUseSqids write SetUseSqids;
 
@@ -121,15 +122,15 @@ begin
 {$ENDIF}
 end;
 
-function TTJSonSqids.Encode(const AValue: Integer): String;
+function TTJSonSqids.Encode(const AValue: Integer): TJSonValue;
 begin
 {$IF CompilerVersion >= 36} // Delphi 12 Athens
   if FUseSqids then
-    result := GetSqids().Encode(AValue).ToLower()
+    result := TJSonString.Create(GetSqids().Encode(AValue).ToLower())
   else
-    result := AValue.ToString();
+    result := TJSonNumber.Create(AValue);
 {$ELSE}
-  result := AValue.ToString();
+  result := TJSonNumber.Create(AValue);
 {$ENDIF}
 end;
 
