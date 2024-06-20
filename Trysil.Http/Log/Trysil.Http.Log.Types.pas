@@ -74,6 +74,7 @@ type
   TTHttpLogRequest = record
   strict private
     FTaskID: TTHttpTaskID;
+    FHost: String;
     FDateTime: TDateTime;
     FUri: String;
     FParams: TTHttpLogNameValues;
@@ -87,6 +88,7 @@ type
     function ToJSon: String;
 
     property TaskID: TTHttpTaskID read FTaskID;
+    property Host: String read FHost;
     property DateTime: TDateTime read FDateTime;
     property Uri: String read FUri;
     property Params: TTHttpLogNameValues read FParams;
@@ -264,6 +266,7 @@ end;
 constructor TTHttpLogRequest.Create(const ARequest: TTHttpRequest);
 begin
   FTaskID := ARequest.TaskID;
+  FHost := ARequest.Host;
   FDateTime := TTimeZone.Local.ToUniversalTime(Now);
   FUri := ARequest.ControllerID.Uri;
   FParams := TTHttpLogNameValues.Create(ARequest.Parameters);
