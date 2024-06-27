@@ -55,7 +55,6 @@ resourcestring
   SColumnNotFound = 'Column %0:s not found.';
   SRelationError = '"%0:s" is currently in use, unable to delete.';
   SColumnTypeError = 'Column non registered for type %0:s.';
-  SBlobParameterValue = 'Value for blob parameter is not accessible.';
   SParameterTypeError = 'Parameter non registered for type %0:s.';
   STableMapNotFound = 'TableMap for class %0:s not found';
   SPrimaryKeyNotDefined = 'Primary key not defined for class %0:s';

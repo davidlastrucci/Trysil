@@ -51,18 +51,20 @@ type
     procedure SetAsDateTime(const Value: TDateTime); virtual; abstract;
     function GetAsGuid: TGUID; virtual; abstract;
     procedure SetAsGuid(const Value: TGUID); virtual; abstract;
+    procedure SetAsBytes(const Value: TBytes); virtual; abstract;
   public
     procedure Clear; virtual; abstract;
 
     property Name: String read GetName;
     property Size: Integer read GetSize;
-    property AsString: String read GetAsString write SetAsString;
-    property AsInteger: Integer read GetAsInteger write SetAsInteger;
-    property AsLargeInt: Int64 read GetAsLargeInt write SetAsLargeInt;
-    property AsDouble: Double read GetAsDouble write SetAsDouble;
-    property AsBoolean: Boolean read GetAsBoolean write SetAsBoolean;
-    property AsDateTime: TDateTime read GetAsDateTime write SetAsDateTime;
-    property AsGuid: TGUID read GetAsGuid write SetAsGuid;
+    property AsString: String write SetAsString;
+    property AsInteger: Integer write SetAsInteger;
+    property AsLargeInt: Int64 write SetAsLargeInt;
+    property AsDouble: Double write SetAsDouble;
+    property AsBoolean: Boolean write SetAsBoolean;
+    property AsDateTime: TDateTime write SetAsDateTime;
+    property AsGuid: TGUID write SetAsGuid;
+    property AsBytes: TBytes write SetAsBytes;
   end;
 
 { TTReader }

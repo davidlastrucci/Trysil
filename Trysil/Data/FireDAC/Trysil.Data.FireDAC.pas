@@ -60,6 +60,7 @@ type
     procedure SetAsDateTime(const AValue: TDateTime); override;
     function GetAsGuid: TGUID; override;
     procedure SetAsGuid(const AValue: TGUID); override;
+    procedure SetAsBytes(const AValue: TBytes); override;
   public
     constructor Create(const AParam: TFDParam);
 
@@ -218,6 +219,20 @@ end;
 procedure TTFDParam.SetAsGuid(const AValue: TGUID);
 begin
   FParam.AsGUID := AValue;
+end;
+
+procedure TTFDParam.SetAsBytes(const AValue: TBytes);
+var
+  LStream: TMemoryStream;
+begin
+  LStream := TMemoryStream.Create;
+  try
+    LStream.Write(AValue, Length(AValue));
+    LStream.Position := 0;
+    FParam.LoadFromStream(LStream, FParam.DataType);
+  finally
+    LStream.Free;
+  end;
 end;
 
 { TTFireDACDriver }
