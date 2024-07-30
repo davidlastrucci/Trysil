@@ -161,7 +161,8 @@ function TTJSonDateTimeSerializer.ToJSon(const AValue: TTValue): TJSonValue;
 begin
   // TODO: DateTime format
   result := TJSonString.Create(
-    DateToISO8601(AValue.AsType<TDateTime>(), True));
+    DateToISO8601(
+      TTimeZone.Local.ToUniversalTime(AValue.AsType<TDateTime>()), True));
 end;
 
 { TTJSonGuidSerializer }
