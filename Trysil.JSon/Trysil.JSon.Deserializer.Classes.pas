@@ -160,7 +160,6 @@ end;
 
 function TTJSonDateTimeDeserializer.FromJSon(const AJSon: TJSonValue): TTValue;
 begin
-  // TODO: DateTime format
   result := TTValue.From<TDateTime>(
     TTimeZone.Local.ToLocalTime(ISO8601ToDate(AJSon.AsType<String>(), True)));
 end;
