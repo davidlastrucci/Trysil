@@ -212,6 +212,7 @@ procedure TTJSonSerializer.ColumnsToJSonObject(
 var
   LTableMap: TTTableMap;
   LColumnMap: TTColumnMap;
+  LJSonIgnore: TJSonIgnoreAttribute;
   LName: String;
   LObject: TObject;
   LValue: TJSonValue;
@@ -219,8 +220,8 @@ begin
   LTableMap := TTMapper.Instance.Load(AObject.ClassInfo);
   for LColumnMap in LTableMap.Columns do
   begin
-    if not Assigned(
-      LColumnMap.Member.RttiType.GetAttribute<TJSonIgnoreAttribute>()) then
+    LJSonIgnore := LColumnMap.Member.GetAttribute<TJSonIgnoreAttribute>();
+    if not Assigned(LJSonIgnore) then
     begin
       LName := GetName(LColumnMap.Member.Name);
 

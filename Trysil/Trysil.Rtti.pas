@@ -97,6 +97,8 @@ type
     procedure SetID(const AObject: TObject; const AID: TTValue);
 
     function GetIsNullable: Boolean;
+
+    function GetAttributes: TArray<TCustomAttribute>; virtual; abstract;
   public
     constructor Create(const AName: String);
 
@@ -116,6 +118,8 @@ type
 
     procedure CloneLazyID(const AClone: TObject; const AOriginal: TObject);
 
+    function GetAttribute<T: TCustomAttribute>: T;
+
     property Name: String read FName;
     property RttiType: TRttiType read FRttiType;
     property IsClass: Boolean read FIsClass;
@@ -127,6 +131,8 @@ type
   TTRttiField = class(TTRttiMember)
   strict private
     FRttiField: TRttiField;
+  strict protected
+    function GetAttributes: TArray<TCustomAttribute>; override;
   public
     constructor Create(const ARttiField: TRttiField);
 
@@ -140,6 +146,8 @@ type
   TTRttiProperty = class(TTRttiMember)
   strict private
     FRttiProperty: TRttiProperty;
+  strict protected
+    function GetAttributes: TArray<TCustomAttribute>; override;
   public
     constructor Create(const ARttiProperty: TRttiProperty);
 
@@ -543,6 +551,19 @@ begin
   result := String(FTypeInfo.Name).StartsWith('TTNullable<');
 end;
 
+function TTRttiMember.GetAttribute<T>: T;
+var
+  LAttribute: TCustomAttribute;
+begin
+  result := nil;
+  for LAttribute in GetAttributes do
+    if LAttribute is T then
+    begin
+      result := T(LAttribute);
+      Break;
+    end;
+end;
+
 { TTRttiField }
 
 constructor TTRttiField.Create(const ARttiField: TRttiField);
@@ -569,6 +590,11 @@ begin
     LValue := AValue;
 
   FRttiField.SetValue(AInstance, LValue);
+end;
+
+function TTRttiField.GetAttributes: TArray<TCustomAttribute>;
+begin
+  result := FRttiField.GetAttributes;
 end;
 
 { TTRttiProperty }
@@ -599,6 +625,11 @@ begin
     LValue := AValue;
 
   FRttiProperty.SetValue(AInstance, LValue);
+end;
+
+function TTRttiProperty.GetAttributes: TArray<TCustomAttribute>;
+begin
+  result := FRttiProperty.GetAttributes;
 end;
 
 { TTRttiLazy }
