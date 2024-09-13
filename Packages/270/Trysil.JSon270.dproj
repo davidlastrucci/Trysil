@@ -134,6 +134,7 @@
         </DelphiCompile>
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="Trysil270.dcp"/>
+        <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Attributes.pas"/>
         <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Consts.pas"/>
         <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Context.pas"/>
         <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Deserializer.Classes.pas"/>

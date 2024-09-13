@@ -23,6 +23,7 @@ uses
   Trysil.Mapping,
   Trysil.Metadata,
 
+  Trysil.JSon.Attributes,
   Trysil.JSon.Types,
   Trysil.JSon.Rtti,
   Trysil.JSon.Events,
@@ -218,26 +219,30 @@ begin
   LTableMap := TTMapper.Instance.Load(AObject.ClassInfo);
   for LColumnMap in LTableMap.Columns do
   begin
-    LName := GetName(LColumnMap.Member.Name);
-
-    if LColumnMap.Member.IsNullable then
-      LValue := GetJSonNullableValue(LColumnMap.Member.GetValue(AObject))
-    else if LColumnMap.Member.IsClass then
+    if not Assigned(
+      LColumnMap.Member.RttiType.GetAttribute<TJSonIgnoreAttribute>()) then
     begin
-      LObject := LColumnMap.Member.GetValue(AObject).AsObject;
-      if TTRttiLazy.IsLazy(LObject) then
-        AddLazyID(LObject, LName, AResult);
-      LValue := GetJSonObjectOrArrayValue(LObject);
-    end
-    else if TTJSonSqids.Instance.UseSqids and
-      (LColumnMap = LTableMap.PrimaryKey) then
-      LValue := TTJSonSqids.Instance.Encode(
-        LColumnMap.Member.GetValue(AObject).AsType<Integer>)
-    else
-      LValue := GetJSonValue(LColumnMap.Member.GetValue(AObject));
+      LName := GetName(LColumnMap.Member.Name);
 
-    if Assigned(LValue) then
-      AResult.AddPair(LName, LValue);
+      if LColumnMap.Member.IsNullable then
+        LValue := GetJSonNullableValue(LColumnMap.Member.GetValue(AObject))
+      else if LColumnMap.Member.IsClass then
+      begin
+        LObject := LColumnMap.Member.GetValue(AObject).AsObject;
+        if TTRttiLazy.IsLazy(LObject) then
+          AddLazyID(LObject, LName, AResult);
+        LValue := GetJSonObjectOrArrayValue(LObject);
+      end
+      else if TTJSonSqids.Instance.UseSqids and
+        (LColumnMap = LTableMap.PrimaryKey) then
+        LValue := TTJSonSqids.Instance.Encode(
+          LColumnMap.Member.GetValue(AObject).AsType<Integer>)
+      else
+        LValue := GetJSonValue(LColumnMap.Member.GetValue(AObject));
+
+      if Assigned(LValue) then
+        AResult.AddPair(LName, LValue);
+    end;
   end;
 end;
 

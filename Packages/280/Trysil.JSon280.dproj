@@ -148,6 +148,7 @@
         </DelphiCompile>
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="Trysil280.dcp"/>
+        <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Attributes.pas"/>
         <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Consts.pas"/>
         <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Context.pas"/>
         <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Deserializer.Classes.pas"/>
@@ -200,13 +201,13 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\Lib\Win32\Release\Trysil.JSon280.bpl" Configuration="Release" Class="ProjectOutput">
+                <DeployFile LocalName="..\..\Lib\280\Win32\Debug\Trysil.JSon280.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>Trysil_JSon280.bpl</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\Trysil.JSon280.bpl" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="..\..\Lib\Win32\Release\Trysil.JSon280.bpl" Configuration="Release" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>Trysil_JSon280.bpl</RemoteName>
                         <Overwrite>true</Overwrite>
