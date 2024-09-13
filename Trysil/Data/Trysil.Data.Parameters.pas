@@ -257,6 +257,9 @@ begin
     SetValueFromObject(LValue.AsObject)
   else
   begin
+    if LValue.Kind = TTypeKind.tkEnumeration then
+      LValue := LValue.AsOrdinal;
+
     LParamValue := LValue.AsType<Integer>();
     FParam.AsInteger := LParamValue;
   end;

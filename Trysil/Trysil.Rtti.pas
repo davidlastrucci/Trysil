@@ -560,8 +560,15 @@ begin
 end;
 
 procedure TTRttiField.SetValue(const AInstance: TObject; const AValue: TTValue);
+var
+  LValue: TTValue;
 begin
-  FRttiField.SetValue(AInstance, AValue);
+  if FRttiField.FieldType.TypeKind = TTypeKind.tkEnumeration then
+    LValue := TValue.FromOrdinal(FRttiField.FieldType.Handle, AValue.AsOrdinal)
+  else
+    LValue := AValue;
+
+  FRttiField.SetValue(AInstance, LValue);
 end;
 
 { TTRttiProperty }
@@ -582,8 +589,16 @@ end;
 
 procedure TTRttiProperty.SetValue(
   const AInstance: TObject; const AValue: TTValue);
+var
+  LValue: TTValue;
 begin
-  FRttiProperty.SetValue(AInstance, AValue);
+  if FRttiProperty.PropertyType.TypeKind = TTypeKind.tkEnumeration then
+    LValue := TValue.FromOrdinal(
+      FRttiProperty.PropertyType.Handle, AValue.AsOrdinal)
+  else
+    LValue := AValue;
+
+  FRttiProperty.SetValue(AInstance, LValue);
 end;
 
 { TTRttiLazy }
