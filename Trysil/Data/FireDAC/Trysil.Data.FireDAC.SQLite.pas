@@ -154,6 +154,8 @@ begin
       LParameters.Add(Format('User_Name=%s', [AUserName]));
       LParameters.Add(Format('Password=%s', [APassword]));
     end;
+    LParameters.Add('LockingMode=Normal');
+
     RegisterConnection(AName, LParameters);
   finally
     LParameters.Free;
