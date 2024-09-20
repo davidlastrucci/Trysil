@@ -89,14 +89,14 @@ type
   TTHttpTaskID = record
   strict private
     FID: String;
-    FThreadID: Cardinal;
+    FThreadID: TThreadID;
   public
     class function NewID: TTHttpTaskID; static;
 
     function ToString: String;
 
     property ID: String read FID;
-    property ThreadID: Cardinal read FThreadID;
+    property ThreadID: TThreadID read FThreadID;
   end;
 
 implementation
