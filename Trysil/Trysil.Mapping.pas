@@ -17,6 +17,7 @@ uses
   System.SysUtils,
   System.TypInfo,
   System.Rtti,
+  Data.DB,
 
   Trysil.Consts,
   Trysil.Types,
@@ -259,6 +260,41 @@ type
     function GetEnumerator(): TTListEnumerator<TTTableEventMethodMap>;
   end;
 
+{ TTWhereParameterMap }
+
+  TTWhereParameterMap = class
+  strict private
+    FName: String;
+    FDataType: TFieldType;
+    FSize: Integer;
+    FValue: TTValue;
+  public
+    constructor Create(
+      const AName: String;
+      const ADataType: TFieldType;
+      const ASize: Integer;
+      const AValue: TTValue); overload;
+
+    property Name: String read FName;
+    property DataType: TFieldType read FDataType;
+    property Size: Integer read FSize;
+    property Value: TTValue read FValue;
+  end;
+
+{ TTWhereParametersMap }
+
+  TTWhereParametersMap = class
+  strict private
+    FParameters: TTObjectList<TTWhereParameterMap>;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure Add(const AWhereParameterMap: TTWhereParameterMap);
+
+    function GetEnumerator(): TTListEnumerator<TTWhereParameterMap>;
+  end;
+
 { TTTableMap }
 
   TTTableMap = class
@@ -269,6 +305,7 @@ type
     FName: String;
     FSequenceName: String;
     FWhereClause: String;
+    FWhereParameters: TTWhereParametersMap;
     FPrimaryKey: TTColumnMap;
     FVersionColumn: TTColumnMap;
     FColumns: TTColumnsMap;
@@ -309,6 +346,7 @@ type
     property Name: String read FName;
     property SequenceName: String read FSequenceName;
     property WhereClause: String read FWhereClause;
+    property WhereParameters: TTWhereParametersMap read FWhereParameters;
     property PrimaryKey: TTColumnMap read FPrimaryKey;
     property VersionColumn: TTColumnMap read FVersionColumn;
     property Columns: TTColumnsMap read FColumns;
@@ -691,6 +729,47 @@ begin
   result := TTListEnumerator<TTTableEventMethodMap>.Create(FMethods);
 end;
 
+{ TTWhereParameterMap }
+
+constructor TTWhereParameterMap.Create(
+  const AName: String;
+  const ADataType: TFieldType;
+  const ASize: Integer;
+  const AValue: TTValue);
+begin
+  inherited Create;
+  FName := AName;
+  FDataType := ADataType;
+  FSize := ASize;
+  FValue := AValue;
+end;
+
+{ TTWhereParametersMap }
+
+constructor TTWhereParametersMap.Create;
+begin
+  inherited Create;
+  FParameters := TTObjectList<TTWhereParameterMap>.Create(True);
+end;
+
+destructor TTWhereParametersMap.Destroy;
+begin
+  FParameters.Free;
+  inherited Destroy;
+end;
+
+procedure TTWhereParametersMap.Add(
+  const AWhereParameterMap: TTWhereParameterMap);
+begin
+  FParameters.Add(AWhereParameterMap);
+end;
+
+function TTWhereParametersMap.GetEnumerator:
+  TTListEnumerator<TTWhereParameterMap>;
+begin
+  result := TTListEnumerator<TTWhereParameterMap>.Create(FParameters);
+end;
+
 { TTTableMap }
 
 constructor TTTableMap.Create(
@@ -767,6 +846,13 @@ begin
       SetSequenceName(TSequenceAttribute(LAttribute).Name)
     else if LAttribute is TWhereClauseAttribute then
       SetWhereClause(TWhereClauseAttribute(LAttribute).Where)
+    else if LAttribute is TWhereClauseParameterAttribute then
+      FWhereParameters.Add(
+        TTWhereParameterMap.Create(
+          TWhereClauseParameterAttribute(LAttribute).Name,
+          TWhereClauseParameterAttribute(LAttribute).DataType,
+          TWhereClauseParameterAttribute(LAttribute).Size,
+          TWhereClauseParameterAttribute(LAttribute).Value))
     else if LAttribute is TRelationAttribute then
       FRelations.Add(
         TTRelationMap.Create(

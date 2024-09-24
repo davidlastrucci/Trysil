@@ -304,11 +304,17 @@ end;
 function TTSelectCountSyntax.GetWhere: String;
 var
   LResult: TStringBuilder;
+  LParameter: TTWhereParameterMap;
 begin
   LResult := TStringBuilder.Create;
   try
     if not FTableMap.WhereClause.IsEmpty then
+    begin
       LResult.AppendFormat('(%s)', [FTableMap.WhereClause]);
+      for LParameter in FTableMap.WhereParameters do
+        FFilter.AddParameter(
+          LParameter.Name, LParameter.DataType, LParameter.Size, LParameter.Value);
+    end;
 
     if not FFilter.Where.IsEmpty then
     begin
@@ -395,11 +401,17 @@ end;
 function TTSelectSyntax.GetWhere: String;
 var
   LResult: TStringBuilder;
+  LParameter: TTWhereParameterMap;
 begin
   LResult := TStringBuilder.Create;
   try
     if not FTableMap.WhereClause.IsEmpty then
+    begin
       LResult.AppendFormat('(%s)', [FTableMap.WhereClause]);
+      for LParameter in FTableMap.WhereParameters do
+        FFilter.AddParameter(
+          LParameter.Name, LParameter.DataType, LParameter.Size, LParameter.Value);
+    end;
 
     if not FFilter.Where.IsEmpty then
     begin

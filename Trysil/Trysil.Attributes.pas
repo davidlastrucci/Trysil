@@ -14,7 +14,10 @@ interface
 
 uses
   System.SysUtils,
-  System.Classes;
+  System.Classes,
+  Data.DB,
+
+  Trysil.Rtti;
 
 type
 
@@ -89,6 +92,40 @@ type
     property Where: String read FWhere;
   end;
 
+{ TWhereClauseParameterAttribute }
+
+  TWhereClauseParameterAttribute = class(TCustomAttribute)
+  strict private
+    FName: String;
+    FDataType: TFieldType;
+    FSize: Integer;
+    FValue: TTValue;
+
+    constructor Create(
+      const AName: String;
+      const ADataType: TFieldType;
+      const ASize: Integer;
+      const AValue: TTValue); overload;
+  public
+    constructor Create(
+      const AName: String; const AValue: String); overload;
+    constructor Create(
+      const AName: String; const AValue: Integer); overload;
+    constructor Create(
+      const AName: String; const AValue: Int64); overload;
+    constructor Create(
+      const AName: String; const AValue: Double); overload;
+    constructor Create(
+      const AName: String; const AValue: Boolean); overload;
+    constructor Create(
+      const AName: String; const AValue: TDateTime); overload;
+
+    property Name: String read FName;
+    property DataType: TFieldType read FDataType;
+    property Size: Integer read FSize;
+    property Value: TTValue read FValue;
+  end;
+
 implementation
 
 { TNamedAttribute }
@@ -127,6 +164,58 @@ constructor TWhereClauseAttribute.Create(const AWhere: String);
 begin
   inherited Create;
   FWhere := AWhere;
+end;
+
+{ TWhereClauseParameterAttribute }
+
+constructor TWhereClauseParameterAttribute.Create(
+  const AName: String;
+  const ADataType: TFieldType;
+  const ASize: Integer;
+  const AValue: TTValue);
+begin
+  inherited Create;
+  FName := AName;
+  FDataType := ADataType;
+  FSize := ASize;
+  FValue := AValue;
+end;
+
+constructor TWhereClauseParameterAttribute.Create(
+  const AName: String; const AValue: String);
+begin
+  Create(
+    AName, TFieldType.ftWideString, AValue.Length, TTValue.From<String>(AValue));
+end;
+
+constructor TWhereClauseParameterAttribute.Create(
+  const AName: String; const AValue: Integer);
+begin
+  Create(AName, TFieldType.ftInteger, 0, TTValue.From<Integer>(AValue));
+end;
+
+constructor TWhereClauseParameterAttribute.Create(
+  const AName: String; const AValue: Int64);
+begin
+  Create(AName, TFieldType.ftLargeint, 0, TTValue.From<Int64>(AValue));
+end;
+
+constructor TWhereClauseParameterAttribute.Create(
+  const AName: String; const AValue: Double);
+begin
+  Create(AName, TFieldType.ftFloat, 0, TTValue.From<Double>(AValue));
+end;
+
+constructor TWhereClauseParameterAttribute.Create(
+  const AName: String; const AValue: Boolean);
+begin
+  Create(AName, TFieldType.ftBoolean, 0, TTValue.From<Boolean>(AValue));
+end;
+
+constructor TWhereClauseParameterAttribute.Create(
+  const AName: String; const AValue: TDateTime);
+begin
+  Create(AName, TFieldType.ftDateTime, 0, TTValue.From<TDateTime>(AValue));
 end;
 
 end.
