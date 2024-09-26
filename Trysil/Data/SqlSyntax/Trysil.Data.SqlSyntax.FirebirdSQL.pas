@@ -32,8 +32,7 @@ type
 
   TTFirebirdSQLSelectSyntax = class(TTSelectSyntax)
   strict protected
-    function InternalGetSqlSyntax(
-      const AWhereColumns: TArray<TTColumnMap>): String; override;
+    function GetSQL: String; override;
 
     function GetFilterPagingSyntax(): String; override;
   end;
@@ -66,8 +65,7 @@ end;
 
 { TTFirebirdSQLSelectSyntax }
 
-function TTFirebirdSQLSelectSyntax.InternalGetSqlSyntax(
-  const AWhereColumns: TArray<TTColumnMap>): String;
+function TTFirebirdSQLSelectSyntax.GetSQL: String;
 var
   LResult: TStringBuilder;
 begin

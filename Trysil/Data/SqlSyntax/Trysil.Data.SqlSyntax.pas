@@ -23,7 +23,6 @@ uses
   Trysil.Filter,
   Trysil.Exceptions,
   Trysil.Rtti,
-  Trysil.Metadata,
   Trysil.Mapping,
   Trysil.Events.Abstract,
   Trysil.Data.Parameters;
@@ -73,26 +72,48 @@ type
 
   TTCheckExistsSyntaxClass = class of TTCheckExistsSyntax;
 
-{ TTSelectCountSyntax }
+{ TTAbstractSelectSyntax }
 
-  TTSelectCountSyntax = class
+  TTAbstractSelectSyntax = class abstract
   strict protected
     FConnection: TTConnection;
     FTableMap: TTTableMap;
     FFilter: TTFilter;
 
-    function GetSQL: String; virtual;
     function GetWhere: String;
   public
     constructor Create(
       const AConnection: TTConnection;
       const ATableMap: TTTableMap;
       const AFilter: TTFilter);
+  end;
 
+{ TTSelectCountSyntax }
+
+  TTSelectCountSyntax = class(TTAbstractSelectSyntax)
+  strict protected
+    function GetSQL: String; virtual;
+  public
     property SQL: String read GetSQL;
   end;
 
   TTSelectCountSyntaxClass = class of TTSelectCountSyntax;
+
+{ TTSelectSyntax }
+
+  TTSelectSyntax = class abstract(TTAbstractSelectSyntax)
+  strict private
+  strict protected
+    function GetColumns: String; virtual;
+    function GetOrderBy: String; virtual;
+
+    function GetSQL: String; virtual;
+    function GetFilterPagingSyntax: String; virtual;
+  public
+    property SQL: String read GetSQL;
+  end;
+
+  TTSelectSyntaxClass = class of TTSelectSyntax;
 
 { TTAbstractSqlSyntax }
 
@@ -100,44 +121,13 @@ type
   strict protected
     FConnection: TTConnection;
     FTableMap: TTTableMap;
-    FTableMetadata: TTTableMetadata;
 
     function InternalGetSqlSyntax(
       const AWhereColumns: TArray<TTColumnMap>): String; virtual; abstract;
   public
     constructor Create(
-      const AConnection: TTConnection;
-      const ATableMap: TTTableMap;
-      const ATableMetadata: TTTableMetadata);
+      const AConnection: TTConnection; const ATableMap: TTTableMap);
   end;
-
-{ TTSelectSyntax }
-
-  TTSelectSyntax = class abstract(TTAbstractSyntax)
-  strict private
-    function GetSQL: String;
-  strict protected
-    FFilter: TTFilter;
-
-    function GetColumns: String; virtual;
-    function GetWhere: String; virtual;
-    function GetOrderBy: String; virtual;
-
-    function InternalGetSqlSyntax(
-      const AWhereColumns: TArray<TTColumnMap>): String; override;
-
-    function GetFilterPagingSyntax: String; virtual;
-  public
-    constructor Create(
-      const AConnection: TTConnection;
-      const ATableMap: TTTableMap;
-      const ATableMetadata: TTTableMetadata;
-      const AFilter: TTFilter);
-
-    property SQL: String read GetSQL;
-  end;
-
-  TTSelectSyntaxClass = class of TTSelectSyntax;
 
 { TTMetadataSyntax }
 
@@ -146,9 +136,7 @@ type
     function GetFilterPagingSyntax: String; override;
   public
     constructor Create(
-      const AConnection: TTConnection;
-      const ATableMap: TTTableMap;
-      const ATableMetadata: TTTableMetadata);
+      const AConnection: TTConnection; const ATableMap: TTTableMap);
   end;
 
   TTMetadataSyntaxClass = class of TTMetadataSyntax;
@@ -158,9 +146,7 @@ type
   TTCommandSyntax = class abstract(TTAbstractSyntax)
   public
     constructor Create(
-      const AConnection: TTConnection;
-      const ATableMap: TTTableMap;
-      const ATableMetadata: TTTableMetadata);
+      const AConnection: TTConnection; const ATableMap: TTTableMap);
 
     function GetSqlSyntax(const AWhereColumns: TArray<TTColumnMap>): String;
   end;
@@ -277,9 +263,9 @@ begin
     FID]);
 end;
 
-{ TTSelectCountSyntax }
+{ TTAbstractSelectSyntax }
 
-constructor TTSelectCountSyntax.Create(
+constructor TTAbstractSelectSyntax.Create(
   const AConnection: TTConnection;
   const ATableMap: TTTableMap;
   const AFilter: TTFilter);
@@ -290,18 +276,7 @@ begin
   FFilter := AFilter;
 end;
 
-function TTSelectCountSyntax.GetSQL: String;
-var
-  LWhere: String;
-begin
-  result := Format('SELECT COUNT(*) FROM %0:s', [
-    FConnection.GetDatabaseObjectName(FTableMap.Name)]);
-  LWhere := GetWhere;
-  if not LWhere.IsEmpty then
-    result := Format('%s WHERE %s', [result, LWhere]);
-end;
-
-function TTSelectCountSyntax.GetWhere: String;
+function TTAbstractSelectSyntax.GetWhere: String;
 var
   LResult: TStringBuilder;
   LParameter: TTWhereParameterMap;
@@ -329,30 +304,20 @@ begin
   end;
 end;
 
-{ TTAbstractSyntax }
+{ TTSelectCountSyntax }
 
-constructor TTAbstractSyntax.Create(
-  const AConnection: TTConnection;
-  const ATableMap: TTTableMap;
-  const ATableMetadata: TTTableMetadata);
+function TTSelectCountSyntax.GetSQL: String;
+var
+  LWhere: String;
 begin
-  inherited Create;
-  FConnection := AConnection;
-  FTableMap := ATableMap;
-  FTableMetadata := ATableMetadata;
+  result := Format('SELECT COUNT(*) FROM %0:s', [
+    FConnection.GetDatabaseObjectName(FTableMap.Name)]);
+  LWhere := GetWhere;
+  if not LWhere.IsEmpty then
+    result := Format('%s WHERE %s', [result, LWhere]);
 end;
 
 { TTSelectSyntax }
-
-constructor TTSelectSyntax.Create(
-  const AConnection: TTConnection;
-  const ATableMap: TTTableMap;
-  const ATableMetadata: TTTableMetadata;
-  const AFilter: TTFilter);
-begin
-  inherited Create(AConnection, ATableMap, ATableMetadata);
-  FFilter := AFilter;
-end;
 
 function TTSelectSyntax.GetColumns: String;
 var
@@ -398,36 +363,7 @@ begin
   end;
 end;
 
-function TTSelectSyntax.GetWhere: String;
-var
-  LResult: TStringBuilder;
-  LParameter: TTWhereParameterMap;
-begin
-  LResult := TStringBuilder.Create;
-  try
-    if not FTableMap.WhereClause.IsEmpty then
-    begin
-      LResult.AppendFormat('(%s)', [FTableMap.WhereClause]);
-      for LParameter in FTableMap.WhereParameters do
-        FFilter.AddParameter(
-          LParameter.Name, LParameter.DataType, LParameter.Size, LParameter.Value);
-    end;
-
-    if not FFilter.Where.IsEmpty then
-    begin
-      if LResult.Length > 0 then
-        LResult.Append(' AND ');
-      LResult.AppendFormat('(%s)', [FFilter.Where]);
-    end;
-
-    result := LResult.ToString();
-  finally
-    LResult.Free;
-  end;
-end;
-
-function TTSelectSyntax.InternalGetSqlSyntax(
-  const AWhereColumns: TArray<TTColumnMap>): String;
+function TTSelectSyntax.GetSQL: String;
 var
   LResult: TStringBuilder;
   LWhere: String;
@@ -451,20 +387,22 @@ begin
   end;
 end;
 
-function TTSelectSyntax.GetSQL: String;
+{ TTAbstractSyntax }
+
+constructor TTAbstractSyntax.Create(
+  const AConnection: TTConnection; const ATableMap: TTTableMap);
 begin
-  result := InternalGetSqlSyntax([]);
+  inherited Create;
+  FConnection := AConnection;
+  FTableMap := ATableMap;
 end;
 
 { TTMetadataSyntax }
 
 constructor TTMetadataSyntax.Create(
-  const AConnection: TTConnection;
-  const ATableMap: TTTableMap;
-  const ATableMetadata: TTTableMetadata);
+  const AConnection: TTConnection; const ATableMap: TTTableMap);
 begin
-  inherited Create(
-    AConnection, ATableMap, ATableMetadata, TTFilter.Create('0 = 1'));
+  inherited Create(AConnection, ATableMap, TTFilter.Create('0 = 1'));
 end;
 
 function TTMetadataSyntax.GetFilterPagingSyntax: string;
@@ -475,11 +413,9 @@ end;
 { TTCommandSyntax }
 
 constructor TTCommandSyntax.Create(
-  const AConnection: TTConnection;
-  const ATableMap: TTTableMap;
-  const ATableMetadata: TTTableMetadata);
+  const AConnection: TTConnection; const ATableMap: TTTableMap);
 begin
-  inherited Create(AConnection, ATableMap, ATableMetadata);
+  inherited Create(AConnection, ATableMap);
 end;
 
 function TTCommandSyntax.GetSqlSyntax(
@@ -648,7 +584,7 @@ end;
 
 constructor TTDeleteCascadeSyntax.Create;
 begin
-  inherited Create(nil, nil, nil);
+  inherited Create(nil, nil);
 end;
 
 function TTDeleteCascadeSyntax.GetSqlSyntax: String;

@@ -305,8 +305,7 @@ var
   LDataset: TDataset;
   LIndex: Integer;
 begin
-  LSyntax := FSyntaxClasses.Metadata.Create(
-    Self, ATableMap, ATableMetadata);
+  LSyntax := FSyntaxClasses.Metadata.Create(Self, ATableMap);
   try
     LDataset := CreateDataSet(LSyntax.SQL, TTFilter.Empty);
     try
@@ -379,7 +378,7 @@ begin
   inherited Create(ATableMap);
   FConnection := AConnection;
   FSyntax := AConnection.SyntaxClasses.Select.Create(
-    AConnection, ATableMap, ATableMetadata, AFilter);
+    AConnection, ATableMap, AFilter);
   FFilter := AFilter;
 end;
 
@@ -482,8 +481,7 @@ procedure TTGenericInsertCommand.Execute(
 var
   LSyntax: TTCommandSyntax;
 begin
-  LSyntax := FConnection.SyntaxClasses.Insert.Create(
-    FConnection, FTableMap, FTableMetadata);
+  LSyntax := FConnection.SyntaxClasses.Insert.Create(FConnection, FTableMap);
   try
     ExecuteCommand(
       LSyntax.GetSqlSyntax([]),
@@ -503,8 +501,7 @@ procedure TTGenericUpdateCommand.Execute(
 var
   LSyntax: TTCommandSyntax;
 begin
-  LSyntax := FConnection.SyntaxClasses.Update.Create(
-    FConnection, FTableMap, FTableMetadata);
+  LSyntax := FConnection.SyntaxClasses.Update.Create(FConnection, FTableMap);
   try
     ExecuteCommand(
       LSyntax.GetSqlSyntax(GetWhereColumns),
@@ -552,8 +549,7 @@ procedure TTGenericDeleteCommand.Execute(
 var
   LSyntax: TTCommandSyntax;
 begin
-  LSyntax := FConnection.SyntaxClasses.Delete.Create(
-    FConnection, FTableMap, FTableMetadata);
+  LSyntax := FConnection.SyntaxClasses.Delete.Create(FConnection, FTableMap);
   try
     ExecuteCommand(
       LSyntax.GetSqlSyntax(GetWhereColumns),
