@@ -781,6 +781,8 @@ begin
 
   FName := String.Empty;
   FSequenceName := String.Empty;
+  FWhereClause := String.Empty;
+  FWhereParameters := TTWhereParametersMap.Create;
   FPrimaryKey := nil;
   FVersionColumn := nil;
   FColumns := TTColumnsMap.Create;
@@ -799,6 +801,7 @@ begin
   FRelations.Free;
   FDetailColumns.Free;
   FColumns.Free;
+  FWhereParameters.Free;
   inherited Destroy;
 end;
 
