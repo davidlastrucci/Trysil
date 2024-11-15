@@ -83,6 +83,7 @@ type
       const AResult: TTList<T>; const AFilter: TTFilter);
 
     function Get<T: class>(const AID: TTPrimaryKey): T;
+    function TryGet<T: class>(const AID: TTPrimaryKey; out AEntity: T): Boolean;
 
     procedure Refresh<T: class>(const AEntity: T);
 
@@ -219,6 +220,12 @@ end;
 function TTContext.Get<T>(const AID: TTPrimaryKey): T;
 begin
   result := FProvider.Get<T>(AID);
+end;
+
+function TTContext.TryGet<T>(const AID: TTPrimaryKey; out AEntity: T): Boolean;
+begin
+  AEntity := Get<T>(AID);
+  result := Assigned(AEntity);
 end;
 
 procedure TTContext.Refresh<T>(const AEntity: T);
