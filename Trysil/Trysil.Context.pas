@@ -86,6 +86,7 @@ type
     function TryGet<T: class>(const AID: TTPrimaryKey; out AEntity: T): Boolean;
 
     procedure Refresh<T: class>(const AEntity: T);
+    function OldEntity<T: class>(const AEntity: T): T;
 
     procedure Validate<T: class>(const AEntity: T);
 
@@ -231,6 +232,17 @@ end;
 procedure TTContext.Refresh<T>(const AEntity: T);
 begin
   FProvider.Refresh<T>(AEntity);
+end;
+
+function TTContext.OldEntity<T>(const AEntity: T): T;
+begin
+  result := CloneEntity<T>(AEntity);
+  try
+    Refresh<T>(result);
+  except
+    result.Free;
+    raise;
+  end;
 end;
 
 procedure TTContext.Validate<T>(const AEntity: T);

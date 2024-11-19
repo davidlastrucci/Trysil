@@ -61,17 +61,7 @@ end;
 function TTEvent<T>.GetOldEntity: T;
 begin
   if not Assigned(FOldEntity) then
-  begin
-    FOldEntity := FContext.CloneEntity<T>(FEntity);
-    try
-      FContext.Refresh<T>(FOldEntity);
-    except
-      FOldEntity.Free;
-      FOldEntity := nil;
-      raise;
-    end;
-  end;
-
+    FOldEntity := FContext.OldEntity<T>(FEntity);
   result := FOldEntity;
 end;
 
