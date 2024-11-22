@@ -29,14 +29,16 @@ type
     FDirectory: String;
     FProjectName: String;
     FJWTSecret: String;
+    FPasswordSecret: String;
 
-    function CalculateRandomSecret: String;
+    function CalculateRandomSecret(const ALength: Integer): String;
   public
     procedure AfterConstruction; override;
 
     property Directory: String read FDirectory write FDirectory;
     property ProjectName: String read FProjectName write FProjectName;
-    property JWTSecret: String read FJWTSecret write FJWTSecret;
+    property JWTSecret: String read FJWTSecret;
+    property PasswordSecret: String read FPasswordSecret;
   end;
 
 { TTApiRestAPIParameters }
@@ -90,16 +92,18 @@ type
   strict private
     FProject: TTApiRestProjectParameters;
     FAPI: TTApiRestAPIParameters;
+    FLogDatabase: TTApiRestDatabaseParameters;
     FService: TTApiRestServiceParameters;
-    FDatabase: TTApiRestDatabaseParameters;
+    FTenantDatabase: TTApiRestDatabaseParameters;
   public
     constructor Create;
     destructor Destroy; override;
 
     property Project: TTApiRestProjectParameters read FProject;
     property API: TTApiRestAPIParameters read FAPI;
+    property LogDatabase: TTApiRestDatabaseParameters read FLogDatabase;
     property Service: TTApiRestServiceParameters read FService;
-    property Database: TTApiRestDatabaseParameters read FDatabase;
+    property TenantDatabase: TTApiRestDatabaseParameters read FTenantDatabase;
   end;
 
 { TTAPIRestCreator }
@@ -129,15 +133,17 @@ implementation
 procedure TTApiRestProjectParameters.AfterConstruction;
 begin
   inherited AfterConstruction;
-  FJWTSecret := CalculateRandomSecret;
+  FJWTSecret := CalculateRandomSecret(60);
+  FPasswordSecret := CalculateRandomSecret(35);
 end;
 
-function TTApiRestProjectParameters.CalculateRandomSecret: String;
+function TTApiRestProjectParameters.CalculateRandomSecret(
+  const ALength: Integer): String;
 var
   LIndex, LChar: Integer;
 begin
   result := String.Empty;
-  for LIndex := 0 to 60 do
+  for LIndex := 0 to ALength - 1 do
   begin
     LChar := 33 + Random(94);
     if LChar = 39 then
@@ -153,14 +159,16 @@ begin
   inherited Create;
   FProject := TTApiRestProjectParameters.Create;
   FAPI := TTApiRestAPIParameters.Create;
+  FLogDatabase := TTApiRestDatabaseParameters.Create;
   FService := TTApiRestServiceParameters.Create;
-  FDatabase := TTApiRestDatabaseParameters.Create;
+  FTenantDatabase := TTApiRestDatabaseParameters.Create;
 end;
 
 destructor TTApiRestParameters.Destroy;
 begin
-  FDatabase.Free;
+  FTenantDatabase.Free;
   FService.Free;
+  FLogDatabase.Free;
   FAPI.Free;
   FProject.Free;
   inherited Destroy;
@@ -197,7 +205,7 @@ begin
   end;
 
   AFileName := AFileName.Replace(
-    '{{ProjectName}}', FParameters.Project.ProjectName, [rfReplaceAll]);
+    '{{Project.Name}}', FParameters.Project.ProjectName, [rfReplaceAll]);
 end;
 
 function TTAPIRestCreator.IsTextFile(const AFileName: String): Boolean;
@@ -216,20 +224,25 @@ end;
 function TTAPIRestCreator.ModifySourceLine(const ALine: String): String;
 begin
   result := ALine
-    .Replace('{{ProjectGuid}}', TGuid.NewGuid.ToString, [rfReplaceAll, rfIgnoreCase])
-    .Replace('{{ProjectName}}', FParameters.Project.ProjectName, [rfReplaceAll, rfIgnoreCase])
-    .Replace('{{ProjectName_}}', FParameters.Project.ProjectName.Replace('.', '_', [rfReplaceAll]), [rfReplaceAll, rfIgnoreCase])
-    .Replace('{{JWTSecret}}', FParameters.Project.JWTSecret, [rfReplaceAll, rfIgnoreCase])
-    .Replace('{{BaseUri}}', FParameters.API.BaseUri, [rfReplaceAll, rfIgnoreCase])
-    .Replace('{{Port}}', FParameters.API.Port.ToString, [rfReplaceAll, rfIgnoreCase])
-    .Replace('{{ServiceName}}', FParameters.Service.Name, [rfReplaceAll, rfIgnoreCase])
-    .Replace('{{ServiceDisplayName}}', FParameters.Service.DisplayName, [rfReplaceAll, rfIgnoreCase])
-    .Replace('{{ServiceDescription}}', FParameters.Service.Description, [rfReplaceAll, rfIgnoreCase])
-    .Replace('{{Database_ConnectionName}}', FParameters.Database.ConnectionName, [rfReplaceAll, rfIgnoreCase])
-    .Replace('{{Database_Host}}', FParameters.Database.Host, [rfReplaceAll, rfIgnoreCase])
-    .Replace('{{Database_Username}}', FParameters.Database.Username, [rfReplaceAll, rfIgnoreCase])
-    .Replace('{{Database_Password}}', FParameters.Database.Password, [rfReplaceAll, rfIgnoreCase])
-    .Replace('{{Database_DatabaseName}}', FParameters.Database.DatabaseName, [rfReplaceAll, rfIgnoreCase]);
+    .Replace('{{Project.Guid}}', TGuid.NewGuid.ToString, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{Project.Name}}', FParameters.Project.ProjectName, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{JWT.Secret}}', FParameters.Project.JWTSecret, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{Password.Secret}}', FParameters.Project.PasswordSecret, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{Api.BaseUri}}', FParameters.API.BaseUri, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{Api.Port}}', FParameters.API.Port.ToString, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{Log.ConnectionName}}', FParameters.LogDatabase.ConnectionName, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{Log.Host}}', FParameters.LogDatabase.Host, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{Log.Username}}', FParameters.LogDatabase.Username, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{Log.Password}}', FParameters.LogDatabase.Password, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{Log.DatabaseName}}', FParameters.LogDatabase.DatabaseName, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{Service.Name}}', FParameters.Service.Name, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{Service.DisplayName}}', FParameters.Service.DisplayName, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{Service.Description}}', FParameters.Service.Description, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{Tenant.ConnectionName}}', FParameters.TenantDatabase.ConnectionName, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{Tenant.Host}}', FParameters.TenantDatabase.Host, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{Tenant.Username}}', FParameters.TenantDatabase.Username, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{Tenant.Password}}', FParameters.TenantDatabase.Password, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{Tenant.DatabaseName}}', FParameters.TenantDatabase.DatabaseName, [rfReplaceAll, rfIgnoreCase]);
 end;
 
 function TTAPIRestCreator.ModifySourceText(const ABytes: TBytes): String;

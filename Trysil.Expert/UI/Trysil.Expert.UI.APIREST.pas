@@ -30,9 +30,13 @@ uses
 
   Trysil.Expert.Validator,
   Trysil.Expert.UI.Themed,
-  Trysil.Expert.APIRestCreator;
+  Trysil.Expert.APIRestCreator, Vcl.Imaging.pngimage;
 
 type
+
+{ TWizardPageEnabled }
+
+  TWizardPageEnabled = function: Boolean of object;
 
 { TWizardPageCheck }
 
@@ -44,6 +48,7 @@ type
   strict private
     FPage: TPanel;
     FControl: TWinControl;
+    FEnabled: TWizardPageEnabled;
     FCheck: TWizardPageCheck;
 
     function GetVisible: Boolean;
@@ -52,8 +57,10 @@ type
     constructor Create(
       const APage: TPanel;
       const AControl: TWinControl;
+      const AEnabled: TWizardPageEnabled;
       const ACheck: TWizardPageCheck);
 
+    function Enabled: Boolean;
     function Check: Boolean;
     procedure SetFocus;
 
@@ -112,18 +119,30 @@ type
     ServiceDisplayNameTextbox: TEdit;
     ServiceDescriptionLabel: TLabel;
     ServiceDescriptionTextbox: TEdit;
-    DatabasePagePanel: TPanel;
-    DatabasePageGroupBox: TGroupBox;
-    DBConnectionNameLabel: TLabel;
-    DBHostLabel: TLabel;
-    DBConnectionNameTextbox: TEdit;
-    DBHostTextbox: TEdit;
-    DBUsernameLabel: TLabel;
-    DBUsernameTextbox: TEdit;
-    DBPasswordLabel: TLabel;
-    DBPasswordTextbox: TEdit;
-    DBDatabaseNameLabel: TLabel;
-    DBDatabaseNameTextbox: TEdit;
+    TenantDatabasePagePanel: TPanel;
+    TenantDatabasePageGroupBox: TGroupBox;
+    TenantConnectionNameLabel: TLabel;
+    TenantHostLabel: TLabel;
+    TenantConnectionNameTextbox: TEdit;
+    TenantHostTextbox: TEdit;
+    TenantUsernameLabel: TLabel;
+    TenantUsernameTextbox: TEdit;
+    TenantPasswordLabel: TLabel;
+    TenantPasswordTextbox: TEdit;
+    TenantDatabaseNameLabel: TLabel;
+    TenantDatabaseNameTextbox: TEdit;
+    LogDatabasePagePanel: TPanel;
+    LogDatabasePageGroupBox: TGroupBox;
+    LogConnectionNameLabel: TLabel;
+    LogHostLabel: TLabel;
+    LogConnectionNameTextbox: TEdit;
+    LogHostTextbox: TEdit;
+    LogUsernameLabel: TLabel;
+    LogUsernameTextbox: TEdit;
+    LogPasswordLabel: TLabel;
+    LogPasswordTextbox: TEdit;
+    LogDatabaseNameLabel: TLabel;
+    LogDatabaseNameTextbox: TEdit;
     BackButton: TButton;
     NextButton: TButton;
     FinishButton: TButton;
@@ -140,8 +159,10 @@ type
 
     function CheckProject: Boolean;
     function CheckAPI: Boolean;
+    function LogDatabaseEnabled: Boolean;
+    function CheckLogDatabase: Boolean;
     function CheckService: Boolean;
-    function CheckDatabase: Boolean;
+    function CheckTenantDatabase: Boolean;
   public
     constructor Create; reintroduce;
     destructor Destroy; override;
@@ -160,11 +181,21 @@ implementation
 constructor TTWizardPage.Create(
   const APage: TPanel;
   const AControl: TWinControl;
+  const AEnabled: TWizardPageEnabled;
   const ACheck: TWizardPageCheck);
 begin
   FPage := APage;
   FControl := AControl;
+  FEnabled := AEnabled;
   FCheck := ACheck;
+end;
+
+function TTWizardPage.Enabled: Boolean;
+begin
+  if Assigned(FEnabled) then
+    result := FEnabled
+  else
+    result := True;
 end;
 
 function TTWizardPage.Check: Boolean;
@@ -240,6 +271,8 @@ begin
     try
       FPages[FIndex].Visible := False;
       FIndex := LIndex;
+      while not FPages[FIndex].Enabled do
+        FIndex := FIndex - 1;
       FPages[FIndex].Visible := True;
       FPages[FIndex].SetFocus;
     finally
@@ -261,6 +294,8 @@ begin
       try
         FPages[FIndex].Visible := False;
         FIndex := LIndex;
+        while not FPages[FIndex].Enabled do
+          FIndex := FIndex + 1;
         FPages[FIndex].Visible := True;
         FPages[FIndex].SetFocus;
       finally
@@ -288,13 +323,21 @@ procedure TTAPIRestForm.AfterConstruction;
 begin
   inherited AfterConstruction;
   FWizard.AddPage(TTWizardPage.Create(
-    ProjectPagePanel, ProjectDirectoryTextbox, CheckProject));
+    ProjectPagePanel, ProjectDirectoryTextbox, nil, CheckProject));
   FWizard.AddPage(TTWizardPage.Create(
-    APIPagePanel, APIBaseUriTextbox, CheckAPI));
+    APIPagePanel, APIBaseUriTextbox, nil, CheckAPI));
   FWizard.AddPage(TTWizardPage.Create(
-    ServicePagePanel, ServiceNameTextbox, CheckService));
+    LogDatabasePagePanel,
+    LogConnectionNameTextbox,
+    LogDatabaseEnabled,
+    CheckLogDatabase));
   FWizard.AddPage(TTWizardPage.Create(
-    DatabasePagePanel, DBConnectionNameTextbox, CheckDatabase));
+    ServicePagePanel, ServiceNameTextbox, nil, CheckService));
+  FWizard.AddPage(TTWizardPage.Create(
+    TenantDatabasePagePanel,
+    TenantConnectionNameTextbox,
+    nil,
+    CheckTenantDatabase));
 
   FWizard.Start;
   EnableDisableButtons;
@@ -367,23 +410,56 @@ begin
   end;
 end;
 
-function TTAPIRestForm.CheckDatabase: Boolean;
+function TTAPIRestForm.LogDatabaseEnabled: Boolean;
+begin
+  result := APILogCheckbox.Checked;
+end;
+
+function TTAPIRestForm.CheckLogDatabase: Boolean;
 var
   LValidator: TTValidator;
 begin
   LValidator := TTValidator.Create;
   try
     LValidator.Check(
-      String(DBConnectionNameTextbox.Text).IsEmpty,
+      String(LogConnectionNameTextbox.Text).IsEmpty,
       'Connection name cannot be empty.');
     LValidator.Check(
-      String(DBHostTextbox.Text).IsEmpty,
+      String(LogHostTextbox.Text).IsEmpty,
       'Host cannot be empty.');
     LValidator.Check(
-      String(DBUsernameTextbox.Text).IsEmpty,
+      String(LogUsernameTextbox.Text).IsEmpty,
       'Username cannot be empty.');
     LValidator.Check(
-      String(DBDatabaseNameTextbox.Text).IsEmpty,
+      String(LogDatabaseNameTextbox.Text).IsEmpty,
+      'Database name cannot be empty.');
+
+    result := LValidator.IsValid;
+    if not result then
+      MessageDlg(
+        LValidator.Messages, TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0);
+  finally
+    LValidator.Free;
+  end;
+end;
+
+function TTAPIRestForm.CheckTenantDatabase: Boolean;
+var
+  LValidator: TTValidator;
+begin
+  LValidator := TTValidator.Create;
+  try
+    LValidator.Check(
+      String(TenantConnectionNameTextbox.Text).IsEmpty,
+      'Connection name cannot be empty.');
+    LValidator.Check(
+      String(TenantHostTextbox.Text).IsEmpty,
+      'Host cannot be empty.');
+    LValidator.Check(
+      String(TenantUsernameTextbox.Text).IsEmpty,
+      'Username cannot be empty.');
+    LValidator.Check(
+      String(TenantDatabaseNameTextbox.Text).IsEmpty,
       'Database name cannot be empty.');
 
     result := LValidator.IsValid;
@@ -405,7 +481,8 @@ begin
       String(ServiceNameTextbox.Text).IsEmpty,
       'Service name cannot be empty.');
     LValidator.Check(
-      String(ServiceNameTextbox.Text).Equals(ProjectNameTextBox.Text),
+      String(ServiceNameTextbox.Text).ToLower().Equals(
+        String(ProjectNameTextBox.Text).ToLower()),
       'Service name cannot be the same as project name.');
     LValidator.Check(
       String(ServiceDisplayNameTextbox.Text).IsEmpty,
@@ -448,7 +525,7 @@ var
   LParameters: TTApiRestParameters;
   LCreator: TTAPIRestCreator;
 begin
-  if CheckDatabase then
+  if CheckTenantDatabase then
   begin
     LParameters := TTApiRestParameters.Create;
     try
@@ -460,16 +537,23 @@ begin
       LParameters.API.Authorization := APIAuthorizationCheckbox.Checked;
       LParameters.API.Log := APILogCheckbox.Checked;
 
+      LParameters.LogDatabase.ConnectionName := LogConnectionNameTextbox.Text;
+      LParameters.LogDatabase.Host :=
+        String(LogHostTextbox.Text).Replace('\', '\\');
+      LParameters.LogDatabase.Username := LogUsernameTextbox.Text;
+      LParameters.LogDatabase.Password := LogPasswordTextbox.Text;
+      LParameters.LogDatabase.DatabaseName := LogDatabaseNameTextbox.Text;
+
       LParameters.Service.Name := ServiceNameTextbox.Text;
       LParameters.Service.DisplayName := ServiceDisplayNameTextbox.Text;
       LParameters.Service.Description := ServiceDescriptionTextbox.Text;
 
-      LParameters.Database.ConnectionName := DBConnectionNameTextbox.Text;
-      LParameters.Database.Host :=
-        String(DBHostTextbox.Text).Replace('\', '\\');
-      LParameters.Database.Username := DBUsernameTextbox.Text;
-      LParameters.Database.Password := DBPasswordTextbox.Text;
-      LParameters.Database.DatabaseName := DBDatabaseNameTextbox.Text;
+      LParameters.TenantDatabase.ConnectionName := TenantConnectionNameTextbox.Text;
+      LParameters.TenantDatabase.Host :=
+        String(TenantHostTextbox.Text).Replace('\', '\\');
+      LParameters.TenantDatabase.Username := TenantUsernameTextbox.Text;
+      LParameters.TenantDatabase.Password := TenantPasswordTextbox.Text;
+      LParameters.TenantDatabase.DatabaseName := TenantDatabaseNameTextbox.Text;
 
       Screen.Cursor := crHourGlass;
       try

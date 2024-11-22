@@ -350,6 +350,7 @@ object TActionsMenuDatamodule: TTActionsMenuDatamodule
     end
     object TTENewAPIRestMenuItem: TMenuItem
       Action = TTENewAPIRESTAction
+      Caption = 'Create new Trysil multitenant API REST'
     end
     object TTESeparator03MenuItem: TMenuItem
       Caption = '-'

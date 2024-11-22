@@ -1,10 +1,8 @@
 inherited TAPIRestForm: TTAPIRestForm
+  StyleElements = [seFont, seClient, seBorder]
   TextHeight = 15
   inherited ContentPanel: TPanel
-    ExplicitLeft = 0
-    ExplicitTop = 0
-    ExplicitWidth = 624
-    ExplicitHeight = 392
+    StyleElements = [seFont, seBorder]
     object APIPagePanel: TPanel
       AlignWithMargins = True
       Left = 72
@@ -92,106 +90,6 @@ inherited TAPIRestForm: TTAPIRestForm
         end
       end
     end
-    object DatabasePagePanel: TPanel
-      AlignWithMargins = True
-      Left = 358
-      Top = 152
-      Width = 230
-      Height = 229
-      Margins.Left = 70
-      Margins.Top = 8
-      Margins.Right = 8
-      Margins.Bottom = 8
-      BevelOuter = bvNone
-      ShowCaption = False
-      TabOrder = 2
-      object DatabasePageGroupBox: TGroupBox
-        AlignWithMargins = True
-        Left = 2
-        Top = 4
-        Width = 226
-        Height = 221
-        Margins.Left = 2
-        Margins.Top = 4
-        Margins.Right = 2
-        Margins.Bottom = 4
-        Align = alClient
-        Caption = 'Database  '
-        TabOrder = 0
-        ExplicitHeight = 361
-        object DBConnectionNameLabel: TLabel
-          Left = 24
-          Top = 28
-          Width = 98
-          Height = 15
-          Caption = 'Connection name:'
-        end
-        object DBHostLabel: TLabel
-          Left = 24
-          Top = 82
-          Width = 28
-          Height = 15
-          Caption = 'Host:'
-        end
-        object DBUsernameLabel: TLabel
-          Left = 24
-          Top = 132
-          Width = 56
-          Height = 15
-          Caption = 'Username:'
-        end
-        object DBPasswordLabel: TLabel
-          Left = 24
-          Top = 182
-          Width = 53
-          Height = 15
-          Caption = 'Password:'
-        end
-        object DBDatabaseNameLabel: TLabel
-          Left = 24
-          Top = 232
-          Width = 84
-          Height = 15
-          Caption = 'Database name:'
-        end
-        object DBConnectionNameTextbox: TEdit
-          Left = 24
-          Top = 49
-          Width = 497
-          Height = 23
-          TabOrder = 0
-        end
-        object DBHostTextbox: TEdit
-          Left = 24
-          Top = 103
-          Width = 497
-          Height = 23
-          TabOrder = 1
-        end
-        object DBUsernameTextbox: TEdit
-          Left = 24
-          Top = 153
-          Width = 497
-          Height = 23
-          TabOrder = 2
-        end
-        object DBPasswordTextbox: TEdit
-          Left = 24
-          Top = 203
-          Width = 497
-          Height = 23
-          PasswordChar = '*'
-          TabOrder = 3
-        end
-        object DBDatabaseNameTextbox: TEdit
-          Left = 24
-          Top = 253
-          Width = 497
-          Height = 23
-          TabOrder = 4
-        end
-      end
-    end
     object ProjectPagePanel: TPanel
       AlignWithMargins = True
       Left = 70
@@ -218,8 +116,6 @@ inherited TAPIRestForm: TTAPIRestForm
         Align = alClient
         Caption = 'Project  '
         TabOrder = 0
-        ExplicitWidth = 163
-        ExplicitHeight = 180
         object ProjectDirectoryLabel: TLabel
           Left = 24
           Top = 28
@@ -344,8 +240,6 @@ inherited TAPIRestForm: TTAPIRestForm
         Align = alClient
         Caption = 'Service  '
         TabOrder = 0
-        ExplicitLeft = 222
-        ExplicitTop = 8
         object ServiceNameLabel: TLabel
           Left = 24
           Top = 28
@@ -390,9 +284,209 @@ inherited TAPIRestForm: TTAPIRestForm
         end
       end
     end
+    object TenantDatabasePagePanel: TPanel
+      AlignWithMargins = True
+      Left = 358
+      Top = 161
+      Width = 230
+      Height = 88
+      Margins.Left = 70
+      Margins.Top = 8
+      Margins.Right = 8
+      Margins.Bottom = 8
+      BevelOuter = bvNone
+      ShowCaption = False
+      TabOrder = 4
+      object TenantDatabasePageGroupBox: TGroupBox
+        AlignWithMargins = True
+        Left = 2
+        Top = 4
+        Width = 226
+        Height = 80
+        Margins.Left = 2
+        Margins.Top = 4
+        Margins.Right = 2
+        Margins.Bottom = 4
+        Align = alClient
+        Caption = 'Tenant (localhost) database  '
+        TabOrder = 0
+        object TenantConnectionNameLabel: TLabel
+          Left = 24
+          Top = 28
+          Width = 98
+          Height = 15
+          Caption = 'Connection name:'
+        end
+        object TenantHostLabel: TLabel
+          Left = 24
+          Top = 82
+          Width = 28
+          Height = 15
+          Caption = 'Host:'
+        end
+        object TenantUsernameLabel: TLabel
+          Left = 24
+          Top = 132
+          Width = 56
+          Height = 15
+          Caption = 'Username:'
+        end
+        object TenantPasswordLabel: TLabel
+          Left = 24
+          Top = 182
+          Width = 53
+          Height = 15
+          Caption = 'Password:'
+        end
+        object TenantDatabaseNameLabel: TLabel
+          Left = 24
+          Top = 232
+          Width = 84
+          Height = 15
+          Caption = 'Database name:'
+        end
+        object TenantConnectionNameTextbox: TEdit
+          Left = 24
+          Top = 49
+          Width = 497
+          Height = 23
+          TabOrder = 0
+          Text = 'api_localhost'
+        end
+        object TenantHostTextbox: TEdit
+          Left = 24
+          Top = 103
+          Width = 497
+          Height = 23
+          TabOrder = 1
+        end
+        object TenantUsernameTextbox: TEdit
+          Left = 24
+          Top = 153
+          Width = 497
+          Height = 23
+          TabOrder = 2
+        end
+        object TenantPasswordTextbox: TEdit
+          Left = 24
+          Top = 203
+          Width = 497
+          Height = 23
+          PasswordChar = '*'
+          TabOrder = 3
+        end
+        object TenantDatabaseNameTextbox: TEdit
+          Left = 24
+          Top = 253
+          Width = 497
+          Height = 23
+          TabOrder = 4
+        end
+      end
+    end
+    object LogDatabasePagePanel: TPanel
+      AlignWithMargins = True
+      Left = 358
+      Top = 270
+      Width = 230
+      Height = 88
+      Margins.Left = 70
+      Margins.Top = 8
+      Margins.Right = 8
+      Margins.Bottom = 8
+      BevelOuter = bvNone
+      ShowCaption = False
+      TabOrder = 2
+      object LogDatabasePageGroupBox: TGroupBox
+        AlignWithMargins = True
+        Left = 2
+        Top = 4
+        Width = 226
+        Height = 80
+        Margins.Left = 2
+        Margins.Top = 4
+        Margins.Right = 2
+        Margins.Bottom = 4
+        Align = alClient
+        Caption = 'HTTP Log database  '
+        TabOrder = 0
+        object LogConnectionNameLabel: TLabel
+          Left = 24
+          Top = 28
+          Width = 98
+          Height = 15
+          Caption = 'Connection name:'
+        end
+        object LogHostLabel: TLabel
+          Left = 24
+          Top = 82
+          Width = 28
+          Height = 15
+          Caption = 'Host:'
+        end
+        object LogUsernameLabel: TLabel
+          Left = 24
+          Top = 132
+          Width = 56
+          Height = 15
+          Caption = 'Username:'
+        end
+        object LogPasswordLabel: TLabel
+          Left = 24
+          Top = 182
+          Width = 53
+          Height = 15
+          Caption = 'Password:'
+        end
+        object LogDatabaseNameLabel: TLabel
+          Left = 24
+          Top = 232
+          Width = 84
+          Height = 15
+          Caption = 'Database name:'
+        end
+        object LogConnectionNameTextbox: TEdit
+          Left = 24
+          Top = 49
+          Width = 497
+          Height = 23
+          TabOrder = 0
+          Text = 'api_http_log'
+        end
+        object LogHostTextbox: TEdit
+          Left = 24
+          Top = 103
+          Width = 497
+          Height = 23
+          TabOrder = 1
+        end
+        object LogUsernameTextbox: TEdit
+          Left = 24
+          Top = 153
+          Width = 497
+          Height = 23
+          TabOrder = 2
+        end
+        object LogPasswordTextbox: TEdit
+          Left = 24
+          Top = 203
+          Width = 497
+          Height = 23
+          PasswordChar = '*'
+          TabOrder = 3
+        end
+        object LogDatabaseNameTextbox: TEdit
+          Left = 24
+          Top = 253
+          Width = 497
+          Height = 23
+          TabOrder = 4
+        end
+      end
+    end
   end
   inherited ButtonsPanel: TPanel
-    ExplicitTop = 392
+    StyleElements = [seFont, seBorder]
     object CancelButton: TButton
       Left = 537
       Top = 12
