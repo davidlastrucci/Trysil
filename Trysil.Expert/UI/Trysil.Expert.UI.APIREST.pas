@@ -27,10 +27,11 @@ uses
   Vcl.StdCtrls,
   Vcl.ExtCtrls,
   Vcl.Buttons,
+  Vcl.Imaging.PngImage,
 
   Trysil.Expert.Validator,
   Trysil.Expert.UI.Themed,
-  Trysil.Expert.APIRestCreator, Vcl.Imaging.pngimage;
+  Trysil.Expert.APIRestCreator;
 
 type
 
@@ -147,6 +148,7 @@ type
     NextButton: TButton;
     FinishButton: TButton;
     CancelButton: TButton;
+    ProjectModelFromHttpCheckbox: TCheckBox;
     procedure ProjectNameButtonClick(Sender: TObject);
     procedure NextButtonClick(Sender: TObject);
     procedure BackButtonClick(Sender: TObject);
@@ -531,6 +533,7 @@ begin
     try
       LParameters.Project.Directory := ProjectDirectoryTextbox.Text;
       LParameters.Project.ProjectName := ProjectNameTextBox.Text;
+      LParameters.Project.ModelFromHttp := ProjectModelFromHttpCheckbox.Checked;
 
       LParameters.API.BaseUri := APIBaseUriTextbox.Text;
       LParameters.API.Port := Integer.Parse(APIPortTextbox.Text);
@@ -559,7 +562,7 @@ begin
       try
         LCreator := TTAPIRestCreator.Create(LParameters);
         try
-          LCreator.CreateProject;
+          LCreator.CreateProject(LParameters.Project.ModelFromHttp);
           LCreator.OpenProject;
         finally
           LCreator.Free;

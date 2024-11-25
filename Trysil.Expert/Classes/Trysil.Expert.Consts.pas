@@ -34,6 +34,7 @@ resourcestring
   SDuplicateColumnColumnName = 'Column "%s" has the same column name.';
   SInvalidEntityType = 'Invalid entity type.';
   SInvalidColumnName = 'Invalid comlumn name.';
+  SHttpError = 'Error downloading project template (%d).';
 
   SDeleteEntity = 'Delete "%s" entity?';
   SDeleteColumn = 'Delete "%s" column?';

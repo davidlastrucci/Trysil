@@ -84,8 +84,6 @@ inherited TAPIRestForm: TTAPIRestForm
           Width = 97
           Height = 17
           Caption = 'Log'
-          Checked = True
-          State = cbChecked
           TabOrder = 3
         end
       end
@@ -95,7 +93,7 @@ inherited TAPIRestForm: TTAPIRestForm
       Left = 70
       Top = 8
       Width = 232
-      Height = 149
+      Height = 175
       Margins.Left = 70
       Margins.Top = 8
       Margins.Right = 8
@@ -108,7 +106,7 @@ inherited TAPIRestForm: TTAPIRestForm
         Left = 2
         Top = 4
         Width = 228
-        Height = 141
+        Height = 167
         Margins.Left = 2
         Margins.Top = 4
         Margins.Right = 2
@@ -211,6 +209,16 @@ inherited TAPIRestForm: TTAPIRestForm
           Width = 468
           Height = 23
           TabOrder = 1
+        end
+        object ProjectModelFromHttpCheckbox: TCheckBox
+          Left = 24
+          Top = 136
+          Width = 165
+          Height = 17
+          Caption = 'Load model from HTTP'
+          Checked = True
+          State = cbChecked
+          TabOrder = 2
         end
       end
     end

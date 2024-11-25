@@ -15,9 +15,12 @@ interface
 uses
   System.SysUtils,
   System.Classes,
+  System.Net.HttpClient,
   System.Zip,
   System.IOUtils,
 
+  Trysil.Expert.Classes,
+  Trysil.Expert.Consts,
   Trysil.Expert.IOTA;
 
 type
@@ -28,6 +31,7 @@ type
   strict private
     FDirectory: String;
     FProjectName: String;
+    FModelFromHttp: Boolean;
     FJWTSecret: String;
     FPasswordSecret: String;
 
@@ -37,6 +41,7 @@ type
 
     property Directory: String read FDirectory write FDirectory;
     property ProjectName: String read FProjectName write FProjectName;
+    property ModelFromHttp: Boolean read FModelFromHttp write FModelFromHttp;
     property JWTSecret: String read FJWTSecret;
     property PasswordSecret: String read FPasswordSecret;
   end;
@@ -110,8 +115,10 @@ type
 
   TTAPIRestCreator = class
   strict private
-    //FModel: String;
     FParameters: TTApiRestParameters;
+
+    function LoadFromResource: TStream;
+    function LoadFromHttp: TStream;
 
     function CheckFileName(var AFileName: String): Boolean;
     function IsTextFile(const AFileName: String): Boolean;
@@ -122,7 +129,7 @@ type
     constructor Create(const AParameters: TTApiRestParameters);
     destructor Destroy; override;
 
-    procedure CreateProject;
+    procedure CreateProject(const AFromHttp: Boolean);
     procedure OpenProject;
   end;
 
@@ -186,6 +193,34 @@ destructor TTAPIRestCreator.Destroy;
 begin
 
   inherited Destroy;
+end;
+
+function TTAPIRestCreator.LoadFromResource: TStream;
+begin
+  result := TResourceStream.Create(HInstance, 'apirest', 'TMODEL');
+end;
+
+function TTAPIRestCreator.LoadFromHttp: TStream;
+var
+  LHttp: THttpClient;
+  LResponse: IHTTPResponse;
+begin
+  result := TMemoryStream.Create;
+  try
+    LHttp := THttpClient.Create;
+    try
+      LResponse := LHttp.Get(
+        'https://www.lastrucci.net/trysil/projects/apirest.zip', result, nil);
+      if LResponse.StatusCode <> 200 then
+        raise ETExpertException.CreateFmt(SHttpError, [LResponse.StatusCode]);
+      result.Position := 0;
+    finally
+      LHttp.Free;
+    end;
+  except
+    result.Free;
+    raise;
+  end;
 end;
 
 function TTAPIRestCreator.CheckFileName(var AFileName: String): Boolean;
@@ -289,7 +324,7 @@ begin
     TFile.WriteAllBytes(AFileName, ABytes);
 end;
 
-procedure TTAPIRestCreator.CreateProject;
+procedure TTAPIRestCreator.CreateProject(const AFromHttp: Boolean);
 var
   LModel: TZipFile;
   LStream: TStream;
@@ -299,7 +334,10 @@ var
 begin
   LModel := TZipFile.Create;
   try
-    LStream := TResourceStream.Create(HInstance, 'apirest', 'TMODEL');
+    if AFromHttp then
+      LStream := LoadFromHttp
+    else
+      LStream := LoadFromResource;
     try
       LModel.Open(LStream, TZipMode.zmRead);
       for LIndex := 0 to LModel.FileCount - 1 do
