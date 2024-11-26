@@ -412,12 +412,12 @@ inherited TAPIRestForm: TTAPIRestForm
           Style = csDropDownList
           ItemIndex = 0
           TabOrder = 0
-          Text = 'Firebird SQL'
+          Text = 'Firebird'
           OnClick = TenantDriverComboboxClick
           Items.Strings = (
-            'Firebird SQL'
+            'Firebird'
             'Microsoft SQL Server'
-            'Postgre SQL'
+            'PostgreSQL'
             'SQLite')
         end
         object TenantPortTextbox: TEdit
@@ -553,12 +553,12 @@ inherited TAPIRestForm: TTAPIRestForm
           Style = csDropDownList
           ItemIndex = 0
           TabOrder = 0
-          Text = 'Firebird SQL'
+          Text = 'Firebird'
           OnClick = LogDriverComboboxClick
           Items.Strings = (
-            'Firebird SQL'
+            'Firebird'
             'Microsoft SQL Server'
-            'Postgre SQL'
+            'PostgreSQL'
             'SQLite')
         end
         object LogPortTextbox: TEdit
