@@ -15,6 +15,7 @@ interface
 uses
   System.Classes,
   System.SysUtils,
+  System.Generics.Collections,
   Data.DB,
   FireDAC.UI.Intf,
   FireDAC.Comp.UI,
@@ -22,6 +23,7 @@ uses
   FireDAC.Comp.Client,
   FireDAC.Phys,
 
+  Trysil.Consts,
   Trysil.Types,
   Trysil.Filter,
   Trysil.Exceptions,
@@ -32,7 +34,6 @@ uses
   Trysil.Data.Connection,
   Trysil.Data.Parameters,
   Trysil.Events.Abstract,
-  Trysil.Data.FireDAC.Common,
   Trysil.Data.FireDAC.ConnectionPool;
 
 type
@@ -77,12 +78,33 @@ type
     procedure SetVendorLib(const AValue: String);
   strict protected
     function GetDriverLink: TFDPhysDriverLink; virtual; abstract;
+  private // internal
+    class function GetDriverID(const ABaseDriverID: String): String;
   public
     procedure AfterConstruction; override;
 
     property DriverLink: TFDPhysDriverLink read GetDriverLink;
     property VendorHome: String read GetVendorHome write SetVendorHome;
     property VendorLib: String read GetVendorLib write SetVendorLib;
+  end;
+
+{ TTFireDACConnectionParameters }
+
+  TTFireDACConnectionParameters = record
+  strict private
+    FDriver: String;
+    FServer: String;
+    FPort: Integer;
+    FUsername: String;
+    FPassword: String;
+    FDatabaseName: String;
+  public
+    property Driver: String read FDriver write FDriver;
+    property Server: String read FServer write FServer;
+    property Port: Integer read FPort write FPort;
+    property Username: String read FUsername write FUsername;
+    property Password: String read FPassword write FPassword;
+    property DatabaseName: String read FDatabaseName write FDatabaseName;
   end;
 
 { TTFireDACConnection }
@@ -107,6 +129,11 @@ type
       const ASQL: String; const AFilter: TTFilter): TDataSet; override;
     function GetInTransaction: Boolean; override;
     function GetSupportTransaction: Boolean; override;
+  protected // internal
+    class procedure InternalRegisterConnection(
+      const AName: String;
+      const AParameter: TTFireDACConnectionParameters); virtual; abstract;
+    class function GetDriver: String; virtual; abstract;
   public
     constructor Create(const AConnectionName: String);
     destructor Destroy; override;
@@ -124,6 +151,35 @@ type
       const AEntity: TObject): Integer; override;
 
     class procedure UnregisterConnection(const AName: String); virtual;
+  end;
+
+{ TTFireDACConnectionClass }
+
+  TTFireDACConnectionClass = class of TTFireDACConnection;
+
+{ TTFireDACConnectionFactory }
+
+  TTFireDACConnectionFactory = class
+  strict private
+    class var FInstance: TTFireDACConnectionFactory;
+
+    class constructor ClassCreate;
+    class destructor ClassDestroy;
+  strict private
+    FDrivers: TDictionary<String, TTFireDACConnectionClass>;
+    FConnections: TDictionary<String, TTFireDACConnectionClass>;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure RegisterDriver<T: TTFireDACConnection>();
+
+    procedure RegisterConnection(
+      const AName: String; const AParameters: TTFireDACConnectionParameters);
+
+    function CreateConnection(const AName: String): TTConnection;
+
+    class property Instance: TTFireDACConnectionFactory read FInstance;
   end;
 
 implementation
@@ -240,7 +296,12 @@ end;
 procedure TTFireDACDriver.AfterConstruction;
 begin
   inherited AfterConstruction;
-  DriverLink.DriverID := Format('Trysil_%s', [DriverLink.BaseDriverID]);
+  DriverLink.DriverID := GetDriverID(DriverLink.BaseDriverID);
+end;
+
+class function TTFireDACDriver.GetDriverID(const ABaseDriverID: String): String;
+begin
+  result := Format('Trysil_%s', [ABaseDriverID]);
 end;
 
 function TTFireDACDriver.GetVendorHome: String;
@@ -439,6 +500,62 @@ end;
 class procedure TTFireDACConnection.UnregisterConnection(const AName: String);
 begin
   TTFireDACConnectionPool.Instance.UnregisterConnection(AName);
+end;
+
+{ TTFireDACConnectionFactory }
+
+class constructor TTFireDACConnectionFactory.ClassCreate;
+begin
+  FInstance := TTFireDACConnectionFactory.Create;
+end;
+
+class destructor TTFireDACConnectionFactory.ClassDestroy;
+begin
+  FInstance.Free;
+end;
+
+constructor TTFireDACConnectionFactory.Create;
+begin
+  inherited Create;
+  FDrivers := TDictionary<String, TTFireDACConnectionClass>.Create;
+  FConnections := TDictionary<String, TTFireDACConnectionClass>.Create;
+end;
+
+destructor TTFireDACConnectionFactory.Destroy;
+begin
+  FConnections.Free;
+  FDrivers.Free;
+  inherited Destroy;
+end;
+
+procedure TTFireDACConnectionFactory.RegisterDriver<T>();
+begin
+  FDrivers.Add(T.GetDriver().ToLower(), T);
+end;
+
+procedure TTFireDACConnectionFactory.RegisterConnection(
+  const AName: String;
+  const AParameters: TTFireDACConnectionParameters);
+var
+  LConnectionClass: TTFireDACConnectionClass;
+begin
+  if not FDrivers.TryGetValue(
+    TTFireDACDriver.GetDriverID(AParameters.Driver).ToLower(),
+    LConnectionClass) then
+    raise ETException.CreateFmt(
+      SNotValidConnectionDriver, [AParameters.Driver]);
+  FConnections.Add(AName.ToLower(), LConnectionClass);
+  LConnectionClass.InternalRegisterConnection(AName, AParameters);
+end;
+
+function TTFireDACConnectionFactory.CreateConnection(
+  const AName: String): TTConnection;
+var
+  LConnectionClass: TTFireDACConnectionClass;
+begin
+  if not FConnections.TryGetValue(AName.ToLower(), LConnectionClass) then
+    raise ETException.CreateFmt(SNotValidConnection, [AName]);
+  result := LConnectionClass.Create(AName);
 end;
 
 end.

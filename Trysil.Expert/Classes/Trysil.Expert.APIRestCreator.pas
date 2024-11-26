@@ -78,12 +78,16 @@ type
 
   TTApiRestDatabaseParameters = class
   strict private
+    FDriver: String;
+    FDriverIndex: Integer;
     FConnectionName: String;
     FHost: String;
     FUsername: String;
     FPassword: String;
     FDatabaseName: String;
   public
+    property Driver: String read FDriver write FDriver;
+    property DriverIndex: Integer read FDriverIndex write FDriverIndex;
     property ConnectionName: String read FConnectionName write FConnectionName;
     property Host: String read FHost write FHost;
     property Username: String read FUsername write FUsername;
@@ -265,6 +269,7 @@ begin
     .Replace('{{Password.Secret}}', FParameters.Project.PasswordSecret, [rfReplaceAll, rfIgnoreCase])
     .Replace('{{Api.BaseUri}}', FParameters.API.BaseUri, [rfReplaceAll, rfIgnoreCase])
     .Replace('{{Api.Port}}', FParameters.API.Port.ToString, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{Log.Driver}}', FParameters.LogDatabase.Driver, [rfReplaceAll, rfIgnoreCase])
     .Replace('{{Log.ConnectionName}}', FParameters.LogDatabase.ConnectionName, [rfReplaceAll, rfIgnoreCase])
     .Replace('{{Log.Host}}', FParameters.LogDatabase.Host, [rfReplaceAll, rfIgnoreCase])
     .Replace('{{Log.Username}}', FParameters.LogDatabase.Username, [rfReplaceAll, rfIgnoreCase])
@@ -273,6 +278,8 @@ begin
     .Replace('{{Service.Name}}', FParameters.Service.Name, [rfReplaceAll, rfIgnoreCase])
     .Replace('{{Service.DisplayName}}', FParameters.Service.DisplayName, [rfReplaceAll, rfIgnoreCase])
     .Replace('{{Service.Description}}', FParameters.Service.Description, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{Tenant.Driver}}', FParameters.TenantDatabase.Driver, [rfReplaceAll, rfIgnoreCase])
+    .Replace('{{Tenant.DriverIndex}}', FParameters.TenantDatabase.DriverIndex.ToString(), [rfReplaceAll, rfIgnoreCase])
     .Replace('{{Tenant.ConnectionName}}', FParameters.TenantDatabase.ConnectionName, [rfReplaceAll, rfIgnoreCase])
     .Replace('{{Tenant.Host}}', FParameters.TenantDatabase.Host, [rfReplaceAll, rfIgnoreCase])
     .Replace('{{Tenant.Username}}', FParameters.TenantDatabase.Username, [rfReplaceAll, rfIgnoreCase])

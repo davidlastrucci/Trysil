@@ -53,6 +53,11 @@ type
     class destructor ClassDestroy;
   strict protected
     function CreateSyntaxClasses: TTSyntaxClasses; override;
+
+    class function GetDriver: String; override;
+    class procedure InternalRegisterConnection(
+      const AName: String;
+      const AParameters: TTFireDACConnectionParameters); override;
   public
     class procedure RegisterConnection(
       const AName: String;
@@ -114,6 +119,31 @@ begin
   result := TTPostgreSQLSyntaxClasses.Create;
 end;
 
+class function TTPostgreSQLConnection.GetDriver: String;
+begin
+  result := FDriver.DriverLink.DriverID;
+end;
+
+class procedure TTPostgreSQLConnection.InternalRegisterConnection(
+  const AName: String; const AParameters: TTFireDACConnectionParameters);
+begin
+  if AParameters.Port = 0 then
+    RegisterConnection(
+      AName,
+      AParameters.Server,
+      AParameters.Username,
+      AParameters.Password,
+      AParameters.DatabaseName)
+  else
+    RegisterConnection(
+      AName,
+      AParameters.Server,
+      AParameters.Port,
+      AParameters.Username,
+      AParameters.Password,
+      AParameters.DatabaseName);
+end;
+
 class procedure TTPostgreSQLConnection.RegisterConnection(
   const AName: String;
   const AServer: String;
@@ -155,5 +185,8 @@ begin
   TTFireDACConnectionPool.Instance.RegisterConnection(
     AName, FDriver.DriverLink.DriverID, AParameters);
 end;
+
+initialization
+  TTFireDACConnectionFactory.Instance.RegisterDriver<TTPostgreSQLConnection>();
 
 end.

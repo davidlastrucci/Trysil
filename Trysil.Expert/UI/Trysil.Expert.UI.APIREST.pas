@@ -96,6 +96,7 @@ type
 
   TTAPIRestForm = class(TTThemedForm)
     SaveDialog: TSaveDialog;
+    DBDriverListbox: TListBox;
     ProjectPagePanel: TPanel;
     ProjectPageGroupBox: TGroupBox;
     ProjectDirectoryLabel: TLabel;
@@ -103,6 +104,7 @@ type
     ProjectNameLabel: TLabel;
     ProjectNameTextBox: TEdit;
     ProjectNameButton: TSpeedButton;
+    ProjectModelFromHttpCheckbox: TCheckBox;
     APIPagePanel: TPanel;
     APIPageGroupbox: TGroupBox;
     APIBaseUriLabel: TLabel;
@@ -112,6 +114,22 @@ type
     APIUrlLabel: TLabel;
     APIAuthorizationCheckbox: TCheckBox;
     APILogCheckbox: TCheckBox;
+    LogDatabasePagePanel: TPanel;
+    LogDatabasePageGroupBox: TGroupBox;
+    LogDriverLabel: TLabel;
+    LogDriverCombobox: TComboBox;
+    LogConnectionNameLabel: TLabel;
+    LogConnectionNameTextbox: TEdit;
+    LogHostLabel: TLabel;
+    LogHostTextbox: TEdit;
+    LogPortLabel: TLabel;
+    LogPortTextbox: TEdit;
+    LogUsernameLabel: TLabel;
+    LogUsernameTextbox: TEdit;
+    LogPasswordLabel: TLabel;
+    LogPasswordTextbox: TEdit;
+    LogDatabaseNameLabel: TLabel;
+    LogDatabaseNameTextbox: TEdit;
     ServicePagePanel: TPanel;
     ServicePageGroupBox: TGroupBox;
     ServiceNameLabel: TLabel;
@@ -122,38 +140,31 @@ type
     ServiceDescriptionTextbox: TEdit;
     TenantDatabasePagePanel: TPanel;
     TenantDatabasePageGroupBox: TGroupBox;
+    TenantDriverLabel: TLabel;
+    TenantDriverCombobox: TComboBox;
     TenantConnectionNameLabel: TLabel;
-    TenantHostLabel: TLabel;
     TenantConnectionNameTextbox: TEdit;
+    TenantHostLabel: TLabel;
     TenantHostTextbox: TEdit;
+    TenantPortLabel: TLabel;
+    TenantPortTextbox: TEdit;
     TenantUsernameLabel: TLabel;
     TenantUsernameTextbox: TEdit;
     TenantPasswordLabel: TLabel;
     TenantPasswordTextbox: TEdit;
     TenantDatabaseNameLabel: TLabel;
     TenantDatabaseNameTextbox: TEdit;
-    LogDatabasePagePanel: TPanel;
-    LogDatabasePageGroupBox: TGroupBox;
-    LogConnectionNameLabel: TLabel;
-    LogHostLabel: TLabel;
-    LogConnectionNameTextbox: TEdit;
-    LogHostTextbox: TEdit;
-    LogUsernameLabel: TLabel;
-    LogUsernameTextbox: TEdit;
-    LogPasswordLabel: TLabel;
-    LogPasswordTextbox: TEdit;
-    LogDatabaseNameLabel: TLabel;
-    LogDatabaseNameTextbox: TEdit;
     BackButton: TButton;
     NextButton: TButton;
     FinishButton: TButton;
     CancelButton: TButton;
-    ProjectModelFromHttpCheckbox: TCheckBox;
     procedure ProjectNameButtonClick(Sender: TObject);
     procedure NextButtonClick(Sender: TObject);
     procedure BackButtonClick(Sender: TObject);
     procedure FinishButtonClick(Sender: TObject);
     procedure CalculateUrlLabel(Sender: TObject);
+    procedure LogDriverComboboxClick(Sender: TObject);
+    procedure TenantDriverComboboxClick(Sender: TObject);
   strict private
     FWizard: TTWizard;
 
@@ -164,6 +175,7 @@ type
     function LogDatabaseEnabled: Boolean;
     function CheckLogDatabase: Boolean;
     function CheckService: Boolean;
+    function TenantDatabaseEnabled: Boolean;
     function CheckTenantDatabase: Boolean;
   public
     constructor Create; reintroduce;
@@ -324,21 +336,30 @@ end;
 procedure TTAPIRestForm.AfterConstruction;
 begin
   inherited AfterConstruction;
+  // Project
   FWizard.AddPage(TTWizardPage.Create(
     ProjectPagePanel, ProjectDirectoryTextbox, nil, CheckProject));
+
+  // API
   FWizard.AddPage(TTWizardPage.Create(
     APIPagePanel, APIBaseUriTextbox, nil, CheckAPI));
+
+  // Log Database
   FWizard.AddPage(TTWizardPage.Create(
     LogDatabasePagePanel,
-    LogConnectionNameTextbox,
+    LogDriverCombobox,
     LogDatabaseEnabled,
     CheckLogDatabase));
+
+  // Service
   FWizard.AddPage(TTWizardPage.Create(
     ServicePagePanel, ServiceNameTextbox, nil, CheckService));
+
+  // Tenant Database
   FWizard.AddPage(TTWizardPage.Create(
     TenantDatabasePagePanel,
-    TenantConnectionNameTextbox,
-    nil,
+    TenantDriverCombobox,
+    TenantDatabaseEnabled,
     CheckTenantDatabase));
 
   FWizard.Start;
@@ -360,9 +381,31 @@ begin
     LFormat := 'http://127.0.0.1:%s%s'
   else
     LFormat := 'http://127.0.0.1:%s/%s';
-    
+
   APIUrlLabel.Caption :=
     Format(LFormat, [APIPortTextbox.Text, APIBaseUriTextbox.Text]);
+end;
+
+procedure TTAPIRestForm.LogDriverComboboxClick(Sender: TObject);
+begin
+  LogHostTextbox.Enabled := LogDriverCombobox.ItemIndex <> 3;
+  if not LogHostTextbox.Enabled then
+    LogHostTextbox.Text := String.Empty;
+
+  LogPortTextbox.Enabled := LogDriverCombobox.ItemIndex = 2;
+  if not LogPortTextbox.Enabled then
+    LogPortTextbox.Text := '0';
+end;
+
+procedure TTAPIRestForm.TenantDriverComboboxClick(Sender: TObject);
+begin
+  TenantHostTextbox.Enabled := TenantDriverCombobox.ItemIndex <> 3;
+  if not TenantHostTextbox.Enabled then
+    TenantHostTextbox.Text := String.Empty;
+
+  TenantPortTextbox.Enabled := TenantDriverCombobox.ItemIndex = 2;
+  if not TenantPortTextbox.Enabled then
+    TenantPortTextbox.Text := '0';
 end;
 
 function TTAPIRestForm.CheckProject: Boolean;
@@ -415,6 +458,9 @@ end;
 function TTAPIRestForm.LogDatabaseEnabled: Boolean;
 begin
   result := APILogCheckbox.Checked;
+  if result then
+    LogConnectionNameTextbox.Text :=
+      Format('%s_log', [String(ProjectNameTextBox.Text).ToLower()]);
 end;
 
 function TTAPIRestForm.CheckLogDatabase: Boolean;
@@ -443,6 +489,14 @@ begin
   finally
     LValidator.Free;
   end;
+end;
+
+function TTAPIRestForm.TenantDatabaseEnabled: Boolean;
+begin
+  result := True;
+  if result then
+    TenantConnectionNameTextbox.Text :=
+      Format('%s_localhost', [String(ProjectNameTextBox.Text).ToLower()]);
 end;
 
 function TTAPIRestForm.CheckTenantDatabase: Boolean;
@@ -540,6 +594,9 @@ begin
       LParameters.API.Authorization := APIAuthorizationCheckbox.Checked;
       LParameters.API.Log := APILogCheckbox.Checked;
 
+      LParameters.LogDatabase.Driver :=
+        DBDriverListbox.Items[LogDriverCombobox.ItemIndex];
+      LParameters.LogDatabase.DriverIndex := LogDriverCombobox.ItemIndex;
       LParameters.LogDatabase.ConnectionName := LogConnectionNameTextbox.Text;
       LParameters.LogDatabase.Host :=
         String(LogHostTextbox.Text).Replace('\', '\\');
@@ -551,6 +608,10 @@ begin
       LParameters.Service.DisplayName := ServiceDisplayNameTextbox.Text;
       LParameters.Service.Description := ServiceDescriptionTextbox.Text;
 
+      // TODO
+      LParameters.TenantDatabase.Driver :=
+        DBDriverListbox.Items[TenantDriverCombobox.ItemIndex];
+      LParameters.TenantDatabase.DriverIndex := TenantDriverCombobox.ItemIndex;
       LParameters.TenantDatabase.ConnectionName := TenantConnectionNameTextbox.Text;
       LParameters.TenantDatabase.Host :=
         String(TenantHostTextbox.Text).Replace('\', '\\');

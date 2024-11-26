@@ -53,6 +53,11 @@ type
   strict protected
     function CreateSyntaxClasses: TTSyntaxClasses; override;
     function GetDatabaseVersion: String; override;
+
+    class function GetDriver: String; override;
+    class procedure InternalRegisterConnection(
+      const AName: String;
+      const AParameters: TTFireDACConnectionParameters); override;
   public
     class procedure RegisterConnection(
       const AName: String;
@@ -116,6 +121,23 @@ begin
   result := Format('FirebirdSQL %s', [inherited GetDatabaseVersion]);
 end;
 
+class function TTFirebirdSQLConnection.GetDriver: String;
+begin
+  result := FDriver.DriverLink.DriverID;
+end;
+
+class procedure TTFirebirdSQLConnection.InternalRegisterConnection(
+  const AName: String;
+  const AParameters: TTFireDACConnectionParameters);
+begin
+  RegisterConnection(
+    AName,
+    AParameters.Server,
+    AParameters.Username,
+    AParameters.Password,
+    AParameters.DatabaseName);
+end;
+
 class procedure TTFirebirdSQLConnection.RegisterConnection(
   const AName: String;
   const AServer: String;
@@ -139,12 +161,13 @@ begin
     LParameters.Add(Format('Server=%s', [AServer]));
     LParameters.Add(Format('Database=%s', [ADatabaseName]));
     if AUsername.IsEmpty then
-        LParameters.Add('OSAuthent=Yes')
+      LParameters.Add('OSAuthent=Yes')
     else
     begin
-        LParameters.Add(Format('User_Name=%s', [AUserName]));
-        LParameters.Add(Format('Password=%s', [APassword]));
+      LParameters.Add(Format('User_Name=%s', [AUserName]));
+      LParameters.Add(Format('Password=%s', [APassword]));
     end;
+
     RegisterConnection(AName, LParameters);
   finally
     LParameters.Free;
@@ -157,5 +180,8 @@ begin
   TTFireDACConnectionPool.Instance.RegisterConnection(
     AName, FDriver.DriverLink.DriverID, AParameters);
 end;
+
+initialization
+  TTFireDACConnectionFactory.Instance.RegisterDriver<TTFirebirdSQLConnection>();
 
 end.

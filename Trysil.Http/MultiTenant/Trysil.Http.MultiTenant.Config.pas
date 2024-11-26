@@ -14,7 +14,8 @@ interface
 
 uses
   System.SysUtils,
-  System.Classes;
+  System.Classes,
+  Trysil.Data.FireDAC;
 
 type
 
@@ -25,20 +26,12 @@ type
     FName: String;
 
     function GetConnectionName: String; virtual; abstract;
-    function GetServer: String; virtual; abstract;
-    function GetPort: Integer; virtual; abstract;
-    function GetUsername: String; virtual; abstract;
-    function GetPassword: String; virtual; abstract;
-    function GetDatabaseName: String; virtual; abstract;
+    function GetParameters: TTFireDACConnectionParameters; virtual; abstract;
   public
     constructor Create(const AName: String); virtual;
 
     property ConnectionName: String read GetConnectionName;
-    property Server: String read GetServer;
-    property Port: Integer read GetPort;
-    property Username: String read GetUsername;
-    property Password: String read GetPassword;
-    property DatabaseName: String read GetDatabaseName;
+    property Parameters: TTFireDACConnectionParameters read GetParameters;
   end;
 
 implementation

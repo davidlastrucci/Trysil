@@ -24,87 +24,87 @@ uses
 
 type
 
-{ TTTenant<T, C> }
+{ TTTenant<T> }
 
-  TTTenant<T: TTTenantConnection; C: TTTenantConfig> = class
+  TTTenant<T: TTTenantConfig> = class
   strict private
     FName: String;
-    FConfig: C;
-    FConnection: T;
+    FConfig: T;
+    FConnection: TTTenantConnection;
   public
     constructor Create(const AName: String);
     destructor Destroy; override;
 
     property Name: String read FName;
-    property Config: C read FConfig;
-    property Connection: T read FConnection;
+    property Config: T read FConfig;
+    property Connection: TTTenantConnection read FConnection;
   end;
 
-{ TTMultiTenant<T, C> }
+{ TTMultiTenant<C> }
 
-  TTMultiTenant<T: TTTenantConnection; C: TTTenantConfig> = class
+  TTMultiTenant<T: TTTenantConfig> = class
   strict private
-    class var FInstance: TTMultiTenant<T, C>;
+    class var FInstance: TTMultiTenant<T>;
 
     class constructor ClassCreate;
     class destructor ClassDestroy;
   strict private
     FCriticalSection: TTCriticalSection;
-    FOwner: TObjectList<TTTenant<T, C>>;
-    FTenants: TDictionary<String, TTTenant<T, C>>;
+    FOwner: TObjectList<TTTenant<T>>;
+    FTenants: TDictionary<String, TTTenant<T>>;
 
-    function CreateTenant(const AName: String): TTTenant<T, C>;
+    function CreateTenant(const AName: String): TTTenant<T>;
   public
     constructor Create;
     destructor Destroy; override;
 
-    function GetOrAdd(const AName: String): TTTenant<T, C>;
+    function GetOrAdd(const AName: String): TTTenant<T>;
     function GetAll: TArray<string>;
     procedure Remove(const AName: String);
 
-    class property Instance: TTMultiTenant<T, C> read FInstance;
+    class property Instance: TTMultiTenant<T> read FInstance;
   end;
 
 implementation
 
-{ TTTenant<T, C> }
+{ TTTenant<T> }
 
-constructor TTTenant<T, C>.Create(const AName: String);
+constructor TTTenant<T>.Create(const AName: String);
 begin
   inherited Create;
   FName := AName;
-  FConfig := C.Create(AName);
-  FConnection := T.Create(FConfig);
+  FConfig := T.Create(AName);
+  FConnection := TTTenantConnection.Create(FConfig);
 end;
 
-destructor TTTenant<T, C>.Destroy;
+destructor TTTenant<T>.Destroy;
 begin
   FConnection.Free;
   FConfig.Free;
   inherited Destroy;
 end;
 
-{ TTMultiTenant<T, C> }
+{ TTMultiTenant<T> }
 
-class constructor TTMultiTenant<T, C>.ClassCreate;
+class constructor TTMultiTenant<T>.ClassCreate;
 begin
-  FInstance := TTMultiTenant<T, C>.Create;
+  FInstance := TTMultiTenant<T>.Create;
 end;
 
-class destructor TTMultiTenant<T, C>.ClassDestroy;
+class destructor TTMultiTenant<T>.ClassDestroy;
 begin
   FInstance.Free;
 end;
 
-constructor TTMultiTenant<T, C>.Create;
+constructor TTMultiTenant<T>.Create;
 begin
   inherited Create;
   FCriticalSection := TTCriticalSection.Create;
-  FOwner := TObjectList<TTTenant<T, C>>.Create(True);
-  FTenants := TDictionary<String, TTTenant<T, C>>.Create;
+  FOwner := TObjectList<TTTenant<T>>.Create(True);
+  FTenants := TDictionary<String, TTTenant<T>>.Create;
 end;
 
-destructor TTMultiTenant<T, C>.Destroy;
+destructor TTMultiTenant<T>.Destroy;
 begin
   FTenants.Free;
   FOwner.Free;
@@ -112,10 +112,9 @@ begin
   inherited Destroy;
 end;
 
-function TTMultiTenant<T, C>.CreateTenant(
-  const AName: String): TTTenant<T, C>;
+function TTMultiTenant<T>.CreateTenant(const AName: String): TTTenant<T>;
 begin
-  result := TTTenant<T, C>.Create(AName);
+  result := TTTenant<T>.Create(AName);
   try
     FTenants.Add(AName.ToLower(), result);
     FOwner.Add(result);
@@ -125,7 +124,7 @@ begin
   end;
 end;
 
-function TTMultiTenant<T, C>.GetOrAdd(const AName: String): TTTenant<T, C>;
+function TTMultiTenant<T>.GetOrAdd(const AName: String): TTTenant<T>;
 var
   LName: String;
 begin
@@ -142,7 +141,7 @@ begin
   end;
 end;
 
-function TTMultiTenant<T, C>.GetAll: TArray<string>;
+function TTMultiTenant<T>.GetAll: TArray<string>;
 var
   LLength, LIndex: Integer;
 begin
@@ -157,10 +156,10 @@ begin
   end;
 end;
 
-procedure TTMultiTenant<T, C>.Remove(const AName: String);
+procedure TTMultiTenant<T>.Remove(const AName: String);
 var
   LName: String;
-  LTenant: TTTenant<T, C>;
+  LTenant: TTTenant<T>;
 begin
   LName := AName.ToLower();
   FCriticalSection.Acquire;

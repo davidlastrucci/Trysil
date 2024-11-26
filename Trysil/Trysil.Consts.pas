@@ -64,6 +64,8 @@ resourcestring
   SInTransaction = '%0:s: transaction already started.';
   SNotInTransaction = '%0:s: transaction not yet started.';
   SNotValidTransaction = 'Transaction is no longer valid.';
+  SNotValidConnectionDriver = 'Connection not found for "%s" driver.';
+  SNotValidConnection = 'Connection not found "%s".';
 
 implementation
 

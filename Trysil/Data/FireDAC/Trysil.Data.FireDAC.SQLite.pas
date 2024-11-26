@@ -57,6 +57,11 @@ type
   strict protected
     function CreateSyntaxClasses: TTSyntaxClasses; override;
     function GetDatabaseVersion: String; override;
+
+    class function GetDriver: String; override;
+    class procedure InternalRegisterConnection(
+      const AName: String;
+      const AParameters: TTFireDACConnectionParameters); override;
   public
     class procedure RegisterConnection(
       const AName: String; const ADatabaseName: String); overload;
@@ -132,6 +137,21 @@ begin
   result := Format('SQLite %s', [inherited GetDatabaseVersion]);
 end;
 
+class function TTSQLiteConnection.GetDriver: String;
+begin
+  result := FDriver.DriverLink.DriverID;
+end;
+
+class procedure TTSQLiteConnection.InternalRegisterConnection(
+  const AName: String; const AParameters: TTFireDACConnectionParameters);
+begin
+  RegisterConnection(
+    AName,
+    AParameters.Username,
+    AParameters.Password,
+    AParameters.DatabaseName);
+end;
+
 class procedure TTSQLiteConnection.RegisterConnection(
   const AName: String; const ADatabaseName: String);
 begin
@@ -168,5 +188,8 @@ begin
   TTFireDACConnectionPool.Instance.RegisterConnection(
     AName, FDriver.DriverLink.DriverID, AParameters);
 end;
+
+initialization
+  TTFireDACConnectionFactory.Instance.RegisterDriver<TTSQLiteConnection>();
 
 end.

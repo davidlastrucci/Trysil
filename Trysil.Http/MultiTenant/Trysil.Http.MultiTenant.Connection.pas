@@ -22,20 +22,13 @@ uses
 
 type
 
-{ TTFireDACConnectionClass }
-
-  TTFireDACConnectionClass = class of TTFireDACConnection;
-
 { TTTenantConnection }
 
-  TTTenantConnection = class abstract
+  TTTenantConnection = class
   strict protected
     FConfig: TTTenantConfig;
-
-    function GetConnectionClass: TTFireDACConnectionClass; virtual; abstract;
-    procedure RegisterConnection; virtual; abstract;
   public
-    constructor Create(const AConfig: TTTenantConfig); virtual;
+    constructor Create(const AConfig: TTTenantConfig);
 
     procedure AfterConstruction; override;
 
@@ -55,12 +48,14 @@ end;
 procedure TTTenantConnection.AfterConstruction;
 begin
   inherited AfterConstruction;
-  RegisterConnection;
+  TTFireDACConnectionFactory.Instance.RegisterConnection(
+    FConfig.ConnectionName, FConfig.Parameters);
 end;
 
 function TTTenantConnection.CreateConnection: TTConnection;
 begin
-  result := GetConnectionClass().Create(FConfig.ConnectionName);
+  result := TTFireDACConnectionFactory.Instance.CreateConnection(
+    FConfig.ConnectionName);
 end;
 
 end.
