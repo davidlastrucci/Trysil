@@ -15,7 +15,6 @@ interface
 uses
   System.SysUtils,
   System.Classes,
-  System.TypInfo,
   System.Rtti,
 
   Trysil.Consts,
@@ -26,7 +25,6 @@ uses
   Trysil.Metadata,
   Trysil.Data,
   Trysil.Validation,
-  Trysil.Events.Attributes,
   Trysil.Events.Abstract,
   Trysil.Events.Factory;
 

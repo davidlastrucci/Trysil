@@ -15,17 +15,11 @@ interface
 uses
   System.Classes,
   System.SysUtils,
-  System.Generics.Collections,
 
-  Trysil.Consts,
   Trysil.Types,
   Trysil.Data,
   Trysil.Filter,
-  Trysil.Exceptions,
-  Trysil.Rtti,
-  Trysil.Mapping,
-  Trysil.Events.Abstract,
-  Trysil.Data.Parameters;
+  Trysil.Mapping;
 
 type
 

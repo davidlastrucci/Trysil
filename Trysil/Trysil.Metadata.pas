@@ -18,7 +18,6 @@ uses
   System.TypInfo,
   Data.DB,
 
-  Trysil.Exceptions,
   Trysil.Classes,
   Trysil.Cache,
   Trysil.Mapping,

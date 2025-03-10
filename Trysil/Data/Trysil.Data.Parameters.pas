@@ -17,7 +17,6 @@ uses
   System.SysUtils,
   System.Generics.Collections,
   System.Rtti,
-  System.NetEncoding,
   Data.DB,
 
   Trysil.Consts,

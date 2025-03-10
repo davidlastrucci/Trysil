@@ -23,7 +23,6 @@ uses
   Trysil.Filter,
   Trysil.Generics.Collections,
   Trysil.Data,
-  Trysil.Mapping,
   Trysil.Metadata,
   Trysil.Provider,
   Trysil.Resolver,

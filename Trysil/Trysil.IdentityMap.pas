@@ -18,8 +18,7 @@ uses
   System.Generics.Collections,
   System.TypInfo,
 
-  Trysil.Types,
-  Trysil.Cache;
+  Trysil.Types;
 
 type
 

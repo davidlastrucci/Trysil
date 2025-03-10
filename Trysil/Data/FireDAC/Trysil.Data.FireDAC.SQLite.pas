@@ -15,13 +15,8 @@ interface
 uses
   System.Classes,
   System.SysUtils,
-  Data.DB,
-  FireDAC.UI.Intf,
-  FireDAC.Comp.UI,
   FireDAC.Phys,
   FireDAC.Phys.SQLite,
-  FireDAC.Stan.Param,
-  FireDAC.Comp.Client,
 
   Trysil.Data.FireDAC.ConnectionPool,
   Trysil.Data.FireDAC,

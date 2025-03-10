@@ -16,7 +16,6 @@ uses
   System.Classes,
   System.SysUtils,
 
-  Trysil.Mapping,
   Trysil.Data.SqlSyntax;
 
 type

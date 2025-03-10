@@ -24,16 +24,13 @@ uses
   FireDAC.Phys,
 
   Trysil.Consts,
-  Trysil.Types,
   Trysil.Filter,
   Trysil.Exceptions,
   Trysil.Metadata,
   Trysil.Mapping,
   Trysil.Data,
-  Trysil.Data.SqlSyntax,
   Trysil.Data.Connection,
   Trysil.Data.Parameters,
-  Trysil.Events.Abstract,
   Trysil.Data.FireDAC.ConnectionPool;
 
 type
