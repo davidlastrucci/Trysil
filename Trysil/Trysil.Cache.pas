@@ -16,7 +16,6 @@ uses
   System.SysUtils,
   System.Classes,
   System.Generics.Collections,
-  System.TypInfo,
 
   Trysil.Sync;
 
