@@ -15,9 +15,7 @@ interface
 uses
   System.SysUtils,
   System.Classes,
-  System.Generics.Collections,
   System.SyncObjs,
-  System.Threading,
   Trysil.LoadBalancing,
 
   Trysil.Http.Rtti,

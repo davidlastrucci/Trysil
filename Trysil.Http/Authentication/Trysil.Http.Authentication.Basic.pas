@@ -15,7 +15,6 @@ interface
 uses
   System.SysUtils,
   System.Classes,
-  System.Generics.Collections,
   System.NetEncoding,
 
   Trysil.Http.Classes,

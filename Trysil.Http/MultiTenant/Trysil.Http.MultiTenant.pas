@@ -17,7 +17,6 @@ uses
   System.Classes,
   System.Generics.Collections,
   Trysil.Sync,
-  Trysil.Data.FireDAC,
 
   Trysil.Http.MultiTenant.Config,
   Trysil.Http.MultiTenant.Connection;

@@ -16,9 +16,7 @@ uses
   System.SysUtils,
   System.Classes,
 
-  Trysil.Http.Types,
-  Trysil.Http.Classes,
-  Trysil.Http.Authentication;
+  Trysil.Http.Classes;
 
 type
 

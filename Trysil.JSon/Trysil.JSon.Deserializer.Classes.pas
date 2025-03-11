@@ -19,7 +19,6 @@ uses
   System.JSon,
   System.DateUtils,
   System.TypInfo,
-  System.Rtti,
   System.NetEncoding,
   Trysil.Rtti,
 

@@ -17,7 +17,6 @@ uses
   System.Classes,
   System.Generics.Collections,
   System.Rtti,
-  System.JSon,
   IdCustomHttpServer,
   Trysil.JSon.Sqids,
 

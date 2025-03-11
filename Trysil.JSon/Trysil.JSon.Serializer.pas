@@ -16,7 +16,6 @@ uses
   System.SysUtils,
   System.Classes,
   System.JSon,
-  System.TypInfo,
   System.Rtti,
   Data.DB,
   Trysil.Rtti,

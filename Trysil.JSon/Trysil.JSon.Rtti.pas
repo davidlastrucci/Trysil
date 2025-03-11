@@ -15,9 +15,6 @@ interface
 uses
   System.SysUtils,
   System.Classes,
-  System.JSon,
-  System.DateUtils,
-  System.TypInfo,
   System.Rtti,
   Trysil.Rtti;
 

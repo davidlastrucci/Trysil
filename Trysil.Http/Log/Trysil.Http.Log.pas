@@ -16,12 +16,9 @@ uses
   System.SysUtils,
   System.Classes,
 
-  Trysil.Http.Consts,
-  Trysil.Http.Exceptions,
   Trysil.Http.Classes,
   Trysil.Http.Rtti,
   Trysil.Http.Log.Types,
-  Trysil.Http.Log.Classes,
   Trysil.Http.Log.Writer,
   Trysil.Http.Log.Threading;
 
