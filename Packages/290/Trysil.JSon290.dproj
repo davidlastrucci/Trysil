@@ -162,6 +162,7 @@
         <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Attributes.pas"/>
         <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Consts.pas"/>
         <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Context.pas"/>
+        <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Dataset.pas"/>
         <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Deserializer.Classes.pas"/>
         <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Deserializer.pas"/>
         <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Events.pas"/>
@@ -209,6 +210,12 @@
                 </DeployFile>
                 <DeployFile LocalName="$(BDS)\Redist\osx32\libcgunwind.1.0.dylib" Class="DependencyModule">
                     <Platform Name="OSX32">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\Lib\290\Linux64\Debug\bplTrysil.JSon290.so" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Linux64">
+                        <RemoteName>bplTrysil_JSon290.so</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

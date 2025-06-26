@@ -22,9 +22,6 @@ package Trysil.JSon290;
 {$VARSTRINGCHECKS ON}
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
-{$IFDEF MSWINDOWS}
-{$IMAGEBASE $400000}
-{$ENDIF}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
 {$IMPLICITBUILD ON}
@@ -37,6 +34,7 @@ contains
   Trysil.JSon.Attributes in '..\..\Trysil.JSon\Trysil.JSon.Attributes.pas',
   Trysil.JSon.Consts in '..\..\Trysil.JSon\Trysil.JSon.Consts.pas',
   Trysil.JSon.Context in '..\..\Trysil.JSon\Trysil.JSon.Context.pas',
+  Trysil.JSon.Dataset in '..\..\Trysil.JSon\Trysil.JSon.Dataset.pas',
   Trysil.JSon.Deserializer.Classes in '..\..\Trysil.JSon\Trysil.JSon.Deserializer.Classes.pas',
   Trysil.JSon.Deserializer in '..\..\Trysil.JSon\Trysil.JSon.Deserializer.pas',
   Trysil.JSon.Events in '..\..\Trysil.JSon\Trysil.JSon.Events.pas',

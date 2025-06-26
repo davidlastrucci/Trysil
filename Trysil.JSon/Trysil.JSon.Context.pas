@@ -17,6 +17,7 @@ uses
   System.Classes,
   System.JSon,
   System.Generics.Collections,
+  Data.DB,
   Trysil.Mapping,
   Trysil.Metadata,
   Trysil.Data,
@@ -25,6 +26,7 @@ uses
   Trysil.JSon.Types,
   Trysil.JSon.Consts,
   Trysil.JSon.Exceptions,
+  Trysil.JSon.Dataset,
   Trysil.JSon.Serializer,
   Trysil.JSon.Deserializer;
 
@@ -53,6 +55,8 @@ type
       const AUseIdentityMap: Boolean); overload; override;
 
     destructor Destroy; override;
+
+    function DatasetToJSon(const ADataset: TDataset): String;
 
     function EntityToJSon<T: class>(
       const AEntity: T; const AConfig: TTJSonSerializerConfig): String;
@@ -120,6 +124,11 @@ end;
 function TTJSonContext.InLoading: Boolean;
 begin
   result := FInLoading;
+end;
+
+function TTJSonContext.DatasetToJSon(const ADataset: TDataset): String;
+begin
+  result := ADataset.ToJSon();
 end;
 
 function TTJSonContext.EntityToJSon<T>(

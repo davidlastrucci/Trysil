@@ -22,6 +22,7 @@ resourcestring
   SNotAJSonArray = 'JSon is not an array.';
   SSerializerNotFound = 'JSon Serializer not found for %s.';
   SDeserializerNotFound = 'JSon Deserializer not found for %s.';
+  SNotValidType = 'Not valid type';
 
 implementation
 

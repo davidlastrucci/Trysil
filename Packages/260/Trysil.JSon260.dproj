@@ -145,6 +145,7 @@
         <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Attributes.pas"/>
         <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Consts.pas"/>
         <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Context.pas"/>
+        <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Dataset.pas"/>
         <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Deserializer.Classes.pas"/>
         <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Deserializer.pas"/>
         <DCCReference Include="..\..\Trysil.JSon\Trysil.JSon.Events.pas"/>
