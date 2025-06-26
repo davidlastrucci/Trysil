@@ -16,6 +16,7 @@ uses
   System.SysUtils,
   System.Classes,
   System.Generics.Collections,
+  Data.DB,
 
   Trysil.Consts,
   Trysil.Types,
@@ -67,6 +68,8 @@ type
       const AWriteConnection: TTConnection;
       const AUseIdentityMap: Boolean); overload; virtual;
     destructor Destroy; override;
+
+    function CreateDataset(const ASQL: String): TDataset;
 
     function CreateEntity<T: class>(): T; overload;
     function CloneEntity<T: class>(const AEntity: T): T;
@@ -147,6 +150,11 @@ begin
   FProvider.Free;
   FMetadata.Free;
   inherited Destroy;
+end;
+
+function TTContext.CreateDataset(const ASQL: String): TDataset;
+begin
+  result := FProvider.CreateDataset(ASQL);
 end;
 
 function TTContext.CreateResolver: TTResolver;

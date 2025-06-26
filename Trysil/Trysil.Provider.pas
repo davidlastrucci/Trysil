@@ -16,6 +16,7 @@ uses
   System.SysUtils,
   System.Classes,
   System.Generics.Collections,
+  Data.DB,
 
   Trysil.Consts,
   Trysil.Types,
@@ -99,6 +100,8 @@ type
       const AUseIdentityMap: Boolean);
     destructor Destroy; override;
 
+    function CreateDataset(const ASQL: String): TDataset;
+
     function CreateEntity<T: class>(const AInLoading: Boolean): T;
     function GetID<T: class>(const AEntity: T): TTPrimaryKey;
     procedure SetSequenceID<T: class>(const AEntity: T);
@@ -148,6 +151,11 @@ begin
     FIdentityMap.Free;
   FLazyOwner.Free;
   inherited Destroy;
+end;
+
+function TTProvider.CreateDataset(const ASQL: String): TDataset;
+begin
+  result := FConnection.CreateDataSet(ASQL, TTFilter.Empty);
 end;
 
 function TTProvider.GetUseIdentityMap: Boolean;
