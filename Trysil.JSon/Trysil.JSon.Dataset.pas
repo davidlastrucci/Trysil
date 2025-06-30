@@ -27,41 +27,6 @@ uses
 
 type
 
-{ TTJSonDateTime }
-
-  TTJSonDateTime = record
-  strict private
-    const JSonFormat: String = '%4d-%.2d-%.2dT%.2d:%.2d:%.2d.%.3dZ';
-  strict private
-    FYear: Word;
-    FMonth: Word;
-    FDay: Word;
-    FHour: Word;
-    FMinute: Word;
-    FSecond: Word;
-    FMillisecond: Word;
-
-    function FormatDateTime: String;
-  public
-    constructor Create(const AValue: String); overload;
-    constructor Create(const AValue: TDateTime); overload;
-
-    function ToJSonValue: TJSonValue;
-
-    class operator Implicit(const AValue: String): TTJSonDateTime;
-    class operator Implicit(const AValue: TTJSonDateTime): String;
-    class operator Implicit(const AValue: TDateTime): TTJSonDateTime;
-    class operator Implicit(const AValue: TTJSonDateTime): TDateTime;
-
-    property Year: Word read FYear;
-    property Month: Word read FMonth;
-    property Day: Word read FDay;
-    property Hour: Word read FHour;
-    property Minute: Word read FMinute;
-    property Second: Word read FSecond;
-    property Millisecond: Word read FMillisecond;
-  end;
-
 { TTJSonValue }
 
   TTJSonValue = record
@@ -113,67 +78,6 @@ type
   end;
 
 implementation
-
-{ TTJSonDateTime }
-
-constructor TTJSonDateTime.Create(const AValue: String);
-var
-  LValue: TJSonValue;
-begin
-  LValue := TJSonString.Create(AValue);
-  try
-    Create(LValue.GetValue<TDateTime>());
-  finally
-    LValue.Free;
-  end;
-end;
-
-constructor TTJSonDateTime.Create(const AValue: TDateTime);
-begin
-  DecodeDate(AValue, FYear, FMonth, FDay);
-  DecodeTime(AValue, FHour, FMinute, FSecond, FMillisecond);
-end;
-
-function TTJSonDateTime.FormatDateTime: String;
-var
-  LDate: TDateTime;
-  LYear, LMonth, LDay, LHour, LMinute, LSecond, LMillisecond: Word;
-begin
-  LDate := EncodeDateTime(
-    FYear, FMonth, FDay, FHour, FMinute, FSecond, FMillisecond);
-  LDate := TTimeZone.Local.ToUniversalTime(LDate);
-  DecodeDateTime(
-    LDate, LYear, LMonth, LDay, LHour, LMinute, LSecond, LMillisecond);
-  result := Format(JSonFormat, [
-    LYear, LMonth, LDay, LHour, LMinute, LSecond, LMillisecond]);
-end;
-
-class operator TTJSonDateTime.Implicit(const AValue: TTJSonDateTime): String;
-begin
-  result := AValue.FormatDateTime;
-end;
-
-class operator TTJSonDateTime.Implicit(const AValue: String): TTJSonDateTime;
-begin
-  result := TTJSonDateTime.Create(AValue);
-end;
-
-class operator TTJSonDateTime.Implicit(const AValue: TTJSonDateTime): TDateTime;
-begin
-  result := EncodeDateTime(
-    AValue.FYear, AValue.FMonth, AValue.FDay,
-    AValue.FHour, AValue.FMinute, AValue.FSecond, AValue.FMillisecond);
-end;
-
-class operator TTJSonDateTime.Implicit(const AValue: TDateTime): TTJSonDateTime;
-begin
-  result := TTJSonDateTime.Create(AValue);
-end;
-
-function TTJSonDateTime.ToJSonValue: TJSonValue;
-begin
-  result := TJSonString.Create(FormatDateTime);
-end;
 
 { TTJSonValue }
 
@@ -339,9 +243,9 @@ begin
       result := TJSonBool.Create(FValue.AsType<Boolean>());
 
     TTJSonValueType.jvtDateTime:
-      result := TTJSonDateTime.Create(
-        FValue.AsType<TDateTime>()).ToJSonValue();
-
+      result := TJSonString.Create(
+        DateToISO8601(
+          TTimeZone.Local.ToUniversalTime(FValue.AsType<TDateTime>()), True));
   else
     raise ETJSonException.Create(SNotValidType);
   end;
@@ -410,7 +314,7 @@ begin
   begin
     LField := Self.Fields[LIndex];
     if LField.Visible then
-      AObject.AddPair(LField.FieldName, FieldToJSonValue(LField));
+      AObject.AddPair(LField.FieldName.ToLower(), FieldToJSonValue(LField));
   end;
 end;
 
