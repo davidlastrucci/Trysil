@@ -18,6 +18,7 @@
 |Trysil.Expert270.dproj|Delphi 10.4 Sydney|
 |Trysil.Expert280.dproj|Delphi 11 Alexandria|
 |Trysil.Expert290.dproj|Delphi 12 Athens|
+|Trysil.Expert370.dproj|Delphi 13 Florence|
 ---
 
 Make With ❤ @davidlastrucci<br>

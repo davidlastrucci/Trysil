@@ -51,6 +51,7 @@ object MainForm: TMainForm
     Top = 68
     Width = 216
     Height = 23
+    ReadOnly = True
     TabOrder = 3
   end
   object PriorButton: TButton
@@ -59,6 +60,7 @@ object MainForm: TMainForm
     Width = 75
     Height = 25
     Caption = '<'
+    Enabled = False
     TabOrder = 4
     OnClick = PriorButtonClick
   end
@@ -68,6 +70,7 @@ object MainForm: TMainForm
     Width = 75
     Height = 25
     Caption = '>'
+    Enabled = False
     TabOrder = 5
     OnClick = NextButtonClick
   end

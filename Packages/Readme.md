@@ -7,6 +7,7 @@
 |270|Delphi 10.4 Sydney|
 |280|Delphi 11 Alexandria|
 |290|Delphi 12 Athens|
+|370|Delphi 13 Florence|
 
 
 ## Delphi editions
