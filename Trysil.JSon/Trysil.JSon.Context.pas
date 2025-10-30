@@ -18,6 +18,7 @@ uses
   System.JSon,
   System.Generics.Collections,
   Data.DB,
+  Trysil.Consts,
   Trysil.Mapping,
   Trysil.Metadata,
   Trysil.Data,
@@ -106,7 +107,7 @@ constructor TTJSonContext.Create(
 begin
   inherited Create(AReadConnection, AWriteConnection, AUseIdentityMap);
   if AUseIdentityMap then
-    raise ETJSonException.Create(SNoIdentityMap);
+    raise ETJSonException.Create(TTLanguage.Instance.Translate(SNoIdentityMap));
 
   FInLoading := False;
 
@@ -200,7 +201,8 @@ begin
   LJSon := TJSonObject.ParseJSonValue(AJSon, False, True);
   try
     if not (LJSon is TJSonObject) then
-      raise ETJSonException.Create(SNotAJSonObject);
+      raise ETJSonException.Create(
+        TTLanguage.Instance.Translate(SNotAJSonObject));
     result := EntityFromJSonObject<T>(TJSonObject(LJSon));
   finally
     LJSon.Free;
@@ -231,7 +233,8 @@ begin
   LJSon := TJSonObject.ParseJSonValue(AJSon, False, True);
   try
     if not (LJSon is TJSonArray) then
-      raise ETJSonException.Create(SNotAJSonArray);
+      raise ETJSonException.Create(
+        TTLanguage.Instance.Translate(SNotAJSonArray));
     ListFromJSonArray<T>(TJSonArray(LJSon), AList);
   finally
     LJSon.Free;

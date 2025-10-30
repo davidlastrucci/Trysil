@@ -16,6 +16,7 @@ uses
   System.SysUtils,
   System.Classes,
   System.Generics.Collections,
+  Trysil.Consts,
 
   Trysil.Http.Consts,
   Trysil.Http.Exceptions,
@@ -202,8 +203,9 @@ begin
   if Assigned(FRttiAuthentication) then
     for LArea in ARttiControllerMethod.Method.Areas do
       if not ARequest.User.Areas.Contains(LArea) then
-        raise ETHttpForbidden.CreateFmt(SForbiddenArea, [
-          ARequest.ControllerID.Uri, LArea])
+        raise ETHttpForbidden.CreateFmt(
+          TTLanguage.Instance.Translate(SForbiddenArea), [
+            ARequest.ControllerID.Uri, LArea])
 end;
 
 procedure TTHttpListener<C>.InitializeResponse(const AResponse: TTHttpResponse);

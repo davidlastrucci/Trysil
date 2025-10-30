@@ -18,6 +18,7 @@ uses
   System.Generics.Collections,
   System.Rtti,
   IdCustomHttpServer,
+  Trysil.Consts,
   Trysil.JSon.Sqids,
 
   Trysil.Http.Consts,
@@ -221,8 +222,9 @@ begin
     THttpCommandType.hcOPTION:
       result := TTHttpMethodType.OPTIONS;
     else
-      raise ETHttpServerException.CreateFmt(SNotValidCommandType, [
-        TRttiEnumerationType.GetName<THttpCommandType>(FCommandType)]);
+      raise ETHttpServerException.CreateFmt(
+        TTLanguage.Instance.Translate(SNotValidCommandType), [
+          TRttiEnumerationType.GetName<THttpCommandType>(FCommandType)]);
   end;
 end;
 

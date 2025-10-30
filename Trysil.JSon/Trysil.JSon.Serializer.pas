@@ -17,6 +17,7 @@ uses
   System.Classes,
   System.JSon,
   System.Rtti,
+  System.TypInfo,
   Data.DB,
   Trysil.Rtti,
   Trysil.Mapping,

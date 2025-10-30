@@ -197,9 +197,11 @@ begin
   try
     LTableMap := TTMapper.Instance.Load<T>();
     if not Assigned(LTablemap.PrimaryKey) then
-      raise ETException.Create(SNotDefinedPrimaryKey);
+      raise ETException.Create(
+        TTLanguage.Instance.Translate(SNotDefinedPrimaryKey));
     if LTableMap.SequenceName.IsEmpty then
-      raise ETException.Create(SNotDefinedSequence);
+      raise ETException.Create(
+        TTLanguage.Instance.Translate(SNotDefinedSequence));
 
     LRttiEntity := TTRttiEntity<T>.Create;
     try
@@ -458,11 +460,13 @@ var
   LResult: TTValue;
 begin
   if not Assigned(ATablemap.PrimaryKey) then
-    raise ETException.Create(SNotDefinedPrimaryKey);
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(SNotDefinedPrimaryKey));
   LColumn := AReader.ColumnByName(ATablemap.PrimaryKey.Name);
   LResult := LColumn.Value;
   if not LResult.IsType<TTPrimaryKey>() then
-    raise ETException.Create(SNotValidPrimaryKeyType);
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(SNotValidPrimaryKeyType));
   result := LResult.AsType<TTPrimaryKey>();
 end;
 
@@ -476,7 +480,8 @@ function TTProvider.GetWhere(
   const ATablemap: TTTableMap; const AID: TTPrimaryKey): String;
 begin
   if not Assigned(ATablemap.PrimaryKey) then
-    raise ETException.Create(SNotDefinedPrimaryKey);
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(SNotDefinedPrimaryKey));
   result := GetWhere(ATablemap.PrimaryKey.Name, AID);
 end;
 

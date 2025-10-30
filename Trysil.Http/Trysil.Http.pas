@@ -21,6 +21,7 @@ uses
   IdCustomHttpServer,
   IdHttpServer,
   IdSocketHandle,
+  Trysil.Consts,
 
   Trysil.Http.Consts,
   Trysil.Http.Exceptions,
@@ -174,14 +175,15 @@ var
   LTypeInfo: PTypeInfo;
 begin
   if Assigned(FRttiLogWriter) then
-    raise ETHttpServerException.Create(SLogWriterAlreadyRegistered);
+    raise ETHttpServerException.Create(
+      TTLanguage.Instance.Translate(SLogWriterAlreadyRegistered));
 
   LTypeInfo := TypeInfo(W);
   FRttiLogWriter := TTHttpRttiLogWriter.Create(LTypeInfo);
   try
     if not FRttiLogWriter.CheckValid then
       raise ETHttpServerException.CreateFmt(
-        SNotValidLogWriter, [LTypeInfo^.Name]);
+        TTLanguage.Instance.Translate(SNotValidLogWriter), [LTypeInfo^.Name]);
   except
     FRttiLogWriter.Free;
     FRttiLogWriter := nil;
@@ -197,14 +199,16 @@ var
 begin
   try
     if Assigned(FRttiAuthentication) then
-      raise ETHttpServerException.Create(SAuthAlreadyRegistered);
+      raise ETHttpServerException.Create(
+        TTLanguage.Instance.Translate(SAuthAlreadyRegistered));
 
     LTypeInfo := TypeInfo(H);
     FRttiAuthentication := TTHttpRttiAuthentication<C>.Create(LTypeInfo);
     try
       if not FRttiAuthentication.CheckValid then
         raise ETHttpServerException.CreateFmt(
-          SNotValidAuthentication, [LTypeInfo^.Name]);
+          TTLanguage.Instance.Translate(SNotValidAuthentication), [
+            LTypeInfo^.Name]);
     except
       FRttiAuthentication.Free;
       FRttiAuthentication := nil;
@@ -243,7 +247,8 @@ begin
     try
       if not LRttiController.CheckValid then
         raise ETHttpServerException.CreateFmt(
-          SNotValidController, [ATypeInfo^.Name]);
+          TTLanguage.Instance.Translate(SNotValidController), [
+            ATypeInfo^.Name]);
     except
       LRttiController.Free;
       raise;
@@ -276,7 +281,8 @@ var
   LBinding: TIdSocketHandle;
 begin
   if FHttpServer.Active then
-    raise ETHttpServerException.Create(SAlreadyStarted);
+    raise ETHttpServerException.Create(
+      TTLanguage.Instance.Translate(SAlreadyStarted));
   FHttpServer.Bindings.Clear;
   LBinding := FHttpServer.Bindings.Add;
   LBinding.Port := FPort;
@@ -287,7 +293,8 @@ end;
 procedure TTHttpServer<C>.Stop;
 begin
   if not FHttpServer.Active then
-    raise ETHttpServerException.Create(SNotStarted);
+    raise ETHttpServerException.Create(
+      TTLanguage.Instance.Translate(SNotStarted));
   FHttpServer.Active := False;
   Log(SStopped);
 end;
@@ -300,7 +307,8 @@ end;
 procedure TTHttpServer<C>.SetBaseUri(const AValue: String);
 begin
   if FHttpServer.Active then
-    raise ETHttpServerException.Create(SAlreadyStarted);
+    raise ETHttpServerException.Create(
+      TTLanguage.Instance.Translate(SAlreadyStarted));
   if (not AValue.IsEmpty) and (not AValue.StartsWith('/')) then
     FBaseUri := Format('/%s', [AValue])
   else
@@ -310,7 +318,8 @@ end;
 procedure TTHttpServer<C>.SetPort(const AValue: Word);
 begin
   if FHttpServer.Active then
-    raise ETHttpServerException.Create(SAlreadyStarted);
+    raise ETHttpServerException.Create(
+      TTLanguage.Instance.Translate(SAlreadyStarted));
   FPort := AValue;
 end;
 

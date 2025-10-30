@@ -18,6 +18,7 @@ uses
   System.Generics.Collections,
   System.TypInfo,
   System.Rtti,
+  Trysil.Consts,
   Trysil.Rtti,
   Trysil.JSon.Sqids,
 
@@ -551,7 +552,8 @@ begin
 
     if LDictionary.ContainsKey(LMethod.ControllerID.MethodType) then
       raise ETHttpServerException.CreateFmt(
-        SDuplicateController, [ARttiController.ControllerName]);
+        TTLanguage.Instance.Translate(SDuplicateController), [
+          ARttiController.ControllerName]);
 
     LDictionary.Add(
       LMethod.ControllerID.MethodType,
@@ -597,10 +599,12 @@ begin
     if not TrySearchParametrizedUri(
       AControllerID.Uri, AParams, LDictionary) then
       if not FControllerMethods.TryGetValue('*', LDictionary) then
-        raise ETHttpNotFound.CreateFmt(SNotFound, [AControllerID.Uri]);
+        raise ETHttpNotFound.CreateFmt(
+          TTLanguage.Instance.Translate(SNotFound), [AControllerID.Uri]);
   if not LDictionary.TryGetValue(AControllerID.MethodType, result) then
-    raise ETHttpMethodNotAllowed.CreateFmt(SMethodNotAllowed, [
-      AControllerID.Method, AControllerID.Uri])
+    raise ETHttpMethodNotAllowed.CreateFmt(
+      TTLanguage.Instance.Translate(SMethodNotAllowed), [
+        AControllerID.Method, AControllerID.Uri])
 end;
 
 end.

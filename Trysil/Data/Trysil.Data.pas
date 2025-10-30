@@ -217,7 +217,8 @@ begin
   for LColumnMap in FTableMap.Columns do
   begin
     if FColumns.ContainsKey(LColumnMap.Name) then
-      raise ETException.CreateFmt(SDuplicateColumn, [LColumnMap.Name]);
+      raise ETException.CreateFmt(
+        TTLanguage.Instance.Translate(SDuplicateColumn), [LColumnMap.Name]);
     FColumns.Add(
       LColumnMap.Name,
       TTColumnFactory.Instance.CreateColumn(
@@ -228,7 +229,8 @@ end;
 function TTReader.ColumnByName(const AColumnName: String): TTColumn;
 begin
   if not FColumns.TryGetValue(AColumnName, result) then
-    raise ETException.CreateFmt(SColumnNotFound, [AColumnName]);
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SColumnNotFound), [AColumnName]);
 end;
 
 function TTReader.GetEof: Boolean;
@@ -301,7 +303,8 @@ begin
     if not LRelation.IsCascade then
       if CheckExists(
         ATableMap, LRelation.TableName, LRelation.ColumnName, AEntity) then
-        raise ETException.CreateFmt(SRelationError, [AEntity.ToString()]);
+        raise ETException.CreateFmt(
+          TTLanguage.Instance.Translate(SRelationError), [AEntity.ToString()]);
 end;
 
 function TTConnection.Execute(const ASQL: String): Integer;

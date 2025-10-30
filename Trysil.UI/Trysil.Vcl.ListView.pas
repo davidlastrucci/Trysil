@@ -593,7 +593,7 @@ begin
   Self.OnSelectItem := ListViewSelectedItem;
 
   if ClassName.Length > 63 then
-    raise Exception.CreateFmt('Classe name "%s" too long.', [ClassName]);
+    raise Exception.CreateFmt('Class name "%s" too long.', [ClassName]);
 end;
 
 procedure TTListView<T>.ListViewCreateItemClass(

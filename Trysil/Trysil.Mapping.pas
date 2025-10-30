@@ -658,21 +658,24 @@ end;
 procedure TTEventsMap.SetInsertTypeInfo(const AAttribute: TEventAttribute);
 begin
   if Assigned(FInsertEventClass) then
-    raise ETException.Create(SInsertEventAttribute);
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(SInsertEventAttribute));
   FInsertEventClass := AAttribute.EventClass;
 end;
 
 procedure TTEventsMap.SetUpdateTypeInfo(const AAttribute: TEventAttribute);
 begin
   if Assigned(FUpdateEventClass) then
-    raise ETException.Create(SUpdateEventAttribute);
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(SUpdateEventAttribute));
   FUpdateEventClass := AAttribute.EventClass;
 end;
 
 procedure TTEventsMap.SetDeleteTypeInfo(const AAttribute: TEventAttribute);
 begin
   if Assigned(FDeleteEventClass) then
-    raise ETException.Create(SDeleteEventAttribute);
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(SDeleteEventAttribute));
   FDeleteEventClass := AAttribute.EventClass;
 end;
 
@@ -820,21 +823,24 @@ end;
 procedure TTTableMap.SetTableName(const AName: String);
 begin
   if not FName.IsEmpty then
-    raise ETException.Create(SDuplicateTableAttribute);
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(SDuplicateTableAttribute));
   FName := AName;
 end;
 
 procedure TTTableMap.SetSequenceName(const AName: String);
 begin
   if not FSequenceName.IsEmpty then
-    raise ETException.Create(SDuplicateSequenceAttribute);
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(SDuplicateSequenceAttribute));
   FSequenceName := AName;
 end;
 
 procedure TTTableMap.SetWhereClause(const AWhereClause: String);
 begin
   if not FWhereClause.IsEmpty then
-    raise ETException.Create(SDuplicateWhereClauseAttribute);
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(SDuplicateWhereClauseAttribute));
   FWhereClause := AWhereClause;
 end;
 
@@ -919,7 +925,8 @@ begin
   else if AObject is TRttiProperty then
     result := TTColumnMap.Create(AName, TRttiProperty(AObject))
   else
-    raise ETException.Create(SInvalidRttiObjectType);
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(SInvalidRttiObjectType));
 end;
 
 function TTTableMap.CreateDetailColumnMap(
@@ -934,7 +941,8 @@ begin
     result := TTDetailColumnMap.Create(
       AName, ADetailName, TRttiProperty(AObject))
   else
-    raise ETException.Create(SInvalidRttiObjectType);
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(SInvalidRttiObjectType));
 end;
 
 procedure TTTableMap.SearchColumnAttribute(const AObject: TRttiObject);
@@ -977,7 +985,8 @@ begin
     if LAttribute is TPrimaryKeyAttribute then
     begin
       if Assigned(FPrimaryKey) then
-        raise ETException.Create(SDuplicatePrimaryKeyAttribute);
+        raise ETException.Create(
+          TTLanguage.Instance.Translate(SDuplicatePrimaryKeyAttribute));
       FPrimaryKey := AColumnMap;
       Break;
     end;
@@ -992,7 +1001,8 @@ begin
     if LAttribute is TVersionColumnAttribute then
     begin
       if Assigned(FVersionColumn) then
-        raise ETException.Create(SDuplicateVersionColumnAttribute);
+        raise ETException.Create(
+          TTLanguage.Instance.Translate(SDuplicateVersionColumnAttribute));
       FVersionColumn := AColumnMap;
       Break;
     end;

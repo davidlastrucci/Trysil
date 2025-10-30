@@ -181,11 +181,12 @@ begin
     TTUpdateMode.KeyAndVersionColumn:
       if (not Assigned(ATableMap.PrimaryKey)) or
         (not Assigned(ATableMap.VersionColumn)) then
-        raise ETException.Create(SReadOnly);
+        raise ETException.Create(TTLanguage.Instance.Translate(SReadOnly));
 
     TTUpdateMode.KeyOnly:
       if not Assigned(ATableMap.PrimaryKey) then
-        raise ETException.Create(SReadOnlyPrimaryKey);
+        raise ETException.Create(
+          TTLanguage.Instance.Translate(SReadOnlyPrimaryKey));
   end;
 end;
 

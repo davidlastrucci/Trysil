@@ -19,6 +19,7 @@ uses
   System.Generics.Collections,
   System.TypInfo,
   System.Rtti,
+  Trysil.Consts,
 
   Trysil.JSon.Exceptions;
 
@@ -181,7 +182,8 @@ begin
       LEventData.RttyType.AsInstance.MetaclassType, LParams);
     try
       if not LResult.IsType<TTJSonEvent>(False) then
-        raise ETJSonException.Create(SNotEventType);
+        raise ETJSonException.Create(
+          TTLanguage.Instance.Translate(SNotEventType));
       result := LResult.AsType<TTJSonEvent>(False);
     except
       LResult.AsObject.Free;
@@ -200,7 +202,8 @@ begin
   LEntity := TypeInfo(T);
   LRttiMethod := SearchMethod(LEvent, LEntity);
   if not Assigned(LRttiMethod) then
-    raise ETJSonException.Create(SNotValidEventClass);
+    raise ETJSonException.Create(
+      TTLanguage.Instance.Translate(SNotValidEventClass));
   FEvents.Add(LEntity, TTJSonEventData.Create(LEvent, LRttiMethod));
 end;
 

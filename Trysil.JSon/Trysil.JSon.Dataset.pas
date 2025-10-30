@@ -21,6 +21,7 @@ uses
   System.DateUtils,
   System.Rtti,
   Data.DB,
+  Trysil.Consts,
 
   Trysil.JSon.Consts,
   Trysil.JSon.Exceptions;
@@ -155,7 +156,8 @@ begin
     end;
 
     else
-      raise ETJSonException.Create(SNotValidType);
+      raise ETJSonException.Create(
+        TTLanguage.Instance.Translate(SNotValidType));
   end;
 end;
 
@@ -163,7 +165,7 @@ class procedure TTJSonValue.CheckValueType(
   const AValueType: TTJSonValueType; const AType: TTJSonValueType);
 begin
   if AValueType <> AType then
-    raise ETJSonException.Create(SNotValidType);
+    raise ETJSonException.Create(TTLanguage.Instance.Translate(SNotValidType));
 end;
 
 class operator TTJSonValue.Implicit(const AValue: String): TTJSonValue;
@@ -247,7 +249,7 @@ begin
         DateToISO8601(
           TTimeZone.Local.ToUniversalTime(FValue.AsType<TDateTime>()), True));
   else
-    raise ETJSonException.Create(SNotValidType);
+    raise ETJSonException.Create(TTLanguage.Instance.Translate(SNotValidType));
   end;
 end;
 

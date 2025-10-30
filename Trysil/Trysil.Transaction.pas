@@ -76,7 +76,8 @@ begin
   if FLocalTransaction then
   begin
     if not FConnection.InTransaction then
-      raise ETException.Create(SNotValidTransaction);
+      raise ETException.Create(
+        TTLanguage.Instance.Translate(SNotValidTransaction));
     FConnection.CommitTransaction;
   end;
 end;
@@ -86,7 +87,8 @@ begin
   if FLocalTransaction then
   begin
     if not FConnection.InTransaction then
-      raise ETException.Create(SNotValidTransaction);
+      raise ETException.Create(
+        TTLanguage.Instance.Translate(SNotValidTransaction));
     FLocalTransaction := False;
     FConnection.RollbackTransaction;
   end;

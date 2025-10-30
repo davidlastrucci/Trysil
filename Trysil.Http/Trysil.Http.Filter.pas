@@ -15,7 +15,9 @@ interface
 uses
   System.SysUtils,
   System.Classes,
+  System.Generics.Collections,
   System.JSon,
+  Trysil.Consts,
   Trysil.Metadata,
   Trysil.Context,
   Trysil.Filter,
@@ -123,7 +125,8 @@ begin
     end;
 
   if not Assigned(result) then
-    raise ETHttpBadRequest.CreateFmt(SColumnNotFound, [AName]);
+    raise ETHttpBadRequest.CreateFmt(
+      TTLanguage.Instance.Translate(SColumnNotFound), [AName]);
 end;
 
 { TTHttpFilterWhere }
@@ -159,7 +162,8 @@ begin
     end;
 
   if not LIsValid then
-    raise ETHttpBadRequest.CreateFmt(SConditionNotValid, [FCondition]);
+    raise ETHttpBadRequest.CreateFmt(
+      TTLanguage.Instance.Translate(SConditionNotValid), [FCondition]);
 end;
 
 { TTHttpFilterWhereList }
@@ -222,7 +226,8 @@ begin
     end;
 
   if not LIsValid then
-    raise ETHttpBadRequest.CreateFmt(SDirectionNotValid, [FDirection]);
+    raise ETHttpBadRequest.CreateFmt(
+      TTLanguage.Instance.Translate(SDirectionNotValid), [FDirection]);
 end;
 
 { TTHttpFilterOrderByList }

@@ -189,21 +189,24 @@ end;
 procedure TTGenericConnection.StartTransaction;
 begin
   if InTransaction then
-    raise ETException.CreateFmt(SInTransaction, ['StartTransaction']);
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SInTransaction), ['StartTransaction']);
   TTLogger.Instance.LogStartTransaction(FConnectionID);
 end;
 
 procedure TTGenericConnection.CommitTransaction;
 begin
   if not InTransaction then
-    raise ETException.CreateFmt(SNotInTransaction, ['CommitTransaction']);
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SNotInTransaction), ['CommitTransaction']);
   TTLogger.Instance.LogCommit(FConnectionID);
 end;
 
 procedure TTGenericConnection.RollbackTransaction;
 begin
   if not InTransaction then
-    raise ETException.CreateFmt(SNotInTransaction, ['RollbackTransaction']);
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SNotInTransaction), ['RollbackTransaction']);
   TTLogger.Instance.LogRollback(FConnectionID);
 end;
 
@@ -273,7 +276,8 @@ begin
     end;
 
   if not Assigned(result) then
-    raise ETException.CreateFmt(SColumnNotFound, [AColumnName]);
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SColumnNotFound), [AColumnName]);
 end;
 
 function TTGenericConnection.GetDatabaseVersion: String;
@@ -460,9 +464,9 @@ begin
         AEntity);
 
       if LRowsAffected = 0 then
-        raise ETException.Create(SRecordChanged)
+        raise ETException.Create(TTLanguage.Instance.Translate(SRecordChanged))
       else if LRowsAffected > 1 then
-        raise ETException.Create(SSyntaxError);
+        raise ETException.Create(TTLanguage.Instance.Translate(SSyntaxError));
 
       AfterExecute(AEntity, AEvent, AAfterEventMethodType);
     except

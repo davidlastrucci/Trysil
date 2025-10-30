@@ -12,6 +12,37 @@ unit Trysil.Consts;
 
 interface
 
+uses
+  System.SysUtils,
+  System.Classes,
+  System.Generics.Collections;
+
+type
+
+{ TTLanguage }
+
+  TTLanguage = class
+  strict private
+    class var FInstance: TTLanguage;
+
+    class constructor ClassCreate;
+    class destructor ClassDestroy;
+  strict private
+    FStrings: TDictionary<String, String>;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure Clear;
+
+    procedure Add(const AKey: String; const AValue: String); overload;
+    procedure Add(const AStrings: TStrings); overload;
+
+    function Translate(const AKey: String): String;
+
+    class property Instance: TTLanguage read FInstance;
+  end;
+
 resourcestring
   SNotValidEventClass = 'Not valid constructor in TTEvent class: %0:s.';
   SNotEventType = 'Not valid TTEvent type: %0:s.';
@@ -68,5 +99,53 @@ resourcestring
   SNotValidConnection = 'Connection not found "%s".';
 
 implementation
+
+{ TTLanguage }
+
+class constructor TTLanguage.ClassCreate;
+begin
+  FInstance := TTLanguage.Create;
+end;
+
+class destructor TTLanguage.ClassDestroy;
+begin
+  FInstance.Free;
+end;
+
+constructor TTLanguage.Create;
+begin
+  inherited Create;
+  FStrings := TDictionary<String, String>.Create;
+end;
+
+destructor TTLanguage.Destroy;
+begin
+  FStrings.Free;
+  inherited Destroy;
+end;
+
+procedure TTLanguage.Clear;
+begin
+  FStrings.Clear;
+end;
+
+procedure TTLanguage.Add(const AKey: String; const AValue: String);
+begin
+  FStrings.AddOrSetValue(AKey, AValue);
+end;
+
+procedure TTLanguage.Add(const AStrings: TStrings);
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to AStrings.Count - 1 do
+    Add(AStrings.KeyNames[LIndex], AStrings.ValueFromIndex[LIndex]);
+end;
+
+function TTLanguage.Translate(const AKey: String): String;
+begin
+  if not FStrings.TryGetValue(AKey, result) then
+    result := AKey;
+end;
 
 end.

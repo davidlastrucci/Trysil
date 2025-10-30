@@ -122,7 +122,9 @@ begin
       TTFactory.Instance.GetType(AEventClass.ClassInfo));
     LRttiMethod := SearchMethod(LRttiType, AContext, AEntity);
     if not Assigned(LRttiMethod) then
-      raise ETException.CreateFmt(SNotValidEventClass, [AEventClass.ClassName]);
+      raise ETException.CreateFmt(
+        TTLanguage.Instance.Translate(SNotValidEventClass), [
+          AEventClass.ClassName]);
 
     SetLength(LParams, 2);
     LParams[0] := TValue.From<TObject>(AContext);
@@ -131,7 +133,8 @@ begin
     LResult := LRttiMethod.Invoke(LRttiType.AsInstance.MetaclassType, LParams);
     try
       if not LResult.IsType<TTEvent>(False) then
-        raise ETException.CreateFmt(SNotEventType, [AEventClass.ClassName]);
+        raise ETException.CreateFmt(
+          TTLanguage.Instance.Translate(SNotEventType), [AEventClass.ClassName]);
       result := LResult.AsType<TTEvent>(False);
     except
       LResult.AsObject.Free;

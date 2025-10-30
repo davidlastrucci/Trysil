@@ -20,6 +20,7 @@ uses
   System.DateUtils,
   System.TypInfo,
   System.NetEncoding,
+  Trysil.Consts,
   Trysil.Rtti,
 
   Trysil.JSon.Consts,
@@ -216,7 +217,8 @@ function TTJSonSerializers.Get(
 begin
   if not FSerializers.TryGetValue(ATypeInfo, result) then
     raise ETJSonException.CreateFmt(
-      SSerializerNotFound, [String(ATypeInfo.Name)]);
+      TTLanguage.Instance.Translate(SSerializerNotFound), [
+        String(ATypeInfo.Name)]);
 end;
 
 procedure TTJSonSerializers.Register<T>(const AClass: TTJSonSerializerClass);

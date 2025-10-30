@@ -195,7 +195,8 @@ end;
 function TTContext.CreateTransaction: TTTransaction;
 begin
   if not FWriteConnection.SupportTransaction then
-    raise ETException.Create(STransactionNotSupported);
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(STransactionNotSupported));
   result := TTTransaction.Create(FWriteConnection);
 end;
 

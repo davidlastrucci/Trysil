@@ -270,7 +270,8 @@ begin
     else if Self.IsType<TTNullable<TGuid>>() then
       result := Self.AsType<TTNullable<TGuid>>().IsNull
     else
-      raise ETException.Create(SInvalidNullableType);
+      raise ETException.Create(
+        TTLanguage.Instance.Translate(SInvalidNullableType));
   end;
 end;
 
@@ -291,7 +292,8 @@ begin
   else if Self.IsType<TTNullable<TGuid>>() then
     result := Self.AsType<TTNullable<TGuid>>().GetValueOrDefault().ToString()
   else
-    raise ETException.Create(SInvalidNullableType);
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(SInvalidNullableType));
 end;
 
 {$IF CompilerVersion < 35} // Delphi 11 Alexandria
@@ -542,7 +544,8 @@ var
 begin
   LPropertyID := FRttiType.GetProperty('ID');
   if not Assigned(LPropertyID) then
-    raise ETException.Create(SPropertyIDNotFound);
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(SPropertyIDNotFound));
   result := LPropertyID.GetValue(AInstance);
 end;
 
@@ -798,7 +801,8 @@ end;
 
 procedure TTRttiGenericList.RaiseNotAList;
 begin
-  raise ETException.CreateFmt(STypeIsNotAList, [FObject.ClassName]);
+  raise ETException.CreateFmt(
+    TTLanguage.Instance.Translate(STypeIsNotAList), [FObject.ClassName]);
 end;
 
 procedure TTRttiGenericList.SearchGenericType;
@@ -919,7 +923,8 @@ begin
     end;
 
   if not Assigned(result) then
-    raise ETException.CreateFmt(STypeHasNotValidConstructor, [FType.Name]);
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(STypeHasNotValidConstructor), [FType.Name]);
 end;
 
 function TTRttiEntity<T>.InternalCreateEntity: T;

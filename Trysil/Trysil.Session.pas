@@ -189,7 +189,8 @@ end;
 function TTSession<T>.GetEntityState(const AClone: T): TTSessionState;
 begin
   if not FEntityStates.TryGetValue(AClone, result) then
-    raise ETException.CreateFmt(SNotValidEntity, [AClone.ToString()]);
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SNotValidEntity), [AClone.ToString()]);
 end;
 
 function TTSession<T>.GetOriginalEntity(const AClone: T): T;
@@ -200,7 +201,8 @@ end;
 procedure TTSession<T>.Insert(const AEntity: T);
 begin
   if FClonedEntities.Contains(AEntity) then
-    raise ETException.CreateFmt(SClonedEntity, [AEntity.ToString()]);
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SClonedEntity), [AEntity.ToString()]);
   FResolver.Validate<T>(AEntity);
   FEntities.Add(AEntity);
   FAllEntities.Add(AEntity);
@@ -213,7 +215,8 @@ var
 begin
   LState := GetEntityState(AClone);
   if LState = TTSessionState.Deleted then
-    raise ETException.CreateFmt(SDeletedEntity, [AClone.ToString()])
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SDeletedEntity), [AClone.ToString()])
   else
   begin
     FResolver.Validate<T>(AClone);
@@ -260,7 +263,7 @@ var
   LTransaction: TTTransaction;
 begin
   if FApplied then
-    raise ETException.Create(SSessionNotTwice);
+    raise ETException.Create(TTLanguage.Instance.Translate(SSessionNotTwice));
 
   LTransaction := TTTransaction.Create(FConnection);
   try

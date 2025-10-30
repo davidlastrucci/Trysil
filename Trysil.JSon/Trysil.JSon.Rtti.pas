@@ -16,6 +16,7 @@ uses
   System.SysUtils,
   System.Classes,
   System.Rtti,
+  System.TypInfo,
   Trysil.Rtti;
 
 type

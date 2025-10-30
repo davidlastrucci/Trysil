@@ -126,7 +126,8 @@ end;
 function TTNullable<T>.GetValue: T;
 begin
   if IsNull then
-    raise ETException.Create(SNullableTypeHasNoValue);
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(SNullableTypeHasNoValue));
   result := FValue;
 end;
 
@@ -175,7 +176,8 @@ begin
   if not Assigned(AValue) then
     result.Clear
   else
-    raise ETException.Create(SCannotAssignPointerToNullable);
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(SCannotAssignPointerToNullable));
 end;
 
 class operator TTNullable<T>.Explicit(const AValue: TTNullable<T>): T;

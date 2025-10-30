@@ -540,7 +540,8 @@ begin
     TTFireDACDriver.GetDriverID(AParameters.Driver).ToLower(),
     LConnectionClass) then
     raise ETException.CreateFmt(
-      SNotValidConnectionDriver, [AParameters.Driver]);
+      TTLanguage.Instance.Translate(SNotValidConnectionDriver), [
+        AParameters.Driver]);
   FConnections.Add(AName.ToLower(), LConnectionClass);
   LConnectionClass.InternalRegisterConnection(AName, AParameters);
 end;
@@ -551,7 +552,8 @@ var
   LConnectionClass: TTFireDACConnectionClass;
 begin
   if not FConnections.TryGetValue(AName.ToLower(), LConnectionClass) then
-    raise ETException.CreateFmt(SNotValidConnection, [AName]);
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SNotValidConnection), [AName]);
   result := LConnectionClass.Create(AName);
 end;
 

@@ -288,9 +288,11 @@ begin
   begin
     LTableMap := TTMapper.Instance.Load(AObject.ClassInfo);
     if not Assigned(LTableMap) then
-      raise ETException.Create(STableMapNotFound);
+      raise ETException.Create(
+        TTLanguage.Instance.Translate(STableMapNotFound));
     if not Assigned(LTableMap.PrimaryKey) then
-      raise ETException.Create(SPrimaryKeyNotDefined);
+      raise ETException.Create(
+        TTLanguage.Instance.Translate(SPrimaryKeyNotDefined));
     LValue := LTableMap.PrimaryKey.Member.GetValue(AObject);
   end;
   LParamValue := LValue.AsType<Integer>();
@@ -554,8 +556,9 @@ var
   LClass: TClass;
 begin
   if not FParameterTypes.TryGetValue(AFieldType, LClass) then
-    raise ETException.CreateFmt(SParameterTypeError, [
-      TRttiEnumerationType.GetName<TFieldType>(AFieldType)]);
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SParameterTypeError), [
+        TRttiEnumerationType.GetName<TFieldType>(AFieldType)]);
   result := TTParameterClass(LClass).Create(AConnectionID, AParam, AColumnMap);
 end;
 

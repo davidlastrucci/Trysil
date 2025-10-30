@@ -15,6 +15,7 @@ interface
 uses
   System.SysUtils,
   System.Classes,
+  Trysil.Consts,
 
   Trysil.Http.Consts,
   Trysil.Http.Exceptions,
@@ -85,13 +86,14 @@ begin
   if not LHeader.IsEmpty then
     AResponse.AddHeader('WWW-Authenticate', LHeader);
   raise ETHttpUnauthorized.CreateFmt(
-    SUnauthorized, [ARequest.ControllerID.Uri]);
+    TTLanguage.Instance.Translate(SUnauthorized), [ARequest.ControllerID.Uri]);
 end;
 
 procedure TTHttpAbstractAuthentication<C>.ResponseForbiddenError(
   const ARequest: TTHttpRequest; const AResponse: TTHttpResponse);
 begin
-  raise ETHttpForbidden.CreateFmt(SForbidden, [ARequest.ControllerID.Uri])
+  raise ETHttpForbidden.CreateFmt(
+    TTLanguage.Instance.Translate(SForbidden), [ARequest.ControllerID.Uri])
 end;
 
 end.

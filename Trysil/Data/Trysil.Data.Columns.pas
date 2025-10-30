@@ -338,7 +338,8 @@ var
   LClass: TClass;
 begin
   if not FColumnTypes.TryGetValue(AField.ClassType, LClass) then
-    raise ETException.CreateFmt(SColumnTypeError, [AField.ClassName]);
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SColumnTypeError), [AField.ClassName]);
   result := TTColumnClass(LClass).Create(AField, AColumnMap);
 end;
 
