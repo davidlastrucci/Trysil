@@ -351,20 +351,28 @@ procedure TTHttpServer<C>.OnHttpServerCommand(
 var
   LTaskID: TTHttpTaskID;
   LRequest: TTHttpRequest;
+  LThreadID: TThreadID;
   LResponse: TTHttpResponse;
 begin
   LTaskID := TTHttpTaskID.NewID;
   LRequest := TTHttpRequest.Create(LTaskID, ARequestInfo);
   try
-    LResponse := TTHttpResponse.Create(LTaskID, AResponseInfo);
+    LThreadID := TThread.Current.ThreadID;
+    TTHttpLanguage.Instance.SetThreadLanguage(
+      LThreadID, LRequest.Headers.Value['Accept-Language']);
     try
-      FLog.LogRequest(LRequest);
-      FListener.HandleRequest(LRequest, LResponse);
-      SetContentStream(LResponse, AResponseInfo);
+      LResponse := TTHttpResponse.Create(LTaskID, AResponseInfo);
+      try
+        FLog.LogRequest(LRequest);
+        FListener.HandleRequest(LRequest, LResponse);
+        SetContentStream(LResponse, AResponseInfo);
 
-      FLog.LogResponse(LRequest.User, LResponse);
+        FLog.LogResponse(LRequest.User, LResponse);
+      finally
+        LResponse.Free;
+      end;
     finally
-      LResponse.Free;
+      TTHttpLanguage.Instance.RemoveThreadLanguage(LThreadID);
     end;
   finally
     LRequest.Free;
