@@ -22,7 +22,6 @@ implementation
 
 class procedure TTLanguageFR.Translate;
 begin
-
   TTLanguage.Instance.Add(SNotValidEventClass, 'Constructeur non valide dans la classe TTEvent : %0:s.');
   TTLanguage.Instance.Add(SNotEventType, 'Type TTEvent non valide : %0:s.');
   TTLanguage.Instance.Add(SInvalidRttiObjectType, 'Le type TRttiObject n''est pas valide.');
