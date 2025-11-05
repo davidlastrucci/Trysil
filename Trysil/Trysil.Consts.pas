@@ -22,9 +22,13 @@ type
 { TTAbstractLanguageResolver }
 
   TTAbstractLanguageResolver = class abstract
+  strict protected
+    function GetCurrentLanguage: String; virtual; abstract;
   public
     function TryTranslate(
       const AKey: String; out AValue: String): Boolean; virtual; abstract;
+
+    property CurrentLanguage: String read GetCurrentLanguage;
   end;
 
 { TTLanguage }
@@ -38,6 +42,8 @@ type
   strict private
     FStrings: TDictionary<String, String>;
     FResolver: TTAbstractLanguageResolver;
+
+    function GetCurrentLanguage: String;
   public
     constructor Create;
     destructor Destroy; override;
@@ -48,6 +54,8 @@ type
 
     property Resolver: TTAbstractLanguageResolver
       read FResolver write FResolver;
+
+    property CurrentLanguage: String read GetCurrentLanguage;
 
     class property Instance: TTLanguage read FInstance;
   end;
@@ -137,6 +145,14 @@ end;
 procedure TTLanguage.Add(const AKey: String; const AValue: String);
 begin
   FStrings.AddOrSetValue(AKey, AValue);
+end;
+
+function TTLanguage.GetCurrentLanguage: String;
+begin
+  if Assigned(FResolver) then
+    result := FResolver.CurrentLanguage
+  else
+    result := String.Empty;
 end;
 
 function TTLanguage.Translate(const AKey: String): String;

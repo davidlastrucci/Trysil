@@ -100,6 +100,8 @@ type
     FCriticalSection: TTCriticalSection;
     FThreads: TDictionary<TThreadID, String>;
     FStrings: TDictionary<TTLanguageValue, String>;
+  strict protected
+    function GetCurrentLanguage: String; override;
   public
     constructor Create;
     destructor Destroy; override;
@@ -219,6 +221,16 @@ begin
   FCriticalSection.Acquire;
   try
     FThreads.Remove(AThreadID);
+  finally
+    FCriticalSection.Leave;
+  end;
+end;
+
+function TTHttpLanguage.GetCurrentLanguage: String;
+begin
+  FCriticalSection.Acquire;
+  try
+    if not FThreads.TryGetValue(TThread.Current.ThreadID, result) then
   finally
     FCriticalSection.Leave;
   end;
