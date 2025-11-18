@@ -191,6 +191,11 @@ begin
       LParameters.Add(Format('Password=%s', [APassword]));
     end;
 
+    // ODBC Driver 18.0 for SQL Server
+    // https://techcommunity.microsoft.com/blog/sqlserver/odbc-driver-18-0-for-sql-server-released/3169228
+    // BREAKING CHANGE - Default Encrypt to Yes/Mandatory
+    LParameters.Add('Encrypt=No');
+
     RegisterConnection(AName, LParameters);
   finally
     LParameters.Free;
