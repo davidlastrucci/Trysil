@@ -16,6 +16,7 @@ uses
   System.SysUtils,
   System.Classes,
   System.Generics.Collections,
+  System.TypInfo,
   Data.DB,
 
   Trysil.Consts,
@@ -36,10 +37,28 @@ type
 
   TTApplyAllMethod<T: class> = reference to procedure(const AEntity: T);
 
+{ TTNewEntityCache }
+
+  TTNewEntityCache = class
+  strict private
+    FProvider: TTProvider;
+
+    FCache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
+  public
+    constructor Create(const AProvider: TTProvider);
+    destructor Destroy; override;
+
+    procedure Add<T: class>(const AEntity: T);
+    function Contains<T: class>(const AEntity: T): Boolean;
+    procedure Remove<T: class>(const AEntity: T);
+  end;
+
 { TTContext }
 
   TTContext = class
   strict private
+    FNewEntityCache: TTNewEntityCache;
+
     procedure ApplyAll<T: class>(
       const AList: TTList<T>; const AApplyAllMethod: TTApplyAllMethod<T>);
 
@@ -92,6 +111,9 @@ type
 
     procedure Validate<T: class>(const AEntity: T);
 
+    procedure Save<T: class>(const AEntity: T);
+    procedure SaveAll<T: class>(const AList: TTList<T>);
+
     procedure Insert<T: class>(const AEntity: T);
     procedure InsertAll<T: class>(const AList: TTList<T>);
 
@@ -107,6 +129,70 @@ type
   end;
 
 implementation
+
+{ TTNewEntityCache }
+
+constructor TTNewEntityCache.Create(const AProvider: TTProvider);
+begin
+  inherited Create;
+  FProvider := AProvider;
+  FCache :=
+    TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>.Create([doOwnsValues]);
+end;
+
+destructor TTNewEntityCache.Destroy;
+begin
+  FCache.Free;
+  inherited Destroy;
+end;
+
+procedure TTNewEntityCache.Add<T>(const AEntity: T);
+var
+  LID: TTPrimaryKey;
+  LTypeInfo: PTypeInfo;
+  LHashSet: THashSet<TTPrimaryKey>;
+begin
+  LID := FProvider.GetID<T>(AEntity);
+  LTypeInfo := TypeInfo(T);
+  if not FCache.TryGetValue(LTypeInfo, LHashSet) then
+  begin
+    LHashSet := THashSet<TTPrimaryKey>.Create;
+    try
+      FCache.Add(LTypeInfo, LHashSet);
+    except
+      LHashSet.Free;
+      raise;
+    end;
+  end;
+
+  if not LHashSet.Contains(LID) then
+    LHashSet.Add(LID);
+end;
+
+function TTNewEntityCache.Contains<T>(const AEntity: T): Boolean;
+var
+  LID: TTPrimaryKey;
+  LTypeInfo: PTypeInfo;
+  LHashSet: THashSet<TTPrimaryKey>;
+begin
+  LID := FProvider.GetID<T>(AEntity);
+  LTypeInfo := TypeInfo(T);
+  result := FCache.TryGetValue(LTypeInfo, LHashSet);
+  if result then
+    result := LHashSet.Contains(LID);
+end;
+
+procedure TTNewEntityCache.Remove<T>(const AEntity: T);
+var
+  LID: TTPrimaryKey;
+  LTypeInfo: PTypeInfo;
+  LHashSet: THashSet<TTPrimaryKey>;
+begin
+  LID := FProvider.GetID<T>(AEntity);
+  LTypeInfo := TypeInfo(T);
+  if FCache.TryGetValue(LTypeInfo, LHashSet) then
+    LHashSet.Remove(LID);
+end;
 
 { TTContext }
 
@@ -142,10 +228,13 @@ begin
   FProvider := TTProvider.Create(
     FReadConnection, Self, FMetadata, AUseIdentityMap);
   FResolver := CreateResolver;
+
+  FNewEntityCache := TTNewEntityCache.Create(FProvider);
 end;
 
 destructor TTContext.Destroy;
 begin
+  FNewEntityCache.Free;
   FResolver.Free;
   FProvider.Free;
   FMetadata.Free;
@@ -185,6 +274,7 @@ end;
 function TTContext.CreateEntity<T>(): T;
 begin
   result := FProvider.CreateEntity<T>(InLoading);
+  FNewEntityCache.Add<T>(result);
 end;
 
 function TTContext.CloneEntity<T>(const AEntity: T): T;
@@ -281,9 +371,27 @@ begin
   end;
 end;
 
+procedure TTContext.Save<T>(const AEntity: T);
+begin
+  if FNewEntityCache.Contains<T>(AEntity) then
+    Insert<T>(AEntity)
+  else
+    Update<T>(AEntity);
+end;
+
+procedure TTContext.SaveAll<T>(const AList: TTList<T>);
+begin
+  ApplyAll<T>(
+    AList, procedure(const AEntity: T)
+    begin
+      Save<T>(AEntity);
+    end);
+end;
+
 procedure TTContext.Insert<T>(const AEntity: T);
 begin
   FResolver.Insert<T>(AEntity);
+  FNewEntityCache.Remove<T>(AEntity);
 end;
 
 procedure TTContext.InsertAll<T>(const AList: TTList<T>);
@@ -291,7 +399,7 @@ begin
   ApplyAll<T>(
     AList, procedure(const AEntity: T)
     begin
-      FResolver.Insert<T>(AEntity);
+      Insert<T>(AEntity);
     end);
 end;
 
@@ -305,7 +413,7 @@ begin
   ApplyAll<T>(
     AList, procedure(const AEntity: T)
     begin
-      FResolver.Update<T>(AEntity);
+      Update<T>(AEntity);
     end);
 end;
 
@@ -319,7 +427,7 @@ begin
   ApplyAll<T>(
     AList, procedure(const AEntity: T)
     begin
-      FResolver.Delete<T>(AEntity);
+      Delete<T>(AEntity);
     end);
 end;
 
