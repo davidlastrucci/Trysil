@@ -116,10 +116,20 @@ type
       const AEntity: TObject; const AEvent: TTEvent); virtual; abstract;
   end;
 
+{ TTTransactionObserver }
+
+  TTTransactionObserver = class abstract
+  protected // internal
+    procedure TransactionStarted; virtual; abstract;
+    procedure TransactionCommitted; virtual; abstract;
+    procedure TransactionRolledback; virtual; abstract;
+  end;
+
 { TTConnection }
 
   TTConnection = class abstract(TTMetadataProvider)
   strict protected
+    FTransactionObserver: TTTransactionObserver;
     FUpdateMode: TTUpdateMode;
 
     function GetDatabaseVersion: String; virtual; abstract;
@@ -135,9 +145,9 @@ type
   public
     constructor Create;
 
-    procedure StartTransaction; virtual; abstract;
-    procedure CommitTransaction; virtual; abstract;
-    procedure RollbackTransaction; virtual; abstract;
+    procedure StartTransaction; virtual;
+    procedure CommitTransaction; virtual;
+    procedure RollbackTransaction; virtual;
 
     function SelectCount(
       const ATableMap: TTTableMap;
@@ -186,6 +196,8 @@ type
     property InTransaction: Boolean read GetInTransaction;
     property SupportTransaction: Boolean read GetSupportTransaction;
     property UpdateMode: TTUpdateMode read FUpdateMode write FUpdateMode;
+    property TransactionObserver: TTTransactionObserver
+      read FTransactionObserver write FTransactionObserver;
   end;
 
 implementation
@@ -280,6 +292,24 @@ constructor TTConnection.Create;
 begin
   inherited Create;
   FUpdateMode := TTUpdateMode.KeyAndVersionColumn;
+end;
+
+procedure TTConnection.StartTransaction;
+begin
+  if Assigned(FTransactionObserver) then
+    FTransactionObserver.TransactionStarted();
+end;
+
+procedure TTConnection.CommitTransaction;
+begin
+  if Assigned(FTransactionObserver) then
+    FTransactionObserver.TransactionCommitted();
+end;
+
+procedure TTConnection.RollbackTransaction;
+begin
+  if Assigned(FTransactionObserver) then
+    FTransactionObserver.TransactionRolledback();
 end;
 
 function TTConnection.CreateDataSet(

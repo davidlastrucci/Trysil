@@ -192,6 +192,7 @@ begin
     raise ETException.CreateFmt(
       TTLanguage.Instance.Translate(SInTransaction), ['StartTransaction']);
   TTLogger.Instance.LogStartTransaction(FConnectionID);
+  inherited StartTransaction;
 end;
 
 procedure TTGenericConnection.CommitTransaction;
@@ -200,6 +201,7 @@ begin
     raise ETException.CreateFmt(
       TTLanguage.Instance.Translate(SNotInTransaction), ['CommitTransaction']);
   TTLogger.Instance.LogCommit(FConnectionID);
+  inherited CommitTransaction;
 end;
 
 procedure TTGenericConnection.RollbackTransaction;
@@ -208,6 +210,7 @@ begin
     raise ETException.CreateFmt(
       TTLanguage.Instance.Translate(SNotInTransaction), ['RollbackTransaction']);
   TTLogger.Instance.LogRollback(FConnectionID);
+  inherited RollbackTransaction;
 end;
 
 function TTGenericConnection.SelectCount(
