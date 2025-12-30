@@ -16,6 +16,7 @@ uses
   System.SysUtils,
   System.Classes,
   System.Generics.Collections,
+  System.TypInfo,
   Data.DB,
 
   Trysil.Consts,
@@ -119,6 +120,41 @@ type
     procedure Refresh<T: class>(const AEntity: T);
 
     property UseIdentityMap: Boolean read GetUseIdentityMap;
+  end;
+
+{ TTNewEntityCache }
+
+  TTNewEntityCache = class(TTTransactionObserver)
+  strict private
+    FProvider: TTProvider;
+
+    FCache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
+    FTransactionCache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
+
+    procedure ClearTransaction;
+    procedure InternalAdd(
+      const ACache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
+      const ATypeInfo: PTypeInfo;
+      const AID: TTPrimaryKey);
+    function InternalContains(
+      const ACache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
+      const ATypeInfo: PTypeInfo;
+      const AID: TTPrimaryKey): Boolean;
+    procedure InternalRemove(
+      const ACache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
+      const ATypeInfo: PTypeInfo;
+      const AID: TTPrimaryKey);
+  strict protected
+    procedure TransactionStarted; override;
+    procedure TransactionCommitted; override;
+    procedure TransactionRolledback; override;
+  public
+    constructor Create(const AProvider: TTProvider);
+    destructor Destroy; override;
+
+    procedure Add<T: class>(const AEntity: T);
+    function Contains<T: class>(const AEntity: T): Boolean;
+    procedure Remove<T: class>(const AEntity: T);
   end;
 
 implementation
@@ -554,6 +590,132 @@ begin
   finally
     LReader.Free;
   end;
+end;
+
+{ TTNewEntityCache }
+
+constructor TTNewEntityCache.Create(const AProvider: TTProvider);
+begin
+  inherited Create;
+  FProvider := AProvider;
+
+  FCache := TObjectDictionary<
+    PTypeInfo, THashSet<TTPrimaryKey>>.Create([doOwnsValues]);
+
+  FTransactionCache := nil;
+end;
+
+destructor TTNewEntityCache.Destroy;
+begin
+  if Assigned(FTransactionCache) then
+    FTransactionCache.Free;
+  FCache.Free;
+  inherited Destroy;
+end;
+
+procedure TTNewEntityCache.ClearTransaction;
+begin
+  FTransactionCache.Free;
+  FTransactionCache := nil;
+end;
+
+procedure TTNewEntityCache.TransactionStarted;
+begin
+  if not Assigned(FTransactionCache) then
+    FTransactionCache := TObjectDictionary<
+      PTypeInfo, THashSet<TTPrimaryKey>>.Create([doOwnsValues]);
+end;
+
+procedure TTNewEntityCache.TransactionCommitted;
+begin
+  if Assigned(FTransactionCache) then
+    ClearTransaction;
+end;
+
+procedure TTNewEntityCache.TransactionRolledback;
+var
+  LPair: TPair<PTypeInfo, THashSet<TTPrimaryKey>>;
+  LID: TTPrimaryKey;
+begin
+  if Assigned(FTransactionCache) then
+    for LPair in FTransactionCache do
+      for LID in LPair.Value do
+        InternalAdd(FCache, LPair.Key, LID);
+  ClearTransaction;
+end;
+
+procedure TTNewEntityCache.InternalAdd(
+  const ACache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
+  const ATypeInfo: PTypeInfo;
+  const AID: TTPrimaryKey);
+var
+  LHashSet: THashSet<TTPrimaryKey>;
+begin
+  if not ACache.TryGetValue(ATypeInfo, LHashSet) then
+  begin
+    LHashSet := THashSet<TTPrimaryKey>.Create;
+    try
+      ACache.Add(ATypeInfo, LHashSet);
+    except
+      LHashSet.Free;
+      raise;
+    end;
+  end;
+
+  if not LHashSet.Contains(AID) then
+    LHashSet.Add(AID);
+end;
+
+function TTNewEntityCache.InternalContains(
+  const ACache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
+  const ATypeInfo: PTypeInfo;
+  const AID: TTPrimaryKey): Boolean;
+var
+  LHashSet: THashSet<TTPrimaryKey>;
+begin
+  result := ACache.TryGetValue(ATypeInfo, LHashSet);
+  if result then
+    result := LHashSet.Contains(AID);
+end;
+
+procedure TTNewEntityCache.InternalRemove(
+  const ACache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
+  const ATypeInfo: PTypeInfo;
+  const AID: TTPrimaryKey);
+var
+  LHashSet: THashSet<TTPrimaryKey>;
+begin
+  if ACache.TryGetValue(ATypeInfo, LHashSet) then
+    LHashSet.Remove(AID);
+end;
+
+procedure TTNewEntityCache.Add<T>(const AEntity: T);
+begin
+  InternalAdd(FCache, TypeInfo(T), FProvider.GetID<T>(AEntity));
+end;
+
+function TTNewEntityCache.Contains<T>(const AEntity: T): Boolean;
+var
+  LTypeInfo: PTypeInfo;
+  LID: TTPrimaryKey;
+begin
+  LTypeInfo := TypeInfo(T);
+  LID := FProvider.GetID<T>(AEntity);
+  result := InternalContains(FCache, LTypeInfo, LID);
+  if (not result) and Assigned(FTransactionCache) then
+    result := InternalContains(FTransactionCache, LTypeInfo, LID);
+end;
+
+procedure TTNewEntityCache.Remove<T>(const AEntity: T);
+var
+  LTypeInfo: PTypeInfo;
+  LID: TTPrimaryKey;
+begin
+  LTypeInfo := TypeInfo(T);
+  LID := FProvider.GetID<T>(AEntity);
+  if Assigned(FTransactionCache) then
+    InternalAdd(FTransactionCache, LTypeInfo, LID);
+  InternalRemove(FCache, LTypeInfo, LID);
 end;
 
 end.

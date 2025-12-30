@@ -16,7 +16,6 @@ uses
   System.SysUtils,
   System.Classes,
   System.Generics.Collections,
-  System.TypInfo,
   Data.DB,
 
   Trysil.Consts,
@@ -37,44 +36,9 @@ type
 
   TTApplyAllMethod<T: class> = reference to procedure(const AEntity: T);
 
-{ TTNewEntityCache }
-
-  TTNewEntityCache = class
-  strict private
-    FProvider: TTProvider;
-
-    FCache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
-    FTransactionCache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
-
-    procedure ClearTransaction;
-    procedure InternalAdd(
-      const ACache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
-      const ATypeInfo: PTypeInfo;
-      const AID: TTPrimaryKey);
-    function InternalContains(
-      const ACache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
-      const ATypeInfo: PTypeInfo;
-      const AID: TTPrimaryKey): Boolean;
-    procedure InternalRemove(
-      const ACache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
-      const ATypeInfo: PTypeInfo;
-      const AID: TTPrimaryKey);
-  public
-    constructor Create(const AProvider: TTProvider);
-    destructor Destroy; override;
-
-    procedure StartTransaction;
-    procedure CommitTransaction;
-    procedure RollbackTransaction;
-
-    procedure Add<T: class>(const AEntity: T);
-    function Contains<T: class>(const AEntity: T): Boolean;
-    procedure Remove<T: class>(const AEntity: T);
-  end;
-
 { TTContext }
 
-  TTContext = class(TTTransactionObserver)
+  TTContext = class
   strict private
     FNewEntityCache: TTNewEntityCache;
 
@@ -90,10 +54,6 @@ type
     FMetadata: TTMetadata;
     FProvider: TTProvider;
     FResolver: TTResolver;
-
-    procedure TransactionStarted; override;
-    procedure TransactionCommitted; override;
-    procedure TransactionRolledback; override;
 
     function CreateResolver: TTResolver; virtual;
     function InLoading: Boolean; virtual;
@@ -155,133 +115,6 @@ type
 
 implementation
 
-{ TTNewEntityCache }
-
-constructor TTNewEntityCache.Create(const AProvider: TTProvider);
-begin
-  inherited Create;
-  FProvider := AProvider;
-
-  FCache := TObjectDictionary<
-    PTypeInfo, THashSet<TTPrimaryKey>>.Create([doOwnsValues]);
-  FTransactionCache := nil;
-end;
-
-destructor TTNewEntityCache.Destroy;
-begin
-  if Assigned(FTransactionCache) then
-    FTransactionCache.Free;
-  FCache.Free;
-  inherited Destroy;
-end;
-
-procedure TTNewEntityCache.ClearTransaction;
-begin
-  if Assigned(FTransactionCache) then
-  begin
-    FTransactionCache.Free;
-    FTransactionCache := nil;
-  end;
-end;
-
-procedure TTNewEntityCache.StartTransaction;
-begin
-  if not Assigned(FTransactionCache) then
-    FTransactionCache := TObjectDictionary<
-      PTypeInfo, THashSet<TTPrimaryKey>>.Create([doOwnsValues]);
-end;
-
-procedure TTNewEntityCache.CommitTransaction;
-begin
-  ClearTransaction;
-end;
-
-procedure TTNewEntityCache.RollbackTransaction;
-var
-  LPair: TPair<PTypeInfo, THashSet<TTPrimaryKey>>;
-  LID: TTPrimaryKey;
-begin
-  if Assigned(FTransactionCache) then
-    for LPair in FTransactionCache do
-      for LID in LPair.Value do
-        InternalAdd(FCache, LPair.Key, LID);
-  ClearTransaction;
-end;
-
-procedure TTNewEntityCache.InternalAdd(
-  const ACache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
-  const ATypeInfo: PTypeInfo;
-  const AID: TTPrimaryKey);
-var
-  LHashSet: THashSet<TTPrimaryKey>;
-begin
-  if not ACache.TryGetValue(ATypeInfo, LHashSet) then
-  begin
-    LHashSet := THashSet<TTPrimaryKey>.Create;
-    try
-      ACache.Add(ATypeInfo, LHashSet);
-    except
-      LHashSet.Free;
-      raise;
-    end;
-  end;
-
-  if not LHashSet.Contains(AID) then
-    LHashSet.Add(AID);
-end;
-
-function TTNewEntityCache.InternalContains(
-  const ACache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
-  const ATypeInfo: PTypeInfo;
-  const AID: TTPrimaryKey): Boolean;
-var
-  LHashSet: THashSet<TTPrimaryKey>;
-begin
-  result := ACache.TryGetValue(ATypeInfo, LHashSet);
-  if result then
-    result := LHashSet.Contains(AID);
-end;
-
-procedure TTNewEntityCache.InternalRemove(
-  const ACache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
-  const ATypeInfo: PTypeInfo;
-  const AID: TTPrimaryKey);
-var
-  LHashSet: THashSet<TTPrimaryKey>;
-begin
-  if ACache.TryGetValue(ATypeInfo, LHashSet) then
-    LHashSet.Remove(AID);
-end;
-
-procedure TTNewEntityCache.Add<T>(const AEntity: T);
-begin
-  InternalAdd(FCache, TypeInfo(T), FProvider.GetID<T>(AEntity));
-end;
-
-function TTNewEntityCache.Contains<T>(const AEntity: T): Boolean;
-var
-  LTypeInfo: PTypeInfo;
-  LID: TTPrimaryKey;
-begin
-  LTypeInfo := TypeInfo(T);
-  LID := FProvider.GetID<T>(AEntity);
-  result := InternalContains(FCache, LTypeInfo, LID);
-  if (not result) and Assigned(FTransactionCache) then
-    result := InternalContains(FTransactionCache, LTypeInfo, LID);
-end;
-
-procedure TTNewEntityCache.Remove<T>(const AEntity: T);
-var
-  LTypeInfo: PTypeInfo;
-  LID: TTPrimaryKey;
-begin
-  LTypeInfo := TypeInfo(T);
-  LID := FProvider.GetID<T>(AEntity);
-  if Assigned(FTransactionCache) then
-    InternalAdd(FTransactionCache, LTypeInfo, LID);
-  InternalRemove(FCache, LTypeInfo, LID);
-end;
-
 { TTContext }
 
 constructor TTContext.Create(const AConnection: TTConnection);
@@ -332,22 +165,7 @@ end;
 procedure TTContext.AfterConstruction;
 begin
   inherited AfterConstruction;
-  FWriteConnection.TransactionObserver := Self;
-end;
-
-procedure TTContext.TransactionStarted;
-begin
-  FNewEntityCache.StartTransaction;
-end;
-
-procedure TTContext.TransactionCommitted;
-begin
-  FNewEntityCache.CommitTransaction;
-end;
-
-procedure TTContext.TransactionRolledback;
-begin
-  FNewEntityCache.RollbackTransaction;
+  FWriteConnection.TransactionObserver := FNewEntityCache;
 end;
 
 function TTContext.CreateDataset(const ASQL: String): TDataset;
