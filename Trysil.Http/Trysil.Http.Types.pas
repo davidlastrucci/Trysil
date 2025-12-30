@@ -47,6 +47,11 @@ type
       const AIndex: Integer;
       const AParam: String;
       out AValue: Integer): Boolean;
+    function AreParamCompatible(
+      const AIndex: Integer;
+      const AParamIndex: Integer;
+      const AOther: TTHttpUriParts;
+      const AParams: TList<Integer>): Boolean;
   public
     constructor Create(const AUri: String);
 
@@ -114,14 +119,32 @@ begin
       Inc(FParamsCount);
 end;
 
+function TTHttpUriParts.AreParamCompatible(
+  const AIndex: Integer;
+  const AParamIndex: Integer;
+  const AOther: TTHttpUriParts;
+  const AParams: TList<Integer>): Boolean;
+var
+  LParam: Integer;
+begin
+  result := False;
+  if Self.FParts[AIndex].Equals('?') then
+    result := GetIntegerParam(AParamIndex, AOther.FParts[AIndex], LParam)
+  else if AOther.FParts[AIndex].Equals('?') then
+    result := GetIntegerParam(AParamIndex, Self.FParts[AIndex], LParam);
+
+  if result and Assigned(AParams) then
+    AParams.Add(LParam);
+end;
+
 function TTHttpUriParts.Equals(
   const AOther: TTHttpUriParts; const AParams: TList<Integer>): Boolean;
 var
   LParamIndex, LIndex: Integer;
-  LParam: Integer;
 begin
   if Assigned(AParams) then
     AParams.Clear;
+
   LParamIndex := 0;
   result := (Low(Self.FParts) = Low(AOther.FParts)) and
     (High(Self.FParts) = High(AOther.FParts));
@@ -131,15 +154,10 @@ begin
       result := (Self.FParts[LIndex].Equals(AOther.FParts[LIndex]));
       if not result then
       begin
-        if Self.FParts[LIndex].Equals('?') then
-          result := GetIntegerParam(LParamIndex, AOther.FParts[LIndex], LParam)
-        else if AOther.FParts[LIndex].Equals('?') then
-          result := GetIntegerParam(LParamIndex, Self.FParts[LIndex], LParam);
-        if result and Assigned(AParams) then
-          AParams.Add(LParam);
-
+        result := AreParamCompatible(LIndex, LParamIndex, AOther, AParams);
         Inc(LParamIndex);
       end;
+
       if not result then
         Break;
     end;

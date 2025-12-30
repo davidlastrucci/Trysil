@@ -319,6 +319,10 @@ type
     procedure SetSequenceName(const AName: String);
     procedure SetWhereClause(const AWhereClause: String);
 
+    function InitializeTableAttributes(
+      const AAttribute: TCustomAttribute): Boolean;
+    procedure InitializeOtherAttributes(const AAttribute: TCustomAttribute);
+
     procedure InitializeTable(const AType: TRttiType);
     procedure InitializeColumns(const AType: TRttiType);
     procedure InitializeValidators(const AType: TRttiType);
@@ -844,32 +848,57 @@ begin
   FWhereClause := AWhereClause;
 end;
 
+function TTTableMap.InitializeTableAttributes(
+  const AAttribute: TCustomAttribute): Boolean;
+begin
+  result := True;
+  if AAttribute is TTableAttribute then
+    SetTableName(TTableAttribute(AAttribute).Name)
+  else if AAttribute is TSequenceAttribute then
+    SetSequenceName(TSequenceAttribute(AAttribute).Name)
+  else if AAttribute is TWhereClauseAttribute then
+    SetWhereClause(TWhereClauseAttribute(AAttribute).Where)
+  else
+    result := False;
+end;
+
+procedure TTTableMap.InitializeOtherAttributes(
+  const AAttribute: TCustomAttribute);
+var
+  LWhereClauseParameterAttribute: TWhereClauseParameterAttribute;
+  LRelationAttribute: TRelationAttribute;
+begin
+  if AAttribute is TWhereClauseParameterAttribute then
+  begin
+    LWhereClauseParameterAttribute :=
+      TWhereClauseParameterAttribute(AAttribute);
+    FWhereParameters.Add(
+      TTWhereParameterMap.Create(
+        LWhereClauseParameterAttribute.Name,
+        LWhereClauseParameterAttribute.DataType,
+        LWhereClauseParameterAttribute.Size,
+        LWhereClauseParameterAttribute.Value))
+  end
+  else if AAttribute is TRelationAttribute then
+  begin
+    LRelationAttribute := TRelationAttribute(AAttribute);
+    FRelations.Add(
+      TTRelationMap.Create(
+        LRelationAttribute.TableName,
+        LRelationAttribute.ColumnName,
+        LRelationAttribute.IsCascade))
+  end
+  else if AAttribute is TEventAttribute then
+    FEvents.SetEvent(TEventAttribute(AAttribute));
+end;
+
 procedure TTTableMap.InitializeTable(const AType: TRttiType);
 var
   LAttribute: TCustomAttribute;
 begin
   for LAttribute in AType.GetInheritedAttributes do
-    if LAttribute is TTableAttribute then
-      SetTableName(TTableAttribute(LAttribute).Name)
-    else if LAttribute is TSequenceAttribute then
-      SetSequenceName(TSequenceAttribute(LAttribute).Name)
-    else if LAttribute is TWhereClauseAttribute then
-      SetWhereClause(TWhereClauseAttribute(LAttribute).Where)
-    else if LAttribute is TWhereClauseParameterAttribute then
-      FWhereParameters.Add(
-        TTWhereParameterMap.Create(
-          TWhereClauseParameterAttribute(LAttribute).Name,
-          TWhereClauseParameterAttribute(LAttribute).DataType,
-          TWhereClauseParameterAttribute(LAttribute).Size,
-          TWhereClauseParameterAttribute(LAttribute).Value))
-    else if LAttribute is TRelationAttribute then
-      FRelations.Add(
-        TTRelationMap.Create(
-          TRelationAttribute(LAttribute).TableName,
-          TRelationAttribute(LAttribute).ColumnName,
-          TRelationAttribute(LAttribute).IsCascade))
-    else if LAttribute is TEventAttribute then
-      FEvents.SetEvent(TEventAttribute(LAttribute));
+    if not InitializeTableAttributes(LAttribute) then
+      InitializeOtherAttributes(LAttribute);
 end;
 
 procedure TTTableMap.InitializeColumns(const AType: TRttiType);

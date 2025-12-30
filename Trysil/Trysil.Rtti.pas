@@ -34,6 +34,7 @@ type
 
   TTValueHelper = record helper for TValue
   strict private
+    procedure RaiseInvalidNullableType;
     function GetIsNull: Boolean;
     function GetIsNullable: Boolean;
   public
@@ -245,55 +246,75 @@ implementation
 
 { TTValueHelper }
 
+procedure TTValueHelper.RaiseInvalidNullableType;
+begin
+  raise ETException.Create(
+    TTLanguage.Instance.Translate(SInvalidNullableType));
+end;
+
 function TTValueHelper.GetIsNullable: Boolean;
 begin
   result := String(Self.TypeInfo.Name).StartsWith('TTNullable<');
 end;
 
 function TTValueHelper.GetIsNull: Boolean;
+var
+  LContext: TRttiContext;
+  LType: TRttiType;
+  LMethod: TRttiMethod;
+  LResult: TValue;
 begin
-  result := False;
-  if Self.IsNullable then
-  begin
-    if Self.IsType<TTNullable<String>>() then
-      result := Self.AsType<TTNullable<String>>().IsNull
-    else if Self.IsType<TTNullable<Integer>>() then
-      result := Self.AsType<TTNullable<Integer>>().IsNull
-    else if Self.IsType<TTNullable<Int64>>() then
-      result := Self.AsType<TTNullable<Int64>>().IsNull
-    else if Self.IsType<TTNullable<Double>>() then
-      result := Self.AsType<TTNullable<Double>>().IsNull
-    else if Self.IsType<TTNullable<Boolean>>() then
-      result := Self.AsType<TTNullable<Boolean>>().IsNull
-    else if Self.IsType<TTNullable<TDateTime>>() then
-      result := Self.AsType<TTNullable<TDateTime>>().IsNull
-    else if Self.IsType<TTNullable<TGuid>>() then
-      result := Self.AsType<TTNullable<TGuid>>().IsNull
-    else
-      raise ETException.Create(
-        TTLanguage.Instance.Translate(SInvalidNullableType));
+  if not Self.IsNullable then
+    RaiseInvalidNullableType;
+
+  LContext := TRttiContext.Create;
+  try
+    LType := LContext.GetType(Self.TypeInfo);
+    if not Assigned(LType) then
+      RaiseInvalidNullableType;
+
+    LMethod := LType.GetMethod('GetIsNull');
+    if not Assigned(LMethod) then
+      RaiseInvalidNullableType;
+
+    LResult := LMethod.Invoke(Self, []);
+    result := LResult.AsType<Boolean>();
+  finally
+    LContext.Free;
   end;
 end;
 
 function TTValueHelper.NullableValueToString: String;
+var
+  LContext: TRttiContext;
+  LType: TRttiType;
+  LFound: Boolean;
+  LMethod: TRttiMethod;
+  LResult: TValue;
 begin
-  if Self.IsType<TTNullable<String>>() then
-    result := Self.AsType<TTNullable<String>>().GetValueOrDefault()
-  else if Self.IsType<TTNullable<Integer>>() then
-    result := Self.AsType<TTNullable<Integer>>().GetValueOrDefault().ToString()
-  else if Self.IsType<TTNullable<Int64>>() then
-    result := Self.AsType<TTNullable<Int64>>().GetValueOrDefault().ToString()
-  else if Self.IsType<TTNullable<Double>>() then
-    result := Self.AsType<TTNullable<Double>>().GetValueOrDefault().ToString()
-  else if Self.IsType<TTNullable<Boolean>>() then
-    result := Self.AsType<TTNullable<Boolean>>().GetValueOrDefault().ToString()
-  else if Self.IsType<TTNullable<TDateTime>>() then
-    result := DateToStr(Self.AsType<TTNullable<TDateTime>>().GetValueOrDefault())
-  else if Self.IsType<TTNullable<TGuid>>() then
-    result := Self.AsType<TTNullable<TGuid>>().GetValueOrDefault().ToString()
-  else
-    raise ETException.Create(
-      TTLanguage.Instance.Translate(SInvalidNullableType));
+  if not Self.IsNullable then
+    RaiseInvalidNullableType;
+
+  LContext := TRttiContext.Create;
+  try
+    LType := LContext.GetType(Self.TypeInfo);
+    if not Assigned(LType) then
+      RaiseInvalidNullableType;
+
+    LFound := False;
+    for LMethod in LType.GetMethods('GetValueOrDefault') do
+      if Length(LMethod.GetParameters) = 0 then
+      begin
+        LFound := True;
+        LResult := LMethod.Invoke(Self, []);
+        result := LResult.ToString();
+      end;
+
+    if not LFound then
+      RaiseInvalidNullableType;
+  finally
+    LContext.Free;
+  end;
 end;
 
 {$IF CompilerVersion < 35} // Delphi 11 Alexandria

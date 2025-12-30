@@ -92,16 +92,29 @@ type
     property IsEmpty: Boolean read GetIsEmpty;
   end;
 
+{ TTLoggerMethod }
+
+  TTLoggerMethod = procedure(const AItem: TTLoggerItem) of object;
+
 { TTLoggerThread }
 
   TTLoggerThread = class abstract(TThread)
   strict private
+    FLoggerMethods: TDictionary<TTLoggerEvent, TTLoggerMethod>;
     FQueue: TTLoggerQueue;
     FEvent: TEvent;
 
     procedure Log(const AItem: TTLoggerItem);
 
     procedure SetTerminated;
+
+    procedure InternalLogStartTransaction(const AItem: TTLoggerItem);
+    procedure InternalLogCommit(const AItem: TTLoggerItem);
+    procedure InternalLogRollback(const AItem: TTLoggerItem);
+    procedure InternalLogParameter(const AItem: TTLoggerItem);
+    procedure InternalLogSyntax(const AItem: TTLoggerItem);
+    procedure InternalLogCommand(const AItem: TTLoggerItem);
+    procedure InternalLogError(const AItem: TTLoggerItem);
   strict protected
     procedure LogStartTransaction(const AID: TTLoggerItemID); virtual; abstract;
     procedure LogCommit(const AID: TTLoggerItemID); virtual; abstract;
@@ -117,10 +130,13 @@ type
     procedure LogError(
       const AID: TTLoggerItemID; const AMessage: String); virtual; abstract;
 
+    procedure RegisterMethods;
     procedure Execute; override;
   public
     constructor Create; virtual;
     destructor Destroy; override;
+
+    procedure AfterConstruction; override;
 
     procedure AddLog(const AItem: TTLoggerItem);
   end;
@@ -250,6 +266,7 @@ end;
 constructor TTLoggerThread.Create;
 begin
   inherited Create;
+  FLoggerMethods := TDictionary<TTLoggerEvent, TTLoggerMethod>.Create;
   FQueue := TTLoggerQueue.Create;
   FEvent := TEvent.Create;
 end;
@@ -259,13 +276,31 @@ begin
   SetTerminated();
   FEvent.Free;
   FQueue.Free;
+  FLoggerMethods.Free;
   inherited Destroy;
+end;
+
+procedure TTLoggerThread.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  RegisterMethods;
 end;
 
 procedure TTLoggerThread.AddLog(const AItem: TTLoggerItem);
 begin
   FQueue.Enqueue(AItem);
   FEvent.SetEvent;
+end;
+
+procedure TTLoggerThread.RegisterMethods;
+begin
+  FLoggerMethods.Add(TTLoggerEvent.StartTransaction, InternalLogStartTransaction);
+  FLoggerMethods.Add(TTLoggerEvent.Commit, InternalLogCommit);
+  FLoggerMethods.Add(TTLoggerEvent.Rollback, InternalLogRollback);
+  FLoggerMethods.Add(TTLoggerEvent.Parameter, InternalLogParameter);
+  FLoggerMethods.Add(TTLoggerEvent.Syntax, InternalLogSyntax);
+  FLoggerMethods.Add(TTLoggerEvent.Command, InternalLogCommand);
+  FLoggerMethods.Add(TTLoggerEvent.Error, InternalLogError);
 end;
 
 procedure TTLoggerThread.Execute;
@@ -291,18 +326,47 @@ begin
   end;
 end;
 
-procedure TTLoggerThread.Log(const AItem: TTLoggerItem);
+procedure TTLoggerThread.InternalLogStartTransaction(const AItem: TTLoggerItem);
 begin
-  case AItem.Event of
-    TTLoggerEvent.StartTransaction: LogStartTransaction(AItem.ID);
-    TTLoggerEvent.Commit: LogCommit(AItem.ID);
-    TTLoggerEvent.Rollback: LogRollback(AItem.ID);
-    TTLoggerEvent.Parameter:
-      LogParameter(AItem.ID, AItem.Values[0], AItem.Values[1]);
-    TTLoggerEvent.Syntax: LogSyntax(AItem.ID, AItem.Values[0]);
-    TTLoggerEvent.Command: LogCommand(AItem.ID, AItem.Values[0]);
-    TTLoggerEvent.Error: LogError(AItem.ID, AItem.Values[0]);
-  end;
+  LogStartTransaction(AItem.ID);
+end;
+
+procedure TTLoggerThread.InternalLogCommit(const AItem: TTLoggerItem);
+begin
+  LogCommit(AItem.ID);
+end;
+
+procedure TTLoggerThread.InternalLogRollback(const AItem: TTLoggerItem);
+begin
+  LogRollback(AItem.ID);
+end;
+
+procedure TTLoggerThread.InternalLogParameter(const AItem: TTLoggerItem);
+begin
+  LogParameter(AItem.ID, AItem.Values[0], AItem.Values[1]);
+end;
+
+procedure TTLoggerThread.InternalLogSyntax(const AItem: TTLoggerItem);
+begin
+  LogSyntax(AItem.ID, AItem.Values[0]);
+end;
+
+procedure TTLoggerThread.InternalLogCommand(const AItem: TTLoggerItem);
+begin
+  LogCommand(AItem.ID, AItem.Values[0]);
+end;
+
+procedure TTLoggerThread.InternalLogError(const AItem: TTLoggerItem);
+begin
+  LogError(AItem.ID, AItem.Values[0]);
+end;
+
+procedure TTLoggerThread.Log(const AItem: TTLoggerItem);
+var
+  LLoggerMethod: TTLoggerMethod;
+begin
+  if FLoggerMethods.TryGetValue(AItem.Event, LLoggerMethod) then
+    LLoggerMethod(AItem);
 end;
 
 procedure TTLoggerThread.SetTerminated;

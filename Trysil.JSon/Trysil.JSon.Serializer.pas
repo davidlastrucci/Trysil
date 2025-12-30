@@ -49,6 +49,12 @@ type
     procedure GetJSonListValue(
       const AList: TTJSonList; const AResult: TJSonArray);
 
+    function ColumnToJSonValue(
+      const ATableMap: TTTableMap;
+      const AColumnMap: TTColumnMap;
+      const AName: String;
+      const AObject: TObject;
+      const AResult: TJSonObject): TJSonValue;
     procedure ColumnsToJSonObject(
       const AObject: TObject; const AResult: TJSonObject);
     procedure DetailColumnsToJSonObject(
@@ -207,6 +213,32 @@ begin
   end;
 end;
 
+function TTJSonSerializer.ColumnToJSonValue(
+  const ATableMap: TTTableMap;
+  const AColumnMap: TTColumnMap;
+  const AName: String;
+  const AObject: TObject;
+  const AResult: TJSonObject): TJSonValue;
+var
+  LObject: TObject;
+begin
+  if AColumnMap.Member.IsNullable then
+    result := GetJSonNullableValue(AColumnMap.Member.GetValue(AObject))
+  else if AColumnMap.Member.IsClass then
+  begin
+    LObject := AColumnMap.Member.GetValue(AObject).AsObject;
+    if TTRttiLazy.IsLazy(LObject) then
+      AddLazyID(LObject, AName, AResult);
+    result := GetJSonObjectOrArrayValue(LObject);
+  end
+  else if TTJSonSqids.Instance.UseSqids and
+    (AColumnMap = ATableMap.PrimaryKey) then
+    result := TTJSonSqids.Instance.Encode(
+      AColumnMap.Member.GetValue(AObject).AsType<Integer>)
+  else
+    result := GetJSonValue(AColumnMap.Member.GetValue(AObject));
+end;
+
 procedure TTJSonSerializer.ColumnsToJSonObject(
   const AObject: TObject; const AResult: TJSonObject);
 var
@@ -214,33 +246,18 @@ var
   LColumnMap: TTColumnMap;
   LJSonIgnore: TJSonIgnoreAttribute;
   LName: String;
-  LObject: TObject;
   LValue: TJSonValue;
 begin
   LTableMap := TTMapper.Instance.Load(AObject.ClassInfo);
   for LColumnMap in LTableMap.Columns do
   begin
+    LName := GetName(LColumnMap.Member.Name);
+
     LJSonIgnore := LColumnMap.Member.GetAttribute<TJSonIgnoreAttribute>();
     if not Assigned(LJSonIgnore) then
     begin
-      LName := GetName(LColumnMap.Member.Name);
-
-      if LColumnMap.Member.IsNullable then
-        LValue := GetJSonNullableValue(LColumnMap.Member.GetValue(AObject))
-      else if LColumnMap.Member.IsClass then
-      begin
-        LObject := LColumnMap.Member.GetValue(AObject).AsObject;
-        if TTRttiLazy.IsLazy(LObject) then
-          AddLazyID(LObject, LName, AResult);
-        LValue := GetJSonObjectOrArrayValue(LObject);
-      end
-      else if TTJSonSqids.Instance.UseSqids and
-        (LColumnMap = LTableMap.PrimaryKey) then
-        LValue := TTJSonSqids.Instance.Encode(
-          LColumnMap.Member.GetValue(AObject).AsType<Integer>)
-      else
-        LValue := GetJSonValue(LColumnMap.Member.GetValue(AObject));
-
+      LValue := ColumnToJSonValue(
+        LTableMap, LColumnMap, LName, AObject, AResult);
       if Assigned(LValue) then
         AResult.AddPair(LName, LValue);
     end;

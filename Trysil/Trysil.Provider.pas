@@ -47,6 +47,7 @@ type
     FLazyOwner: TObjectList<TObject>;
 
     function GetUseIdentityMap: Boolean;
+    function LoadAndCheckTableMap<T: class>(): TTTableMap;
 
     function InternalCreateEntity<T: class>(
       const ATableMap: TTTAbleMap; const AReader: TTReader): T;
@@ -223,6 +224,17 @@ begin
   SetPrimaryKey<T>(LTablemap, AEntity);
 end;
 
+function TTProvider.LoadAndCheckTableMap<T>: TTTableMap;
+begin
+  result := TTMapper.Instance.Load<T>();
+  if not Assigned(result.PrimaryKey) then
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(SNotDefinedPrimaryKey));
+  if result.SequenceName.IsEmpty then
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(SNotDefinedSequence));
+end;
+
 function TTProvider.CreateEntity<T>(const AInLoading: Boolean): T;
 var
   LTableMap: TTTableMap;
@@ -231,14 +243,7 @@ var
 begin
   FInLoading := AInLoading;
   try
-    LTableMap := TTMapper.Instance.Load<T>();
-    if not Assigned(LTablemap.PrimaryKey) then
-      raise ETException.Create(
-        TTLanguage.Instance.Translate(SNotDefinedPrimaryKey));
-    if LTableMap.SequenceName.IsEmpty then
-      raise ETException.Create(
-        TTLanguage.Instance.Translate(SNotDefinedSequence));
-
+    LTableMap := LoadAndCheckTableMap<T>();
     LRttiEntity := TTRttiEntity<T>.Create;
     try
       result := LRttiEntity.CreateEntity(FContext);
