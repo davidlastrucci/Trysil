@@ -47,7 +47,7 @@ type
       const AIndex: Integer;
       const AParam: String;
       out AValue: Integer): Boolean;
-    function AreParamCompatible(
+    function IsParamPartCompatible(
       const AIndex: Integer;
       const AParamIndex: Integer;
       const AOther: TTHttpUriParts;
@@ -119,7 +119,7 @@ begin
       Inc(FParamsCount);
 end;
 
-function TTHttpUriParts.AreParamCompatible(
+function TTHttpUriParts.IsParamPartCompatible(
   const AIndex: Integer;
   const AParamIndex: Integer;
   const AOther: TTHttpUriParts;
@@ -154,7 +154,7 @@ begin
       result := (Self.FParts[LIndex].Equals(AOther.FParts[LIndex]));
       if not result then
       begin
-        result := AreParamCompatible(LIndex, LParamIndex, AOther, AParams);
+        result := IsParamPartCompatible(LIndex, LParamIndex, AOther, AParams);
         Inc(LParamIndex);
       end;
 
