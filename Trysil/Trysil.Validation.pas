@@ -106,15 +106,24 @@ end;
 
 function TTValidationErrors.ToJSon: String;
 var
-  LResult: TJSonObject;
+  LResult: TJSonArray;
   LError: TTValidationError;
+  LErrorItem: TJSonObject;
 begin
-  LResult := TJSonObject.Create;
+  LResult := TJSonArray.Create;
   try
     for LError in FErrors do
     begin
-      LResult.AddPair('columnName', LError.ColumnName);
-      LResult.AddPair('errorMessage', LError.ErrorMessage);
+      LErrorItem := TJSonObject.Create;
+      try
+        LErrorItem.AddPair('columnName', LError.ColumnName);
+        LErrorItem.AddPair('errorMessage', LError.ErrorMessage);
+
+        LResult.AddElement(LErrorItem);
+      except
+        LErrorItem.Free;
+        raise;
+      end;
     end;
     result := LResult.ToJSon();
   finally
