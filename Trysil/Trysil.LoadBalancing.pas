@@ -92,17 +92,17 @@ end;
 function TTRoundRobin<T>.GetNext: T;
 begin
   result := nil;
-  if FItems.Count > 0 then
-  begin
-    FCriticalSection.Acquire;
-    try
+  FCriticalSection.Acquire;
+  try
+    if FItems.Count > 0 then
+    begin
       Inc(FIndex);
       if FIndex >= FItems.Count then
         FIndex := 0;
       result := FItems[FIndex];
-    finally
-      FCriticalSection.Leave;
     end;
+  finally
+    FCriticalSection.Leave;
   end;
 end;
 
