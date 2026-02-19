@@ -8,7 +8,7 @@ Projects and applications that use Trysil as their ORM layer.
 
 **wippo** is a construction site management software developed by [Gioele Buonadonna](https://www.linkedin.com/in/gioelebuonadonna/). Trysil is part of its technology stack — more details on **wippo** [Technology](https://wippo.app/tecnologia.html) page.
 
-If you built an application with Trysil and would like it listed here, send me an email at [david.lastrucci@gmail.com](mailto:david.lastrucci@gmail.com).
+If you built an application with Trysil and would like it listed here, share it in the [Show and tell: share your project built with Trysil!](https://github.com/davidlastrucci/Trysil/issues/9) pinned issue, or send me an email at [david.lastrucci@gmail.com](mailto:david.lastrucci@gmail.com).
 
 ## Support Trysil
 
