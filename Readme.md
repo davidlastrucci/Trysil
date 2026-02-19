@@ -44,5 +44,10 @@ I would appreciate it!
 
 ---
 
+# Built With Trysil
+Projects and applications that use Trysil in production. [See the full list here.](https://github.com/davidlastrucci/Trysil/blob/master/Docs/BuiltWithTrysil.md)
+
+---
+
 Make With ❤ @davidlastrucci<br>
 [https://www.lastrucci.net/](https://www.lastrucci.net)
