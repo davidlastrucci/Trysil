@@ -40,3 +40,6 @@ __recovery/
 
 # Statistics file
 *.stat
+
+# Miscellaneous
+nul
