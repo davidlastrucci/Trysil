@@ -19,6 +19,25 @@ uses
 
 type
 
+{ TTHashList<T> }
+
+  TTHashList<T> = class(TEnumerable<T>)
+  strict private type
+    TNull = record end;
+  private
+    FDictionary: TDictionary<T, TNull>;
+  protected
+    function DoGetEnumerator: TEnumerator<T>; override;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    function Add(const AValue: T): Boolean; inline;
+    function Contains(const AValue: T): Boolean; inline;
+    function Remove(const AValue: T): Boolean;
+
+  end;
+
 { TTPredicate<T> }
 
   TTPredicate<T> = reference to function(const AItem: T): Boolean;
@@ -91,6 +110,44 @@ type
   end;
 
 implementation
+
+{ TTHashList<T> }
+
+constructor TTHashList<T>.Create;
+begin
+  inherited Create;
+  FDictionary := TDictionary<T, TNull>.Create;
+end;
+
+destructor TTHashList<T>.Destroy;
+begin
+  FDictionary.Free;
+  inherited Destroy;
+end;
+
+function TTHashList<T>.Add(const AValue: T): Boolean;
+var
+  LNull: TNull;
+begin
+  result := FDictionary.TryAdd(AValue, LNull);
+end;
+
+function TTHashList<T>.Contains(const AValue: T): Boolean;
+begin
+  result := FDictionary.ContainsKey(AValue);
+end;
+
+function TTHashList<T>.Remove(const AValue: T): Boolean;
+begin
+  result := FDictionary.ContainsKey(AValue);
+  if result then
+    FDictionary.Remove(AValue);
+end;
+
+function TTHashList<T>.DoGetEnumerator: TEnumerator<T>;
+begin
+  result := FDictionary.Keys.GetEnumerator;
+end;
 
 { TTEnumerator<T> }
 

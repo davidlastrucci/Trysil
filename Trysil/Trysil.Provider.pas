@@ -128,20 +128,20 @@ type
   strict private
     FProvider: TTProvider;
 
-    FCache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
-    FTransactionCache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
+    FCache: TObjectDictionary<PTypeInfo, TTHashList<TTPrimaryKey>>;
+    FTransactionCache: TObjectDictionary<PTypeInfo, TTHashList<TTPrimaryKey>>;
 
     procedure ClearTransaction;
     procedure InternalAdd(
-      const ACache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
+      const ACache: TObjectDictionary<PTypeInfo, TTHashList<TTPrimaryKey>>;
       const ATypeInfo: PTypeInfo;
       const AID: TTPrimaryKey);
     function InternalContains(
-      const ACache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
+      const ACache: TObjectDictionary<PTypeInfo, TTHashList<TTPrimaryKey>>;
       const ATypeInfo: PTypeInfo;
       const AID: TTPrimaryKey): Boolean;
     procedure InternalRemove(
-      const ACache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
+      const ACache: TObjectDictionary<PTypeInfo, TTHashList<TTPrimaryKey>>;
       const ATypeInfo: PTypeInfo;
       const AID: TTPrimaryKey);
   strict protected
@@ -600,7 +600,7 @@ begin
   FProvider := AProvider;
 
   FCache := TObjectDictionary<
-    PTypeInfo, THashSet<TTPrimaryKey>>.Create([doOwnsValues]);
+    PTypeInfo, TTHashList<TTPrimaryKey>>.Create([doOwnsValues]);
 
   FTransactionCache := nil;
 end;
@@ -623,7 +623,7 @@ procedure TTNewEntityCache.TransactionStarted;
 begin
   if not Assigned(FTransactionCache) then
     FTransactionCache := TObjectDictionary<
-      PTypeInfo, THashSet<TTPrimaryKey>>.Create([doOwnsValues]);
+      PTypeInfo, TTHashList<TTPrimaryKey>>.Create([doOwnsValues]);
 end;
 
 procedure TTNewEntityCache.TransactionCommitted;
@@ -634,7 +634,7 @@ end;
 
 procedure TTNewEntityCache.TransactionRolledback;
 var
-  LPair: TPair<PTypeInfo, THashSet<TTPrimaryKey>>;
+  LPair: TPair<PTypeInfo, TTHashList<TTPrimaryKey>>;
   LID: TTPrimaryKey;
 begin
   if Assigned(FTransactionCache) then
@@ -645,48 +645,48 @@ begin
 end;
 
 procedure TTNewEntityCache.InternalAdd(
-  const ACache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
+  const ACache: TObjectDictionary<PTypeInfo, TTHashList<TTPrimaryKey>>;
   const ATypeInfo: PTypeInfo;
   const AID: TTPrimaryKey);
 var
-  LHashSet: THashSet<TTPrimaryKey>;
+  LHashList: TTHashList<TTPrimaryKey>;
 begin
-  if not ACache.TryGetValue(ATypeInfo, LHashSet) then
+  if not ACache.TryGetValue(ATypeInfo, LHashList) then
   begin
-    LHashSet := THashSet<TTPrimaryKey>.Create;
+    LHashList := TTHashList<TTPrimaryKey>.Create;
     try
-      ACache.Add(ATypeInfo, LHashSet);
+      ACache.Add(ATypeInfo, LHashList);
     except
-      LHashSet.Free;
+      LHashList.Free;
       raise;
     end;
   end;
 
-  if not LHashSet.Contains(AID) then
-    LHashSet.Add(AID);
+  if not LHashList.Contains(AID) then
+    LHashList.Add(AID);
 end;
 
 function TTNewEntityCache.InternalContains(
-  const ACache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
+  const ACache: TObjectDictionary<PTypeInfo, TTHashList<TTPrimaryKey>>;
   const ATypeInfo: PTypeInfo;
   const AID: TTPrimaryKey): Boolean;
 var
-  LHashSet: THashSet<TTPrimaryKey>;
+  LHashList: TTHashList<TTPrimaryKey>;
 begin
-  result := ACache.TryGetValue(ATypeInfo, LHashSet);
+  result := ACache.TryGetValue(ATypeInfo, LHashList);
   if result then
-    result := LHashSet.Contains(AID);
+    result := LHashList.Contains(AID);
 end;
 
 procedure TTNewEntityCache.InternalRemove(
-  const ACache: TObjectDictionary<PTypeInfo, THashSet<TTPrimaryKey>>;
+  const ACache: TObjectDictionary<PTypeInfo, TTHashList<TTPrimaryKey>>;
   const ATypeInfo: PTypeInfo;
   const AID: TTPrimaryKey);
 var
-  LHashSet: THashSet<TTPrimaryKey>;
+  LHashList: TTHashList<TTPrimaryKey>;
 begin
-  if ACache.TryGetValue(ATypeInfo, LHashSet) then
-    LHashSet.Remove(AID);
+  if ACache.TryGetValue(ATypeInfo, LHashList) then
+    LHashList.Remove(AID);
 end;
 
 procedure TTNewEntityCache.Add<T>(const AEntity: T);
