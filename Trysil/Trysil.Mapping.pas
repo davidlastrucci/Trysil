@@ -604,7 +604,7 @@ end;
 
 procedure TTRelationsMap.Add(const ARelation: TTRelationMap);
 begin
-  FRelations.Add(ARelation)
+  FRelations.Add(ARelation);
 end;
 
 function TTRelationsMap.GetEnumerator: TTListEnumerator<TTRelationMap>;

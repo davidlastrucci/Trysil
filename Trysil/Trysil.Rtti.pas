@@ -819,7 +819,7 @@ begin
   end;
 
   if not Assigned(LType) then
-    RaiseNotALIst;
+    RaiseNotAList;
 
   LNames := LType.Name.Split(['<', '>']);
   if Length(LNames) <> 3 then
