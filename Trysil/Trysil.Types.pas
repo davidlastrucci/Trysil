@@ -42,8 +42,8 @@ type
 { TTNullable<T> }
 
 {$RTTI EXPLICIT
-  FIELDS([vcPrivate])
-  METHODS([vcPrivate])}
+  FIELDS([vcPublic, vcPrivate])
+  METHODS([vcPublic, vcPrivate])}
 
   TTNullable<T> = record
   strict private
