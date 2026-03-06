@@ -80,6 +80,7 @@ type
 
     function CreateTransaction(): TTTransaction;
     function CreateSession<T: class>(const AList: TList<T>): TTSession<T>;
+    function CreateFilterBuilder<T: class>(): TTFilterBuilder<T>;
 
     function GetMetadata<T: class>(): TTTableMetadata;
 
@@ -220,6 +221,11 @@ end;
 function TTContext.CreateSession<T>(const AList: TList<T>): TTSession<T>;
 begin
   result := TTSession<T>.Create(FWriteConnection, FProvider, FResolver, AList);
+end;
+
+function TTContext.CreateFilterBuilder<T>: TTFilterBuilder<T>;
+begin
+  result := TTFilterBuilder<T>.Create(FMetadata);
 end;
 
 function TTContext.GetMetadata<T>(): TTTableMetadata;
