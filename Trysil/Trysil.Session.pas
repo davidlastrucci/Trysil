@@ -265,16 +265,20 @@ begin
   if FApplied then
     raise ETException.Create(TTLanguage.Instance.Translate(SSessionNotTwice));
 
-  LTransaction := TTTransaction.Create(FConnection);
+  LTransaction := nil;
+  if not FConnection.InTransaction then
+    LTransaction := TTTransaction.Create(FConnection);
   try
     try
       InternalApplyChanges;
     except
-      LTransaction.Rollback;
+      if Assigned(LTransaction) then
+        LTransaction.Rollback;
       raise;
     end;
   finally
-    LTransaction.Free;
+    if Assigned(LTransaction) then
+      LTransaction.Free;
   end;
 
   FApplied := True;

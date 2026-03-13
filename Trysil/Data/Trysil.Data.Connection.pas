@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright © David Lastrucci
+  Copyright ï¿½ David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -467,9 +467,9 @@ begin
         AEntity);
 
       if LRowsAffected = 0 then
-        raise ETException.Create(TTLanguage.Instance.Translate(SRecordChanged))
+        raise ETConcurrentUpdateException.Create(TTLanguage.Instance.Translate(SRecordChanged))
       else if LRowsAffected > 1 then
-        raise ETException.Create(TTLanguage.Instance.Translate(SSyntaxError));
+        raise ETDataIntegrityException.Create(TTLanguage.Instance.Translate(SSyntaxError));
 
       AfterExecute(AEntity, AEvent, AAfterEventMethodType);
     except

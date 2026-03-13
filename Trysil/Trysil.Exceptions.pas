@@ -38,6 +38,14 @@ type
 
   ETValidationException = class(ETException);
 
+{ ETConcurrentUpdateException }
+
+  ETConcurrentUpdateException = class(ETException);
+
+{ ETDataIntegrityException }
+
+  ETDataIntegrityException = class(ETException);
+
 implementation
 
 { ETException }

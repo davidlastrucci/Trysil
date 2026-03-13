@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright © David Lastrucci
+  Copyright ï¿½ David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -75,7 +75,7 @@ resourcestring
   SNotDefinedPrimaryKey = 'Primary key: not defined.';
   SNotValidPrimaryKeyType = 'Primary key: not valid type.';
   SNotDefinedSequence = 'Sequence: not defined.';
-  SReadOnly = '"Primary Key" or "Version Column" are not defined.';
+  SReadOnly = '"Primary Key" and "Version Column" must both be defined.';
   SReadOnlyPrimaryKey = '"Primary Key" is not defined.';
   SRequiredValidation = '%0:s cannot be empty.';
   SNotInvalidTypeValidation = '%0:s type not valid for validation.';
@@ -107,7 +107,7 @@ resourcestring
   STableMapNotFound = 'TableMap for class %0:s not found';
   SPrimaryKeyNotDefined = 'Primary key not defined for class %0:s';
   SRecordChanged = 'Entity modified by another user.';
-  SSyntaxError = 'Incorrect syntax: too many records affected.';
+  SSyntaxError = 'Data integrity error: too many records affected.';
   STransactionNotSupported = 'The connection does not support transactions.';
   SInTransaction = '%0:s: transaction already started.';
   SNotInTransaction = '%0:s: transaction not yet started.';

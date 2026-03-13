@@ -67,7 +67,7 @@ begin
   LTableMap := TTMapper.Instance.Load<T>();
   LEntity := Get<T>(AID);
   if not Assigned(LEntity) then
-    raise ETException.Create(TTLanguage.Instance.Translate(SRecordChanged));
+    raise ETConcurrentUpdateException.Create(TTLanguage.Instance.Translate(SRecordChanged));
   try
     if Assigned(LTableMap.VersionColumn) then
       LTableMap.VersionColumn.Member.SetValue(LEntity, AVersionID);
