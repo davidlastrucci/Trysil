@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright © David Lastrucci
+  Copyright Â© David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -377,7 +377,7 @@ end;
 function TTFilterCondition<T>.IsNotNull: TTFilterBuilder<T>;
 begin
   FBuilder.AppendCondition(
-    FOperator, Format('%s NOT IS NULL', [FColumnName]));
+    FOperator, Format('%s IS NOT NULL', [FColumnName]));
   result := FBuilder;
 end;
 
