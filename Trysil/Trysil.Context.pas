@@ -42,7 +42,7 @@ type
   strict private
     FNewEntityCache: TTNewEntityCache;
 
-    procedure ApplyAll<T: class>(
+    procedure InternalApplyAll<T: class>(
       const AList: TTList<T>; const AApplyAllMethod: TTApplyAllMethod<T>);
 
     function GetInTransaction: Boolean;
@@ -108,6 +108,11 @@ type
 
     procedure Delete<T: class>(const AEntity: T);
     procedure DeleteAll<T: class>(const AList: TTList<T>);
+
+    procedure ApplyAll<T: class>(
+      const AInsertList: TTList<T>;
+      const AUpdateList: TTList<T>;
+      const ADeleteList: TTList<T>);
 
     property InTransaction: Boolean read GetInTransaction;
     property SupportTransaction: Boolean read GetSupportTransaction;
@@ -281,7 +286,7 @@ begin
   FResolver.Validate<T>(AEntity);
 end;
 
-procedure TTContext.ApplyAll<T>(
+procedure TTContext.InternalApplyAll<T>(
   const AList: TTList<T>; const AApplyAllMethod: TTApplyAllMethod<T>);
 var
   LTransaction: TTTransaction;
@@ -289,17 +294,21 @@ var
 begin
   if Assigned(AApplyAllMethod) then
   begin
-    LTransaction := TTTransaction.Create(FWriteConnection);
+    LTransaction := nil;
+    if not FWriteConnection.InTransaction then
+      LTransaction := TTTransaction.Create(FWriteConnection);
     try
       try
         for LEntity in AList do
           AApplyAllMethod(LEntity);
       except
-        LTransaction.Rollback;
+        if Assigned(LTransaction) then
+          LTransaction.Rollback;
         raise;
       end;
     finally
-      LTransaction.Free;
+      if Assigned(LTransaction) then
+        LTransaction.Free;
     end;
   end;
 end;
@@ -314,7 +323,7 @@ end;
 
 procedure TTContext.SaveAll<T>(const AList: TTList<T>);
 begin
-  ApplyAll<T>(
+  InternalApplyAll<T>(
     AList, procedure(const AEntity: T)
     begin
       Save<T>(AEntity);
@@ -329,7 +338,7 @@ end;
 
 procedure TTContext.InsertAll<T>(const AList: TTList<T>);
 begin
-  ApplyAll<T>(
+  InternalApplyAll<T>(
     AList, procedure(const AEntity: T)
     begin
       Insert<T>(AEntity);
@@ -343,7 +352,7 @@ end;
 
 procedure TTContext.UpdateAll<T>(const AList: TTList<T>);
 begin
-  ApplyAll<T>(
+  InternalApplyAll<T>(
     AList, procedure(const AEntity: T)
     begin
       Update<T>(AEntity);
@@ -357,11 +366,33 @@ end;
 
 procedure TTContext.DeleteAll<T>(const AList: TTList<T>);
 begin
-  ApplyAll<T>(
+  InternalApplyAll<T>(
     AList, procedure(const AEntity: T)
     begin
       Delete<T>(AEntity);
     end);
+end;
+
+procedure TTContext.ApplyAll<T>(
+  const AInsertList: TTList<T>;
+  const AUpdateList: TTList<T>;
+  const ADeleteList: TTList<T>);
+var
+  LTransaction: TTTransaction;
+begin
+  LTransaction := TTTransaction.Create(FWriteConnection);
+  try
+    try
+      InsertAll<T>(AInsertList);
+      UpdateAll<T>(AUpdateList);
+      DeleteAll<T>(ADeleteList);
+    except
+      LTransaction.Rollback;
+      raise;
+    end;
+  finally
+    LTransaction.Free;
+  end;
 end;
 
 end.
