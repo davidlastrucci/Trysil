@@ -1,4 +1,4 @@
-(*
+﻿(*
 
   Trysil
   Copyright © David Lastrucci
@@ -145,7 +145,7 @@ type
     function Less(const AValue: TTValue): TTFilterBuilder<T>;
     function LessOrEqual(const AValue: TTValue): TTFilterBuilder<T>;
     function Like(const AValue: String): TTFilterBuilder<T>;
-
+    function NotLike(const AValue: String): TTFilterBuilder<T>;
     function IsNull: TTFilterBuilder<T>;
     function IsNotNull: TTFilterBuilder<T>;
   end;
@@ -365,6 +365,11 @@ end;
 function TTFilterCondition<T>.Like(const AValue: String): TTFilterBuilder<T>;
 begin
   result := AddCondition('LIKE', TTValue.From<String>(AValue));
+end;
+
+function TTFilterCondition<T>.NotLike(const AValue: String): TTFilterBuilder<T>;
+begin
+  result := AddCondition('NOT LIKE', TTValue.From<String>(AValue));
 end;
 
 function TTFilterCondition<T>.IsNull: TTFilterBuilder<T>;
