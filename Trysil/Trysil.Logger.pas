@@ -406,7 +406,7 @@ var
 begin
   LThread := FThreads.Next;
   if Assigned(LThread) then
-    LThread.AddLog( AItem);
+    LThread.AddLog(AItem);
 end;
 
 procedure TTLogger.LogStartTransaction(const AConnectionID: String);

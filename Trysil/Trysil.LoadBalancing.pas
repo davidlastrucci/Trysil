@@ -51,6 +51,7 @@ implementation
 
 constructor TTRoundRobin<T>.Create;
 begin
+  inherited Create;
   FIndex := -1;
   FCriticalSection := TTCriticalSection.Create;
   FItems := TObjectList<T>.Create(True);
