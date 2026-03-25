@@ -7,6 +7,8 @@ repo_name: davidlastrucci/trysil
 
 copyright: Copyright &copy; David Lastrucci
 
+docs_dir: Docs
+
 theme:
   name: material
   logo: assets/logo-dark.png
