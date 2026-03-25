@@ -1,0 +1,98 @@
+site_name: Trysil - Delphi ORM
+site_description: A lightweight, attribute-driven ORM for Delphi with JSON serialization and HTTP REST support
+site_author: David Lastrucci
+site_url: https://davidlastrucci.github.io/trysil/
+repo_url: https://github.com/davidlastrucci/trysil
+repo_name: davidlastrucci/trysil
+
+copyright: Copyright &copy; David Lastrucci
+
+theme:
+  name: material
+  logo: assets/logo-dark.png
+  favicon: assets/logo.png
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - content.code.copy
+    - content.code.annotate
+    - search.suggest
+    - search.highlight
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quick-start.md
+    - Database Setup: getting-started/database-setup.md
+  - Guide:
+    - Entities: guide/entities.md
+    - Context (CRUD): guide/context.md
+    - Filtering: guide/filtering.md
+    - Transactions: guide/transactions.md
+    - Sessions (Unit of Work): guide/sessions.md
+    - Lazy Loading: guide/lazy-loading.md
+    - Validation: guide/validation.md
+    - Events: guide/events.md
+    - Identity Map: guide/identity-map.md
+    - Nullable Types: guide/nullable.md
+    - Logging: guide/logging.md
+  - Database Drivers:
+    - Overview: database-drivers/index.md
+    - SQLite: database-drivers/sqlite.md
+    - SQL Server: database-drivers/sqlserver.md
+    - PostgreSQL: database-drivers/postgresql.md
+    - Firebird: database-drivers/firebird.md
+  - JSON Module:
+    - Overview: json/index.md
+    - Serialization: json/serialization.md
+    - Deserialization: json/deserialization.md
+    - Configuration: json/configuration.md
+    - Events: json/events.md
+  - HTTP Module:
+    - Overview: http/index.md
+    - Server Setup: http/server.md
+    - Controllers & Routing: http/controllers.md
+    - Authentication: http/authentication.md
+    - CORS: http/cors.md
+    - Multi-Tenant: http/multi-tenant.md
+  - API Reference:
+    - Core Types: api-reference/types.md
+    - Attributes: api-reference/attributes.md
+    - Exceptions: api-reference/exceptions.md
+  - Examples:
+    - Simple CRUD (SQLite): examples/simple-crud.md
+    - REST API: examples/rest-api.md
+  - Community:
+    - Built with Trysil: community/built-with-trysil.md

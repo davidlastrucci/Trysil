@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(for f:*)",
+      "Bash(do test:*)",
+      "Bash(echo \"EXISTS: $f\")",
+      "Bash(echo \"MISSING: $f\")",
+      "Bash(done)"
+    ]
+  }
+}
