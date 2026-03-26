@@ -23,13 +23,28 @@ type
 
   TTCriticalSection = class
   strict private
-    FCriticalSection: TCriticalSection;
+    FLock: TCriticalSection;
   public
     constructor Create;
     destructor Destroy; override;
 
     procedure Acquire;
-    procedure Leave;
+    procedure Release;
+  end;
+
+{ TTMultiReadExclusiveWriteLock }
+
+  TTMultiReadExclusiveWriteLock = class
+  strict private
+    FLock: TMultiReadExclusiveWriteSynchronizer;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure BeginRead;
+    procedure EndRead;
+    procedure BeginWrite;
+    procedure EndWrite;
   end;
 
 implementation
@@ -39,23 +54,57 @@ implementation
 constructor TTCriticalSection.Create;
 begin
   inherited Create;
-  FCriticalSection := TCriticalSection.Create;
+  FLock := TCriticalSection.Create;
 end;
 
 destructor TTCriticalSection.Destroy;
 begin
-  FCriticalSection.Free;
+  FLock.Free;
   inherited Destroy;
 end;
 
 procedure TTCriticalSection.Acquire;
 begin
-  FCriticalSection.Acquire;
+  FLock.Acquire;
 end;
 
-procedure TTCriticalSection.Leave;
+procedure TTCriticalSection.Release;
 begin
-  FCriticalSection.Leave;
+  FLock.Release;
+end;
+
+{ TTMultiReadExclusiveWriteLock }
+
+constructor TTMultiReadExclusiveWriteLock.Create;
+begin
+  inherited Create;
+  FLock := TMultiReadExclusiveWriteSynchronizer.Create;
+end;
+
+destructor TTMultiReadExclusiveWriteLock.Destroy;
+begin
+  FLock.Free;
+  inherited Destroy;
+end;
+
+procedure TTMultiReadExclusiveWriteLock.BeginRead;
+begin
+  FLock.BeginRead;
+end;
+
+procedure TTMultiReadExclusiveWriteLock.EndRead;
+begin
+  FLock.EndRead;
+end;
+
+procedure TTMultiReadExclusiveWriteLock.BeginWrite;
+begin
+  FLock.BeginWrite;
+end;
+
+procedure TTMultiReadExclusiveWriteLock.EndWrite;
+begin
+  FLock.EndWrite;
 end;
 
 end.

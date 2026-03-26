@@ -135,7 +135,7 @@ begin
       if not FTenants.TryGetValue(LName, result) then
         result := CreateTenant(AName);
     finally
-      FCriticalSection.Leave;
+      FCriticalSection.Release;
     end;
   end;
 end;
@@ -151,7 +151,7 @@ begin
     for LIndex := 0 to LLength - 1 do
       result[LIndex] := FOwner[LIndex].Name;
   finally
-    FCriticalSection.Leave;
+    FCriticalSection.Release;
   end;
 end;
 
@@ -169,7 +169,7 @@ begin
         FOwner.Remove(LTenant);
     end;
   finally
-    FCriticalSection.Leave;
+    FCriticalSection.Release;
   end;
 end;
 

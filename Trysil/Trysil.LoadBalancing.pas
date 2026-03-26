@@ -86,7 +86,7 @@ begin
       end;
     end;
   finally
-    FCriticalSection.Leave;
+    FCriticalSection.Release;
   end;
 end;
 
@@ -103,7 +103,7 @@ begin
       result := FItems[FIndex];
     end;
   finally
-    FCriticalSection.Leave;
+    FCriticalSection.Release;
   end;
 end;
 

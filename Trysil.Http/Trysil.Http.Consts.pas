@@ -212,7 +212,7 @@ begin
   try
     FThreads.AddOrSetValue(AThreadID, ALanguage);
   finally
-    FCriticalSection.Leave;
+    FCriticalSection.Release;
   end;
 end;
 
@@ -222,7 +222,7 @@ begin
   try
     FThreads.Remove(AThreadID);
   finally
-    FCriticalSection.Leave;
+    FCriticalSection.Release;
   end;
 end;
 
@@ -232,7 +232,7 @@ begin
   try
     if not FThreads.TryGetValue(TThread.Current.ThreadID, result) then
   finally
-    FCriticalSection.Leave;
+    FCriticalSection.Release;
   end;
 end;
 
@@ -252,7 +252,7 @@ begin
   try
     result := FThreads.TryGetValue(TThread.Current.ThreadID, LLanguage);
   finally
-    FCriticalSection.Leave;
+    FCriticalSection.Release;
   end;
 
   if result then

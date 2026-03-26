@@ -237,7 +237,7 @@ begin
   try
     FQueue.Enqueue(AValue);
   finally
-    FCriticalSection.Leave;
+    FCriticalSection.Release;
   end;
 end;
 
@@ -247,7 +247,7 @@ begin
   try
     result := FQueue.Dequeue;
   finally
-    FCriticalSection.Leave;
+    FCriticalSection.Release;
   end;
 end;
 
@@ -257,7 +257,7 @@ begin
   try
     result := (FQueue.Count = 0);
   finally
-    FCriticalSection.Leave;
+    FCriticalSection.Release;
   end;
 end;
 
