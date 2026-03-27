@@ -26,6 +26,7 @@ Database drivers:
 
 For further information:
 
+- [Help](https://davidlastrucci.github.io/trysil)
 - [Setup](https://github.com/davidlastrucci/Trysil/blob/master/Docs/Setup.md)
 - [Getting started](https://github.com/davidlastrucci/Trysil/blob/master/Docs/GettingStarted.md)
 - [Simple sample](https://github.com/davidlastrucci/Trysil/blob/master/Docs/Sample.md)
