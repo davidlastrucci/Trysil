@@ -1,0 +1,9 @@
+{
+  "name": "Trysil",
+  "description": "A lightweight, attribute-driven ORM for Delphi",
+  "version": "1.0.0",
+  "homepage": "https://github.com/davidlastrucci/Trysil",
+  "mainsrc": "Trysil",
+  "projects": [],
+  "dependencies": {}
+}

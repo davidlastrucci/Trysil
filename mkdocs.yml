@@ -70,6 +70,7 @@ nav:
     - Identity Map: guide/identity-map.md
     - Nullable Types: guide/nullable.md
     - Logging: guide/logging.md
+    - Cookbook: guide/cookbook.md
   - Database Drivers:
     - Overview: database-drivers/index.md
     - SQLite: database-drivers/sqlite.md
