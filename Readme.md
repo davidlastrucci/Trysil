@@ -13,7 +13,8 @@
 <p align="center">
   <a href="https://github.com/davidlastrucci/Trysil/blob/master/Licence.md"><img src="https://img.shields.io/badge/license-BSD--3--Clause-blue.svg" alt="License"></a>
   <a href="https://github.com/davidlastrucci/Trysil/stargazers"><img src="https://img.shields.io/github/stars/davidlastrucci/Trysil?style=social" alt="GitHub Stars"></a>
-  <img src="https://img.shields.io/badge/Delphi-10.3%20%E2%80%94%2013-red" alt="Delphi 10.3 to 13"></p>
+  <img src="https://img.shields.io/badge/Delphi-10.3%20%E2%80%94%2013-red" alt="Delphi 10.3 to 13">
+  <a href="https://getitnow.embarcadero.com/trysil-delphi-orm/"><img src="https://img.shields.io/badge/GetIt-available-orange.svg" alt="GetIt"></a></p>
 
 ---
 
