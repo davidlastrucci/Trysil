@@ -41,5 +41,9 @@ __recovery/
 # Statistics file
 *.stat
 
+# Claude
+.claude/
+CLAUDE.md
+
 # Miscellaneous
 nul
