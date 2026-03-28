@@ -188,6 +188,7 @@ TTContext  ───────────────────────
   │     └── Events (Before/After hooks)
   ├── TTIdentityMap                       Per-context entity cache
   ├── TTSession<T>                        Unit of Work
+  ├── TTTransaction                       Explicit transaction management
   └── TTFilterBuilder<T>                  Fluent query builder
 
 TTConnection (abstract)
@@ -198,8 +199,9 @@ TTConnection (abstract)
         └── Firebird
 
 Modules
-  ├── Trysil.JSon    → JSON serialization via TTJSonContext
-  └── Trysil.Http    → REST hosting, routing, CORS, JWT, multi-tenant
+  ├── Trysil          → ORM core
+  ├── Trysil.JSon     → JSON serialization via TTJSonContext
+  └── Trysil.Http     → REST hosting, routing, CORS, JWT, multi-tenant
 ```
 
 ## The Name
