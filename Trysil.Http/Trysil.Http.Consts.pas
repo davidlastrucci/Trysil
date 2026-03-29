@@ -97,7 +97,7 @@ type
     class constructor ClassCreate;
     class destructor ClassDestroy;
   strict private
-    FCriticalSection: TTCriticalSection;
+    FLock: TTMultiReadExclusiveWriteLock;
     FThreads: TDictionary<TThreadID, String>;
     FStrings: TDictionary<TTLanguageValue, String>;
   strict protected
@@ -185,7 +185,7 @@ end;
 constructor TTHttpLanguage.Create;
 begin
   inherited Create;
-  FCriticalSection := TTCriticalSection.Create;
+  FLock := TTMultiReadExclusiveWriteLock.Create;
   FThreads := TDictionary<TThreadID, String>.Create;
   FStrings := TDictionary<TTLanguageValue, String>.Create(
     TTLanguageValueEqualityComparer.Create);
@@ -195,7 +195,7 @@ destructor TTHttpLanguage.Destroy;
 begin
   FStrings.Free;
   FThreads.Free;
-  FCriticalSection.Free;
+  FLock.Free;
   inherited Destroy;
 end;
 
@@ -208,38 +208,44 @@ end;
 procedure TTHttpLanguage.SetThreadLanguage(
   const AThreadID: TThreadID; const ALanguage: String);
 begin
-  FCriticalSection.Acquire;
+  FLock.BeginWrite;
   try
     FThreads.AddOrSetValue(AThreadID, ALanguage);
   finally
-    FCriticalSection.Release;
+    FLock.EndWrite;
   end;
 end;
 
 procedure TTHttpLanguage.RemoveThreadLanguage(const AThreadID: TThreadID);
 begin
-  FCriticalSection.Acquire;
+  FLock.BeginWrite;
   try
     FThreads.Remove(AThreadID);
   finally
-    FCriticalSection.Release;
+    FLock.EndWrite;
   end;
 end;
 
 function TTHttpLanguage.GetCurrentLanguage: String;
 begin
-  FCriticalSection.Acquire;
+  FLock.BeginRead;
   try
     if not FThreads.TryGetValue(TThread.Current.ThreadID, result) then
+      result := String.Empty;
   finally
-    FCriticalSection.Release;
+    FLock.EndRead;
   end;
 end;
 
 procedure TTHttpLanguage.Add(
   const ALanguage: String; const AKey: String; const AValue: String);
 begin
-  FStrings.AddOrSetValue(TTLanguageValue.Create(ALanguage, AKey), AValue);
+  FLock.BeginWrite;
+  try
+    FStrings.AddOrSetValue(TTLanguageValue.Create(ALanguage, AKey), AValue);
+  finally
+    FLock.EndWrite;
+  end;
 end;
 
 function TTHttpLanguage.TryTranslate(
@@ -248,17 +254,16 @@ var
   LLanguage: String;
   LKey: TTLanguageValue;
 begin
-  FCriticalSection.Acquire;
+  FLock.BeginRead;
   try
     result := FThreads.TryGetValue(TThread.Current.ThreadID, LLanguage);
+    if result then
+    begin
+      LKey := TTLanguageValue.Create(LLanguage, AKey);
+      result := FStrings.TryGetValue(LKey, AValue);
+    end;
   finally
-    FCriticalSection.Release;
-  end;
-
-  if result then
-  begin
-    LKey := TTLanguageValue.Create(LLanguage, AKey);
-    result := FStrings.TryGetValue(LKey, AValue);
+    FLock.EndRead;
   end;
 end;
 

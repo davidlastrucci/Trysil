@@ -1,7 +1,7 @@
-(*
+ï»¿(*
 
   Trysil
-  Copyright © David Lastrucci
+  Copyright ï¿½ David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -48,10 +48,12 @@ type
     class constructor ClassCreate;
     class destructor ClassDestroy;
   strict private
-    FCriticalSection: TTCriticalSection;
+    FLock: TTMultiReadExclusiveWriteLock;
     FOwner: TObjectList<TTTenant<T>>;
     FTenants: TDictionary<String, TTTenant<T>>;
 
+    function TryGetTenant(
+      const AName: String; out ATenant: TTTenant<T>): Boolean;
     function CreateTenant(const AName: String): TTTenant<T>;
   public
     constructor Create;
@@ -98,7 +100,7 @@ end;
 constructor TTMultiTenant<T>.Create;
 begin
   inherited Create;
-  FCriticalSection := TTCriticalSection.Create;
+  FLock := TTMultiReadExclusiveWriteLock.Create;
   FOwner := TObjectList<TTTenant<T>>.Create(True);
   FTenants := TDictionary<String, TTTenant<T>>.Create;
 end;
@@ -107,19 +109,38 @@ destructor TTMultiTenant<T>.Destroy;
 begin
   FTenants.Free;
   FOwner.Free;
-  FCriticalSection.Free;
+  FLock.Free;
   inherited Destroy;
+end;
+
+function TTMultiTenant<T>.TryGetTenant(
+  const AName: String; out ATenant: TTTenant<T>): Boolean;
+begin
+  FLock.BeginRead;
+  try
+    result := FTenants.TryGetValue(AName, ATenant);
+  finally
+    FLock.EndRead;
+  end;
 end;
 
 function TTMultiTenant<T>.CreateTenant(const AName: String): TTTenant<T>;
 begin
-  result := TTTenant<T>.Create(AName);
+  FLock.BeginWrite;
   try
-    FTenants.Add(AName.ToLower(), result);
-    FOwner.Add(result);
-  except
-    result.Free;
-    raise;
+    if not FTenants.TryGetValue(AName, result) then
+    begin
+      result := TTTenant<T>.Create(AName);
+      try
+        FTenants.Add(AName, result);
+        FOwner.Add(result);
+      except
+        result.Free;
+        raise;
+      end;
+    end;
+  finally
+    FLock.EndWrite;
   end;
 end;
 
@@ -128,30 +149,22 @@ var
   LName: String;
 begin
   LName := AName.ToLower();
-  if not FTenants.TryGetValue(LName, result) then
-  begin
-    FCriticalSection.Acquire;
-    try
-      if not FTenants.TryGetValue(LName, result) then
-        result := CreateTenant(AName);
-    finally
-      FCriticalSection.Release;
-    end;
-  end;
+  if not TryGetTenant(LName, result) then
+    result := CreateTenant(LName);
 end;
 
 function TTMultiTenant<T>.GetAll: TArray<string>;
 var
   LLength, LIndex: Integer;
 begin
-  FCriticalSection.Acquire;
+  FLock.BeginRead;
   try
     LLength := FOwner.Count;
     SetLength(result, LLength);
     for LIndex := 0 to LLength - 1 do
       result[LIndex] := FOwner[LIndex].Name;
   finally
-    FCriticalSection.Release;
+    FLock.EndRead;
   end;
 end;
 
@@ -161,7 +174,7 @@ var
   LTenant: TTTenant<T>;
 begin
   LName := AName.ToLower();
-  FCriticalSection.Acquire;
+  FLock.BeginWrite;
   try
     if FTenants.TryGetValue(LName, LTenant) then
     begin
@@ -169,7 +182,7 @@ begin
         FOwner.Remove(LTenant);
     end;
   finally
-    FCriticalSection.Release;
+    FLock.EndWrite;
   end;
 end;
 
