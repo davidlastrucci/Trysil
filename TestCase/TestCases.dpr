@@ -7,8 +7,15 @@ program TestCases;
 {$APPTYPE CONSOLE}
 {$ENDIF}
 {$STRONGLINKTYPES ON}
+{$IFDEF MSWINDOWS}
+   {$DEFINE ADDFASTMM4}
+   {$INCLUDE FastMM4Options.inc}
+{$ENDIF}
+
 uses
+  {$IFDEF MSWINDOWS}
   FastMM4,
+  {$ENDIF }
   DUnitX.MemoryLeakMonitor.FastMM4,
   System.SysUtils,
   {$IFDEF TESTINSIGHT}
@@ -19,7 +26,8 @@ uses
   DUnitX.Loggers.Xml.NUnit,
   {$ENDIF }
   DUnitX.TestFramework,
-  Unit1 in 'Unit1.pas';
+  Cases in 'Cases.pas',
+  TestServices in 'TestServices.pas';
 
 { keep comment here to protect the following conditional from being removed by the IDE when adding a unit }
 {$IFNDEF TESTINSIGHT}
@@ -30,6 +38,11 @@ var
   nunitLogger : ITestLogger;
 {$ENDIF}
 begin
+  { Register Test Fixture
+   *** all future tests must be register here
+  }
+  RegisterTestFixture;
+
 {$IFDEF TESTINSIGHT}
   TestInsight.DUnitX.RunRegisteredTests;
 {$ELSE}

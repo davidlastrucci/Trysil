@@ -1,4 +1,8 @@
 DUnitX
 git subtree add --prefix=libs/DUnitX https://github.com/VSoftTechnologies/DUnitX.git master --squash
 git subtree pull --prefix=libs/DUnitX https://github.com/VSoftTechnologies/DUnitX.git master --squash
+
+FastMM4
+git subtree add --prefix=libs/FastMM4 https://github.com/pleriche/FastMM4.git master --squash
+git subtree pull --prefix=libs/FastMM4 https://github.com/pleriche/FastMM4.git master --squash
  
