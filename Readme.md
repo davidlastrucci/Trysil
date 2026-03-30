@@ -98,7 +98,16 @@ begin
 end;
 ```
 
-### 3. Filter with the fluent builder
+### 3. Watch it in action
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=4qKkhO76DKA">
+    <img src="https://img.youtube.com/vi/4qKkhO76DKA/maxresdefault.jpg" alt="Trysil - Delphi ORM from scratch">
+  </a><br>
+  <sub>▶ Watch: <strong>Trysil — Delphi ORM from scratch</strong></sub>
+</p>
+
+### 4. Filter with the fluent builder
 
 ```pascal
 var
