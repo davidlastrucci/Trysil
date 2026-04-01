@@ -15,11 +15,14 @@ interface
 uses
   System.SysUtils,
   System.Classes,
+  System.Generics.Collections,
+  System.TypInfo,
   System.Rtti,
 
   Trysil.Consts,
   Trysil.Exceptions,
   Trysil.Factory,
+  Trysil.Sync,
   Trysil.Rtti,
   Trysil.Events.Abstract;
 
@@ -33,12 +36,24 @@ type
     class constructor ClassCreate;
     class destructor ClassDestroy;
   strict private
+    FLock: TTMultiReadExclusiveWriteLock;
     FContext: TRttiContext;
+    FMethods: TDictionary<PTypeInfo, TRttiMethod>;
 
-    function SearchMethod(
+    function GetMethod(
+      const AEventClassInfo: Pointer; out AMethod: TRttiMethod): Boolean;
+    function InternalSearchMethod(
       const ARttiType: TRttiType;
       const AContext: TObject;
       const AEntity: TObject): TRttiMethod;
+    function SearchMethod(
+      const AEventClassInfo: Pointer;
+      const AContext: TObject;
+      const AEntity: TObject): TRttiMethod;
+    function GetOrSearchMethod<T: class>(
+      const AEventClassInfo: Pointer;
+      const AContext: TObject;
+      const AEntity: T): TRttiMethod;
   public
     constructor Create;
     destructor Destroy; override;
@@ -68,16 +83,31 @@ end;
 constructor TTEventFactory.Create;
 begin
   inherited Create;
+  FLock := TTMultiReadExclusiveWriteLock.Create;
   FContext := TRttiContext.Create;
+  FMethods := TDictionary<PTypeInfo, TRttiMethod>.Create;
 end;
 
 destructor TTEventFactory.Destroy;
 begin
+  FMethods.Free;
   FContext.Free;
+  FLock.Free;
   inherited Destroy;
 end;
 
-function TTEventFactory.SearchMethod(
+function TTEventFactory.GetMethod(
+  const AEventClassInfo: Pointer; out AMethod: TRttiMethod): Boolean;
+begin
+  FLock.BeginRead;
+  try
+    result := FMethods.TryGetValue(AEventClassInfo, AMethod);
+  finally
+    FLock.EndRead;
+  end;
+end;
+
+function TTEventFactory.InternalSearchMethod(
   const ARttiType: TRttiType;
   const AContext: TObject;
   const AEntity: TObject): TRttiMethod;
@@ -105,12 +135,41 @@ begin
     end;
 end;
 
+function TTEventFactory.SearchMethod(
+  const AEventClassInfo: Pointer;
+  const AContext: TObject;
+  const AEntity: TObject): TRttiMethod;
+var
+  LRttiType: TRttiType;
+begin
+  FLock.BeginWrite;
+  try
+    if not FMethods.TryGetValue(AEventClassInfo, result) then
+    begin
+      LRttiType := FContext.GetType(TTFactory.Instance.GetType(AEventClassInfo));
+      result := InternalSearchMethod(LRttiType, AContext, AEntity);
+      FMethods.Add(AEventClassInfo, result);
+    end;
+  finally
+    FLock.EndWrite;
+  end;
+end;
+
+function TTEventFactory.GetOrSearchMethod<T>(
+  const AEventClassInfo: Pointer;
+  const AContext: TObject;
+  const AEntity: T): TRttiMethod;
+begin
+  if not GetMethod(AEventClassInfo, result) then
+    result := SearchMethod(AEventClassInfo, AContext, AEntity);
+end;
+
 function TTEventFactory.CreateEvent<T>(
   const AEventClass: TTEventClass;
   const AContext: TObject;
   const AEntity: T): TTEvent;
 var
-  LRttiType: TRttiType;
+  LEventClassInfo: Pointer;
   LRttiMethod: TRttiMethod;
   LParams: TArray<TValue>;
   LResult: TValue;
@@ -118,9 +177,9 @@ begin
   result := nil;
   if Assigned(AEventClass) then
   begin
-    LRttiType := FContext.GetType(
-      TTFactory.Instance.GetType(AEventClass.ClassInfo));
-    LRttiMethod := SearchMethod(LRttiType, AContext, AEntity);
+    LEventClassInfo := AEventClass.ClassInfo;
+    LRttiMethod := GetOrSearchMethod<T>(LEventClassInfo, AContext, AEntity);
+
     if not Assigned(LRttiMethod) then
       raise ETException.CreateFmt(
         TTLanguage.Instance.Translate(SNotValidEventClass), [
@@ -130,7 +189,7 @@ begin
     LParams[0] := TValue.From<TObject>(AContext);
     LParams[1] := TValue.From<TObject>(AEntity);
 
-    LResult := LRttiMethod.Invoke(LRttiType.AsInstance.MetaclassType, LParams);
+    LResult := LRttiMethod.Invoke(AEventClass, LParams);
     try
       if not LResult.IsType<TTEvent>(False) then
         raise ETException.CreateFmt(

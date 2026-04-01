@@ -22,6 +22,7 @@ uses
   Trysil.Consts,
   Trysil.Types,
   Trysil.Exceptions,
+  Trysil.Sync,
   Trysil.Factory;
 
 type
@@ -30,11 +31,60 @@ type
 
   TTValue = TValue;
 
+{ TTNullableMethodCache }
+
+  TTNullableMethodCache = class abstract
+  strict private
+    FLock: TTMultiReadExclusiveWriteLock;
+    FContext: TRttiContext;
+    FCache: TDictionary<PTypeInfo, TRttiMethod>;
+
+    procedure RaiseInvalidNullableType;
+    function GetMethod(
+      const ATypeInfo: PTypeInfo; out AMethod: TRttiMethod): Boolean;
+    function SearchMethod(const ATypeInfo: PTypeInfo): TRttiMethod;
+  strict protected
+    function GetMethodName: String; virtual; abstract;
+    function DoGetMethod(const ATypeInfo: PTypeInfo): TRttiMethod;
+  public
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
+{ TTIsNullCache }
+
+  TTIsNullCache = class(TTNullableMethodCache)
+  strict private
+    class var FInstance: TTIsNullCache;
+    class constructor ClassCreate;
+    class destructor ClassDestroy;
+  strict protected
+    function GetMethodName: String; override;
+  public
+    function GetIsNull(const ATypeInfo: PTypeInfo): TRttiMethod;
+
+    class property Instance: TTIsNullCache read FInstance;
+  end;
+
+{ TTValueOrDefaultCache }
+
+  TTValueOrDefaultCache = class(TTNullableMethodCache)
+  strict private
+    class var FInstance: TTValueOrDefaultCache;
+    class constructor ClassCreate;
+    class destructor ClassDestroy;
+  strict protected
+    function GetMethodName: String; override;
+  public
+    function GetValueOrDefault(const ATypeInfo: PTypeInfo): TRttiMethod;
+
+    class property Instance: TTValueOrDefaultCache read FInstance;
+  end;
+
 { TTValueHelper }
 
   TTValueHelper = record helper for TValue
   strict private
-    procedure RaiseInvalidNullableType;
     function GetIsNull: Boolean;
     function GetIsNullable: Boolean;
     function ExecuteGetValueOrDefault(const AMethod: TRttiMethod): String;
@@ -245,13 +295,125 @@ type
 
 implementation
 
-{ TTValueHelper }
+{ TTNullableMethodCache }
 
-procedure TTValueHelper.RaiseInvalidNullableType;
+constructor TTNullableMethodCache.Create;
+begin
+  inherited Create;
+  FLock := TTMultiReadExclusiveWriteLock.Create;
+  FContext := TRttiContext.Create;
+  FCache := TDictionary<PTypeInfo, TRttiMethod>.Create;
+end;
+
+destructor TTNullableMethodCache.Destroy;
+begin
+  FCache.Free;
+  FContext.Free;
+  FLock.Free;
+  inherited Destroy;
+end;
+
+procedure TTNullableMethodCache.RaiseInvalidNullableType;
 begin
   raise ETException.Create(
     TTLanguage.Instance.Translate(SInvalidNullableType));
 end;
+
+function TTNullableMethodCache.GetMethod(
+  const ATypeInfo: PTypeInfo; out AMethod: TRttiMethod): Boolean;
+begin
+  FLock.BeginRead;
+  try
+    result := FCache.TryGetValue(ATypeInfo, AMethod);
+  finally
+    FLock.EndRead;
+  end;
+end;
+
+function TTNullableMethodCache.SearchMethod(
+  const ATypeInfo: PTypeInfo): TRttiMethod;
+var
+  LType: TRttiType;
+  LMethod: TRttiMethod;
+begin
+  FLock.BeginWrite;
+  try
+    if not FCache.TryGetValue(ATypeInfo, result) then
+    begin
+      LType := FContext.GetType(ATypeInfo);
+      if not Assigned(LType) then
+        RaiseInvalidNullableType;
+
+      for LMethod in LType.GetMethods(GetMethodName()) do
+        if Length(LMethod.GetParameters) = 0 then
+        begin
+          result := LMethod;
+          Break;
+        end;
+
+      if not Assigned(result) then
+        RaiseInvalidNullableType;
+
+      FCache.Add(ATypeInfo, result);
+    end;
+  finally
+    FLock.EndWrite;
+  end;
+end;
+
+function TTNullableMethodCache.DoGetMethod(
+  const ATypeInfo: PTypeInfo): TRttiMethod;
+begin
+  if not GetMethod(ATypeInfo, result) then
+    result := SearchMethod(ATypeInfo);
+end;
+
+{ TTIsNullCache }
+
+class constructor TTIsNullCache.ClassCreate;
+begin
+  FInstance := TTIsNullCache.Create;
+end;
+
+class destructor TTIsNullCache.ClassDestroy;
+begin
+  FInstance.Free;
+end;
+
+function TTIsNullCache.GetMethodName: String;
+begin
+  result := 'GetIsNull';
+end;
+
+function TTIsNullCache.GetIsNull(const ATypeInfo: PTypeInfo): TRttiMethod;
+begin
+  result := DoGetMethod(ATypeInfo);
+end;
+
+{ TTValueOrDefaultCache }
+
+class constructor TTValueOrDefaultCache.ClassCreate;
+begin
+  FInstance := TTValueOrDefaultCache.Create;
+end;
+
+class destructor TTValueOrDefaultCache.ClassDestroy;
+begin
+  FInstance.Free;
+end;
+
+function TTValueOrDefaultCache.GetMethodName: String;
+begin
+  result := 'GetValueOrDefault';
+end;
+
+function TTValueOrDefaultCache.GetValueOrDefault(
+  const ATypeInfo: PTypeInfo): TRttiMethod;
+begin
+  result := DoGetMethod(ATypeInfo);
+end;
+
+{ TTValueHelper }
 
 function TTValueHelper.GetIsNullable: Boolean;
 begin
@@ -260,8 +422,6 @@ end;
 
 function TTValueHelper.GetIsNull: Boolean;
 var
-  LContext: TRttiContext;
-  LType: TRttiType;
   LMethod: TRttiMethod;
   LResult: TValue;
 begin
@@ -269,21 +429,9 @@ begin
     result := False
   else
   begin
-    LContext := TRttiContext.Create;
-    try
-      LType := LContext.GetType(Self.TypeInfo);
-      if not Assigned(LType) then
-        RaiseInvalidNullableType;
-
-      LMethod := LType.GetMethod('GetIsNull');
-      if not Assigned(LMethod) then
-        RaiseInvalidNullableType;
-
-      LResult := LMethod.Invoke(Self, []);
-      result := LResult.AsType<Boolean>();
-    finally
-      LContext.Free;
-    end;
+    LMethod := TTIsNullCache.Instance.GetIsNull(Self.TypeInfo);
+    LResult := LMethod.Invoke(Self, []);
+    result := LResult.AsType<Boolean>();
   end;
 end;
 
@@ -301,33 +449,10 @@ end;
 
 function TTValueHelper.NullableValueToString: String;
 var
-  LContext: TRttiContext;
-  LType: TRttiType;
-  LFound: Boolean;
   LMethod: TRttiMethod;
 begin
-  if not Self.IsNullable then
-    RaiseInvalidNullableType;
-
-  LContext := TRttiContext.Create;
-  try
-    LType := LContext.GetType(Self.TypeInfo);
-    if not Assigned(LType) then
-      RaiseInvalidNullableType;
-
-    LFound := False;
-    for LMethod in LType.GetMethods('GetValueOrDefault') do
-      if Length(LMethod.GetParameters) = 0 then
-      begin
-        LFound := True;
-        result := ExecuteGetValueOrDefault(LMethod);
-      end;
-
-    if not LFound then
-      RaiseInvalidNullableType;
-  finally
-    LContext.Free;
-  end;
+  LMethod := TTValueOrDefaultCache.Instance.GetValueOrDefault(Self.TypeInfo);
+  result := ExecuteGetValueOrDefault(LMethod);
 end;
 
 {$IF CompilerVersion < 35} // Delphi 11 Alexandria
