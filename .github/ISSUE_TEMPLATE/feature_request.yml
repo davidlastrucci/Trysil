@@ -1,0 +1,43 @@
+name: Feature Request
+description: Suggest a new feature or improvement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea to improve Trysil? We'd love to hear it.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear description of the feature you'd like to see.
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use case
+      description: Why do you need this feature? What problem does it solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: api-example
+    attributes:
+      label: Proposed API or example
+      description: If you have an idea of how the API should look, share it here (optional).
+      render: pascal
+
+  - type: dropdown
+    id: database
+    attributes:
+      label: Related database
+      description: Is this feature specific to a database driver?
+      options:
+        - All / Not specific
+        - SQLite
+        - PostgreSQL
+        - SQL Server
+        - Firebird
