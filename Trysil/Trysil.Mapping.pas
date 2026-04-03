@@ -93,11 +93,29 @@ type
     property Name: String read FName;
   end;
 
+{ TTChangeTrackingMap }
+
+  TTChangeTrackingMap = class
+  strict private
+    FChangedAt: TTColumnMap;
+    FChangedBy: TTColumnMap;
+  private // internal
+    procedure SetChangedAt(const AColumnMap: TTColumnMap);
+    procedure SetChangedBy(const AColumnMap: TTColumnMap);
+  public
+    property ChangedAt: TTColumnMap read FChangedAt;
+    property ChangedBy: TTColumnMap read FChangedBy;
+  end;
+
 { TTColumnsMap }
 
   TTColumnsMap = class
   strict private
     FColumns: TTObjectList<TTColumnMap>;
+
+    FCreatedChangeTracking: TTChangeTrackingMap;
+    FUpdatedChangeTracking: TTChangeTrackingMap;
+    FDeletedChangeTracking: TTChangeTrackingMap;
 
     function GetEmpty: Boolean;
   public
@@ -109,6 +127,10 @@ type
     function GetEnumerator(): TTListEnumerator<TTColumnMap>;
 
     property Empty: Boolean read GetEmpty;
+
+    property CreatedChangeTracking: TTChangeTrackingMap read FCreatedChangeTracking;
+    property UpdatedChangeTracking: TTChangeTrackingMap read FUpdatedChangeTracking;
+    property DeletedChangeTracking: TTChangeTrackingMap read FDeletedChangeTracking;
   end;
 
 { TTDetailColumnMap }
@@ -339,6 +361,14 @@ type
       const AObject: TRttiObject; const AColumnMap: TTColumnMap);
     procedure InitializeVersionColumn(
       const AObject: TRttiObject; const AColumnMap: TTColumnMap);
+    procedure CheckChangeTrackingAttribute(
+      const AAttribute: TCustomAttribute;
+      const AAttributeClassAt: TClass;
+      const AAttributeClassBy: TClass;
+      const AChangeTrackingMap: TTChangeTrackingMap;
+      const AColumnMap: TTColumnMap);
+    procedure InitializeChangeTrackingColumn(
+      const AObject: TRttiObject; const AColumnMap: TTColumnMap);
   public
     constructor Create(
       const AContext: TRttiContext; const ATypeInfo: PTypeInfo);
@@ -491,16 +521,50 @@ begin
     GetValidationColumnName, FMember.GetValue(AEntity), AErrors);
 end;
 
+{ TTChangeTrackingMap }
+
+procedure TTChangeTrackingMap.SetChangedAt(const AColumnMap: TTColumnMap);
+begin
+  if Assigned(FChangedAt) then
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SDuplicateChangedAtAttribute), [
+        AColumnMap.Name]);
+  if not TTRtti.IsSameType(
+    TypeInfo(TTNullable<TDateTime>), AColumnMap.Member.RttiType) then
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SInvalidChangedAtType), [AColumnMap.Name]);
+  FChangedAt := AColumnMap;
+end;
+
+procedure TTChangeTrackingMap.SetChangedBy(const AColumnMap: TTColumnMap);
+begin
+  if Assigned(FChangedBy) then
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SDuplicateChangedByAttribute), [
+        AColumnMap.Name]);
+  if not (AColumnMap.Member.RttiType.TypeKind in [
+    tkString, tkLString, tkWString, tkUString]) then
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SInvalidChangedByType), [AColumnMap.Name]);
+  FChangedBy := AColumnMap;
+end;
+
 { TTColumnsMap }
 
 constructor TTColumnsMap.Create;
 begin
   inherited Create;
   FColumns := TTObjectList<TTColumnMap>.Create(True);
+  FCreatedChangeTracking := TTChangeTrackingMap.Create;
+  FUpdatedChangeTracking := TTChangeTrackingMap.Create;
+  FDeletedChangeTracking := TTChangeTrackingMap.Create;
 end;
 
 destructor TTColumnsMap.Destroy;
 begin
+  FDeletedChangeTracking.Free;
+  FUpdatedChangeTracking.Free;
+  FCreatedChangeTracking.Free;
   FColumns.Free;
   inherited Destroy;
 end;
@@ -987,6 +1051,7 @@ begin
       try
         InitializePrimaryKey(AObject, LColumnMap);
         InitializeVersionColumn(AObject, LColumnMap);
+        InitializeChangeTrackingColumn(AObject, LColumnMap);
         FColumns.Add(LColumnMap);
       except
         LColumnMap.Free;
@@ -1035,6 +1100,49 @@ begin
       FVersionColumn := AColumnMap;
       Break;
     end;
+end;
+
+procedure TTTableMap.CheckChangeTrackingAttribute(
+  const AAttribute: TCustomAttribute;
+  const AAttributeClassAt: TClass;
+  const AAttributeClassBy: TClass;
+  const AChangeTrackingMap: TTChangeTrackingMap;
+  const AColumnMap: TTColumnMap);
+begin
+  if AAttribute.ClassType = AAttributeClassAt then
+    AChangeTrackingMap.SetChangedAt(AColumnMap)
+  else if AAttribute.ClassType = AAttributeClassBy then
+    AChangeTrackingMap.SetChangedBy(AColumnMap);
+end;
+
+procedure TTTableMap.InitializeChangeTrackingColumn(
+  const AObject: TRttiObject; const AColumnMap: TTColumnMap);
+var
+  LAttribute: TCustomAttribute;
+begin
+  for LAttribute in AObject.GetAttributes do
+  begin
+    CheckChangeTrackingAttribute(
+      LAttribute,
+      TCreatedAtAttribute,
+      TCreatedByAttribute,
+      FColumns.CreatedChangeTracking,
+      AColumnMap);
+
+    CheckChangeTrackingAttribute(
+      LAttribute,
+      TUpdatedAtAttribute,
+      TUpdatedByAttribute,
+      FColumns.UpdatedChangeTracking,
+      AColumnMap);
+
+    CheckChangeTrackingAttribute(
+      LAttribute,
+      TDeletedAtAttribute,
+      TDeletedByAttribute,
+      FColumns.DeletedChangeTracking,
+      AColumnMap)
+  end;
 end;
 
 { TTMapper }

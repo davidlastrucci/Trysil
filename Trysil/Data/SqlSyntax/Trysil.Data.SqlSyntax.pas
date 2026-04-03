@@ -74,6 +74,9 @@ type
     FTableMap: TTTableMap;
     FFilter: TTFilter;
 
+    procedure AddWhereClause(const AResult: TStringBuilder);
+    procedure AddSoftDeleteWhere(const AResult: TStringBuilder);
+    procedure AddFilterWhere(const AResult: TStringBuilder);
     function GetWhere: String;
   public
     constructor Create(
@@ -174,6 +177,15 @@ type
       const AWhereColumns: TArray<TTColumnMap>): String; override;
   end;
 
+{ TTSoftDeleteSyntax }
+
+  TTSoftDeleteSyntax = class(TTCommandSyntax)
+  strict protected
+    function GetColumns: String; virtual;
+    function InternalGetSqlSyntax(
+      const AWhereColumns: TArray<TTColumnMap>): String; override;
+  end;
+
 { TTDeleteCascadeSyntax }
 
   TTDeleteCascadeSyntax = class(TTCommandSyntax)
@@ -211,6 +223,7 @@ type
     function Insert: TTCommandSyntaxClass; virtual;
     function Update: TTCommandSyntaxClass; virtual;
     function Delete: TTCommandSyntaxClass; virtual;
+    function SoftDelete: TTCommandSyntaxClass; virtual;
     function DeleteCascade: TTDeleteCascadeSyntaxClass; virtual;
     function Version: TTVersionSyntaxClass; virtual; abstract;
   end;
@@ -270,28 +283,54 @@ begin
   FFilter := AFilter;
 end;
 
+procedure TTAbstractSelectSyntax.AddWhereClause(const AResult: TStringBuilder);
+var
+  LParameter: TTWhereParameterMap;
+begin
+  if not FTableMap.WhereClause.IsEmpty then
+  begin
+    AResult.AppendFormat('(%s)', [FTableMap.WhereClause]);
+    for LParameter in FTableMap.WhereParameters do
+      FFilter.AddParameter(
+        LParameter.Name, LParameter.DataType, LParameter.Size, LParameter.Value);
+  end;
+end;
+
+procedure TTAbstractSelectSyntax.AddSoftDeleteWhere(
+  const AResult: TStringBuilder);
+var
+  LDeletedAt: TTColumnMap;
+begin
+  LDeletedAt := FTableMap.Columns.DeletedChangeTracking.ChangedAt;
+  if Assigned(LDeletedAt) then
+  begin
+    if AResult.Length > 0 then
+      AResult.Append(' AND ');
+    AResult.AppendFormat('%s IS NULL', [
+      FConnection.GetDatabaseObjectName(LDeletedAt.Name)]);
+  end;
+end;
+
+procedure TTAbstractSelectSyntax.AddFilterWhere(const AResult: TStringBuilder);
+begin
+  if not FFilter.Where.IsEmpty then
+  begin
+    if AResult.Length > 0 then
+      AResult.Append(' AND ');
+    AResult.AppendFormat('(%s)', [FFilter.Where]);
+  end;
+end;
+
 function TTAbstractSelectSyntax.GetWhere: String;
 var
   LResult: TStringBuilder;
-  LParameter: TTWhereParameterMap;
 begin
   LResult := TStringBuilder.Create;
   try
-    if not FTableMap.WhereClause.IsEmpty then
-    begin
-      LResult.AppendFormat('(%s)', [FTableMap.WhereClause]);
-      for LParameter in FTableMap.WhereParameters do
-        FFilter.AddParameter(
-          LParameter.Name, LParameter.DataType, LParameter.Size, LParameter.Value);
-    end;
-
-    if not FFilter.Where.IsEmpty then
-    begin
-      if LResult.Length > 0 then
-        LResult.Append(' AND ');
-      LResult.AppendFormat('(%s)', [FFilter.Where]);
-    end;
-
+    AddWhereClause(LResult);
+    if not FFilter.IncludeDeleted then
+      AddSoftDeleteWhere(LResult);
+    AddFilterWhere(LResult);
     result := LResult.ToString();
   finally
     LResult.Free;
@@ -574,6 +613,72 @@ begin
   end;
 end;
 
+{ TTSoftDeleteSyntax }
+
+function TTSoftDeleteSyntax.GetColumns: String;
+var
+  LResult: TStringBuilder;
+  LColumnMap: TTColumnMap;
+begin
+  LResult := TStringBuilder.Create;
+  try
+    LColumnMap := FTableMap.Columns.DeletedChangeTracking.ChangedAt;
+    if Assigned(LColumnMap) then
+      LResult.AppendFormat('%0:s = :%1:s, ', [
+        FConnection.GetDatabaseObjectName(LColumnMap.Name),
+        FConnection.GetParameterName(LColumnMap.Name)]);
+
+    LColumnMap := FTableMap.Columns.DeletedChangeTracking.ChangedBy;
+    if Assigned(LColumnMap) then
+      LResult.AppendFormat('%0:s = :%1:s, ', [
+        FConnection.GetDatabaseObjectName(LColumnMap.Name),
+        FConnection.GetParameterName(LColumnMap.Name)]);
+
+    LColumnMap := FTableMap.VersionColumn;
+    if Assigned(LColumnMap) then
+      LResult.AppendFormat('%0:s = %0:s + 1, ', [
+        FConnection.GetDatabaseObjectName(LColumnMap.Name)]);
+
+    result := LResult.ToString();
+    if not result.IsEmpty then
+      result := result.Substring(0, result.Length - 2);
+  finally
+    LResult.Free;
+  end;
+end;
+
+function TTSoftDeleteSyntax.InternalGetSqlSyntax(
+  const AWhereColumns: TArray<TTColumnMap>): String;
+var
+  LResult: TStringBuilder;
+  LFirst: Boolean;
+  LColumnMap: TTColumnMap;
+begin
+  LResult := TStringBuilder.Create;
+  try
+    LResult.AppendFormat('UPDATE %s SET ', [
+      FConnection.GetDatabaseObjectName(FTableMap.Name)]);
+    LResult.Append(GetColumns());
+    LFirst := True;
+    for LColumnMap in AWhereColumns do
+    begin
+      if LFirst then
+        LResult.Append(' WHERE ')
+      else
+        LResult.Append(' AND ');
+
+      LResult.AppendFormat('%0:s = :%1:s', [
+        FConnection.GetDatabaseObjectName(LColumnMap.Name),
+        FConnection.GetParameterName(LColumnMap.Name)]);
+
+      LFirst := False;
+    end;
+    result := LResult.ToString();
+  finally
+    LResult.Free;
+  end;
+end;
+
 { TTDeleteCascadeSyntax }
 
 constructor TTDeleteCascadeSyntax.Create;
@@ -627,6 +732,11 @@ end;
 function TTSyntaxClasses.Delete: TTCommandSyntaxClass;
 begin
   result := TTDeleteSyntax;
+end;
+
+function TTSyntaxClasses.SoftDelete: TTCommandSyntaxClass;
+begin
+  result := TTSoftDeleteSyntax;
 end;
 
 function TTSyntaxClasses.DeleteCascade: TTDeleteCascadeSyntaxClass;

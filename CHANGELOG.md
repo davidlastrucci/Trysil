@@ -2,6 +2,15 @@
 
 Notable changes to Trysil, in reverse chronological order.
 
+## Change Tracking & Soft Delete
+
+- **Change tracking attributes**: `[TCreatedAt]`, `[TCreatedBy]`, `[TUpdatedAt]`, `[TUpdatedBy]`, `[TDeletedAt]`, `[TDeletedBy]` — automatic timestamps and user tracking on insert, update, and delete
+- **Soft delete**: entities with `[TDeletedAt]` use UPDATE instead of DELETE; all SELECT queries automatically exclude soft-deleted records (`DeletedAt IS NULL`)
+- **`IncludeDeleted`**: option on `TTFilter` and `TTFilterBuilder<T>` to include soft-deleted records in queries
+- **`OnGetCurrentUser`**: callback property on `TTContext` to provide the current user name for `*By` fields
+- **`TTChangeTrackingMap`**: mapping infrastructure for change tracking columns
+- **`TTSoftDeleteSyntax`**: SQL syntax class for soft delete UPDATE statements
+
 ## Recent
 
 - **Docs**: MkDocs Material documentation site, cookbook, demo READMEs

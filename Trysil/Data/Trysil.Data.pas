@@ -188,6 +188,10 @@ type
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata): TTAbstractCommand; virtual; abstract;
 
+    function CreateSoftDeleteCommand(
+      const ATableMap: TTTableMap;
+      const ATableMetadata: TTTableMetadata): TTAbstractCommand; virtual; abstract;
+
     function CreateDeleteCommand(
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata): TTAbstractCommand; virtual; abstract;

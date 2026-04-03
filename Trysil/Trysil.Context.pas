@@ -48,6 +48,9 @@ type
     function GetInTransaction: Boolean;
     function GetSupportTransaction: Boolean;
     function GetUseIdentityMap: Boolean;
+
+    function GetOnGetCurrentUser: TFunc<String>;
+    procedure SetOnGetCurrentUser(const AValue: TFunc<String>);
   strict protected
     FReadConnection: TTConnection;
     FWriteConnection: TTConnection;
@@ -117,6 +120,9 @@ type
     property InTransaction: Boolean read GetInTransaction;
     property SupportTransaction: Boolean read GetSupportTransaction;
     property UseIdentityMap: Boolean read GetUseIdentityMap;
+
+    property OnGetCurrentUser: TFunc<String>
+      read GetOnGetCurrentUser write SetOnGetCurrentUser;
   end;
 
 implementation
@@ -202,6 +208,16 @@ end;
 function TTContext.GetUseIdentityMap: Boolean;
 begin
   result := FProvider.UseIdentityMap;
+end;
+
+function TTContext.GetOnGetCurrentUser: TFunc<String>;
+begin
+  result := FResolver.OnGetCurrentUser;
+end;
+
+procedure TTContext.SetOnGetCurrentUser(const AValue: TFunc<String>);
+begin
+  FResolver.OnGetCurrentUser := AValue;
 end;
 
 function TTContext.CreateEntity<T>(): T;

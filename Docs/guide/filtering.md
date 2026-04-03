@@ -122,6 +122,32 @@ LBuilder
 
 Only one `OrderBy` call is active at a time. Calling `OrderByAsc` or `OrderByDesc` replaces any previous ordering.
 
+## Including Soft-Deleted Records
+
+When an entity has a `[TDeletedAt]` column, all queries automatically exclude soft-deleted records by adding `DeletedAt IS NULL` to the WHERE clause. To include them:
+
+### Via TTFilterBuilder
+
+```pascal
+var LFilter := LContext.CreateFilterBuilder<TArticle>()
+  .Where('Title').Like('Draft%')
+  .IncludeDeleted
+  .Build;
+
+LContext.Select<TArticle>(LArticles, LFilter);
+```
+
+### Via TTFilter
+
+```pascal
+LFilter := TTFilter.Create('Title LIKE :Title');
+LFilter.AddParameter('Title', ftWideString, 'Draft%');
+LFilter.IncludeDeleted := True;
+LContext.Select<TArticle>(LArticles, LFilter);
+```
+
+See [Entity Mapping — Soft Delete](entities.md#soft-delete) for how to set up change tracking attributes.
+
 ## SelectCount
 
 Count records matching a filter without loading entities:

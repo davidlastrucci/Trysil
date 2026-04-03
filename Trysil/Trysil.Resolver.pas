@@ -15,6 +15,8 @@ interface
 uses
   System.SysUtils,
   System.Classes,
+  System.TypInfo,
+  System.Rtti,
 
   Trysil.Consts,
   Trysil.Types,
@@ -63,11 +65,18 @@ type
     FConnection: TTConnection;
     FContext: TObject;
     FMetadata: TTMetadata;
+    FOnGetCurrentUser: TFunc<String>;
 
     procedure CheckReadWrite(const ATableMap: TTTableMap);
 
     procedure ExecuteValidators(
       const AEntity: TObject; const ATableMap: TTTableMap);
+    procedure ApplyChangeTrackingAt(
+    const AEntity: TObject; const AChangeTracking: TTChangeTrackingMap);
+    procedure ApplyChangeTrackingBy(
+    const AEntity: TObject; const AChangeTracking: TTChangeTrackingMap);
+    procedure ApplyChangeTracking(
+    const AEntity: TObject; const AChangeTracking: TTChangeTrackingMap);
   strict protected
     function GetValidationErrorMessage(
       const AErrors: TTValidationErrors): String; virtual;
@@ -82,6 +91,9 @@ type
     procedure Insert<T: class>(const AEntity: T);
     procedure Update<T: class>(const AEntity: T);
     procedure Delete<T: class>(const AEntity: T);
+
+    property OnGetCurrentUser: TFunc<String>
+      read FOnGetCurrentUser write FOnGetCurrentUser;
   end;
 
 implementation
@@ -173,6 +185,7 @@ begin
   FConnection := AConnection;
   FContext := AContext;
   FMetadata := AMetadata;
+  FOnGetCurrentUser := nil;
 end;
 
 procedure TTResolver.CheckReadWrite(const ATableMap: TTTableMap);
@@ -218,6 +231,40 @@ begin
   end;
 end;
 
+procedure TTResolver.ApplyChangeTrackingAt(
+  const AEntity: TObject; const AChangeTracking: TTChangeTrackingMap);
+var
+  LDateTime: TTNullable<TDateTime>;
+  LValue: TTValue;
+begin
+  LDateTime := TTNullable<TDateTime>.Create(Now);
+  TTValue.Make(
+    @LDateTime, AChangeTracking.ChangedAt.Member.RttiType.Handle, LValue);
+  AChangeTracking.ChangedAt.Member.SetValue(AEntity, LValue);
+end;
+
+procedure TTResolver.ApplyChangeTrackingBy(
+  const AEntity: TObject; const AChangeTracking: TTChangeTrackingMap);
+var
+  LCurrentUser: String;
+begin
+  LCurrentUser := String.Empty;
+  if Assigned(FOnGetCurrentUser) then
+    LCurrentUser := FOnGetCurrentUser();
+
+  AChangeTracking.ChangedBy.Member.SetValue(
+      AEntity, TTValue.From<String>(LCurrentUser));
+end;
+
+procedure TTResolver.ApplyChangeTracking(
+  const AEntity: TObject; const AChangeTracking: TTChangeTrackingMap);
+begin
+  if Assigned(AChangeTracking.ChangedAt) then
+    ApplyChangeTrackingAt(AEntity, AChangeTracking);
+  if Assigned(AChangeTracking.ChangedBy) then
+    ApplyChangeTrackingBy(AEntity, AChangeTracking);
+end;
+
 procedure TTResolver.Validate<T>(const AEntity: T);
 var
   LTableMap: TTTableMap;
@@ -236,6 +283,7 @@ begin
   LTableMap := TTMapper.Instance.Load<T>();
   CheckReadWrite(LTableMap);
   ExecuteValidators(AEntity, LTableMap);
+  ApplyChangeTracking(AEntity, LTableMap.Columns.CreatedChangeTracking);
   LTableMetadata := FMetadata.Load<T>();
   LCommand := FConnection.CreateInsertCommand(LTableMap, LTableMetadata);
   try
@@ -264,6 +312,7 @@ begin
   LTableMap := TTMapper.Instance.Load<T>();
   CheckReadWrite(LTableMap);
   ExecuteValidators(AEntity, LTableMap);
+  ApplyChangeTracking(AEntity, LTableMap.Columns.UpdatedChangeTracking);
   LTableMetadata := FMetadata.Load<T>();
   LCommand := FConnection.CreateUpdateCommand(LTableMap, LTableMetadata);
   try
@@ -295,9 +344,19 @@ var
 begin
   LTableMap := TTMapper.Instance.Load<T>();
   CheckReadWrite(LTableMap);
-  FConnection.CheckRelations(LTableMap, AEntity);
   LTableMetadata := FMetadata.Load<T>();
-  LCommand := FConnection.CreateDeleteCommand(LTableMap, LTableMetadata);
+
+  if Assigned(LTableMap.Columns.DeletedChangeTracking.ChangedAt) then
+  begin
+    ApplyChangeTracking(AEntity, LTableMap.Columns.DeletedChangeTracking);
+    LCommand := FConnection.CreateSoftDeleteCommand(LTableMap, LTableMetadata);
+  end
+  else
+  begin
+    FConnection.CheckRelations(LTableMap, AEntity);
+    LCommand := FConnection.CreateDeleteCommand(LTableMap, LTableMetadata);
+  end;
+
   try
     LEvent := TTEventFactory.Instance.CreateEvent<T>(
       LTableMap.Events.DeleteEventClass, FContext, AEntity);

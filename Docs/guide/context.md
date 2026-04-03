@@ -141,6 +141,8 @@ LContext.UpdateAll<TPerson>(LPersonList);
 LContext.Delete<TPerson>(LPerson);
 ```
 
+If the entity has a `[TDeletedAt]` column, `Delete` performs a **soft delete** (UPDATE) instead of a SQL DELETE. See [Entity Mapping — Soft Delete](entities.md#soft-delete) for details.
+
 ### DeleteAll
 
 ```pascal
@@ -258,6 +260,21 @@ Validation also runs automatically before every `Insert` and `Update` operation 
 | `InTransaction` | `Boolean` | Whether the write connection has an active transaction |
 | `SupportTransaction` | `Boolean` | Whether the write connection supports transactions |
 | `UseIdentityMap` | `Boolean` | Whether the identity map is enabled for this context |
+| `OnGetCurrentUser` | `TFunc<String>` | Callback that returns the current user name for change tracking `*By` fields |
+
+### OnGetCurrentUser
+
+Assign this property to provide the current user name for change tracking attributes (`[TCreatedBy]`, `[TUpdatedBy]`, `[TDeletedBy]`):
+
+```pascal
+LContext.OnGetCurrentUser :=
+  function: String
+  begin
+    Result := GetCurrentUserName;
+  end;
+```
+
+If not assigned, an empty string is written to `*By` fields. See [Entity Mapping — Change Tracking](entities.md#change-tracking) for details.
 
 ## Typical Usage Pattern
 

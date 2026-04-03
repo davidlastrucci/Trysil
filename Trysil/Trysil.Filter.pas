@@ -76,6 +76,7 @@ type
     FWhere: String;
     FParameters: TArray<TTFilterParameter>;
     FPaging: TTFilterPaging;
+    FIncludeDeleted: Boolean;
 
     function GetIsEmpty: Boolean;
   public
@@ -107,6 +108,7 @@ type
     property Parameters: TArray<TTFilterParameter> read FParameters;
     property Paging: TTFilterPaging read FPaging;
     property IsEmpty: Boolean read GetIsEmpty;
+    property IncludeDeleted: Boolean read FIncludeDeleted write FIncludeDeleted;
 
     class function Empty: TTFilter; static;
   end;
@@ -162,6 +164,7 @@ type
     FOrderBy: String;
     FStart: Integer;
     FLimit: Integer;
+    FIncludeDeleted: Boolean;
     FParamCounter: Integer;
 
     function BuildWhereClause: String;
@@ -188,6 +191,7 @@ type
     function OrderByDesc(const AColumnName: String): TTFilterBuilder<T>;
     function Limit(const ALimit: Integer): TTFilterBuilder<T>;
     function Offset(const AStart: Integer): TTFilterBuilder<T>;
+    function IncludeDeleted: TTFilterBuilder<T>;
 
     function Build: TTFilter;
   end;
@@ -242,6 +246,7 @@ begin
   FWhere := AWhere;
   SetLength(FParameters, 0);
   FPaging := TTFilterPaging.Empty();
+  FIncludeDeleted := False;
 end;
 
 constructor TTFilter.Create(
@@ -252,6 +257,7 @@ begin
   FWhere := AWhere;
   SetLength(FParameters, 0);
   FPaging := TTFilterPaging.Create(0, AMaxRecord, AOrderBy);
+  FIncludeDeleted := False;
 end;
 
 constructor TTFilter.Create(
@@ -263,6 +269,7 @@ begin
   FWhere := AWhere;
   SetLength(FParameters, 0);
   FPaging := TTFilterPaging.Create(AStart, ALimit, AOrderBy);
+  FIncludeDeleted := False;
 end;
 
 procedure TTFilter.AddParameter(
@@ -410,6 +417,7 @@ begin
   FOrderBy := String.Empty;
   FStart := -1;
   FLimit := -1;
+  FIncludeDeleted := False;
   FParamCounter := 0;
 end;
 
@@ -517,6 +525,12 @@ begin
   result := Self;
 end;
 
+function TTFilterBuilder<T>.IncludeDeleted: TTFilterBuilder<T>;
+begin
+  FIncludeDeleted := True;
+  result := Self;
+end;
+
 function TTFilterBuilder<T>.Build: TTFilter;
 var
   LWhere: String;
@@ -530,6 +544,8 @@ begin
     result := TTFilter.Create(LWhere, -1, FOrderBy)
   else
     result := TTFilter.Create(LWhere);
+
+  result.IncludeDeleted := FIncludeDeleted;
 
   for LParam in FParameters do
     result.AddParameter(

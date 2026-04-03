@@ -1,4 +1,4 @@
-(*
+﻿(*
 
   Trysil
   Copyright � David Lastrucci
@@ -69,6 +69,10 @@ resourcestring
   SDuplicateWhereClauseAttribute = 'Duplicate TWhereClause Attribute.';
   SDuplicatePrimaryKeyAttribute = 'Duplicate TPrimaryKey Attribute.';
   SDuplicateVersionColumnAttribute = 'Duplicate TVersionColumn Attribute.';
+  SDuplicateChangedAtAttribute = 'Duplicate change tracking "At" attribute: %0:s.';
+  SDuplicateChangedByAttribute = 'Duplicate change tracking "By" attribute: %0:s.';
+  SInvalidChangedAtType = 'Change tracking "At" attribute requires TTNullable<TDateTime> field: %0:s.';
+  SInvalidChangedByType = 'Change tracking "By" attribute requires String field: %0:s.';
   SInsertEventAttribute = 'Duplicate TInsertEventAttribute Attribute.';
   SUpdateEventAttribute = 'Duplicate TUpdateEventAttribute Attribute.';
   SDeleteEventAttribute = 'Duplicate TDeleteEventAttribute Attribute.';

@@ -126,6 +126,30 @@ type
     property Value: TTValue read FValue;
   end;
 
+{ TCreatedAtAttribute }
+
+  TCreatedAtAttribute = class(TCustomAttribute);
+
+{ TCreatedByAttribute }
+
+  TCreatedByAttribute = class(TCustomAttribute);
+
+{ TUpdatedAtAttribute }
+
+  TUpdatedAtAttribute = class(TCustomAttribute);
+
+{ TUpdatedByAttribute }
+
+  TUpdatedByAttribute = class(TCustomAttribute);
+
+{ TDeletedAtAttribute }
+
+  TDeletedAtAttribute = class(TCustomAttribute);
+
+{ TDeletedByAttribute }
+
+  TDeletedByAttribute = class(TCustomAttribute);
+
 implementation
 
 { TNamedAttribute }

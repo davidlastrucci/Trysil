@@ -128,8 +128,10 @@ type
 
     class function GetHasPackages: Boolean;
     class function IsSameType(
-      const AClass: TClass; const AType: TRttiType): Boolean;
+      const AClass: TClass; const AType: TRttiType): Boolean; overload;
   public
+    class function IsSameType(
+      const ATypeInfo: PTypeInfo; const AType: TRttiType): Boolean; overload;
     class function InheritsFrom(
       const AObject: TObject; const AType: TRttiType): Boolean;
   end;
@@ -551,6 +553,16 @@ begin
       AClass.QualifiedClassName, AType.QualifiedName, True) = 0
   else
     result := AClass.ClassInfo = AType.Handle;
+end;
+
+class function TTRtti.IsSameType(
+  const ATypeInfo: PTypeInfo; const AType: TRttiType): Boolean;
+begin
+  // RTTI, Package & Generics
+  if FHasPackages then
+    result := String.Compare(String(ATypeInfo.Name), AType.Name, True) = 0
+  else
+    result := ATypeInfo = AType.Handle;
 end;
 
 class function TTRtti.InheritsFrom(

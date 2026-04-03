@@ -24,6 +24,7 @@
 - **4 database drivers** — SQLite, PostgreSQL, SQL Server, Firebird — all through FireDAC
 - **Fluent query builder** — type-safe filtering with `TTFilterBuilder<T>`
 - **Lazy loading** — `TTLazy<T>` and `TTLazyList<T>` for related entities
+- **Change tracking & soft delete** — `[TCreatedAt]`, `[TUpdatedAt]`, `[TDeletedAt]` with automatic timestamps and user tracking
 - **Optimistic locking** — built-in via `[TVersionColumn]`
 - **Identity map** — per-context, multi-tenant safe
 - **Unit of Work** — `TTSession<T>` tracks and applies changes automatically

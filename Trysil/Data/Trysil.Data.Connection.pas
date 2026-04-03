@@ -1,4 +1,4 @@
-(*
+﻿(*
 
   Trysil
   Copyright � David Lastrucci
@@ -72,6 +72,10 @@ type
       const ATableMetadata: TTTableMetadata): TTAbstractCommand; override;
 
     function CreateUpdateCommand(
+      const ATableMap: TTTableMap;
+      const ATableMetadata: TTTableMetadata): TTAbstractCommand; override;
+
+    function CreateSoftDeleteCommand(
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata): TTAbstractCommand; override;
 
@@ -151,6 +155,14 @@ type
 { TTGenericUpdateCommand }
 
   TTGenericUpdateCommand = class(TTGenericCommand)
+  public
+    procedure Execute(
+      const AEntity: TObject; const AEvent: TTEvent); override;
+  end;
+
+{ TTGenericSoftDeleteCommand }
+
+  TTGenericSoftDeleteCommand = class(TTGenericCommand)
   public
     procedure Execute(
       const AEntity: TObject; const AEvent: TTEvent); override;
@@ -254,6 +266,14 @@ function TTGenericConnection.CreateUpdateCommand(
   const ATableMetadata: TTTableMetadata): TTAbstractCommand;
 begin
   result := TTGenericUpdateCommand.Create(
+    Self, ATableMap, ATableMetadata, FUpdateMode);
+end;
+
+function TTGenericConnection.CreateSoftDeleteCommand(
+  const ATableMap: TTTableMap;
+  const ATableMetadata: TTTableMetadata): TTAbstractCommand;
+begin
+  result := TTGenericSoftDeleteCommand.Create(
     Self, ATableMap, ATableMetadata, FUpdateMode);
 end;
 
@@ -516,6 +536,27 @@ begin
       AEvent,
       TTEventMethodType.BeforeUpdate,
       TTEventMethodType.AfterUpdate);
+  finally
+    LSyntax.Free;
+  end;
+end;
+
+{ TTGenericSoftDeleteCommand }
+
+procedure TTGenericSoftDeleteCommand.Execute(
+  const AEntity: TObject; const AEvent: TTEvent);
+var
+  LSyntax: TTCommandSyntax;
+begin
+  LSyntax := FConnection.SyntaxClasses.SoftDelete.Create(
+    FConnection, FTableMap);
+  try
+    ExecuteCommand(
+      LSyntax.GetSqlSyntax(GetWhereColumns),
+      AEntity,
+      AEvent,
+      TTEventMethodType.BeforeDelete,
+      TTEventMethodType.AfterDelete);
   finally
     LSyntax.Free;
   end;

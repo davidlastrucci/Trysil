@@ -102,6 +102,92 @@ TActiveUser = class
 - Parameters are **compile-time constants** only. Supported types: `String`, `Integer`, `Int64`, `Double`, `Boolean`, `TDateTime`.
 - For dynamic, runtime-constructed filters, use [TTFilterBuilder\<T\>](filtering.md) instead.
 
+## Change Tracking
+
+Trysil can automatically set timestamp and user-name fields when entities are inserted, updated, or soft-deleted. Decorate columns with the change tracking attributes:
+
+| Attribute | Set on | Required field type |
+|---|---|---|
+| `TCreatedAt` | Insert | `TTNullable<TDateTime>` |
+| `TCreatedBy` | Insert | `String` |
+| `TUpdatedAt` | Update | `TTNullable<TDateTime>` |
+| `TUpdatedBy` | Update | `String` |
+| `TDeletedAt` | Delete (soft) | `TTNullable<TDateTime>` |
+| `TDeletedBy` | Delete (soft) | `String` |
+
+```pascal
+[TTable('Articles')]
+[TSequence('ArticlesID')]
+TArticle = class
+strict private
+  [TPrimaryKey]
+  [TColumn('ID')]
+  FID: TTPrimaryKey;
+
+  [TColumn('Title')]
+  FTitle: String;
+
+  [TCreatedAt]
+  [TColumn('CreatedAt')]
+  FCreatedAt: TTNullable<TDateTime>;
+
+  [TCreatedBy]
+  [TColumn('CreatedBy')]
+  FCreatedBy: String;
+
+  [TUpdatedAt]
+  [TColumn('UpdatedAt')]
+  FUpdatedAt: TTNullable<TDateTime>;
+
+  [TUpdatedBy]
+  [TColumn('UpdatedBy')]
+  FUpdatedBy: String;
+
+  [TDeletedAt]
+  [TColumn('DeletedAt')]
+  FDeletedAt: TTNullable<TDateTime>;
+
+  [TDeletedBy]
+  [TColumn('DeletedBy')]
+  FDeletedBy: String;
+
+  [TVersionColumn]
+  [TColumn('VersionID')]
+  FVersionID: TTVersion;
+public
+  property ID: TTPrimaryKey read FID;
+  property Title: String read FTitle write FTitle;
+end;
+```
+
+### How It Works
+
+- The resolver automatically populates `*At` fields with `Now` and `*By` fields with the value returned by `TTContext.OnGetCurrentUser` (empty string if not assigned).
+- `[TCreatedAt]` / `[TCreatedBy]` are set during `Insert`.
+- `[TUpdatedAt]` / `[TUpdatedBy]` are set during `Update`.
+- `[TDeletedAt]` / `[TDeletedBy]` are set during `Delete`.
+
+### Soft Delete
+
+When an entity has a `[TDeletedAt]` column, calling `Delete<T>` does **not** execute a SQL `DELETE`. Instead, it executes an `UPDATE` that sets the `DeletedAt` (and optionally `DeletedBy`) column and increments `[TVersionColumn]` if present. Relation checks (`TRelation`) are skipped for soft deletes.
+
+All SELECT queries automatically add `DeletedAt IS NULL` to the WHERE clause, so soft-deleted records are excluded by default. To include them, use `TTFilter.IncludeDeleted` or `TTFilterBuilder<T>.IncludeDeleted` — see [Filtering](filtering.md#including-soft-deleted-records).
+
+### Providing the Current User
+
+Set `OnGetCurrentUser` on the context to supply the user name for `*By` fields:
+
+```pascal
+LContext := TTContext.Create(LConnection);
+LContext.OnGetCurrentUser :=
+  function: String
+  begin
+    Result := GetCurrentUserName;  // your application logic
+  end;
+```
+
+If `OnGetCurrentUser` is not assigned, an empty string is written to `*By` fields.
+
 ## RTTI Warning
 
 Always add this compiler directive at the top of units that define entities with Trysil attributes:

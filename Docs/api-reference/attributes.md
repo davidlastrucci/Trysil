@@ -17,6 +17,12 @@ Unit: `Trysil.Attributes`
 | `TRelation(table, fk, cascade)` | Class | Declares child relationship |
 | `TWhereClause(sql)` | Class | Adds fixed WHERE clause to all queries |
 | `TWhereClauseParameter(name, value)` | Class | Parameter for `TWhereClause` |
+| `TCreatedAt` | Field | Timestamp set on insert (`TTNullable<TDateTime>`) |
+| `TCreatedBy` | Field | User name set on insert (`String`) |
+| `TUpdatedAt` | Field | Timestamp set on update (`TTNullable<TDateTime>`) |
+| `TUpdatedBy` | Field | User name set on update (`String`) |
+| `TDeletedAt` | Field | Timestamp set on delete — enables soft delete (`TTNullable<TDateTime>`) |
+| `TDeletedBy` | Field | User name set on delete (`String`) |
 
 ### TTable
 
@@ -107,6 +113,48 @@ TActiveAdmin = class
 Adds a fixed WHERE clause to every query on this entity. Parameters are **compile-time constants only**. For dynamic filtering, use [`TTFilterBuilder<T>`](../guide/filtering.md).
 
 `TWhereClauseParameter` constructors accept: `String`, `Integer`, `Int64`, `Double`, `Boolean`, `TDateTime`.
+
+### Change Tracking Attributes
+
+```pascal
+[TCreatedAt]
+[TColumn('CreatedAt')]
+FCreatedAt: TTNullable<TDateTime>;
+
+[TCreatedBy]
+[TColumn('CreatedBy')]
+FCreatedBy: String;
+
+[TUpdatedAt]
+[TColumn('UpdatedAt')]
+FUpdatedAt: TTNullable<TDateTime>;
+
+[TUpdatedBy]
+[TColumn('UpdatedBy')]
+FUpdatedBy: String;
+
+[TDeletedAt]
+[TColumn('DeletedAt')]
+FDeletedAt: TTNullable<TDateTime>;
+
+[TDeletedBy]
+[TColumn('DeletedBy')]
+FDeletedBy: String;
+```
+
+The resolver automatically populates these fields:
+
+- **`TCreatedAt` / `TCreatedBy`** — set during `Insert` with `Now` and the value from `TTContext.OnGetCurrentUser`.
+- **`TUpdatedAt` / `TUpdatedBy`** — set during `Update`.
+- **`TDeletedAt` / `TDeletedBy`** — set during `Delete`. When `TDeletedAt` is present, delete becomes a **soft delete** (UPDATE instead of DELETE). All SELECT queries automatically add `DeletedAt IS NULL` to exclude soft-deleted records.
+
+Type constraints:
+
+- `*At` fields must be `TTNullable<TDateTime>` — validated at mapping time.
+- `*By` fields must be `String` — validated at mapping time.
+- Duplicate attributes of the same kind on the same entity raise `ETException`.
+
+See [Entity Mapping — Change Tracking](../guide/entities.md#change-tracking) for a full example.
 
 ---
 
