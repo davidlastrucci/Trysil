@@ -92,6 +92,9 @@ type
     procedure Select<T: class>(
       const AResult: TTList<T>; const AFilter: TTFilter);
 
+    procedure RawSelect<T: class>(
+      const ASQL: String; const AResult: TTList<T>);
+
     function Get<T: class>(const AID: TTPrimaryKey): T;
     function TryGet<T: class>(const AID: TTPrimaryKey; out AEntity: T): Boolean;
 
@@ -268,6 +271,12 @@ procedure TTContext.Select<T>(
   const AResult: TTList<T>; const AFilter: TTFilter);
 begin
   FProvider.Select<T>(AResult, AFilter);
+end;
+
+procedure TTContext.RawSelect<T>(
+  const ASQL: String; const AResult: TTList<T>);
+begin
+  FProvider.RawSelect<T>(ASQL, AResult);
 end;
 
 function TTContext.Get<T>(const AID: TTPrimaryKey): T;

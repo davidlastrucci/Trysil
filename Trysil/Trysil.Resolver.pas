@@ -190,6 +190,10 @@ end;
 
 procedure TTResolver.CheckReadWrite(const ATableMap: TTTableMap);
 begin
+  if ATableMap.HasJoins then
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(SJoinEntityReadOnly));
+
   case FConnection.UpdateMode of
     TTUpdateMode.KeyAndVersionColumn:
       if (not Assigned(ATableMap.PrimaryKey)) or

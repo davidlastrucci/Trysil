@@ -120,6 +120,9 @@ type
 
     procedure Refresh<T: class>(const AEntity: T);
 
+    procedure RawSelect<T: class>(
+      const ASQL: String; const AResult: TTList<T>);
+
     property UseIdentityMap: Boolean read GetUseIdentityMap;
   end;
 
@@ -274,7 +277,7 @@ var
 begin
   LPrimaryKey := GetPrimaryKey(ATableMap, AReader);
   result := nil;
-  if Assigned(FIdentityMap) then
+  if Assigned(FIdentityMap) and (not ATableMap.HasJoins) then
     result := FIdentityMap.GetEntity<T>(LPrimaryKey);
 
   if not Assigned(result) then
@@ -282,7 +285,7 @@ begin
     LRttiEntity := TTRttiEntity<T>.Create;
     try
       result := LRttiEntity.CreateEntity(FContext);
-      if Assigned(FIdentityMap) then
+      if Assigned(FIdentityMap) and (not ATableMap.HasJoins) then
         FIdentityMap.AddEntity<T>(LPrimaryKey, result);
     finally
       LRttiEntity.Free;
@@ -349,7 +352,7 @@ begin
   begin
     if not LColumnMap.Member.IsClass then
     begin
-      LColumn := AReader.ColumnByName(LColumnMap.Name);
+      LColumn := AReader.ColumnByName(LColumnMap.LookupName);
       LColumn.SetValue(AEntity);
     end;
   end;
@@ -393,7 +396,7 @@ begin
     if LColumnMap.Member.IsClass then
       MapLazyColumn(
         AReader,
-        LColumnMap.Name,
+        LColumnMap.LookupName,
         LColumnMap.Name,
         LColumnMap.Member,
         AEntity,
@@ -503,7 +506,7 @@ begin
   if not Assigned(ATablemap.PrimaryKey) then
     raise ETException.Create(
       TTLanguage.Instance.Translate(SNotDefinedPrimaryKey));
-  LColumn := AReader.ColumnByName(ATablemap.PrimaryKey.Name);
+  LColumn := AReader.ColumnByName(ATablemap.PrimaryKey.LookupName);
   LResult := LColumn.Value;
   if not LResult.IsType<TTPrimaryKey>() then
     raise ETException.Create(
@@ -592,6 +595,42 @@ begin
   try
     if not LReader.IsEmpty then
       MapEntity(LTableMap, LReader, AEntity);
+  finally
+    LReader.Free;
+  end;
+end;
+
+procedure TTProvider.RawSelect<T>(
+  const ASQL: String; const AResult: TTList<T>);
+var
+  LTableMap: TTTableMap;
+  LDataSet: TDataSet;
+  LReader: TTReader;
+  LRttiEntity: TTRttiEntity<T>;
+  LEntity: T;
+begin
+  LTableMap := TTMapper.Instance.Load<T>();
+  LDataSet := FConnection.CreateDataSet(ASQL, TTFilter.Empty);
+  LReader := TTRawReader.Create(LTableMap, LDataSet);
+  try
+    AResult.Clear;
+    while not LReader.Eof do
+    begin
+      LRttiEntity := TTRttiEntity<T>.Create;
+      try
+        LEntity := LRttiEntity.CreateEntity(FContext);
+        try
+          MapEntity(LTableMap, LReader, LEntity);
+          AResult.Add(LEntity);
+        except
+          LEntity.Free;
+          raise;
+        end;
+      finally
+        LRttiEntity.Free;
+      end;
+      LReader.Next;
+    end;
   finally
     LReader.Free;
   end;

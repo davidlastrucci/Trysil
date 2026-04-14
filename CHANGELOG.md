@@ -2,6 +2,18 @@
 
 Notable changes to Trysil, in reverse chronological order.
 
+## JOIN Queries & Raw Select
+
+- **`[TJoin]` attribute**: declarative JOIN support with three overloads — simple (`TJoin(Kind, Table, SourceCol, TargetCol)`), with alias for self-joins (`TJoin(Kind, Table, Alias, SourceCol, TargetCol)`), and chained (`TJoin(Kind, Table, Alias, SourceTableOrAlias, SourceCol, TargetCol)`)
+- **`[TColumn]` 2-parameter overload**: `TColumn('Alias', 'ColumnName')` maps a field to a joined table column
+- **`TJoinKind`**: scoped enum — `Inner`, `Left`, `Right`
+- **Read-only enforcement**: join entities raise `ETException` on `Insert`, `Update`, or `Delete`
+- **Identity map skip**: join entities bypass the identity map (same PK can appear in multiple rows)
+- **Soft delete support**: `DeletedAt IS NULL` is qualified with the FROM table name when JOINs are present
+- **Full backward compatibility**: all changes are behind `HasJoins` checks — existing entities are unaffected
+- **`TTContext.RawSelect<T>`**: execute arbitrary SQL and map results to DTO classes via `[TColumn]` attributes — no `[TTable]`, `[TPrimaryKey]`, or `[TSequence]` required
+- **`TTRawReader`**: lightweight reader that wraps a `TDataSet` for raw SQL result mapping
+
 ## Change Tracking & Soft Delete
 
 - **Change tracking attributes**: `[TCreatedAt]`, `[TCreatedBy]`, `[TUpdatedAt]`, `[TUpdatedBy]`, `[TDeletedAt]`, `[TDeletedBy]` — automatic timestamps and user tracking on insert, update, and delete

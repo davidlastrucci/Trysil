@@ -21,6 +21,8 @@ uses
 
 type
 
+{$SCOPEDENUMS ON}
+
 { TNamedAttribute }
 
   TNamedAttribute = class(TCustomAttribute)
@@ -46,7 +48,16 @@ type
 
 { TColumnAttribute }
 
-  TColumnAttribute = class(TNamedAttribute);
+  TColumnAttribute = class(TNamedAttribute)
+  strict private
+    FTableName: String;
+  public
+    constructor Create(const AName: String); overload;
+    constructor Create(
+      const ATableName: String; const AColumnName: String); overload;
+
+    property TableName: String read FTableName;
+  end;
 
 { TDetailColumnAttribute }
 
@@ -150,6 +161,50 @@ type
 
   TDeletedByAttribute = class(TCustomAttribute);
 
+{ TJoinKind }
+
+  TJoinKind = (Inner, Left, Right);
+
+{ TJoinAttribute }
+
+  TJoinAttribute = class(TCustomAttribute)
+  strict private
+    FJoinKind: TJoinKind;
+    FTableName: String;
+    FAlias: String;
+    FSourceTableOrAlias: String;
+    FSourceColumnName: String;
+    FTargetColumnName: String;
+  public
+    constructor Create(
+      const AJoinKind: TJoinKind;
+      const ATableName: String;
+      const ASourceColumnName: String;
+      const ATargetColumnName: String); overload;
+
+    constructor Create(
+      const AJoinKind: TJoinKind;
+      const ATableName: String;
+      const AAlias: String;
+      const ASourceColumnName: String;
+      const ATargetColumnName: String); overload;
+
+    constructor Create(
+      const AJoinKind: TJoinKind;
+      const ATableName: String;
+      const AAlias: String;
+      const ASourceTableOrAlias: String;
+      const ASourceColumnName: String;
+      const ATargetColumnName: String); overload;
+
+    property JoinKind: TJoinKind read FJoinKind;
+    property TableName: String read FTableName;
+    property Alias: String read FAlias;
+    property SourceTableOrAlias: String read FSourceTableOrAlias;
+    property SourceColumnName: String read FSourceColumnName;
+    property TargetColumnName: String read FTargetColumnName;
+  end;
+
 implementation
 
 { TNamedAttribute }
@@ -158,6 +213,20 @@ constructor TNamedAttribute.Create(const AName: String);
 begin
   inherited Create;
   FName := AName;
+end;
+
+{ TColumnAttribute }
+
+constructor TColumnAttribute.Create(const AName: String);
+begin
+  Create(String.Empty, AName);
+end;
+
+constructor TColumnAttribute.Create(
+  const ATableName: String; const AColumnName: String);
+begin
+  inherited Create(AColumnName);
+  FTableName := ATableName;
 end;
 
 { TDetailColumnAttribute }
@@ -240,6 +309,56 @@ constructor TWhereClauseParameterAttribute.Create(
   const AName: String; const AValue: TDateTime);
 begin
   Create(AName, TFieldType.ftDateTime, 0, TTValue.From<TDateTime>(AValue));
+end;
+
+{ TJoinAttribute }
+
+constructor TJoinAttribute.Create(
+  const AJoinKind: TJoinKind;
+  const ATableName: String;
+  const ASourceColumnName: String;
+  const ATargetColumnName: String);
+begin
+  Create(
+    AJoinKind,
+    ATableName,
+    ATableName,
+    String.Empty,
+    ASourceColumnName,
+    ATargetColumnName);
+end;
+
+constructor TJoinAttribute.Create(
+  const AJoinKind: TJoinKind;
+  const ATableName: String;
+  const AAlias: String;
+  const ASourceColumnName: String;
+  const ATargetColumnName: String);
+begin
+  Create(
+    AJoinKind,
+    ATableName,
+    AAlias,
+    String.Empty,
+    ASourceColumnName,
+    ATargetColumnName);
+end;
+
+constructor TJoinAttribute.Create(
+  const AJoinKind: TJoinKind;
+  const ATableName: String;
+  const AAlias: String;
+  const ASourceTableOrAlias: String;
+  const ASourceColumnName: String;
+  const ATargetColumnName: String);
+begin
+  inherited Create;
+  FJoinKind := AJoinKind;
+  FTableName := ATableName;
+  FAlias := AAlias;
+  FSourceTableOrAlias := ASourceTableOrAlias;
+  FSourceColumnName := ASourceColumnName;
+  FTargetColumnName := ATargetColumnName;
 end;
 
 end.

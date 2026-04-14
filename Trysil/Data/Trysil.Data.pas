@@ -93,6 +93,18 @@ type
     property IsEmpty: Boolean read GetIsEmpty;
   end;
 
+{ TTRawReader }
+
+  TTRawReader = class(TTReader)
+  strict private
+    FRawDataSet: TDataSet;
+  strict protected
+    function GetDataset: TDataset; override;
+  public
+    constructor Create(
+      const ATableMap: TTTableMap; const ARawDataSet: TDataSet);
+  end;
+
 { TTUpdateMode }
 
   TTUpdateMode = (KeyAndVersionColumn, KeyOnly);
@@ -232,13 +244,13 @@ begin
   FDataset := GetDataset;
   for LColumnMap in FTableMap.Columns do
   begin
-    if FColumns.ContainsKey(LColumnMap.Name) then
+    if FColumns.ContainsKey(LColumnMap.LookupName) then
       raise ETException.CreateFmt(
-        TTLanguage.Instance.Translate(SDuplicateColumn), [LColumnMap.Name]);
+        TTLanguage.Instance.Translate(SDuplicateColumn), [LColumnMap.LookupName]);
     FColumns.Add(
-      LColumnMap.Name,
+      LColumnMap.LookupName,
       TTColumnFactory.Instance.CreateColumn(
-        FDataset.FieldByName(LColumnMap.Name), LColumnMap));
+        FDataset.FieldByName(LColumnMap.LookupName), LColumnMap));
   end;
 end;
 
@@ -262,6 +274,20 @@ end;
 procedure TTReader.Next;
 begin
   FDataset.Next;
+end;
+
+{ TTRawReader }
+
+constructor TTRawReader.Create(
+  const ATableMap: TTTableMap; const ARawDataSet: TDataSet);
+begin
+  inherited Create(ATableMap);
+  FRawDataSet := ARawDataSet;
+end;
+
+function TTRawReader.GetDataset: TDataset;
+begin
+  result := FRawDataSet;
 end;
 
 { TTAbstractCommand }

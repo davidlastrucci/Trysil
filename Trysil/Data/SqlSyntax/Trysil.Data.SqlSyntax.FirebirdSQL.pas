@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright © David Lastrucci
+  Copyright ï¿½ David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -76,6 +76,8 @@ begin
     LResult.Append(GetColumns());
     LResult.AppendFormat(' FROM %s', [
       FConnection.GetDatabaseObjectName(FTableMap.Name)]);
+    if FTableMap.HasJoins then
+      LResult.Append(GetJoins());
     if not FFilter.Where.IsEmpty then
       LResult.AppendFormat(' WHERE %s', [FFilter.Where]);
     LResult.Append(GetOrderBy());

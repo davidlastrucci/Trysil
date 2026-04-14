@@ -71,9 +71,12 @@ type
   strict private
     FMember: TTRttiMember;
     FName: String;
+    FTableName: String;
+    FAliasName: String;
     FDisplayName: String;
     FValidations: TTValidationsMap;
 
+    function GetLookupName: String;
     function GetValidationColumnName: String;
     procedure SearchValidations(const ARttiMember: TRttiMember);
   public
@@ -82,6 +85,14 @@ type
       const AName: String; const AField: TRttiField); overload;
     constructor Create(
       const AName: String; const AProperty: TRttiProperty); overload;
+    constructor Create(
+      const ATableName: String;
+      const AName: String;
+      const AField: TRttiField); overload;
+    constructor Create(
+      const ATableName: String;
+      const AName: String;
+      const AProperty: TRttiProperty); overload;
 
     destructor Destroy; override;
 
@@ -91,6 +102,9 @@ type
 
     property Member: TTRttiMember read FMember;
     property Name: String read FName;
+    property TableName: String read FTableName;
+    property AliasName: String read FAliasName write FAliasName;
+    property LookupName: String read GetLookupName;
   end;
 
 { TTChangeTrackingMap }
@@ -203,6 +217,55 @@ type
     procedure Add(const ARelation: TTRelationMap);
 
     function GetEnumerator(): TTListEnumerator<TTRelationMap>;
+  end;
+
+{ TTJoinMap }
+
+  TTJoinMap = class
+  strict private
+    FJoinKind: TJoinKind;
+    FTableName: String;
+    FAlias: String;
+    FSourceTableOrAlias: String;
+    FSourceColumnName: String;
+    FTargetColumnName: String;
+  public
+    constructor Create(
+      const AJoinKind: TJoinKind;
+      const ATableName: String;
+      const AAlias: String;
+      const ASourceTableOrAlias: String;
+      const ASourceColumnName: String;
+      const ATargetColumnName: String);
+
+    property JoinKind: TJoinKind read FJoinKind;
+    property TableName: String read FTableName;
+    property Alias: String read FAlias;
+    property SourceTableOrAlias: String read FSourceTableOrAlias;
+    property SourceColumnName: String read FSourceColumnName;
+    property TargetColumnName: String read FTargetColumnName;
+  end;
+
+{ TTJoinsMap }
+
+  TTJoinsMap = class
+  strict private
+    FJoins: TTObjectList<TTJoinMap>;
+    function GetIsEmpty: Boolean;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure Add(
+      const AJoinKind: TJoinKind;
+      const ATableName: String;
+      const AAlias: String;
+      const ASourceTableOrAlias: String;
+      const ASourceColumnName: String;
+      const ATargetColumnName: String);
+    function GetEnumerator(): TTListEnumerator<TTJoinMap>;
+
+    property IsEmpty: Boolean read GetIsEmpty;
   end;
 
 { TTValidatorMap }
@@ -333,9 +396,12 @@ type
     FColumns: TTColumnsMap;
     FDetailColumns: TTDetailColumnsMap;
     FRelations: TTRelationsMap;
+    FJoins: TTJoinsMap;
     FValidators: TTValidatorsMap;
     FEvents: TTEventsMap;
     FEventMethods: TTTableEventMethodsMap;
+
+    function GetHasJoins: Boolean;
 
     procedure SetTableName(const AName: String);
     procedure SetSequenceName(const AName: String);
@@ -351,7 +417,9 @@ type
     procedure InitializeEvents(const AType: TRttiType);
 
     function CreateColumnMap(
-      const AName: String; const AObject: TRttiObject): TTColumnMap;
+      const ATableName: String;
+      const AName: String;
+      const AObject: TRttiObject): TTColumnMap;
     function CreateDetailColumnMap(
       const AName: String;
       const ADetailName: String;
@@ -386,6 +454,8 @@ type
     property Columns: TTColumnsMap read FColumns;
     property DetailColums: TTDetailColumnsMap read FDetailColumns;
     property Relations: TTRelationsMap read FRelations;
+    property Joins: TTJoinsMap read FJoins;
+    property HasJoins: Boolean read GetHasJoins;
     property Validators: TTValidatorsMap read FValidators;
 
     property Events: TTEventsMap read FEvents;
@@ -469,6 +539,8 @@ begin
   inherited Create;
   FMember := nil;
   FName := AName;
+  FTableName := String.Empty;
+  FAliasName := String.Empty;
   FDisplayName := String.Empty;
   FValidations := TTValidationsMap.Create;
 end;
@@ -484,6 +556,28 @@ constructor TTColumnMap.Create(
   const AName: String; const AProperty: TRttiProperty);
 begin
   Create(AName);
+  FMember := TTRttiProperty.Create(AProperty);
+  SearchValidations(AProperty);
+end;
+
+constructor TTColumnMap.Create(
+  const ATableName: String;
+  const AName: String;
+  const AField: TRttiField);
+begin
+  Create(AName);
+  FTableName := ATableName;
+  FMember := TTRttiField.Create(AField);
+  SearchValidations(AField);
+end;
+
+constructor TTColumnMap.Create(
+  const ATableName: String;
+  const AName: String;
+  const AProperty: TRttiProperty);
+begin
+  Create(AName);
+  FTableName := ATableName;
   FMember := TTRttiProperty.Create(AProperty);
   SearchValidations(AProperty);
 end;
@@ -505,6 +599,14 @@ begin
     else if LAttribute is TValidationAttribute then
       FValidations.Add(
         TTValidationMap.Create(TValidationAttribute(LAttribute)));
+end;
+
+function TTColumnMap.GetLookupName: String;
+begin
+  if not FAliasName.IsEmpty then
+    result := FAliasName
+  else
+    result := FName;
 end;
 
 function TTColumnMap.GetValidationColumnName: String;
@@ -678,6 +780,74 @@ end;
 function TTRelationsMap.GetEnumerator: TTListEnumerator<TTRelationMap>;
 begin
   result := TTListEnumerator<TTRelationMap>.Create(FRelations);
+end;
+
+{ TTJoinMap }
+
+constructor TTJoinMap.Create(
+  const AJoinKind: TJoinKind;
+  const ATableName: String;
+  const AAlias: String;
+  const ASourceTableOrAlias: String;
+  const ASourceColumnName: String;
+  const ATargetColumnName: String);
+begin
+  inherited Create;
+  FJoinKind := AJoinKind;
+  FTableName := ATableName;
+  FAlias := AAlias;
+  FSourceTableOrAlias := ASourceTableOrAlias;
+  FSourceColumnName := ASourceColumnName;
+  FTargetColumnName := ATargetColumnName;
+end;
+
+{ TTJoinsMap }
+
+constructor TTJoinsMap.Create;
+begin
+  inherited Create;
+  FJoins := TTObjectList<TTJoinMap>.Create(True);
+end;
+
+destructor TTJoinsMap.Destroy;
+begin
+  FJoins.Free;
+  inherited Destroy;
+end;
+
+procedure TTJoinsMap.Add(
+  const AJoinKind: TJoinKind;
+  const ATableName: String;
+  const AAlias: String;
+  const ASourceTableOrAlias: String;
+  const ASourceColumnName: String;
+  const ATargetColumnName: String);
+var
+  LJoinMap: TTJoinMap;
+begin
+  LJoinMap := TTJoinMap.Create(
+    AJoinKind,
+    ATableName,
+    AAlias,
+    ASourceTableOrAlias,
+    ASourceColumnName,
+    ATargetColumnName);
+  try
+    FJoins.Add(LJoinMap);
+  except
+    LJoinMap.Free;
+    raise;
+  end;
+end;
+
+function TTJoinsMap.GetIsEmpty: Boolean;
+begin
+  result := FJoins.IsEmpty;
+end;
+
+function TTJoinsMap.GetEnumerator: TTListEnumerator<TTJoinMap>;
+begin
+  result := TTListEnumerator<TTJoinMap>.Create(FJoins);
 end;
 
 { TTValidatorMap }
@@ -859,6 +1029,7 @@ begin
   FColumns := TTColumnsMap.Create;
   FDetailColumns := TTDetailColumnsMap.Create;
   FRelations := TTRelationsMap.Create;
+  FJoins := TTJoinsMap.Create;
   FValidators := TTValidatorsMap.Create;
   FEvents := TTEventsMap.Create;
   FEventMethods := TTTableEventMethodsMap.Create;
@@ -869,6 +1040,7 @@ begin
   FEventMethods.Free;
   FEvents.Free;
   FValidators.Free;
+  FJoins.Free;
   FRelations.Free;
   FDetailColumns.Free;
   FColumns.Free;
@@ -879,6 +1051,8 @@ end;
 procedure TTTableMap.AfterConstruction;
 var
   LType: TRttiType;
+  LColumnMap: TTColumnMap;
+  LResolvedAlias: String;
 begin
   inherited AfterConstruction;
   LType := FContext.GetType(FTypeInfo);
@@ -886,6 +1060,21 @@ begin
   InitializeColumns(LType);
   InitializeValidators(LType);
   InitializeEvents(LType);
+
+  if HasJoins then
+    for LColumnMap in FColumns do
+    begin
+      if LColumnMap.TableName.IsEmpty then
+        LResolvedAlias := FName
+      else
+        LResolvedAlias := LColumnMap.TableName;
+      LColumnMap.AliasName := Format('%s_%s', [LResolvedAlias, LColumnMap.Name]);
+    end;
+end;
+
+function TTTableMap.GetHasJoins: Boolean;
+begin
+  result := not FJoins.IsEmpty;
 end;
 
 procedure TTTableMap.SetTableName(const AName: String);
@@ -931,6 +1120,8 @@ procedure TTTableMap.InitializeOtherAttributes(
 var
   LWhereClauseParameterAttribute: TWhereClauseParameterAttribute;
   LRelationAttribute: TRelationAttribute;
+  LJoinAttribute: TJoinAttribute;
+  LSourceTableOrAlias: String;
 begin
   if AAttribute is TWhereClauseParameterAttribute then
   begin
@@ -951,6 +1142,20 @@ begin
         LRelationAttribute.TableName,
         LRelationAttribute.ColumnName,
         LRelationAttribute.IsCascade))
+  end
+  else if AAttribute is TJoinAttribute then
+  begin
+    LJoinAttribute := TJoinAttribute(AAttribute);
+    LSourceTableOrAlias := LJoinAttribute.SourceTableOrAlias;
+    if LSourceTableOrAlias.IsEmpty then
+      LSourceTableOrAlias := FName;
+    FJoins.Add(
+      LJoinAttribute.JoinKind,
+      LJoinAttribute.TableName,
+      LJoinAttribute.Alias,
+      LSourceTableOrAlias,
+      LJoinAttribute.SourceColumnName,
+      LJoinAttribute.TargetColumnName);
   end
   else if AAttribute is TEventAttribute then
     FEvents.SetEvent(TEventAttribute(AAttribute));
@@ -1011,15 +1216,30 @@ begin
 end;
 
 function TTTableMap.CreateColumnMap(
-  const AName: String; const AObject: TRttiObject): TTColumnMap;
+  const ATableName: String;
+  const AName: String;
+  const AObject: TRttiObject): TTColumnMap;
 begin
-  if AObject is TRttiField then
-    result := TTColumnMap.Create(AName, TRttiField(AObject))
-  else if AObject is TRttiProperty then
-    result := TTColumnMap.Create(AName, TRttiProperty(AObject))
+  if ATableName.IsEmpty then
+  begin
+    if AObject is TRttiField then
+      result := TTColumnMap.Create(AName, TRttiField(AObject))
+    else if AObject is TRttiProperty then
+      result := TTColumnMap.Create(AName, TRttiProperty(AObject))
+    else
+      raise ETException.Create(
+        TTLanguage.Instance.Translate(SInvalidRttiObjectType));
+  end
   else
-    raise ETException.Create(
-      TTLanguage.Instance.Translate(SInvalidRttiObjectType));
+  begin
+    if AObject is TRttiField then
+      result := TTColumnMap.Create(ATableName, AName, TRttiField(AObject))
+    else if AObject is TRttiProperty then
+      result := TTColumnMap.Create(ATableName, AName, TRttiProperty(AObject))
+    else
+      raise ETException.Create(
+        TTLanguage.Instance.Translate(SInvalidRttiObjectType));
+  end;
 end;
 
 function TTTableMap.CreateDetailColumnMap(
@@ -1047,7 +1267,9 @@ begin
     if LAttribute is TColumnAttribute then
     begin
       LColumnMap := CreateColumnMap(
-        TColumnAttribute(LAttribute).Name, AObject);
+        TColumnAttribute(LAttribute).TableName,
+        TColumnAttribute(LAttribute).Name,
+        AObject);
       try
         InitializePrimaryKey(AObject, LColumnMap);
         InitializeVersionColumn(AObject, LColumnMap);

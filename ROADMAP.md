@@ -1,16 +1,16 @@
 # Roadmap
 
-## v1.0 — Stabilization (current)
+## ~~v1.0 — Stabilization~~ (Completed)
 
-- Semantic versioning and first GitHub release
-- Public roadmap
-- Good first issues for community contributions
+- ~~Semantic versioning and first GitHub release~~
+- ~~Public roadmap~~
+- ~~Good first issues for community contributions~~
 
-## v1.1 — Raw SQL
+## ~~v1.1 — Raw SQL~~ (Completed)
 
-- `TTContext.RawSelect<T>('SELECT ...')` — map result sets to read-only DTOs (Data Transfer Objects) via RTTI
-- Enables complex JOINs across multiple tables without falling back to direct FireDAC access
-- DTOs are plain classes with `[TColumn]` attributes — no identity map, no change tracking, no persistence
+- **`[TJoin]` attributes**: declarative JOIN support (3 overloads: simple, self-join with alias, chained) — no raw SQL needed for most multi-table queries
+- **`TTContext.RawSelect<T>`**: for queries that attributes can't express (subquery, UNION, GROUP BY, aggregations) — maps raw SQL results to DTO classes via `[TColumn]`
+- Both approaches: read-only, skip identity map, fully backward compatible
 
 ## v1.2 — Commit Changes Event
 

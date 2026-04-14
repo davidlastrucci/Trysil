@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright © David Lastrucci
+  Copyright ï¿½ David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -17,6 +17,7 @@ uses
   System.SysUtils,
 
   Trysil.Types,
+  Trysil.Attributes,
   Trysil.Data,
   Trysil.Filter,
   Trysil.Mapping;
@@ -77,6 +78,7 @@ type
     procedure AddWhereClause(const AResult: TStringBuilder);
     procedure AddSoftDeleteWhere(const AResult: TStringBuilder);
     procedure AddFilterWhere(const AResult: TStringBuilder);
+    function GetJoins: String;
     function GetWhere: String;
   public
     constructor Create(
@@ -306,8 +308,13 @@ begin
   begin
     if AResult.Length > 0 then
       AResult.Append(' AND ');
-    AResult.AppendFormat('%s IS NULL', [
-      FConnection.GetDatabaseObjectName(LDeletedAt.Name)]);
+    if FTableMap.HasJoins then
+      AResult.AppendFormat('%s.%s IS NULL', [
+        FConnection.GetDatabaseObjectName(FTableMap.Name),
+        FConnection.GetDatabaseObjectName(LDeletedAt.Name)])
+    else
+      AResult.AppendFormat('%s IS NULL', [
+        FConnection.GetDatabaseObjectName(LDeletedAt.Name)]);
   end;
 end;
 
@@ -318,6 +325,36 @@ begin
     if AResult.Length > 0 then
       AResult.Append(' AND ');
     AResult.AppendFormat('(%s)', [FFilter.Where]);
+  end;
+end;
+
+function TTAbstractSelectSyntax.GetJoins: String;
+var
+  LResult: TStringBuilder;
+  LJoinMap: TTJoinMap;
+  LJoinKeyword: String;
+begin
+  LResult := TStringBuilder.Create;
+  try
+    for LJoinMap in FTableMap.Joins do
+    begin
+      case LJoinMap.JoinKind of
+        TJoinKind.Inner: LJoinKeyword := 'INNER JOIN';
+        TJoinKind.Left: LJoinKeyword := 'LEFT JOIN';
+        TJoinKind.Right: LJoinKeyword := 'RIGHT JOIN';
+      end;
+      LResult.AppendFormat(' %s %s %s ON %s.%s = %s.%s', [
+        LJoinKeyword,
+        FConnection.GetDatabaseObjectName(LJoinMap.TableName),
+        LJoinMap.Alias,
+        LJoinMap.SourceTableOrAlias,
+        FConnection.GetDatabaseObjectName(LJoinMap.SourceColumnName),
+        LJoinMap.Alias,
+        FConnection.GetDatabaseObjectName(LJoinMap.TargetColumnName)]);
+    end;
+    result := LResult.ToString();
+  finally
+    LResult.Free;
   end;
 end;
 
@@ -345,6 +382,8 @@ var
 begin
   result := Format('SELECT COUNT(*) FROM %0:s', [
     FConnection.GetDatabaseObjectName(FTableMap.Name)]);
+  if FTableMap.HasJoins then
+    result := result + GetJoins();
   LWhere := GetWhere;
   if not LWhere.IsEmpty then
     result := Format('%s WHERE %s', [result, LWhere]);
@@ -356,12 +395,27 @@ function TTSelectSyntax.GetColumns: String;
 var
   LResult: TStringBuilder;
   LColumnMap: TTColumnMap;
+  LTableRef: String;
 begin
   LResult := TStringBuilder.Create;
   try
     for LColumnMap in FTableMap.Columns do
-      LResult.AppendFormat('%s, ', [
-        FConnection.GetDatabaseObjectName(LColumnMap.Name)]);
+    begin
+      if FTableMap.HasJoins then
+      begin
+        if LColumnMap.TableName.IsEmpty then
+          LTableRef := FTableMap.Name
+        else
+          LTableRef := LColumnMap.TableName;
+        LResult.AppendFormat('%s.%s AS %s, ', [
+          LTableRef,
+          FConnection.GetDatabaseObjectName(LColumnMap.Name),
+          LColumnMap.AliasName]);
+      end
+      else
+        LResult.AppendFormat('%s, ', [
+          FConnection.GetDatabaseObjectName(LColumnMap.Name)]);
+    end;
 
     result := LResult.ToString();
     if not result.IsEmpty then
@@ -387,8 +441,15 @@ begin
     if not FFilter.Paging.OrderBy.IsEmpty then
       LResult.Append(FFilter.Paging.OrderBy)
     else if Assigned(FTableMap.PrimaryKey) then
-      LResult.Append(
-        FConnection.GetDatabaseObjectName(FTableMap.PrimaryKey.Name));
+    begin
+      if FTableMap.HasJoins then
+        LResult.AppendFormat('%s.%s', [
+          FConnection.GetDatabaseObjectName(FTableMap.Name),
+          FConnection.GetDatabaseObjectName(FTableMap.PrimaryKey.Name)])
+      else
+        LResult.Append(
+          FConnection.GetDatabaseObjectName(FTableMap.PrimaryKey.Name));
+    end;
 
     result := LResult.ToString();
   finally
@@ -407,6 +468,8 @@ begin
     LResult.Append(GetColumns());
     LResult.AppendFormat(' FROM %s', [
       FConnection.GetDatabaseObjectName(FTableMap.Name)]);
+    if FTableMap.HasJoins then
+      LResult.Append(GetJoins());
     LWhere := GetWhere();
     if not LWhere.IsEmpty then
       LResult.AppendFormat(' WHERE %s', [LWhere]);

@@ -118,6 +118,7 @@ resourcestring
   SNotValidTransaction = 'Transaction is no longer valid.';
   SNotValidConnectionDriver = 'Connection not found for "%s" driver.';
   SNotValidConnection = 'Connection not found "%s".';
+  SJoinEntityReadOnly = 'Join entities are read-only: Insert, Update, and Delete are not supported.';
 
 implementation
 
