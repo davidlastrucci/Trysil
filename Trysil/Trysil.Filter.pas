@@ -321,7 +321,7 @@ end;
 
 function TTFilterCondition<T>.ParamName: String;
 begin
-  result := Format(':p%d', [FParamIndex]);
+  result := Format('p%d', [FParamIndex]);
 end;
 
 function TTFilterCondition<T>.AddCondition(
@@ -330,7 +330,7 @@ function TTFilterCondition<T>.AddCondition(
 begin
   FBuilder.AppendCondition(
     FOperator,
-    Format('%s %s %s', [FColumnName, AOperatorSQL, ParamName]));
+    Format('%s %s :%s', [FColumnName, AOperatorSQL, ParamName]));
   FBuilder.AppendParameter(FColumnName, ParamName, AValue);
   result := FBuilder;
 end;
