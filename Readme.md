@@ -181,7 +181,7 @@ See the full [Setup guide](https://github.com/davidlastrucci/Trysil/blob/master/
 
 | Resource | Link |
 |---|---|
-| Online Help | [davidlastrucci.github.io/trysil](https://davidlastrucci.github.io/trysil) |
+| Online Help | [davidlastrucci.github.io/Trysil](https://davidlastrucci.github.io/Trysil) |
 | Getting Started | [Docs/GettingStarted.md](https://github.com/davidlastrucci/Trysil/blob/master/Docs/GettingStarted.md) |
 | Simple Sample | [Docs/Sample.md](https://github.com/davidlastrucci/Trysil/blob/master/Docs/Sample.md) |
 | Run Simple Demo | [Docs/RunSimpleDemo.md](https://github.com/davidlastrucci/Trysil/blob/master/Docs/RunSimpleDemo.md) |
