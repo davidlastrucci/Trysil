@@ -17,6 +17,8 @@ Unit: `Trysil.Attributes`
 | `TRelation(table, fk, cascade)` | Class | Declares child relationship |
 | `TWhereClause(sql)` | Class | Adds fixed WHERE clause to all queries |
 | `TWhereClauseParameter(name, value)` | Class | Parameter for `TWhereClause` |
+| `TJoin(kind, table, ...)` | Class | Declares a JOIN for multi-table SELECT |
+| `TColumn(alias, name)` | Field | Maps field to a joined table column (2-param overload) |
 | `TCreatedAt` | Field | Timestamp set on insert (`TTNullable<TDateTime>`) |
 | `TCreatedBy` | Field | User name set on insert (`String`) |
 | `TUpdatedAt` | Field | Timestamp set on update (`TTNullable<TDateTime>`) |
@@ -66,6 +68,15 @@ FFirstname: String;
 
 Maps a field to a database column by name. The field must be `strict private`.
 
+A two-parameter overload maps a field to a column from a joined table:
+
+```pascal
+[TColumn('Customers', 'CompanyName')]
+FCustomerName: String;
+```
+
+The first parameter is the **alias** of the joined table (must match the alias from `[TJoin]`), the second is the **column name**. See [JOIN Queries](../guide/joins.md).
+
 ### TDetailColumn
 
 ```pascal
@@ -113,6 +124,38 @@ TActiveAdmin = class
 Adds a fixed WHERE clause to every query on this entity. Parameters are **compile-time constants only**. For dynamic filtering, use [`TTFilterBuilder<T>`](../guide/filtering.md).
 
 `TWhereClauseParameter` constructors accept: `String`, `Integer`, `Int64`, `Double`, `Boolean`, `TDateTime`.
+
+### TJoin
+
+Declares a JOIN for multi-table SELECT queries. Three overloads:
+
+**Simple JOIN** -- join using FROM table columns:
+
+```pascal
+[TJoin(TJoinKind.Inner, 'Customers', 'CustomerID', 'ID')]
+```
+
+Parameters: JoinKind, TableName, SourceColumnName, TargetColumnName.
+
+**Self-JOIN with alias** -- required when joining the same table multiple times:
+
+```pascal
+[TJoin(TJoinKind.Inner, 'PianoDeiConti', 'ContoDare', 'ContoDareID', 'ID')]
+```
+
+Parameters: JoinKind, TableName, Alias, SourceColumnName, TargetColumnName.
+
+**Chained JOIN** -- join using a column from a previous join:
+
+```pascal
+[TJoin(TJoinKind.Left, 'Countries', 'Countries', 'Customers', 'CountryID', 'ID')]
+```
+
+Parameters: JoinKind, TableName, Alias, SourceTableOrAlias, SourceColumnName, TargetColumnName.
+
+`TJoinKind` is a scoped enum: `Inner`, `Left`, `Right`.
+
+Join entities are **read-only**: `Insert`, `Update`, and `Delete` raise `ETException`. The identity map is bypassed for join entities. See [JOIN Queries](../guide/joins.md) for full documentation.
 
 ### Change Tracking Attributes
 

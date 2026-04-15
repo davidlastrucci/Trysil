@@ -102,6 +102,28 @@ TActiveUser = class
 - Parameters are **compile-time constants** only. Supported types: `String`, `Integer`, `Int64`, `Double`, `Boolean`, `TDateTime`.
 - For dynamic, runtime-constructed filters, use [TTFilterBuilder\<T\>](filtering.md) instead.
 
+## JOIN Queries
+
+Trysil supports declarative multi-table SELECT queries via `[TJoin]` attributes. Join entities are read-only.
+
+```pascal
+[TTable('Orders')]
+[TSequence('OrdersID')]
+[TJoin(TJoinKind.Inner, 'Customers', 'CustomerID', 'ID')]
+TOrderReport = class
+strict private
+  [TPrimaryKey]
+  [TColumn('ID')]
+  FID: TTPrimaryKey;
+
+  [TColumn('Customers', 'CompanyName')]
+  FCustomerName: String;
+```
+
+The two-parameter overload `[TColumn('Alias', 'ColumnName')]` maps a field to a column from a joined table, where the alias must match the alias from `[TJoin]`.
+
+Three join overloads are available: simple, self-join with alias, and chained join. See [JOIN Queries](joins.md) for full documentation with examples.
+
 ## Change Tracking
 
 Trysil can automatically set timestamp and user-name fields when entities are inserted, updated, or soft-deleted. Decorate columns with the change tracking attributes:

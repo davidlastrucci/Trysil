@@ -15,6 +15,8 @@ Trysil maps your Delphi classes to database tables using attributes, giving you 
 - **Attribute-based entity mapping** -- decorate classes with `[TTable]`, `[TColumn]`, `[TPrimaryKey]` and more
 - **Full CRUD via `TTContext`** -- `SelectAll<T>`, `Get<T>`, `Insert<T>`, `Update<T>`, `Delete<T>`, `Save<T>`
 - **Fluent query builder** -- `TTFilterBuilder<T>` for type-safe WHERE clauses, ordering, and paging
+- **Declarative JOIN queries** -- `[TJoin]` attributes for multi-table SELECT without raw SQL
+- **Raw Select** -- `RawSelect<T>` maps arbitrary SQL (GROUP BY, UNION, subqueries) to typed DTO classes
 - **Optimistic locking** -- automatic version-column checks on every update
 - **Lazy loading** -- `TTLazy<T>` and `TTLazyList<T>` for deferred related-entity loading
 - **Unit of Work pattern** -- `TTSession<T>` tracks changes and applies them in a single transaction

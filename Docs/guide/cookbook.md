@@ -321,6 +321,98 @@ begin
 end;
 ```
 
+## JOIN Query
+
+Define a join entity and query it:
+
+```pascal
+type
+  [TTable('Orders')]
+  [TSequence('OrdersID')]
+  [TJoin(TJoinKind.Inner, 'Customers', 'CustomerID', 'ID')]
+  TOrderReport = class
+  strict private
+    [TPrimaryKey]
+    [TColumn('ID')]
+    FID: TTPrimaryKey;
+
+    [TColumn('OrderDate')]
+    FOrderDate: TDateTime;
+
+    [TColumn('Customers', 'CompanyName')]
+    FCustomerName: String;
+
+    [TVersionColumn]
+    [TColumn('VersionID')]
+    FVersionID: TTVersion;
+  public
+    property ID: TTPrimaryKey read FID;
+    property OrderDate: TDateTime read FOrderDate;
+    property CustomerName: String read FCustomerName;
+  end;
+```
+
+```pascal
+LOrders := TTObjectList<TOrderReport>.Create;
+try
+  LContext.SelectAll<TOrderReport>(LOrders);
+  for LOrder in LOrders do
+    WriteLn(Format('Order %d: %s (%s)', [
+      LOrder.ID,
+      LOrder.CustomerName,
+      DateToStr(LOrder.OrderDate)]));
+finally
+  LOrders.Free;
+end;
+```
+
+Join entities are read-only. See [JOIN Queries](joins.md) for all overloads and details.
+
+## Raw Select with GROUP BY
+
+Map aggregation results to a DTO class:
+
+```pascal
+type
+  TOrderSummary = class
+  strict private
+    [TColumn('CustomerName')]
+    FCustomerName: String;
+
+    [TColumn('OrderCount')]
+    FOrderCount: Integer;
+
+    [TColumn('Total')]
+    FTotal: Double;
+  public
+    property CustomerName: String read FCustomerName;
+    property OrderCount: Integer read FOrderCount;
+    property Total: Double read FTotal;
+  end;
+```
+
+```pascal
+LResult := TTObjectList<TOrderSummary>.Create;
+try
+  LContext.RawSelect<TOrderSummary>(
+    'SELECT c.CompanyName AS CustomerName, ' +
+    '       COUNT(*) AS OrderCount, ' +
+    '       SUM(o.Amount) AS Total ' +
+    'FROM Orders o ' +
+    'JOIN Customers c ON o.CustomerID = c.ID ' +
+    'GROUP BY c.CompanyName',
+    LResult);
+
+  for LItem in LResult do
+    WriteLn(Format('%s: %d orders, total %.2f', [
+      LItem.CustomerName, LItem.OrderCount, LItem.Total]));
+finally
+  LResult.Free;
+end;
+```
+
+DTO classes only need `[TColumn]` attributes -- no `[TTable]`, `[TPrimaryKey]`, or `[TSequence]` required. See [Raw Select](raw-select.md).
+
 ## JSON Round-Trip
 
 Serialize an entity to JSON and back:

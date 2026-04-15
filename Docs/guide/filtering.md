@@ -165,6 +165,16 @@ finally
 end;
 ```
 
+## Filtering Join Entities
+
+`TTFilterBuilder<T>` does not resolve join aliases in v1. For filtered queries on [join entities](joins.md), use `TTFilter.Create` with manually qualified column names:
+
+```pascal
+var LFilter := TTFilter.Create('Customers.CompanyName LIKE :Name');
+LFilter.AddParameter('Name', ftWideString, 'Acme%');
+LContext.Select<TOrderReport>(LOrders, LFilter);
+```
+
 ## Static Filters via Attributes
 
 For filters that never change at runtime, use `TWhereClause` and `TWhereClauseParameter` attributes directly on the entity class:

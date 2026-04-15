@@ -1,9 +1,9 @@
 site_name: Trysil - Delphi ORM
 site_description: A lightweight, attribute-driven ORM for Delphi with JSON serialization and HTTP REST support
 site_author: David Lastrucci
-site_url: https://davidlastrucci.github.io/trysil/
-repo_url: https://github.com/davidlastrucci/trysil
-repo_name: davidlastrucci/trysil
+site_url: https://davidlastrucci.github.io/Trysil/
+repo_url: https://github.com/davidlastrucci/Trysil
+repo_name: davidlastrucci/Trysil
 
 copyright: Copyright &copy; David Lastrucci
 
@@ -61,6 +61,8 @@ nav:
   - Guide:
     - Entities: guide/entities.md
     - Context (CRUD): guide/context.md
+    - JOIN Queries: guide/joins.md
+    - Raw Select: guide/raw-select.md
     - Filtering: guide/filtering.md
     - Transactions: guide/transactions.md
     - Sessions (Unit of Work): guide/sessions.md

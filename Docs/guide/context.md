@@ -23,6 +23,8 @@ When using read/write split, SELECT operations go through the read connection an
 
 ## Read Operations
 
+All read operations support entities with `[TJoin]` attributes -- the generated SQL automatically includes JOIN clauses and column aliases. See [JOIN Queries](joins.md).
+
 ### SelectAll
 
 Load all entities of a given type:
@@ -101,6 +103,25 @@ end;
 ```
 
 `OldEntity` creates a clone and refreshes it, so the caller owns the returned object and must free it.
+
+### RawSelect
+
+Execute arbitrary SQL and map results to typed DTO classes. DTO classes only need `[TColumn]` attributes -- `[TTable]`, `[TPrimaryKey]`, and `[TSequence]` are not required:
+
+```pascal
+LResult := TTObjectList<TOrderSummary>.Create;
+try
+  LContext.RawSelect<TOrderSummary>(
+    'SELECT c.CompanyName AS CustomerName, SUM(o.Amount) AS Total ' +
+    'FROM Orders o JOIN Customers c ON o.CustomerID = c.ID ' +
+    'GROUP BY c.CompanyName',
+    LResult);
+finally
+  LResult.Free;
+end;
+```
+
+Results are read-only and the identity map is not used. See [Raw Select](raw-select.md) for details.
 
 ## Write Operations
 
@@ -232,7 +253,7 @@ LMetadata := LContext.GetMetadata<TPerson>();
 
 ### CreateDataset
 
-Execute raw SQL and return a `TDataset`. Use this as a fallback for complex queries that cannot be expressed through the ORM:
+Execute raw SQL and return a `TDataset`. For most use cases, prefer `RawSelect<T>` which also handles mapping automatically:
 
 ```pascal
 LDataset := LContext.CreateDataset('SELECT COUNT(*) FROM Persons');
