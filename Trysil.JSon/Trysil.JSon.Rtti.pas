@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright © David Lastrucci
+  Copyright ï¿½ David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -149,20 +149,16 @@ end;
 
 function TTJSonNullable.FindGenericType(const AName: String): TRttiType;
 var
-  LIndex: Integer;
+  LOpen, LClose: Integer;
   LGenericName: String;
 begin
   result := nil;
-  LIndex := AName.IndexOf('<');
-  if LIndex >= 0  then
+  LOpen := AName.IndexOf('<');
+  LClose := AName.LastIndexOf('>');
+  if (LOpen >= 0) and (LClose > LOpen)  then
   begin
-    LGenericName := AName.Substring(LIndex + 1);
-    LIndex := LGenericName.IndexOf('>');
-    if LIndex >= 0 then
-    begin
-      LGenericName := LGenericName.Substring(0, LIndex);
-      result := FContext.FindType(LGenericName);
-    end;
+    LGenericName := AName.Substring(LOpen + 1, LClose - LOpen - 1);
+    result := FContext.FindType(LGenericName);
   end;
 end;
 
