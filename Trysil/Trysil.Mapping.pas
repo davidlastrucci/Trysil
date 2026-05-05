@@ -842,7 +842,7 @@ end;
 
 function TTJoinsMap.GetIsEmpty: Boolean;
 begin
-  result := FJoins.IsEmpty;
+  result := (FJoins.Count = 0);
 end;
 
 function TTJoinsMap.GetEnumerator: TTListEnumerator<TTJoinMap>;
