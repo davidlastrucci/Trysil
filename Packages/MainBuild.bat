@@ -4,6 +4,7 @@ IF "%~2"=="" GOTO :usage
 IF "%~3"=="" GOTO :usage
 
 SETLOCAL ENABLEDELAYEDEXPANSION
+CD /D "%~dp0"
 
 SET STUDIO=%1
 SET PKG=%2
