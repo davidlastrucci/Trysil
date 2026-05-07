@@ -1,16 +1,3 @@
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/davidlastrucci/Trysil/blob/master/Docs/Trysil_Dark.png">
-    <img img width="300" height="107" src="https://github.com/davidlastrucci/Trysil/blob/master/Docs/Trysil_Light.png" alt="Trysil - Delphi ORM" title="Trysil - Delphi ORM">
-  </picture>
-</p>
-
-> *Copyright © [David Lastrucci](https://www.lastrucci.net/)*<br>
-> *All rights reserved*<br>
-> <br>
-> *Trysil* - Operation ORM (World War II)<br>
-> http://codenames.info/operation/orm/
-
 # Setup
 ### Git Bash
 <pre>
@@ -61,7 +48,3 @@ Create a new Delphi Project and in Project->Options->Building->Delphi Compiler s
 |Delphi 11 Alexandria|280|22.0|
 |Delphi 12 Athens|290|23.0|
 |Delphi 13 Florence|370|37.0|
----
-
-Make With ❤ @davidlastrucci<br>
-[https://www.lastrucci.net/](https://www.lastrucci.net)
