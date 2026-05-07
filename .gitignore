@@ -41,6 +41,9 @@ __recovery/
 # Statistics file
 *.stat
 
+# Code coverage reports
+Trysil.Tests/CodeCoverage/
+
 # Claude
 .claude/
 CLAUDE.md
