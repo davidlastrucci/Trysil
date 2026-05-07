@@ -219,7 +219,7 @@ During World War II, **ORM** was a British operation to establish a reception ba
 
 ## Built With Trysil
 
-Projects and applications using Trysil in production. [See the full list](https://github.com/davidlastrucci/Trysil/blob/master/Docs/BuiltWithTrysil.md) — and add yours!
+Projects and applications using Trysil in production. [See the full list](https://github.com/davidlastrucci/Trysil/blob/master/BuiltWithTrysil.md) — and add yours!
 
 ## Support the Project
 
