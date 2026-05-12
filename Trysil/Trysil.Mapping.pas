@@ -453,7 +453,7 @@ type
     property PrimaryKey: TTColumnMap read FPrimaryKey;
     property VersionColumn: TTColumnMap read FVersionColumn;
     property Columns: TTColumnsMap read FColumns;
-    property DetailColums: TTDetailColumnsMap read FDetailColumns;
+    property DetailColumns: TTDetailColumnsMap read FDetailColumns;
     property Relations: TTRelationsMap read FRelations;
     property Joins: TTJoinsMap read FJoins;
     property HasJoins: Boolean read GetHasJoins;

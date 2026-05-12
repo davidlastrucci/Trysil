@@ -206,7 +206,7 @@ var
   LValue: TTValue;
 begin
   LTableMap := TTMapper.Instance.Load(AObject.ClassInfo);
-  for LDetailColumnMap in LTableMap.DetailColums do
+  for LDetailColumnMap in LTableMap.DetailColumns do
   begin
     LName := GetName(LDetailColumnMap.Member.Name);
     LValue := LDetailColumnMap.Member.GetValue(AObject);

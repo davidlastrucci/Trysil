@@ -276,7 +276,7 @@ begin
   LLevel := FLevel;
   try
     LTableMap := TTMapper.Instance.Load(AObject.ClassInfo);
-    for LDetailColumnMap in LTableMap.DetailColums do
+    for LDetailColumnMap in LTableMap.DetailColumns do
     begin
       FLevel := 0;
       LName := GetName(LDetailColumnMap.Member.Name);

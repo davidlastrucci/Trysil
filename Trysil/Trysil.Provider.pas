@@ -315,7 +315,7 @@ begin
           LColumnMap.Member.SetValue(
             result, LColumnMap.Member.GetValue(AEntity));
 
-      for LDetailColumnMap in LTableMap.DetailColums do
+      for LDetailColumnMap in LTableMap.DetailColumns do
         LDetailColumnMap.Member.CloneLazyID(result, AEntity);
     except
       result.Free;
@@ -410,7 +410,7 @@ procedure TTProvider.MapLazyListColumns(
 var
   LColumnMap: TTDetailColumnMap;
 begin
-  for LColumnMap in ATableMap.DetailColums do
+  for LColumnMap in ATableMap.DetailColumns do
     if LColumnMap.Member.IsClass then
       MapLazyColumn(
         AReader,
