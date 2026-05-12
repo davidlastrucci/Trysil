@@ -251,6 +251,7 @@ type
   TTJoinsMap = class
   strict private
     FJoins: TTObjectList<TTJoinMap>;
+
     function GetIsEmpty: Boolean;
   public
     constructor Create;
