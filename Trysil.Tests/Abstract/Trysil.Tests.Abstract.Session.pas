@@ -56,6 +56,12 @@ type
     procedure SessionDeleteInsertedEntityCancelsInsert;
 
     [Test]
+    procedure SessionSaveOnNewEntityActsAsInsert;
+
+    [Test]
+    procedure SessionSaveOnClonedEntityActsAsUpdate;
+
+    [Test]
     procedure SessionApplyChangesUpdatesNullableFromNullToValue;
 
     [Test]
@@ -305,6 +311,74 @@ begin
   LCount := FContext.SelectCount<TTestCustomer>(TTFilter.Empty);
   Assert.AreEqual<Integer>(0, LCount,
     'Insert followed by Delete in same session must cancel out');
+end;
+
+procedure TTAbstractSessionTests.SessionSaveOnNewEntityActsAsInsert;
+var
+  LList: TTList<TTestCustomer>;
+  LSession: TTSession<TTestCustomer>;
+  LNewCustomer: TTestCustomer;
+  LCount: Integer;
+begin
+  LList := TTList<TTestCustomer>.Create;
+  try
+    FContext.SelectAll<TTestCustomer>(LList);
+    LSession := FContext.CreateSession<TTestCustomer>(LList);
+    try
+      LNewCustomer := FContext.CreateEntity<TTestCustomer>();
+      LNewCustomer.Name := 'SavedAsInsert';
+      LNewCustomer.Email := 'save-insert@example.com';
+      LSession.Save(LNewCustomer);
+      LSession.ApplyChanges;
+    finally
+      LSession.Free;
+    end;
+  finally
+    LList.Free;
+  end;
+
+  LCount := FContext.SelectCount<TTestCustomer>(TTFilter.Empty);
+  Assert.AreEqual<Integer>(1, LCount,
+    'Save on a new entity must behave as Insert');
+end;
+
+procedure TTAbstractSessionTests.SessionSaveOnClonedEntityActsAsUpdate;
+var
+  LCustomer: TTestCustomer;
+  LList: TTList<TTestCustomer>;
+  LSession: TTSession<TTestCustomer>;
+  LFreshContext: TTContext;
+  LReloaded: TTestCustomer;
+  LInsertedID: TTPrimaryKey;
+begin
+  LCustomer := FContext.CreateEntity<TTestCustomer>();
+  LCustomer.Name := 'BeforeSave';
+  FContext.Insert<TTestCustomer>(LCustomer);
+  LInsertedID := LCustomer.ID;
+
+  LList := TTList<TTestCustomer>.Create;
+  try
+    FContext.SelectAll<TTestCustomer>(LList);
+    LSession := FContext.CreateSession<TTestCustomer>(LList);
+    try
+      LSession.Entities[0].Name := 'AfterSave';
+      LSession.Save(LSession.Entities[0]);
+      LSession.ApplyChanges;
+    finally
+      LSession.Free;
+    end;
+  finally
+    LList.Free;
+  end;
+
+  LFreshContext := TTContext.Create(Connection);
+  try
+    LReloaded := LFreshContext.Get<TTestCustomer>(LInsertedID);
+    Assert.AreEqual('AfterSave', LReloaded.Name,
+      'Save on a cloned (existing) entity must behave as Update');
+  finally
+    LFreshContext.Free;
+  end;
 end;
 
 procedure TTAbstractSessionTests.SessionApplyChangesUpdatesNullableFromNullToValue;
