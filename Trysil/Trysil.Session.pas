@@ -1,7 +1,7 @@
-(*
+ï»¿(*
 
   Trysil
-  Copyright © David Lastrucci
+  Copyright ï¿½ David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -80,6 +80,7 @@ type
 
     function GetOriginalEntity(const AClone: T): T;
 
+    procedure Save(const AEntity: T);
     procedure Insert(const AEntity: T);
     procedure Update(const AClone: T);
     procedure Delete(const AClone: T);
@@ -199,6 +200,14 @@ end;
 function TTSession<T>.GetOriginalEntity(const AClone: T): T;
 begin
   result := FCloned.GetOriginalEntity(AClone);
+end;
+
+procedure TTSession<T>.Save(const AEntity: T);
+begin
+  if FClonedEntities.Contains(AEntity) then
+    Update(AEntity)
+  else
+    Insert(AEntity);
 end;
 
 procedure TTSession<T>.Insert(const AEntity: T);
