@@ -234,6 +234,10 @@ If Trysil is useful to you, please consider:
 
 BSD-3-Clause — see [LICENSE.md](https://github.com/davidlastrucci/Trysil/blob/master/LICENSE.md) for details.
 
+## Naming
+
+*Trysil* takes its name from [Operation ORM](http://codenames.info/operation/orm/), a World War II Allied operation.
+
 ---
 
 <p align="center">
