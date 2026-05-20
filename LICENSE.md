@@ -1,3 +1,5 @@
+# BSD 3-Clause License
+
 > *Copyright © [David Lastrucci](https://www.lastrucci.net/)*<br>
 > *All rights reserved*<br>
 > <br>
