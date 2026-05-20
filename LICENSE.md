@@ -1,8 +1,5 @@
 BSD 3-Clause License
 
-Trysil - Operation ORM (World War II)
-http://codenames.info/operation/orm/
-
 Copyright (c) 2019-2026, David Lastrucci
 All rights reserved.
 
