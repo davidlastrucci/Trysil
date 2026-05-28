@@ -16,7 +16,7 @@ A complete REST API server demonstrating Trysil's HTTP module with JWT authentic
 ## Prerequisites
 
 - Delphi Enterprise edition (for SQL Server) or Community edition (for SQLite/Firebird)
-- Trysil packages built, including `Trysil.Http` and `Trysil.JSon` (see [Setup](../../Docs/Setup.md))
+- Trysil packages built, including `Trysil.Http` and `Trysil.JSon` (see [Setup](../../docs/Setup.md))
 
 ## Setup
 

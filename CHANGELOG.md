@@ -25,7 +25,7 @@ Notable changes to Trysil, in reverse chronological order.
 
 ## Recent
 
-- **Docs**: MkDocs Material documentation site, cookbook, demo READMEs
+- **docs**: MkDocs Material documentation site, cookbook, demo READMEs
 - **SmartLauncher**: added to Built With Trysil
 - **Sync & Cache**: internal improvements
 

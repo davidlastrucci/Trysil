@@ -15,4 +15,4 @@
 
 ## Prerequisites
 
-All demos require the Trysil packages to be built first. See the [Setup guide](../Docs/Setup.md).
+All demos require the Trysil packages to be built first. See the [Setup guide](../docs/Setup.md).

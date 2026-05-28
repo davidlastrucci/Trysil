@@ -15,7 +15,7 @@ A VCL desktop application demonstrating basic CRUD operations with Trysil and SQ
 
 - Delphi Enterprise edition (required for SQL Server driver)
 - SQL Server instance
-- Trysil packages built (see [Setup](../../Docs/Setup.md))
+- Trysil packages built (see [Setup](../../docs/Setup.md))
 
 ## Setup
 
