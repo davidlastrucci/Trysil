@@ -16,7 +16,7 @@ Projects and applications that use Trysil as their ORM layer.
 
 **SmartLauncher** is a Freeware app for Microsoft Windows 7 to 11 to launch a third party software and wait for it to end. SmartLauncher then fires a configurable batch file that can be used to sync or backup the application data right after it has changed and without any effort, perfect for end users who do not care for backups.
 
-SmartLauncher is [well documented](https://smartlauncher.docs.husx.de/) (in German language). It's translated to English and German (default: English)..
+SmartLauncher is [well documented](https://smartlauncher.docs.husx.de/) (in German language). It's translated to English and German (default: English).
 
 *"Trysil is the tool of choice to manage logging and reporting features of SmartLauncher, so no backup is forgotten."*
 
