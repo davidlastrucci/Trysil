@@ -64,7 +64,7 @@ Trysil resolves relationships, handles lazy loading, manages transactions, and v
 - [Getting Started](getting-started/installation.md) -- install, configure, and run your first project
 - [Quick Start](getting-started/quick-start.md) -- a complete working example in five minutes
 - [Database Setup](getting-started/database-setup.md) -- schema design rules for each supported database
-- [Built with Trysil](community/built-with-trysil.md) -- projects and companies using Trysil in production
+- [Built with Trysil](https://github.com/davidlastrucci/Trysil/blob/master/BuiltWithTrysil.md) -- projects and companies using Trysil in production
 
 ## The Name
 

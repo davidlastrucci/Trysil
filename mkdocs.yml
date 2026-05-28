@@ -97,5 +97,3 @@ nav:
   - Examples:
     - Simple CRUD (SQLite): examples/simple-crud.md
     - REST API: examples/rest-api.md
-  - Community:
-    - Built with Trysil: community/built-with-trysil.md
