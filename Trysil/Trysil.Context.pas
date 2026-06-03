@@ -124,6 +124,9 @@ type
     procedure Delete<T: class>(const AEntity: T);
     procedure DeleteAll<T: class>(const AList: TTList<T>);
 
+    procedure Undelete<T: class>(const AEntity: T);
+    procedure UndeleteAll<T: class>(const AList: TTList<T>);
+
     procedure ApplyAll<T: class>(
       const AInsertList: TTList<T>;
       const AUpdateList: TTList<T>;
@@ -429,6 +432,20 @@ begin
     AList, procedure(const AEntity: T)
     begin
       Delete<T>(AEntity);
+    end);
+end;
+
+procedure TTContext.Undelete<T>(const AEntity: T);
+begin
+  FResolver.Undelete<T>(AEntity);
+end;
+
+procedure TTContext.UndeleteAll<T>(const AList: TTList<T>);
+begin
+  InternalApplyAll<T>(
+    AList, procedure(const AEntity: T)
+    begin
+      Undelete<T>(AEntity);
     end);
 end;
 

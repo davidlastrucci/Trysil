@@ -119,6 +119,7 @@ resourcestring
   SNotValidConnectionDriver = 'Connection not found for "%s" driver.';
   SNotValidConnection = 'Connection not found "%s".';
   SJoinEntityReadOnly = 'Join entities are read-only: Insert, Update, and Delete are not supported.';
+  SUndeleteNotSupported = 'Undelete is not supported: the entity has no soft-delete column.';
 
 implementation
 

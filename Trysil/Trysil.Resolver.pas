@@ -72,11 +72,17 @@ type
     procedure ExecuteValidators(
       const AEntity: TObject; const ATableMap: TTTableMap);
     procedure ApplyChangeTrackingAt(
-    const AEntity: TObject; const AChangeTracking: TTChangeTrackingMap);
+      const AEntity: TObject; const AChangeTracking: TTChangeTrackingMap);
     procedure ApplyChangeTrackingBy(
-    const AEntity: TObject; const AChangeTracking: TTChangeTrackingMap);
+      const AEntity: TObject; const AChangeTracking: TTChangeTrackingMap);
     procedure ApplyChangeTracking(
-    const AEntity: TObject; const AChangeTracking: TTChangeTrackingMap);
+      const AEntity: TObject; const AChangeTracking: TTChangeTrackingMap);
+    procedure ClearChangeTrackingAt(
+      const AEntity: TObject; const AChangeTracking: TTChangeTrackingMap);
+    procedure ClearChangeTrackingBy(
+      const AEntity: TObject; const AChangeTracking: TTChangeTrackingMap);
+    procedure ClearChangeTracking(
+      const AEntity: TObject; const AChangeTracking: TTChangeTrackingMap);
   strict protected
     function GetValidationErrorMessage(
       const AErrors: TTValidationErrors): String; virtual;
@@ -91,6 +97,7 @@ type
     procedure Insert<T: class>(const AEntity: T);
     procedure Update<T: class>(const AEntity: T);
     procedure Delete<T: class>(const AEntity: T);
+    procedure Undelete<T: class>(const AEntity: T);
 
     property OnGetCurrentUser: TFunc<String>
       read FOnGetCurrentUser write FOnGetCurrentUser;
@@ -269,6 +276,34 @@ begin
     ApplyChangeTrackingBy(AEntity, AChangeTracking);
 end;
 
+procedure TTResolver.ClearChangeTrackingAt(
+  const AEntity: TObject; const AChangeTracking: TTChangeTrackingMap);
+var
+  LDateTime: TTNullable<TDateTime>;
+  LValue: TTValue;
+begin
+  LDateTime := Default(TTNullable<TDateTime>);
+  TTValue.Make(
+    @LDateTime, AChangeTracking.ChangedAt.Member.RttiType.Handle, LValue);
+  AChangeTracking.ChangedAt.Member.SetValue(AEntity, LValue);
+end;
+
+procedure TTResolver.ClearChangeTrackingBy(
+  const AEntity: TObject; const AChangeTracking: TTChangeTrackingMap);
+begin
+  AChangeTracking.ChangedBy.Member.SetValue(
+      AEntity, TTValue.From<String>(String.Empty));
+end;
+
+procedure TTResolver.ClearChangeTracking(
+  const AEntity: TObject; const AChangeTracking: TTChangeTrackingMap);
+begin
+  if Assigned(AChangeTracking.ChangedAt) then
+    ClearChangeTrackingAt(AEntity, AChangeTracking);
+  if Assigned(AChangeTracking.ChangedBy) then
+    ClearChangeTrackingBy(AEntity, AChangeTracking);
+end;
+
 procedure TTResolver.Validate<T>(const AEntity: T);
 var
   LTableMap: TTTableMap;
@@ -373,6 +408,19 @@ begin
   finally
     LCommand.Free;
   end;
+end;
+
+procedure TTResolver.Undelete<T>(const AEntity: T);
+var
+  LTableMap: TTTableMap;
+begin
+  LTableMap := TTMapper.Instance.Load<T>();
+  if not Assigned(LTableMap.Columns.DeletedChangeTracking.ChangedAt) then
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(SUndeleteNotSupported));
+
+  ClearChangeTracking(AEntity, LTableMap.Columns.DeletedChangeTracking);
+  Update<T>(AEntity);
 end;
 
 end.
