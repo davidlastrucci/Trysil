@@ -97,8 +97,15 @@ type
     procedure RawSelect<T: class>(
       const ASQL: String; const AResult: TTList<T>);
 
-    function Get<T: class>(const AID: TTPrimaryKey): T;
-    function TryGet<T: class>(const AID: TTPrimaryKey; out AEntity: T): Boolean;
+    function Get<T: class>(const AID: TTPrimaryKey): T; overload;
+    function Get<T: class>(
+      const AID: TTPrimaryKey; const AIncludeDeleted: Boolean): T; overload;
+    function TryGet<T: class>(
+      const AID: TTPrimaryKey; out AEntity: T): Boolean; overload;
+    function TryGet<T: class>(
+      const AID: TTPrimaryKey;
+      out AEntity: T;
+      const AIncludeDeleted: Boolean): Boolean; overload;
 
     procedure Refresh<T: class>(const AEntity: T);
     function OldEntity<T: class>(const AEntity: T): T;
@@ -294,12 +301,26 @@ end;
 
 function TTContext.Get<T>(const AID: TTPrimaryKey): T;
 begin
-  result := FProvider.Get<T>(AID);
+  result := Get<T>(AID, False);
+end;
+
+function TTContext.Get<T>(
+  const AID: TTPrimaryKey; const AIncludeDeleted: Boolean): T;
+begin
+  result := FProvider.Get<T>(AID, AIncludeDeleted);
 end;
 
 function TTContext.TryGet<T>(const AID: TTPrimaryKey; out AEntity: T): Boolean;
 begin
-  AEntity := Get<T>(AID);
+  result := TryGet<T>(AID, AEntity, False);
+end;
+
+function TTContext.TryGet<T>(
+  const AID: TTPrimaryKey;
+  out AEntity: T;
+  const AIncludeDeleted: Boolean): Boolean;
+begin
+  AEntity := Get<T>(AID, AIncludeDeleted);
   result := Assigned(AEntity);
 end;
 

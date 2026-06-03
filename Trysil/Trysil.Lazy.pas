@@ -131,7 +131,7 @@ end;
 function TTLazy<T>.GetEntity: T;
 begin
   if not Assigned(FEntity) then
-    FEntity := FContext.Get<T>(FID);
+    FEntity := FContext.Get<T>(FID, True);
   result := FEntity;
 end;
 

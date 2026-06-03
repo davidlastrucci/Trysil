@@ -116,7 +116,8 @@ type
     procedure Select<T: class>(
       const AResult: TTList<T>; const AFilter: TTFilter);
 
-    function Get<T: class>(const AID: TTPrimaryKey): T;
+    function Get<T: class>(
+      const AID: TTPrimaryKey; const AIncludeDeleted: Boolean): T;
 
     procedure Refresh<T: class>(const AEntity: T);
 
@@ -559,7 +560,8 @@ begin
   end;
 end;
 
-function TTProvider.Get<T>(const AID: TTPrimaryKey): T;
+function TTProvider.Get<T>(
+  const AID: TTPrimaryKey; const AIncludeDeleted: Boolean): T;
 var
   LTableMap: TTTableMap;
   LTableMetadata: TTTableMetadata;
@@ -570,6 +572,7 @@ begin
   LTableMap := TTMapper.Instance.Load<T>();
   LTableMetadata := FMetadata.Load<T>();
   LFilter := TTFilter.Create(GetWhere(LTablemap, AID));
+  LFilter.IncludeDeleted := AIncludeDeleted;
   LReader := FConnection.CreateReader(LTableMap, LTableMetadata, LFilter);
   try
     if not LReader.IsEmpty then
