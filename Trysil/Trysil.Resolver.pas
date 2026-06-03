@@ -83,6 +83,8 @@ type
       const AEntity: TObject; const AChangeTracking: TTChangeTrackingMap);
     procedure ClearChangeTracking(
       const AEntity: TObject; const AChangeTracking: TTChangeTrackingMap);
+    procedure IncrementVersion(
+      const AEntity: TObject; const ATableMap: TTTableMap);
   strict protected
     function GetValidationErrorMessage(
       const AErrors: TTValidationErrors): String; virtual;
@@ -304,6 +306,15 @@ begin
     ClearChangeTrackingBy(AEntity, AChangeTracking);
 end;
 
+procedure TTResolver.IncrementVersion(
+  const AEntity: TObject; const ATableMap: TTTableMap);
+begin
+  if Assigned(ATableMap.VersionColumn) then
+    ATableMap.VersionColumn.Member.SetValue(
+      AEntity,
+      ATableMap.VersionColumn.Member.GetValue(AEntity).AsType<TTVersion>() + 1);
+end;
+
 procedure TTResolver.Validate<T>(const AEntity: T);
 var
   LTableMap: TTTableMap;
@@ -363,12 +374,7 @@ begin
       if Assigned(LEvent) then
         LEvent.Free;
     end;
-    if Assigned(LTableMap.VersionColumn) then
-    begin
-      LTableMap.VersionColumn.Member.SetValue(
-        AEntity,
-        LTableMap.VersionColumn.Member.GetValue(AEntity).AsType<TTVersion>() + 1);
-    end;
+    IncrementVersion(AEntity, LTableMap);
   finally
     LCommand.Free;
   end;
@@ -380,12 +386,14 @@ var
   LTableMetadata: TTTableMetadata;
   LCommand: TTAbstractCommand;
   LEvent: TTEvent;
+  LSoftDelete: Boolean;
 begin
   LTableMap := TTMapper.Instance.Load<T>();
   CheckReadWrite(LTableMap);
   LTableMetadata := FMetadata.Load<T>();
 
-  if Assigned(LTableMap.Columns.DeletedChangeTracking.ChangedAt) then
+  LSoftDelete := Assigned(LTableMap.Columns.DeletedChangeTracking.ChangedAt);
+  if LSoftDelete then
   begin
     ApplyChangeTracking(AEntity, LTableMap.Columns.DeletedChangeTracking);
     LCommand := FConnection.CreateSoftDeleteCommand(LTableMap, LTableMetadata);
@@ -405,6 +413,8 @@ begin
       if Assigned(LEvent) then
         LEvent.Free;
     end;
+    if LSoftDelete then
+      IncrementVersion(AEntity, LTableMap);
   finally
     LCommand.Free;
   end;

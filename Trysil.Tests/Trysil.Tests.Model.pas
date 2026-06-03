@@ -369,6 +369,68 @@ type
     property Orders: TTLazyList<TTestLazyOrder> read FOrders;
   end;
 
+{ TTestSoftCustomer - customer with soft delete, used as lazy N:1 target }
+
+  [TTable('Customers')]
+  [TSequence('CustomersID')]
+  TTestSoftCustomer = class
+  strict private
+    [TPrimaryKey]
+    [TColumn('ID')]
+    FID: TTPrimaryKey;
+
+    [TColumn('Name')]
+    FName: String;
+
+    [TColumn('Email')]
+    FEmail: String;
+
+    [TVersionColumn]
+    [TColumn('VersionID')]
+    FVersion: TTVersion;
+
+    [TDeletedAt]
+    [TColumn('DeletedAt')]
+    FDeletedAt: TTNullable<TDateTime>;
+
+    [TDeletedBy]
+    [TColumn('DeletedBy')]
+    FDeletedBy: String;
+  public
+    property ID: TTPrimaryKey read FID;
+    property Name: String read FName write FName;
+    property Email: String read FEmail write FEmail;
+    property Version: TTVersion read FVersion;
+    property DeletedAt: TTNullable<TDateTime> read FDeletedAt;
+    property DeletedBy: String read FDeletedBy;
+  end;
+
+{ TTestSoftLazyOrder - order whose TTLazy master supports soft delete }
+
+  [TTable('Orders')]
+  [TSequence('OrdersID')]
+  TTestSoftLazyOrder = class
+  strict private
+    [TPrimaryKey]
+    [TColumn('ID')]
+    FID: TTPrimaryKey;
+
+    [TColumn('CustomerID')]
+    FCustomer: TTLazy<TTestSoftCustomer>;
+
+    [TColumn('Amount')]
+    FAmount: Double;
+
+    [TVersionColumn]
+    [TColumn('VersionID')]
+    FVersion: TTVersion;
+  public
+    property ID: TTPrimaryKey read FID;
+    property Customer: TTLazy<TTestSoftCustomer> read FCustomer;
+    property Amount: Double read FAmount write FAmount;
+    property Version: TTVersion read FVersion;
+  end;
+
 { TTestValidatedItem - entity with validation attributes }
 
   [TTable('ValidatedItems')]

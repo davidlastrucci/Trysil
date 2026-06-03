@@ -66,6 +66,9 @@ type
 
     [Test]
     procedure SessionApplyChangesUpdatesNullableFromValueToNull;
+
+    [Test]
+    procedure SessionFromLazyListInvalidatesAfterApply;
   end;
 
 implementation
@@ -461,6 +464,47 @@ begin
     Assert.IsTrue(LReloaded.Description.IsNull);
     Assert.IsTrue(LReloaded.Quantity.IsNull);
     Assert.IsTrue(LReloaded.Price.IsNull);
+  finally
+    LFreshContext.Free;
+  end;
+end;
+
+procedure TTAbstractSessionTests.SessionFromLazyListInvalidatesAfterApply;
+var
+  LCustomer: TTestLazyCustomer;
+  LOrder: TTestOrder;
+  LFreshContext: TTContext;
+  LLoadedCustomer: TTestLazyCustomer;
+  LSession: TTSession<TTestLazyOrder>;
+begin
+  LCustomer := FContext.CreateEntity<TTestLazyCustomer>();
+  LCustomer.Name := 'LazyParent';
+  FContext.Insert<TTestLazyCustomer>(LCustomer);
+
+  LOrder := FContext.CreateEntity<TTestOrder>();
+  LOrder.CustomerID := LCustomer.ID;
+  LOrder.Amount := 10.0;
+  FContext.Insert<TTestOrder>(LOrder);
+
+  LFreshContext := TTContext.Create(Connection);
+  try
+    LLoadedCustomer := LFreshContext.Get<TTestLazyCustomer>(LCustomer.ID);
+
+    LSession := LFreshContext.CreateSession<TTestLazyOrder>(
+      LLoadedCustomer.Orders);
+    try
+      Assert.AreEqual<Integer>(1, LSession.Entities.Count,
+        'Session must clone the entities held by the lazy list');
+      LSession.Entities[0].Amount := 99.0;
+      LSession.Update(LSession.Entities[0]);
+      LSession.ApplyChanges;
+    finally
+      LSession.Free;
+    end;
+
+    Assert.AreEqual<Integer>(1, LLoadedCustomer.Orders.List.Count);
+    Assert.AreEqual(99.0, LLoadedCustomer.Orders.List[0].Amount, 0.001,
+      'Lazy list must reflect the applied change after invalidation');
   finally
     LFreshContext.Free;
   end;

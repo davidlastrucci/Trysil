@@ -41,6 +41,9 @@ type
 
     [Test]
     procedure LazyListIsEmptyWhenNoRelated;
+
+    [Test]
+    procedure LazyEntityResolvesSoftDeletedMaster;
   end;
 
 implementation
@@ -155,6 +158,41 @@ begin
     LLoadedCustomer := LFreshContext.Get<TTestLazyCustomer>(LCustomer.ID);
     Assert.AreEqual<Integer>(0, LLoadedCustomer.Orders.List.Count,
       'Lazy list must return empty list when no related entities exist');
+  finally
+    LFreshContext.Free;
+  end;
+end;
+
+procedure TTAbstractLazyTests.LazyEntityResolvesSoftDeletedMaster;
+var
+  LCustomer: TTestSoftCustomer;
+  LOrder: TTestOrder;
+  LFreshContext: TTContext;
+  LLoadedOrder: TTestSoftLazyOrder;
+  LCustomerID: TTPrimaryKey;
+begin
+  LCustomer := FContext.CreateEntity<TTestSoftCustomer>();
+  LCustomer.Name := 'Ghost';
+  LCustomer.Email := 'ghost@example.com';
+  FContext.Insert<TTestSoftCustomer>(LCustomer);
+  LCustomerID := LCustomer.ID;
+
+  LOrder := FContext.CreateEntity<TTestOrder>();
+  LOrder.CustomerID := LCustomer.ID;
+  LOrder.Amount := 42.0;
+  FContext.Insert<TTestOrder>(LOrder);
+
+  FContext.Delete<TTestSoftCustomer>(LCustomer);
+
+  LFreshContext := TTContext.Create(Connection);
+  try
+    LLoadedOrder := LFreshContext.Get<TTestSoftLazyOrder>(LOrder.ID);
+    Assert.IsNotNull(LLoadedOrder.Customer.Entity,
+      'Lazy reference must resolve a soft-deleted master');
+    Assert.AreEqual('Ghost', LLoadedOrder.Customer.Entity.Name);
+
+    Assert.IsNull(LFreshContext.Get<TTestSoftCustomer>(LCustomerID),
+      'A direct Get must still exclude the soft-deleted master');
   finally
     LFreshContext.Free;
   end;

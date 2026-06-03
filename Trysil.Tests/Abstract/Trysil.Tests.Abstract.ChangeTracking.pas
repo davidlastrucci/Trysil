@@ -17,6 +17,7 @@ uses
   DUnitX.TestFramework,
 
   Trysil.Types,
+  Trysil.Exceptions,
   Trysil.Generics.Collections,
   Trysil.Context,
   Trysil.Data,
@@ -44,6 +45,27 @@ type
 
     [Test]
     procedure SoftDeletePopulatesDeletedAtAndDeletedBy;
+
+    [Test]
+    procedure SoftDeleteIncrementsInMemoryVersion;
+
+    [Test]
+    procedure GetExcludesSoftDeletedByDefault;
+
+    [Test]
+    procedure GetWithIncludeDeletedReturnsSoftDeletedEntity;
+
+    [Test]
+    procedure TryGetWithIncludeDeletedReturnsSoftDeletedEntity;
+
+    [Test]
+    procedure UndeleteRestoresSoftDeletedEntity;
+
+    [Test]
+    procedure UndeleteAllRestoresSoftDeletedEntities;
+
+    [Test]
+    procedure UndeleteOnEntityWithoutSoftDeleteRaises;
 
     [Test]
     procedure NullableFieldPersistsNullThroughDb;
@@ -162,6 +184,181 @@ begin
   Assert.IsFalse(LTask.DeletedAt.IsNull,
     'Soft delete must populate DeletedAt');
   Assert.AreEqual('deleter', LTask.DeletedBy);
+end;
+
+procedure TTAbstractChangeTrackingTests.SoftDeleteIncrementsInMemoryVersion;
+var
+  LTask: TTestTask;
+begin
+  LTask := FContext.CreateEntity<TTestTask>();
+  LTask.Title := 'VersionCheck';
+  FContext.Insert<TTestTask>(LTask);
+
+  FContext.Delete<TTestTask>(LTask);
+
+  Assert.AreEqual<TTVersion>(1, LTask.Version,
+    'Soft delete must increment the in-memory version');
+end;
+
+procedure TTAbstractChangeTrackingTests.GetExcludesSoftDeletedByDefault;
+var
+  LTask: TTestTask;
+  LFreshContext: TTContext;
+  LID: TTPrimaryKey;
+begin
+  LTask := FContext.CreateEntity<TTestTask>();
+  LTask.Title := 'Hidden';
+  FContext.Insert<TTestTask>(LTask);
+  LID := LTask.ID;
+  FContext.Delete<TTestTask>(LTask);
+
+  LFreshContext := TTContext.Create(Connection);
+  try
+    Assert.IsNull(LFreshContext.Get<TTestTask>(LID),
+      'Get must exclude soft-deleted entities by default');
+  finally
+    LFreshContext.Free;
+  end;
+end;
+
+procedure TTAbstractChangeTrackingTests.GetWithIncludeDeletedReturnsSoftDeletedEntity;
+var
+  LTask: TTestTask;
+  LFreshContext: TTContext;
+  LLoaded: TTestTask;
+  LID: TTPrimaryKey;
+begin
+  LTask := FContext.CreateEntity<TTestTask>();
+  LTask.Title := 'Recoverable';
+  FContext.Insert<TTestTask>(LTask);
+  LID := LTask.ID;
+  FContext.Delete<TTestTask>(LTask);
+
+  LFreshContext := TTContext.Create(Connection);
+  try
+    LLoaded := LFreshContext.Get<TTestTask>(LID, True);
+    Assert.IsNotNull(LLoaded,
+      'Get with IncludeDeleted must return a soft-deleted entity');
+    Assert.AreEqual('Recoverable', LLoaded.Title);
+    Assert.IsFalse(LLoaded.DeletedAt.IsNull,
+      'Soft-deleted entity must carry a DeletedAt value');
+  finally
+    LFreshContext.Free;
+  end;
+end;
+
+procedure TTAbstractChangeTrackingTests.TryGetWithIncludeDeletedReturnsSoftDeletedEntity;
+var
+  LTask: TTestTask;
+  LFreshContext: TTContext;
+  LLoaded: TTestTask;
+  LID: TTPrimaryKey;
+begin
+  LTask := FContext.CreateEntity<TTestTask>();
+  LTask.Title := 'TryRecoverable';
+  FContext.Insert<TTestTask>(LTask);
+  LID := LTask.ID;
+  FContext.Delete<TTestTask>(LTask);
+
+  LFreshContext := TTContext.Create(Connection);
+  try
+    Assert.IsFalse(LFreshContext.TryGet<TTestTask>(LID, LLoaded),
+      'TryGet without IncludeDeleted must not find a soft-deleted entity');
+    Assert.IsTrue(LFreshContext.TryGet<TTestTask>(LID, LLoaded, True),
+      'TryGet with IncludeDeleted must find a soft-deleted entity');
+    Assert.AreEqual('TryRecoverable', LLoaded.Title);
+  finally
+    LFreshContext.Free;
+  end;
+end;
+
+procedure TTAbstractChangeTrackingTests.UndeleteRestoresSoftDeletedEntity;
+var
+  LTask: TTestTask;
+  LVerifyContext: TTContext;
+  LID: TTPrimaryKey;
+begin
+  LTask := FContext.CreateEntity<TTestTask>();
+  LTask.Title := 'ToRestore';
+  FContext.Insert<TTestTask>(LTask);
+  LID := LTask.ID;
+
+  FContext.Delete<TTestTask>(LTask);
+  FContext.Undelete<TTestTask>(LTask);
+
+  Assert.IsTrue(LTask.DeletedAt.IsNull,
+    'Undelete must clear DeletedAt');
+  Assert.AreEqual(String.Empty, LTask.DeletedBy,
+    'Undelete must clear DeletedBy');
+
+  LVerifyContext := TTContext.Create(Connection);
+  try
+    Assert.IsNotNull(LVerifyContext.Get<TTestTask>(LID),
+      'An undeleted entity must be visible to a default Get again');
+  finally
+    LVerifyContext.Free;
+  end;
+end;
+
+procedure TTAbstractChangeTrackingTests.UndeleteAllRestoresSoftDeletedEntities;
+var
+  LFirst: TTestTask;
+  LSecond: TTestTask;
+  LList: TTList<TTestTask>;
+  LVerifyContext: TTContext;
+  LFirstID: TTPrimaryKey;
+  LSecondID: TTPrimaryKey;
+begin
+  LFirst := FContext.CreateEntity<TTestTask>();
+  LFirst.Title := 'First';
+  FContext.Insert<TTestTask>(LFirst);
+  LFirstID := LFirst.ID;
+  FContext.Delete<TTestTask>(LFirst);
+
+  LSecond := FContext.CreateEntity<TTestTask>();
+  LSecond.Title := 'Second';
+  FContext.Insert<TTestTask>(LSecond);
+  LSecondID := LSecond.ID;
+  FContext.Delete<TTestTask>(LSecond);
+
+  LList := TTList<TTestTask>.Create;
+  try
+    LList.Add(LFirst);
+    LList.Add(LSecond);
+    FContext.UndeleteAll<TTestTask>(LList);
+  finally
+    LList.Free;
+  end;
+
+  LVerifyContext := TTContext.Create(Connection);
+  try
+    Assert.IsNotNull(LVerifyContext.Get<TTestTask>(LFirstID),
+      'UndeleteAll must restore the first entity');
+    Assert.IsNotNull(LVerifyContext.Get<TTestTask>(LSecondID),
+      'UndeleteAll must restore the second entity');
+  finally
+    LVerifyContext.Free;
+  end;
+end;
+
+procedure TTAbstractChangeTrackingTests.UndeleteOnEntityWithoutSoftDeleteRaises;
+var
+  LCustomer: TTestCustomer;
+  LRaised: Boolean;
+begin
+  LCustomer := FContext.CreateEntity<TTestCustomer>();
+  LCustomer.Name := 'NoSoftDelete';
+  FContext.Insert<TTestCustomer>(LCustomer);
+
+  LRaised := False;
+  try
+    FContext.Undelete<TTestCustomer>(LCustomer);
+  except
+    on E: ETException do
+      LRaised := True;
+  end;
+  Assert.IsTrue(LRaised,
+    'Undelete on an entity without a DeletedAt column must raise ETException');
 end;
 
 procedure TTAbstractChangeTrackingTests.NullableFieldPersistsNullThroughDb;
