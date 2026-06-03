@@ -51,6 +51,7 @@ end;
 - The related entity is loaded on the first access to `.Entity`. Subsequent accesses return the cached instance.
 - Setting `.Entity` to a different object updates the internal foreign key ID and frees the previous entity (unless the identity map is active).
 - When the `ID` property on the lazy field changes, the cached entity is cleared and will be reloaded on next access.
+- **Soft-deleted parents resolve.** The lazy load uses `Get<T>(ID, True)`, so a parent that has been soft-deleted still resolves through its foreign key — a child referencing a logically deleted master is not left with a dangling `nil` reference.
 
 ## TTLazyList\<T\> (Collection)
 
@@ -97,6 +98,23 @@ LNewEmployee.Firstname := 'Alice';
 ```
 
 - When the parent's ID changes, the cached list is freed and will be reloaded on next access.
+
+### Invalidation and Sessions
+
+`TTLazyList<T>` implements the `ITLazyList<T>` interface (`Invalidate`, `GetList`). Calling `Invalidate` discards the cached list so the next access re-runs the SELECT.
+
+This integrates with the Unit of Work: `CreateSession<T>` has an overload that takes a `TTLazyList<T>` directly. When the session's `ApplyChanges` completes, it invalidates the lazy list automatically, so the in-memory collection reflects the persisted state on the next read:
+
+```pascal
+var LSession := LContext.CreateSession<TEmployee>(LDepartment.Employees);
+try
+  LSession.Entities[0].Lastname := 'Updated';
+  LSession.Update(LSession.Entities[0]);
+  LSession.ApplyChanges;        // LDepartment.Employees is invalidated here
+finally
+  LSession.Free;
+end;
+```
 
 ## Important Notes
 

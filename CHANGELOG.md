@@ -2,6 +2,15 @@
 
 Notable changes to Trysil, in reverse chronological order.
 
+## Undelete & Lazy Loading
+
+- **`Undelete<T>` / `UndeleteAll<T>`** (`TTContext`): reverse a soft delete — clears the `[TDeletedAt]` / `[TDeletedBy]` columns and issues an `UPDATE`. Raises `ETException` (`SUndeleteNotSupported`) when the entity has no `[TDeletedAt]` column
+- **`IncludeDeleted` overloads on `Get<T>` / `TryGet<T>`**: `Get<T>(AID, AIncludeDeleted)` and `TryGet<T>(AID, out AEntity, AIncludeDeleted)` load an entity by primary key even when it is soft-deleted (existing single-argument overloads default to `False`)
+- **`TTLazy<T>` resolves soft-deleted entities**: lazy single-entity references now load through `Get<T>(ID, True)`, so a soft-deleted parent still resolves through its foreign key
+- **`ITLazyList<T>` interface** (`Trysil.Generics.Collections`): exposes `Invalidate` and `GetList`; `TTLazyList<T>` implements it and `Invalidate` clears the cached list so it reloads on next access
+- **`TTSession<T>` from a lazy list**: new `CreateSession<T>(ITLazyList<T>)` overload — after `ApplyChanges` the lazy list is invalidated, keeping the in-memory collection in sync with the persisted state
+- **`TNoRefCountObject`** (`Trysil.Classes`): no-reference-count base adopted by `TTAbstractLazy<T>` so it can implement an interface without lifetime side effects on Delphi 10.3/10.4 (`CompilerVersion < 35`)
+
 ## JOIN Queries & Raw Select
 
 - **`[TJoin]` attribute**: declarative JOIN support with three overloads — simple (`TJoin(Kind, Table, SourceCol, TargetCol)`), with alias for self-joins (`TJoin(Kind, Table, Alias, SourceCol, TargetCol)`), and chained (`TJoin(Kind, Table, Alias, SourceTableOrAlias, SourceCol, TargetCol)`)

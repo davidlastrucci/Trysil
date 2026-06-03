@@ -71,12 +71,25 @@ Load a single entity by primary key. Returns `nil` if not found:
 LPerson := LContext.Get<TPerson>(42);
 ```
 
+Soft-deleted records are excluded by default. Pass `IncludeDeleted` to load an entity even when it has been soft-deleted:
+
+```pascal
+LPerson := LContext.Get<TPerson>(42, True);   // include soft-deleted
+```
+
 ### TryGet
 
 Safe alternative that returns a Boolean:
 
 ```pascal
 if LContext.TryGet<TPerson>(42, LPerson) then
+  WriteLn(LPerson.Firstname);
+```
+
+The `IncludeDeleted` overload applies here too:
+
+```pascal
+if LContext.TryGet<TPerson>(42, LPerson, True) then
   WriteLn(LPerson.Firstname);
 ```
 
@@ -170,6 +183,25 @@ If the entity has a `[TDeletedAt]` column, `Delete` performs a **soft delete** (
 LContext.DeleteAll<TPerson>(LPersonList);
 ```
 
+### Undelete
+
+Reverse a soft delete. `Undelete` clears the `[TDeletedAt]` / `[TDeletedBy]` columns and issues an `UPDATE`, bringing the record back into normal queries:
+
+```pascal
+LPerson := LContext.Get<TPerson>(42, True);  // load the soft-deleted record
+LContext.Undelete<TPerson>(LPerson);
+```
+
+Calling `Undelete` on an entity that has no `[TDeletedAt]` column raises `ETException`. See [Entity Mapping — Soft Delete](entities.md#soft-delete).
+
+### UndeleteAll
+
+```pascal
+LContext.UndeleteAll<TPerson>(LPersonList);
+```
+
+Wraps all undeletes in a single transaction.
+
 ## Save Operations
 
 ### Save
@@ -233,6 +265,12 @@ Create a Unit of Work session. See [Sessions](sessions.md):
 
 ```pascal
 LSession := LContext.CreateSession<TPerson>(LPersonList);
+```
+
+An overload accepts a `TTLazyList<T>` directly. After `ApplyChanges` the lazy list is invalidated so it reloads from the database on next access:
+
+```pascal
+LSession := LContext.CreateSession<TOrder>(LCustomer.Orders);
 ```
 
 ### CreateFilterBuilder

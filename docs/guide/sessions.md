@@ -27,6 +27,16 @@ finally
 end;
 ```
 
+## Creating from a Lazy List
+
+`CreateSession<T>` also accepts a `TTLazyList<T>` (via the `ITLazyList<T>` interface) instead of a plain list. This is convenient for editing the children of a parent entity loaded through [lazy loading](lazy-loading.md):
+
+```pascal
+var LSession := LContext.CreateSession<TEmployee>(LDepartment.Employees);
+```
+
+When `ApplyChanges` completes, the session invalidates the lazy list, so the parent's collection reloads from the database on next access and stays in sync with the persisted state.
+
 ## How It Works
 
 1. **Clone on creation** -- When `CreateSession<T>` is called, the session clones every entity from the source list. You work with clones, not the originals.

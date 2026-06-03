@@ -193,7 +193,14 @@ end;
 
 When an entity has a `[TDeletedAt]` column, calling `Delete<T>` does **not** execute a SQL `DELETE`. Instead, it executes an `UPDATE` that sets the `DeletedAt` (and optionally `DeletedBy`) column and increments `[TVersionColumn]` if present. Relation checks (`TRelation`) are skipped for soft deletes.
 
-All SELECT queries automatically add `DeletedAt IS NULL` to the WHERE clause, so soft-deleted records are excluded by default. To include them, use `TTFilter.IncludeDeleted` or `TTFilterBuilder<T>.IncludeDeleted` — see [Filtering](filtering.md#including-soft-deleted-records).
+All SELECT queries automatically add `DeletedAt IS NULL` to the WHERE clause, so soft-deleted records are excluded by default. To include them, use `TTFilter.IncludeDeleted` or `TTFilterBuilder<T>.IncludeDeleted` — see [Filtering](filtering.md#including-soft-deleted-records). To load a single soft-deleted record by primary key, use the `Get<T>(AID, True)` / `TryGet<T>(AID, out AEntity, True)` overloads.
+
+To reverse a soft delete, call `Undelete<T>` (or `UndeleteAll<T>` for a list): it clears the `DeletedAt` / `DeletedBy` columns and issues an `UPDATE`. Calling it on an entity without a `[TDeletedAt]` column raises `ETException`.
+
+```pascal
+LArticle := LContext.Get<TArticle>(LID, True);  // load the soft-deleted row
+LContext.Undelete<TArticle>(LArticle);          // bring it back
+```
 
 ### Providing the Current User
 
