@@ -17,6 +17,7 @@ uses
   System.Classes,
 
   Trysil.Types,
+  Trysil.Classes,
   Trysil.Filter,
   Trysil.Rtti,
   Trysil.Context,
@@ -27,7 +28,7 @@ type
 
 { TTAbstractLazy<T> }
 
-  TTAbstractLazy<T: class> = class abstract
+  TTAbstractLazy<T: class> = class abstract(TNoRefCountObject)
   strict private
     procedure SetID(const AID: TTPrimaryKey);
   strict protected
@@ -65,12 +66,14 @@ type
 
 {$RTTI EXPLICIT
   METHODS([vcProtected, vcPrivate])}
-  TTLazyList<T: class> = class(TTAbstractLazy<T>)
+  TTLazyList<T: class> = class(TTAbstractLazy<T>, ITLazyList<T>)
   strict private
     FList: TTList<T>;
 
     function CreateList: TTList<T>;
 
+    // ITLazyList<T>
+    procedure Invalidate;
     function GetList: TTList<T>;
   strict protected
     function AddEntity: T;
@@ -191,6 +194,11 @@ begin
 end;
 
 procedure TTLazyList<T>.NotifyChangedID;
+begin
+  Invalidate;
+end;
+
+procedure TTLazyList<T>.Invalidate;
 begin
   if Assigned(FList) then
   begin

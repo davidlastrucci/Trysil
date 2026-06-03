@@ -55,6 +55,7 @@ type
     FConnection: TTConnection;
     FProvider: TTProvider;
     FResolver: TTResolver;
+    FLazyList: ITLazyList<T>;
     FOriginalEntities: TList<T>;
 
     FApplied: Boolean;
@@ -73,7 +74,12 @@ type
       const AConnection: TTConnection;
       const AProvider: TTProvider;
       const AResolver: TTResolver;
-      const AList: TList<T>);
+      const ALazyList: ITLazyList<T>); overload;
+    constructor Create(
+      const AConnection: TTConnection;
+      const AProvider: TTProvider;
+      const AResolver: TTResolver;
+      const AList: TList<T>); overload;
     destructor Destroy; override;
 
     procedure AfterConstruction; override;
@@ -136,12 +142,23 @@ constructor TTSession<T>.Create(
   const AConnection: TTConnection;
   const AProvider: TTProvider;
   const AResolver: TTResolver;
+  const ALazyList: ITLazyList<T>);
+begin
+  Create(AConnection, AProvider, AResolver, ALazyList.GetList());
+  FLazyList := ALazyList;
+end;
+
+constructor TTSession<T>.Create(
+  const AConnection: TTConnection;
+  const AProvider: TTProvider;
+  const AResolver: TTResolver;
   const AList: TList<T>);
 begin
   inherited Create;
   FConnection := AConnection;
   FProvider := AProvider;
   FResolver := AResolver;
+  FLazyList := nil;
   FOriginalEntities := AList;
 
   FApplied := False;
@@ -268,6 +285,12 @@ begin
       TTSessionState.Deleted:
         FResolver.Delete<T>(LEntity);
     end;
+  end;
+
+  if Assigned(FLazyList) then
+  begin
+    FLazyList.Invalidate();
+    FOriginalEntities := nil;
   end;
 end;
 

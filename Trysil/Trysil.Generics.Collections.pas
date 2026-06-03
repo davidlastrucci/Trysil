@@ -109,6 +109,13 @@ type
     constructor Create(const AOwnsObjects: Boolean); overload;
   end;
 
+{ ITLazyList<T> }
+
+  ITLazyList<T: class> = interface
+    procedure Invalidate;
+    function GetList: TTList<T>;
+  end;
+
 implementation
 
 { TTHashList<T> }
