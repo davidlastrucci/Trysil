@@ -89,7 +89,7 @@ end;
 
 ### Behavior
 
-- The list is loaded on the first access to `.List`. A SELECT query is executed with a filter matching the foreign key column to the parent's ID.
+- The list is loaded on first access. A SELECT query is executed with a filter matching the foreign key column to the parent's ID.
 - `AddEntity` creates a new entity via the context and adds it to the list:
 
 ```pascal
@@ -97,13 +97,13 @@ LNewEmployee := FEmployees.AddEntity;
 LNewEmployee.Firstname := 'Alice';
 ```
 
-- When the parent's ID changes, the cached list is freed and will be reloaded on next access.
+- When the parent's ID changes, the cached list is invalidated and will be reloaded on next access.
 
 ### Invalidation and Sessions
 
-`TTLazyList<T>` implements the `ITLazyList<T>` interface (`Invalidate`, `GetList`). Calling `Invalidate` discards the cached list so the next access re-runs the SELECT.
+The cached list carries an `IsValid` flag. When it is cleared -- for example when the parent's ID changes -- the next access re-runs the SELECT and refills the same list instance in place.
 
-This integrates with the Unit of Work: `CreateSession<T>` has an overload that takes a `TTLazyList<T>` directly. When the session's `ApplyChanges` completes, it invalidates the lazy list automatically, so the in-memory collection reflects the persisted state on the next read:
+This integrates with the Unit of Work: the collection is a `TTList<T>`, so you pass it straight to `CreateSession<T>`. When the session's `ApplyChanges` completes, it invalidates the underlying lazy list automatically, so the in-memory collection reflects the persisted state on the next read:
 
 ```pascal
 var LSession := LContext.CreateSession<TEmployee>(LDepartment.Employees);

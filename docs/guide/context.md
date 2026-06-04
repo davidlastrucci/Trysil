@@ -267,7 +267,7 @@ Create a Unit of Work session. See [Sessions](sessions.md):
 LSession := LContext.CreateSession<TPerson>(LPersonList);
 ```
 
-An overload accepts a `TTLazyList<T>` directly. After `ApplyChanges` the lazy list is invalidated so it reloads from the database on next access:
+When the list comes from a lazy collection (a `TTLazyList<T>` field exposed as `TTList<T>`), `ApplyChanges` invalidates the underlying lazy list so it reloads from the database on next access:
 
 ```pascal
 LSession := LContext.CreateSession<TOrder>(LCustomer.Orders);

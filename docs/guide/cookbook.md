@@ -195,10 +195,27 @@ type
     [TColumn('VersionID')]
     [TVersionColumn]
     FVersionID: TTVersion;
+
+    function GetCustomer: TCustomer;
+    procedure SetCustomer(const AValue: TCustomer);
   public
     property ID: TTPrimaryKey read FID;
-    property Customer: TTLazy<TCustomer> read FCustomer;
+    property Customer: TCustomer read GetCustomer write SetCustomer;
   end;
+```
+
+The getter and setter delegate to `FCustomer.Entity`:
+
+```pascal
+function TOrder.GetCustomer: TCustomer;
+begin
+  Result := FCustomer.Entity;
+end;
+
+procedure TOrder.SetCustomer(const AValue: TCustomer);
+begin
+  FCustomer.Entity := AValue;
+end;
 ```
 
 Use it -- the related entity is loaded on first access:
@@ -206,7 +223,7 @@ Use it -- the related entity is loaded on first access:
 ```pascal
 LContext.SelectAll<TOrder>(LOrders);
 for LOrder in LOrders do
-  Writeln(LOrder.Customer.Value.Name);  // loads TCustomer on first call
+  Writeln(LOrder.Customer.Name);  // loads TCustomer on first call
 ```
 
 !!! warning
@@ -224,14 +241,23 @@ type
     // ...
     [TDetailColumn('ID', 'OrderID')]
     FDetails: TTLazyList<TOrderDetail>;
+
+    function GetDetails: TTList<TOrderDetail>;
   public
-    property Details: TTLazyList<TOrderDetail> read FDetails;
+    property Details: TTList<TOrderDetail> read GetDetails;
   end;
 ```
 
 ```pascal
+function TOrder.GetDetails: TTList<TOrderDetail>;
+begin
+  Result := FDetails.List;
+end;
+```
+
+```pascal
 LOrder := LContext.Get<TOrder>(LOrderID);
-for LDetail in LOrder.Details.Value do
+for LDetail in LOrder.Details do
   Writeln(Format('  %s x%d', [LDetail.ProductName, LDetail.Quantity]));
 ```
 
