@@ -20,6 +20,7 @@ uses
   Trysil.Consts,
   Trysil.Exceptions,
   Trysil.Generics.Collections,
+  Trysil.Rtti,
   Trysil.Data,
   Trysil.Provider,
   Trysil.Resolver,
@@ -55,7 +56,6 @@ type
     FConnection: TTConnection;
     FProvider: TTProvider;
     FResolver: TTResolver;
-    FLazyList: ITLazyList<T>;
     FOriginalEntities: TList<T>;
 
     FApplied: Boolean;
@@ -68,13 +68,9 @@ type
 
     procedure CloneEntities;
     function GetEntityState(const AClone: T): TTSessionState;
+    procedure TryInvalidateList;
     procedure InternalApplyChanges;
   public
-    constructor Create(
-      const AConnection: TTConnection;
-      const AProvider: TTProvider;
-      const AResolver: TTResolver;
-      const ALazyList: ITLazyList<T>); overload;
     constructor Create(
       const AConnection: TTConnection;
       const AProvider: TTProvider;
@@ -142,23 +138,12 @@ constructor TTSession<T>.Create(
   const AConnection: TTConnection;
   const AProvider: TTProvider;
   const AResolver: TTResolver;
-  const ALazyList: ITLazyList<T>);
-begin
-  Create(AConnection, AProvider, AResolver, ALazyList.GetList());
-  FLazyList := ALazyList;
-end;
-
-constructor TTSession<T>.Create(
-  const AConnection: TTConnection;
-  const AProvider: TTProvider;
-  const AResolver: TTResolver;
   const AList: TList<T>);
 begin
   inherited Create;
   FConnection := AConnection;
   FProvider := AProvider;
   FResolver := AResolver;
-  FLazyList := nil;
   FOriginalEntities := AList;
 
   FApplied := False;
@@ -267,6 +252,12 @@ begin
   FEntities.Remove(AClone);
 end;
 
+procedure TTSession<T>.TryInvalidateList;
+begin
+  if TTRtti.InheritsFrom(FOriginalEntities, TTObjectLazyList<T>) then
+    TTObjectLazyList<T>(FOriginalEntities).IsValid := False;
+end;
+
 procedure TTSession<T>.InternalApplyChanges;
 var
   LEntity: T;
@@ -287,11 +278,7 @@ begin
     end;
   end;
 
-  if Assigned(FLazyList) then
-  begin
-    FLazyList.Invalidate();
-    FOriginalEntities := nil;
-  end;
+  TryInvalidateList;
 end;
 
 procedure TTSession<T>.ApplyChanges;

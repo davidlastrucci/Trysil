@@ -17,7 +17,6 @@ uses
   System.Classes,
 
   Trysil.Types,
-  Trysil.Classes,
   Trysil.Filter,
   Trysil.Rtti,
   Trysil.Context,
@@ -28,7 +27,7 @@ type
 
 { TTAbstractLazy<T> }
 
-  TTAbstractLazy<T: class> = class abstract(TNoRefCountObject)
+  TTAbstractLazy<T: class> = class abstract
   strict private
     procedure SetID(const AID: TTPrimaryKey);
   strict protected
@@ -66,14 +65,11 @@ type
 
 {$RTTI EXPLICIT
   METHODS([vcProtected, vcPrivate])}
-  TTLazyList<T: class> = class(TTAbstractLazy<T>, ITLazyList<T>)
+  TTLazyList<T: class> = class(TTAbstractLazy<T>)
   strict private
-    FList: TTList<T>;
+    FList: TTObjectLazyList<T>;
 
-    function CreateList: TTList<T>;
-
-    // ITLazyList<T>
-    procedure Invalidate;
+    procedure PrepareList;
     function GetList: TTList<T>;
   strict protected
     function AddEntity: T;
@@ -164,20 +160,23 @@ constructor TTLazyList<T>.Create(
   const AContext: TTContext; const AColumnName: String);
 begin
   inherited Create(AContext, AColumnName);
-  FList := nil;
+  FList := TTObjectLazyList<T>.Create(not FContext.UseIdentityMap);
 end;
 
 destructor TTLazyList<T>.Destroy;
 begin
-  if Assigned(FList) then
-    FList.Free;
+  FList.Free;
   inherited Destroy;
+end;
+
+procedure TTLazyList<T>.PrepareList;
+begin
+  FList.Clear;
+  FList.IsValid := True;
 end;
 
 function TTLazyList<T>.AddEntity: T;
 begin
-  if not Assigned(FList) then
-    CreateList;
   result := FContext.CreateEntity<T>();
   try
     FList.Add(result);
@@ -185,45 +184,27 @@ begin
     result.Free;
     raise;
   end;
-end;
 
-function TTLazyList<T>.CreateList: TTList<T>;
-begin
-  FList := TTObjectList<T>.Create(not FContext.UseIdentityMap);
-  result := FList;
+  FList.IsValid := True;
 end;
 
 procedure TTLazyList<T>.NotifyChangedID;
 begin
-  Invalidate;
-end;
-
-procedure TTLazyList<T>.Invalidate;
-begin
-  if Assigned(FList) then
-  begin
-    FList.Free;
-    FList := nil;
-  end;
+  FList.IsValid := False;
 end;
 
 function TTLazyList<T>.GetList: TTList<T>;
 var
   LFilter: TTFilter;
 begin
-  if not Assigned(FList) then
+  if not FList.IsValid then
   begin
-    FList := CreateList;
-    try
-      LFilter := TTFilter.Create(
-        Format('%s = %s', [FColumnName, TTPrimaryKeyHelper.SqlValue(FID)]));
-      FContext.Select<T>(FList, LFilter);
-    except
-      FList.Free;
-      FList := nil;
-      raise;
-    end;
+    LFilter := TTFilter.Create(
+      Format('%s = %s', [FColumnName, TTPrimaryKeyHelper.SqlValue(FID)]));
+    FContext.Select<T>(FList, LFilter);
+    FList.IsValid := True;
   end;
+
   result := FList;
 end;
 

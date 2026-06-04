@@ -136,7 +136,7 @@ begin
   LFreshContext := TTContext.Create(Connection);
   try
     LLoadedCustomer := LFreshContext.Get<TTestLazyCustomer>(LCustomer.ID);
-    Assert.AreEqual<Integer>(2, LLoadedCustomer.Orders.List.Count,
+    Assert.AreEqual<Integer>(2, LLoadedCustomer.Orders.Count,
       'Lazy list must load all related orders');
   finally
     LFreshContext.Free;
@@ -156,7 +156,7 @@ begin
   LFreshContext := TTContext.Create(Connection);
   try
     LLoadedCustomer := LFreshContext.Get<TTestLazyCustomer>(LCustomer.ID);
-    Assert.AreEqual<Integer>(0, LLoadedCustomer.Orders.List.Count,
+    Assert.AreEqual<Integer>(0, LLoadedCustomer.Orders.Count,
       'Lazy list must return empty list when no related entities exist');
   finally
     LFreshContext.Free;

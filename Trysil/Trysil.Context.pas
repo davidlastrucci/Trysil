@@ -84,10 +84,7 @@ type
     procedure FreeEntity<T: class>(const AEntity: T);
 
     function CreateTransaction(): TTTransaction;
-    function CreateSession<T: class>(
-      const AList: TList<T>): TTSession<T>; overload;
-    function CreateSession<T: class>(
-      const ALazyList: ITLazyList<T>): TTSession<T>; overload;
+    function CreateSession<T: class>(const AList: TList<T>): TTSession<T>;
     function CreateFilterBuilder<T: class>(): TTFilterBuilder<T>;
 
     function GetMetadata<T: class>(): TTTableMetadata;
@@ -271,13 +268,6 @@ end;
 function TTContext.CreateSession<T>(const AList: TList<T>): TTSession<T>;
 begin
   result := TTSession<T>.Create(FWriteConnection, FProvider, FResolver, AList);
-end;
-
-function TTContext.CreateSession<T>(
-  const ALazyList: ITLazyList<T>): TTSession<T>;
-begin
-  result := TTSession<T>.Create(
-    FWriteConnection, FProvider, FResolver, ALazyList);
 end;
 
 function TTContext.CreateFilterBuilder<T>: TTFilterBuilder<T>;

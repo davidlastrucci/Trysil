@@ -162,7 +162,7 @@ begin
   try
     if LLazyList.IsList then
     begin
-      LLazyList.CreateList;
+      LLazyList.PrepareList;
 
       LArray := AJSon.GetValue<TJSonArray>(AName, nil);
       if Assigned(LArray) then

@@ -133,7 +133,9 @@ type
     class function IsSameType(
       const ATypeInfo: PTypeInfo; const AType: TRttiType): Boolean; overload;
     class function InheritsFrom(
-      const AObject: TObject; const AType: TRttiType): Boolean;
+      const AObject: TObject; const AType: TRttiType): Boolean; overload;
+    class function InheritsFrom(
+      const AObject: TObject; const AClass: TClass): Boolean; overload;
   end;
 
 { TTRttiMember }
@@ -570,14 +572,31 @@ class function TTRtti.InheritsFrom(
 var
   LClass: TClass;
 begin
-  LClass := AObject.ClassType;
-  result := IsSameType(LClass, AType);
-  while not result do
+  result := False;
+  if Assigned(AObject) then
   begin
-    LClass := LClass.ClassParent;
-    if not Assigned(LClass) then
-      Break;
+    LClass := AObject.ClassType;
     result := IsSameType(LClass, AType);
+    while not result do
+    begin
+      LClass := LClass.ClassParent;
+      if not Assigned(LClass) then
+        Break;
+      result := IsSameType(LClass, AType);
+    end;
+  end;
+end;
+
+class function TTRtti.InheritsFrom(
+  const AObject: TObject; const AClass: TClass): Boolean;
+var
+  LContext: TRttiContext;
+begin
+  LContext := TRttiContext.Create;
+  try
+    result := InheritsFrom(AObject, LContext.GetType(AClass));
+  finally
+    LContext.Free;
   end;
 end;
 

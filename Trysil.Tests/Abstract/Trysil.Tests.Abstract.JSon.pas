@@ -52,6 +52,12 @@ type
     procedure EntityFromJSonRoundTrip;
 
     [Test]
+    procedure EntityFromJSonPopulatesLazyList;
+
+    [Test]
+    procedure EntityFromJSonEmptyArrayDoesNotReloadFromDB;
+
+    [Test]
     procedure ListToJSonReturnsValidArray;
 
     [Test]
@@ -126,6 +132,92 @@ begin
   FCreatedEntities.Add(LRestored);
   Assert.AreEqual('Acme Corp', LRestored.Name);
   Assert.AreEqual('acme@example.com', LRestored.Email);
+end;
+
+procedure TTAbstractJSonTests.EntityFromJSonPopulatesLazyList;
+var
+  LCustomer: TTestCustomer;
+  LOrder: TTestOrder;
+  LConfig: TTJSonSerializerConfig;
+  LLoadedCustomer: TTestLazyCustomer;
+  LJson: String;
+  LRestored: TTestLazyCustomer;
+begin
+  LConfig := TTJSonSerializerConfig.Create(-1, True);
+
+  LCustomer := FJSonContext.CreateEntity<TTestCustomer>();
+  FCreatedEntities.Add(LCustomer);
+  LCustomer.Name := 'LazyParent';
+  FJSonContext.Insert<TTestCustomer>(LCustomer);
+
+  LOrder := FJSonContext.CreateEntity<TTestOrder>();
+  FCreatedEntities.Add(LOrder);
+  LOrder.CustomerID := LCustomer.ID;
+  LOrder.Amount := 10.0;
+  FJSonContext.Insert<TTestOrder>(LOrder);
+
+  LOrder := FJSonContext.CreateEntity<TTestOrder>();
+  FCreatedEntities.Add(LOrder);
+  LOrder.CustomerID := LCustomer.ID;
+  LOrder.Amount := 20.0;
+  FJSonContext.Insert<TTestOrder>(LOrder);
+
+  LLoadedCustomer := FJSonContext.Get<TTestLazyCustomer>(LCustomer.ID);
+  FCreatedEntities.Add(LLoadedCustomer);
+  Assert.AreEqual<Integer>(2, LLoadedCustomer.Orders.Count,
+    'Precondition: lazy list must load the two related orders');
+
+  LJson := FJSonContext.EntityToJSon<TTestLazyCustomer>(
+    LLoadedCustomer, LConfig);
+
+  Connection.Execute('DELETE FROM Orders');
+
+  LRestored := FJSonContext.EntityFromJSon<TTestLazyCustomer>(LJson);
+  FCreatedEntities.Add(LRestored);
+  Assert.AreEqual<Integer>(2, LRestored.Orders.Count,
+    'Lazy list must be populated from the JSON array, not reloaded from DB');
+end;
+
+procedure TTAbstractJSonTests.EntityFromJSonEmptyArrayDoesNotReloadFromDB;
+var
+  LCustomer: TTestCustomer;
+  LOrder: TTestOrder;
+  LConfig: TTJSonSerializerConfig;
+  LLoadedCustomer: TTestLazyCustomer;
+  LJson: String;
+  LRestored: TTestLazyCustomer;
+begin
+  LConfig := TTJSonSerializerConfig.Create(-1, True);
+
+  LCustomer := FJSonContext.CreateEntity<TTestCustomer>();
+  FCreatedEntities.Add(LCustomer);
+  LCustomer.Name := 'EmptyParent';
+  FJSonContext.Insert<TTestCustomer>(LCustomer);
+
+  LLoadedCustomer := FJSonContext.Get<TTestLazyCustomer>(LCustomer.ID);
+  FCreatedEntities.Add(LLoadedCustomer);
+  Assert.AreEqual<Integer>(0, LLoadedCustomer.Orders.Count,
+    'Precondition: customer must start with no related orders');
+
+  LJson := FJSonContext.EntityToJSon<TTestLazyCustomer>(
+    LLoadedCustomer, LConfig);
+
+  LOrder := FJSonContext.CreateEntity<TTestOrder>();
+  FCreatedEntities.Add(LOrder);
+  LOrder.CustomerID := LCustomer.ID;
+  LOrder.Amount := 10.0;
+  FJSonContext.Insert<TTestOrder>(LOrder);
+
+  LOrder := FJSonContext.CreateEntity<TTestOrder>();
+  FCreatedEntities.Add(LOrder);
+  LOrder.CustomerID := LCustomer.ID;
+  LOrder.Amount := 20.0;
+  FJSonContext.Insert<TTestOrder>(LOrder);
+
+  LRestored := FJSonContext.EntityFromJSon<TTestLazyCustomer>(LJson);
+  FCreatedEntities.Add(LRestored);
+  Assert.AreEqual<Integer>(0, LRestored.Orders.Count,
+    'Empty JSON array must leave the lazy list empty and valid, not reload from DB');
 end;
 
 procedure TTAbstractJSonTests.ListToJSonReturnsValidArray;

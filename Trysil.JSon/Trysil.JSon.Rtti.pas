@@ -1,4 +1,4 @@
-(*
+﻿(*
 
   Trysil
   Copyright � David Lastrucci
@@ -84,7 +84,7 @@ type
 
   TTJSonLazyList = class(TTRttiLazy)
   strict private
-    FCreateList: TRttiMethod;
+    FPrepareList: TRttiMethod;
     FAddEntity: TRttiMethod;
 
     function GetIsList: Boolean;
@@ -93,7 +93,7 @@ type
 
     procedure AfterConstruction; override;
 
-    procedure CreateList;
+    procedure PrepareList;
     function AddEntity: TObject;
 
     property IsList: Boolean read GetIsList;
@@ -263,7 +263,7 @@ end;
 constructor TTJSonLazyList.Create(const AObject: TObject);
 begin
   inherited Create(AObject);
-  FCreateList := nil;
+  FPrepareList := nil;
   FAddEntity := nil;
 end;
 
@@ -272,20 +272,20 @@ begin
   inherited AfterConstruction;
   if Assigned(FType) then
   begin
-    FCreateList := FType.GetMethod('CreateList');
+    FPrepareList := FType.GetMethod('PrepareList');
     FAddEntity := FType.GetMethod('AddEntity');
   end;
 end;
 
 function TTJSonLazyList.GetIsList: Boolean;
 begin
-  result := Assigned(FCreateList) and Assigned(FAddEntity);
+  result := Assigned(FPrepareList) and Assigned(FAddEntity);
 end;
 
-procedure TTJSonLazyList.CreateList;
+procedure TTJSonLazyList.PrepareList;
 begin
-  if Assigned(FCreateList) then
-    FCreateList.Invoke(FObject, []);
+  if Assigned(FPrepareList) then
+    FPrepareList.Invoke(FObject, []);
 end;
 
 function TTJSonLazyList.AddEntity: TObject;

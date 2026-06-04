@@ -502,8 +502,8 @@ begin
       LSession.Free;
     end;
 
-    Assert.AreEqual<Integer>(1, LLoadedCustomer.Orders.List.Count);
-    Assert.AreEqual(99.0, LLoadedCustomer.Orders.List[0].Amount, 0.001,
+    Assert.AreEqual<Integer>(1, LLoadedCustomer.Orders.Count);
+    Assert.AreEqual(99.0, LLoadedCustomer.Orders[0].Amount, 0.001,
       'Lazy list must reflect the applied change after invalidation');
   finally
     LFreshContext.Free;

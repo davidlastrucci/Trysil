@@ -19,6 +19,7 @@ uses
   Data.DB,
 
   Trysil.Types,
+  Trysil.Generics.Collections,
   Trysil.Attributes,
   Trysil.Validation,
   Trysil.Validation.Attributes,
@@ -361,12 +362,14 @@ type
 
     [TDetailColumn('ID', 'CustomerID')]
     FOrders: TTLazyList<TTestLazyOrder>;
+
+    function GetOrders: TTList<TTestLazyOrder>;
   public
     property ID: TTPrimaryKey read FID;
     property Name: String read FName write FName;
     property Email: String read FEmail write FEmail;
     property Version: TTVersion read FVersion;
-    property Orders: TTLazyList<TTestLazyOrder> read FOrders;
+    property Orders: TTList<TTestLazyOrder> read GetOrders;
   end;
 
 { TTestSoftCustomer - customer with soft delete, used as lazy N:1 target }
@@ -824,6 +827,13 @@ type
   end;
 
 implementation
+
+{ TTestLazyCustomer }
+
+function TTestLazyCustomer.GetOrders: TTList<TTestLazyOrder>;
+begin
+  result := FOrders.List;
+end;
 
 { TTestCustomValidatedCustomer }
 
