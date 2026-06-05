@@ -30,7 +30,7 @@ uses
   Trysil.Expert.Validator,
   Trysil.Expert.Model,
   Trysil.Expert.UI.Themed,
-  Trysil.Expert.UI.Prompter;
+  Trysil.Expert.UI.Prompter, Vcl.Imaging.pngimage;
 
 type
 

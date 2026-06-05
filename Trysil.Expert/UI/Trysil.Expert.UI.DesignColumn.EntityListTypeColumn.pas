@@ -29,7 +29,7 @@ uses
   Trysil.Expert.Consts,
   Trysil.Expert.Validator,
   Trysil.Expert.Model,
-  Trysil.Expert.UI.Themed;
+  Trysil.Expert.UI.Themed, Vcl.Imaging.pngimage;
 
 type
 

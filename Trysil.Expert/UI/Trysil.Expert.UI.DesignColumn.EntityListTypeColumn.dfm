@@ -9,8 +9,7 @@ inherited TDesignEntityListTypeColumnForm: TTDesignEntityListTypeColumnForm
   inherited ContentPanel: TPanel
     Width = 466
     Height = 182
-    ExplicitLeft = 0
-    ExplicitTop = 0
+    StyleElements = [seFont, seBorder]
     ExplicitWidth = 466
     ExplicitHeight = 182
     object ColumnNameLabel: TLabel
@@ -30,9 +29,9 @@ inherited TDesignEntityListTypeColumnForm: TTDesignEntityListTypeColumnForm
     object NameLabel: TLabel
       Left = 72
       Top = 16
-      Width = 77
+      Width = 81
       Height = 15
-      Caption = 'Propery name:'
+      Caption = 'Property name:'
     end
     object ColumnNameCombobox: TComboBox
       Left = 72
@@ -72,6 +71,7 @@ inherited TDesignEntityListTypeColumnForm: TTDesignEntityListTypeColumnForm
   inherited ButtonsPanel: TPanel
     Top = 182
     Width = 466
+    StyleElements = [seFont, seBorder]
     ExplicitTop = 182
     ExplicitWidth = 466
     object SaveButton: TButton
