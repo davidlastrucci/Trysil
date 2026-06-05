@@ -1,0 +1,61 @@
+{
+  "id": "c9482520-71d1-4bb8-9793-5ac8b5b0678e",
+  "name": "Customer",
+  "tableName": "Customers",
+  "sequenceName": "CustomersID",
+  "columns": [
+    {
+      "name": "ID",
+      "columnName": "ID",
+      "type": "PrimaryKey"
+    },
+    {
+      "name": "CompanyName",
+      "columnName": "CompanyName",
+      "required": true,
+      "type": "String",
+      "size": 100
+    },
+    {
+      "name": "Address",
+      "columnName": "Address",
+      "type": "String",
+      "size": 100
+    },
+    {
+      "name": "City",
+      "columnName": "City",
+      "type": "String",
+      "size": 100
+    },
+    {
+      "name": "Region",
+      "columnName": "Region",
+      "type": "String",
+      "size": 100
+    },
+    {
+      "name": "PostalCode",
+      "columnName": "PostalCode",
+      "type": "String",
+      "size": 20
+    },
+    {
+      "name": "Country",
+      "columnName": "Country",
+      "type": "String",
+      "size": 100
+    },
+    {
+      "name": "Email",
+      "columnName": "Email",
+      "type": "String",
+      "size": 255
+    },
+    {
+      "name": "VersionID",
+      "columnName": "VersionID",
+      "type": "Version"
+    }
+  ]
+}

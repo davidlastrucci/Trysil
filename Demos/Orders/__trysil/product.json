@@ -1,0 +1,36 @@
+{
+  "id": "ea59a1c3-8a49-4d71-bc3e-20a833173141",
+  "name": "Product",
+  "tableName": "Products",
+  "sequenceName": "ProductsID",
+  "columns": [
+    {
+      "name": "ID",
+      "columnName": "ID",
+      "type": "PrimaryKey"
+    },
+    {
+      "name": "Brand",
+      "columnName": "BrandID",
+      "required": true,
+      "type": "{3340a25d-f95a-4633-9706-d5acc676312d}"
+    },
+    {
+      "name": "Description",
+      "columnName": "Description",
+      "required": true,
+      "type": "String",
+      "size": 100
+    },
+    {
+      "name": "Price",
+      "columnName": "Price",
+      "type": "Double"
+    },
+    {
+      "name": "VersionID",
+      "columnName": "VersionID",
+      "type": "Version"
+    }
+  ]
+}

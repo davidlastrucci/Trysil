@@ -1,0 +1,77 @@
+object DialogBase: TDialogBase
+  Left = 0
+  Top = 0
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsDialog
+  Caption = 'Dialog'
+  ClientHeight = 200
+  ClientWidth = 500
+  Color = clWhite
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -12
+  Font.Name = 'Segoe UI'
+  Font.Style = []
+  Position = poOwnerFormCenter
+  TextHeight = 15
+  object ContentPanel: TPanel
+    Left = 0
+    Top = 0
+    Width = 500
+    Height = 155
+    Align = alClient
+    BevelOuter = bvNone
+    ParentBackground = False
+    ParentColor = True
+    TabOrder = 0
+    ExplicitWidth = 488
+    ExplicitHeight = 115
+  end
+  object ButtonPanel: TPanel
+    Left = 0
+    Top = 155
+    Width = 500
+    Height = 45
+    Align = alBottom
+    BevelOuter = bvNone
+    ParentBackground = False
+    ParentColor = True
+    TabOrder = 1
+    ExplicitTop = 115
+    ExplicitWidth = 488
+    object OkButton: TButton
+      AlignWithMargins = True
+      Left = 314
+      Top = 8
+      Width = 85
+      Height = 25
+      Margins.Left = 4
+      Margins.Top = 8
+      Margins.Right = 4
+      Margins.Bottom = 12
+      Align = alRight
+      Caption = '&Save'
+      Default = True
+      TabOrder = 0
+      OnClick = OkButtonClick
+      ExplicitLeft = 302
+    end
+    object CancelButton: TButton
+      AlignWithMargins = True
+      Left = 407
+      Top = 8
+      Width = 85
+      Height = 25
+      Margins.Left = 4
+      Margins.Top = 8
+      Margins.Right = 8
+      Margins.Bottom = 12
+      Align = alRight
+      Cancel = True
+      Caption = '&Cancel'
+      ModalResult = 2
+      TabOrder = 1
+      ExplicitLeft = 395
+    end
+  end
+end

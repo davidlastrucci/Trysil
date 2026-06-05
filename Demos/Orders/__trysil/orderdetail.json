@@ -1,0 +1,55 @@
+{
+  "id": "1fd6f88d-e8a9-4305-8f12-b0e880831a9f",
+  "name": "OrderDetail",
+  "tableName": "OrderDetails",
+  "sequenceName": "OrderDetailsID",
+  "columns": [
+    {
+      "name": "ID",
+      "columnName": "ID",
+      "type": "PrimaryKey"
+    },
+    {
+      "name": "OrderID",
+      "columnName": "OrderID",
+      "required": true,
+      "type": "Integer"
+    },
+    {
+      "name": "Product",
+      "columnName": "ProductID",
+      "required": true,
+      "type": "{ea59a1c3-8a49-4d71-bc3e-20a833173141}"
+    },
+    {
+      "name": "Quantity",
+      "columnName": "Quantity",
+      "type": "Double"
+    },
+    {
+      "name": "Price",
+      "columnName": "Price",
+      "type": "Double"
+    },
+    {
+      "name": "Produced",
+      "columnName": "Produced",
+      "type": "DateTime"
+    },
+    {
+      "name": "Delivered",
+      "columnName": "Delivered",
+      "type": "DateTime"
+    },
+    {
+      "name": "Cashed",
+      "columnName": "Cashed",
+      "type": "DateTime"
+    },
+    {
+      "name": "VersionID",
+      "columnName": "VersionID",
+      "type": "Version"
+    }
+  ]
+}

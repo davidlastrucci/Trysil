@@ -1,0 +1,41 @@
+{
+  "id": "ae0c043f-e3fc-4128-bab7-ab13763df15e",
+  "name": "Order",
+  "tableName": "Orders",
+  "sequenceName": "OrdersID",
+  "columns": [
+    {
+      "name": "ID",
+      "columnName": "ID",
+      "type": "PrimaryKey"
+    },
+    {
+      "name": "OrderDate",
+      "columnName": "OrderDate",
+      "required": true,
+      "type": "DateTime"
+    },
+    {
+      "name": "Customer",
+      "columnName": "CustomerID",
+      "required": true,
+      "type": "{c9482520-71d1-4bb8-9793-5ac8b5b0678e}"
+    },
+    {
+      "name": "Detail",
+      "columnName": "OrderID",
+      "type": "{1fd6f88d-e8a9-4305-8f12-b0e880831a9f}[]"
+    },
+    {
+      "name": "Cashed",
+      "columnName": "Cashed",
+      "required": true,
+      "type": "Boolean"
+    },
+    {
+      "name": "VersionID",
+      "columnName": "VersionID",
+      "type": "Version"
+    }
+  ]
+}

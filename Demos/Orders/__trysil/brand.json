@@ -1,0 +1,25 @@
+{
+  "id": "3340a25d-f95a-4633-9706-d5acc676312d",
+  "name": "Brand",
+  "tableName": "Brands",
+  "sequenceName": "BrandsID",
+  "columns": [
+    {
+      "name": "ID",
+      "columnName": "ID",
+      "type": "PrimaryKey"
+    },
+    {
+      "name": "Description",
+      "columnName": "Description",
+      "required": true,
+      "type": "String",
+      "size": 100
+    },
+    {
+      "name": "VersionID",
+      "columnName": "VersionID",
+      "type": "Version"
+    }
+  ]
+}

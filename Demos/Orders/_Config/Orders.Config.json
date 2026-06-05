@@ -1,0 +1,16 @@
+{
+  "active": "SQLite",
+  "configurations": {
+    "SQLite": {
+      "driver": "SQLite",
+      "databasename": ""
+    },
+    "MSSQL": {
+      "driver": "MSSQL",
+      "server": "",
+      "username": "",
+      "password": "",
+      "databasename": ""
+    }
+  }
+}
