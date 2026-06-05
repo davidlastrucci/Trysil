@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{F76DA175-0189-4838-8E3E-BB610DB8F59E}</ProjectGuid>
     </PropertyGroup>
@@ -16,6 +16,15 @@
             <Dependencies/>
         </Projects>
         <Projects Include="Trysil.SqlServer280.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Trysil.InterBase280.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Trysil.MariaDB280.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Trysil.Oracle280.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="Trysil.JSon280.dproj">
@@ -77,6 +86,33 @@
     <Target Name="Trysil_SqlServer280:Make">
         <MSBuild Projects="Trysil.SqlServer280.dproj" Targets="Make"/>
     </Target>
+    <Target Name="Trysil_InterBase280">
+        <MSBuild Projects="Trysil.InterBase280.dproj"/>
+    </Target>
+    <Target Name="Trysil_InterBase280:Clean">
+        <MSBuild Projects="Trysil.InterBase280.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil_InterBase280:Make">
+        <MSBuild Projects="Trysil.InterBase280.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Trysil_MariaDB280">
+        <MSBuild Projects="Trysil.MariaDB280.dproj"/>
+    </Target>
+    <Target Name="Trysil_MariaDB280:Clean">
+        <MSBuild Projects="Trysil.MariaDB280.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil_MariaDB280:Make">
+        <MSBuild Projects="Trysil.MariaDB280.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Trysil_Oracle280">
+        <MSBuild Projects="Trysil.Oracle280.dproj"/>
+    </Target>
+    <Target Name="Trysil_Oracle280:Clean">
+        <MSBuild Projects="Trysil.Oracle280.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil_Oracle280:Make">
+        <MSBuild Projects="Trysil.Oracle280.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Trysil_JSon280">
         <MSBuild Projects="Trysil.JSon280.dproj"/>
     </Target>
@@ -96,13 +132,13 @@
         <MSBuild Projects="Trysil.Http280.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="Trysil280;Trysil_FirebirdSQL280;Trysil_PostgreSQL280;Trysil_SQLite280;Trysil_SqlServer280;Trysil_JSon280;Trysil_Http280"/>
+        <CallTarget Targets="Trysil280;Trysil_FirebirdSQL280;Trysil_PostgreSQL280;Trysil_SQLite280;Trysil_SqlServer280;Trysil_InterBase280;Trysil_MariaDB280;Trysil_Oracle280;Trysil_JSon280;Trysil_Http280"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Trysil280:Clean;Trysil_FirebirdSQL280:Clean;Trysil_PostgreSQL280:Clean;Trysil_SQLite280:Clean;Trysil_SqlServer280:Clean;Trysil_JSon280:Clean;Trysil_Http280:Clean"/>
+        <CallTarget Targets="Trysil280:Clean;Trysil_FirebirdSQL280:Clean;Trysil_PostgreSQL280:Clean;Trysil_SQLite280:Clean;Trysil_SqlServer280:Clean;Trysil_InterBase280:Clean;Trysil_MariaDB280:Clean;Trysil_Oracle280:Clean;Trysil_JSon280:Clean;Trysil_Http280:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Trysil280:Make;Trysil_FirebirdSQL280:Make;Trysil_PostgreSQL280:Make;Trysil_SQLite280:Make;Trysil_SqlServer280:Make;Trysil_JSon280:Make;Trysil_Http280:Make"/>
+        <CallTarget Targets="Trysil280:Make;Trysil_FirebirdSQL280:Make;Trysil_PostgreSQL280:Make;Trysil_SQLite280:Make;Trysil_SqlServer280:Make;Trysil_InterBase280:Make;Trysil_MariaDB280:Make;Trysil_Oracle280:Make;Trysil_JSon280:Make;Trysil_Http280:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='All target and configuration'">
@@ -132,6 +168,24 @@
         </BuildGroupProject>
         <BuildGroupProject Include="Trysil.SqlServer280.dproj">
             <ProjectGuid>{3C8CD65F-578B-48CD-8508-EE3D40C9C2F0}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.InterBase280.dproj">
+            <ProjectGuid>{94753F1E-76FD-44CE-AFCE-C24DFEA0196C}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.MariaDB280.dproj">
+            <ProjectGuid>{3AC9589E-2634-4BD0-B09D-4B9F5233DFAB}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.Oracle280.dproj">
+            <ProjectGuid>{3588BD07-5E13-4C9D-B7A9-CFEBE770EC32}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>

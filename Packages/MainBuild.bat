@@ -16,7 +16,7 @@ FOR /F %%a IN ('echo prompt $E ^| cmd') DO SET ESC=%%a
 
 CALL "c:/Program Files (x86)/Embarcadero/Studio/%STUDIO%/bin/rsvars.bat" >nul
 
-FOR %%P IN (Trysil Trysil.FirebirdSQL Trysil.PostgreSQL Trysil.SQLite Trysil.SqlServer Trysil.JSon Trysil.Http) DO (
+FOR %%P IN (Trysil Trysil.FirebirdSQL Trysil.InterBase Trysil.PostgreSQL Trysil.SQLite Trysil.SqlServer Trysil.MariaDB Trysil.Oracle Trysil.JSon Trysil.Http) DO (
   FOR %%C IN (Debug Release) DO (
     FOR %%X IN (%PLATFORMS%) DO (
       <nul SET /P=%%P %PKG% %%C %%X ...

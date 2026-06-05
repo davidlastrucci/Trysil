@@ -102,9 +102,11 @@ $(Trysil)\$(Platform)\$(Config)
 
 This resolves at build time to the correct platform (Win32/Win64) and configuration (Debug/Release) subdirectory.
 
-## SQL Server Note
+## Edition Note
 
-`Trysil.SqlServer` requires the **Enterprise** edition of Delphi. All other packages (core, SQLite, PostgreSQL, Firebird, JSON, HTTP) work with the **Community** edition.
+`Trysil.SqlServer` and `Trysil.Oracle` require the **Enterprise** (or Architect) edition of Delphi — their FireDAC driver units (`FireDAC.Phys.MSSQL`, `FireDAC.Phys.Oracle`) ship only with those editions. The other packages (core, SQLite, InterBase, PostgreSQL, MariaDB, Firebird, JSON, HTTP) build on the **Community** edition.
+
+At runtime, FireDAC's edition matrix also applies: on Community/Professional, PostgreSQL, MySQL/MariaDB and Firebird connect to **localhost/embedded** only — connecting to a **remote** server requires Enterprise/Architect. See the [RAD Studio FireDAC page](https://www.embarcadero.com/products/rad-studio/firedac).
 
 ## Expert Installation (Optional)
 

@@ -77,6 +77,9 @@ nav:
     - SQL Server: database-drivers/sqlserver.md
     - PostgreSQL: database-drivers/postgresql.md
     - Firebird: database-drivers/firebird.md
+    - InterBase: database-drivers/interbase.md
+    - MariaDB: database-drivers/mariadb.md
+    - Oracle: database-drivers/oracle.md
   - JSON Module:
     - Overview: json/index.md
     - Serialization: json/serialization.md

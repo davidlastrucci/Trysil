@@ -2,6 +2,14 @@
 
 Notable changes to Trysil, in reverse chronological order.
 
+## Database Drivers — InterBase, MariaDB, Oracle
+
+- **InterBase driver** (`Trysil.Data.FireDAC.InterBase`): generator-based sequences (`GEN_ID`), `FIRST/SKIP` pagination — built on `TFDPhysIBDriverLink`
+- **MariaDB driver** (`Trysil.Data.FireDAC.MariaDB`): native sequences (`NEXTVAL`) on MariaDB 10.3+, `LIMIT/OFFSET` pagination — built on the FireDAC MySQL driver (`TFDPhysMySQLDriverLink`). MariaDB was chosen over MySQL because Trysil assigns primary keys from a sequence *before* `INSERT`, which MySQL cannot provide
+- **Oracle driver** (`Trysil.Data.FireDAC.Oracle`): sequences (`seq.NEXTVAL FROM DUAL`), `OFFSET/FETCH` pagination, EZConnect descriptor `//host:port/service` — built on `TFDPhysOracleDriverLink`
+- **Packaging**: `.dpk` / `.dproj` for all five Delphi versions (260–370), wired into each `Trysil.groupproj` and the shared `MainBuild.bat`
+- **Tests**: full per-database fixture suites (disabled by default in `Trysil.Tests.json`)
+
 ## Undelete & Lazy Loading
 
 - **`Undelete<T>` / `UndeleteAll<T>`** (`TTContext`): reverse a soft delete — clears the `[TDeletedAt]` / `[TDeletedBy]` columns and issues an `UPDATE`. Raises `ETException` (`SUndeleteNotSupported`) when the entity has no `[TDeletedAt]` column

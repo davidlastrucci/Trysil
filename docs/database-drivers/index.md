@@ -4,19 +4,22 @@ title: Database Drivers
 
 # Database Drivers
 
-Trysil supports four relational databases. All drivers use **FireDAC** internally for database connectivity.
+Trysil supports seven relational databases. All drivers use **FireDAC** internally for database connectivity.
 
 ## Supported Databases
 
 | Database | Connection Class | Unit | Delphi Edition |
 |---|---|---|---|
 | SQLite | `TTSQLiteConnection` | `Trysil.Data.FireDAC.SQLite` | Community |
+| InterBase | `TTInterBaseConnection` | `Trysil.Data.FireDAC.InterBase` | Community |
+| PostgreSQL | `TTPostgreSQLConnection` | `Trysil.Data.FireDAC.PostgreSQL` | Community (localhost) / Enterprise (server) |
+| Firebird | `TTFirebirdSQLConnection` | `Trysil.Data.FireDAC.FirebirdSQL` | Community (localhost/embedded) / Enterprise (server) |
+| MariaDB | `TTMariaDBConnection` | `Trysil.Data.FireDAC.MariaDB` | Community (localhost/embedded) / Enterprise (server) |
 | SQL Server | `TTSqlServerConnection` | `Trysil.Data.FireDAC.SqlServer` | Enterprise |
-| PostgreSQL | `TTPostgreSQLConnection` | `Trysil.Data.FireDAC.PostgreSQL` | Community |
-| Firebird | `TTFirebirdConnection` | `Trysil.Data.FireDAC.FirebirdSQL` | Community |
+| Oracle | `TTOracleConnection` | `Trysil.Data.FireDAC.Oracle` | Enterprise |
 
-!!! note
-    SQL Server support requires the **Enterprise** edition of Delphi. All other databases work with the Community edition.
+!!! note "Edition matrix (FireDAC)"
+    Driver availability follows the FireDAC edition matrix. **Professional / Community** provides local/embedded connectivity: SQLite, InterBase, plus *localhost-only* access to PostgreSQL, MySQL/MariaDB and Firebird. Full client/server connectivity — and **SQL Server** and **Oracle** in any form — requires the **Enterprise** or **Architect** edition. Building the `Trysil.SqlServer` and `Trysil.Oracle` packages also requires Enterprise/Architect, since their FireDAC driver units ship only with those editions.
 
 ## Connection Pattern
 
@@ -90,6 +93,9 @@ The SQL syntax implementations live in the `Trysil/Data/SqlSyntax/` directory:
 | SQL Server | `Trysil.Data.SqlSyntax.SqlServer` |
 | PostgreSQL | `Trysil.Data.SqlSyntax.PostgreSQL` |
 | Firebird | `Trysil.Data.SqlSyntax.FirebirdSQL` |
+| InterBase | `Trysil.Data.SqlSyntax.InterBase` |
+| MariaDB | `Trysil.Data.SqlSyntax.MariaDB` |
+| Oracle | `Trysil.Data.SqlSyntax.Oracle` |
 
 You do not need to interact with these units directly. The correct syntax is selected automatically based on the connection class you use.
 
@@ -102,4 +108,4 @@ All connection classes inherit from `TTConnection` (defined in `Trysil.Data.pas`
 - A UUID-based `ConnectionID` for log correlation across threads.
 - `TTSyntaxClasses` -- the pluggable SQL-generation strategy.
 
-All four FireDAC drivers extend `TTGenericConnection`.
+All seven FireDAC drivers extend `TTGenericConnection`.

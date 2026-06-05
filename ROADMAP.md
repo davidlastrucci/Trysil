@@ -33,4 +33,7 @@
 - Async support
 - Query cache with invalidation
 - HTTP enhancements (rate limiting, OpenAPI)
-- InterBase, MySQL/MariaDB drivers
+
+## Delivered
+
+- **InterBase, MariaDB, Oracle drivers** — three additional FireDAC drivers (MariaDB chosen over MySQL: it has native `CREATE SEQUENCE`, which Trysil's client-assigned primary keys require)

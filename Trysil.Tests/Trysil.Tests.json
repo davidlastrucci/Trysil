@@ -25,6 +25,30 @@
       "database": "",
       "username": "SYSDBA",
       "password": ""
+    },
+    "interBase": {
+      "enabled": false,
+      "host": "localhost",
+      "port": 3050,
+      "database": "",
+      "username": "SYSDBA",
+      "password": ""
+    },
+    "mariaDB": {
+      "enabled": false,
+      "host": "localhost",
+      "port": 3306,
+      "database": "trysil_tests",
+      "username": "",
+      "password": ""
+    },
+    "oracle": {
+      "enabled": false,
+      "host": "localhost",
+      "port": 1521,
+      "database": "",
+      "username": "",
+      "password": ""
     }
   }
 }

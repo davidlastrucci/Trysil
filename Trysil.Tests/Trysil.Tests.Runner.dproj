@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{B0971E12-0C10-4669-AF3D-1A101E6C8D8D}</ProjectGuid>
         <MainSource>Trysil.Tests.Runner.dpr</MainSource>
@@ -315,6 +315,63 @@
         <DCCReference Include="FirebirdSQL\Trysil.Tests.FirebirdSQL.NullablePrimitives.pas"/>
         <DCCReference Include="FirebirdSQL\Trysil.Tests.FirebirdSQL.NullablePrimitivesJSon.pas"/>
         <DCCReference Include="FirebirdSQL\Trysil.Tests.FirebirdSQL.Register.pas"/>
+        <DCCReference Include="InterBase\Trysil.Tests.InterBase.Connection.pas"/>
+        <DCCReference Include="InterBase\Trysil.Tests.InterBase.Crud.pas"/>
+        <DCCReference Include="InterBase\Trysil.Tests.InterBase.ChangeTracking.pas"/>
+        <DCCReference Include="InterBase\Trysil.Tests.InterBase.IdentityMap.pas"/>
+        <DCCReference Include="InterBase\Trysil.Tests.InterBase.Validation.pas"/>
+        <DCCReference Include="InterBase\Trysil.Tests.InterBase.Join.pas"/>
+        <DCCReference Include="InterBase\Trysil.Tests.InterBase.Session.pas"/>
+        <DCCReference Include="InterBase\Trysil.Tests.InterBase.Transaction.pas"/>
+        <DCCReference Include="InterBase\Trysil.Tests.InterBase.Lazy.pas"/>
+        <DCCReference Include="InterBase\Trysil.Tests.InterBase.Events.pas"/>
+        <DCCReference Include="InterBase\Trysil.Tests.InterBase.Relation.pas"/>
+        <DCCReference Include="InterBase\Trysil.Tests.InterBase.ContextApi.pas"/>
+        <DCCReference Include="InterBase\Trysil.Tests.InterBase.UpdateMode.pas"/>
+        <DCCReference Include="InterBase\Trysil.Tests.InterBase.JSon.pas"/>
+        <DCCReference Include="InterBase\Trysil.Tests.InterBase.AllTypes.pas"/>
+        <DCCReference Include="InterBase\Trysil.Tests.InterBase.AllTypesJSon.pas"/>
+        <DCCReference Include="InterBase\Trysil.Tests.InterBase.NullablePrimitives.pas"/>
+        <DCCReference Include="InterBase\Trysil.Tests.InterBase.NullablePrimitivesJSon.pas"/>
+        <DCCReference Include="InterBase\Trysil.Tests.InterBase.Register.pas"/>
+        <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.Connection.pas"/>
+        <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.Crud.pas"/>
+        <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.ChangeTracking.pas"/>
+        <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.IdentityMap.pas"/>
+        <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.Validation.pas"/>
+        <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.Join.pas"/>
+        <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.Session.pas"/>
+        <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.Transaction.pas"/>
+        <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.Lazy.pas"/>
+        <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.Events.pas"/>
+        <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.Relation.pas"/>
+        <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.ContextApi.pas"/>
+        <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.UpdateMode.pas"/>
+        <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.JSon.pas"/>
+        <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.AllTypes.pas"/>
+        <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.AllTypesJSon.pas"/>
+        <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.NullablePrimitives.pas"/>
+        <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.NullablePrimitivesJSon.pas"/>
+        <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.Register.pas"/>
+        <DCCReference Include="Oracle\Trysil.Tests.Oracle.Connection.pas"/>
+        <DCCReference Include="Oracle\Trysil.Tests.Oracle.Crud.pas"/>
+        <DCCReference Include="Oracle\Trysil.Tests.Oracle.ChangeTracking.pas"/>
+        <DCCReference Include="Oracle\Trysil.Tests.Oracle.IdentityMap.pas"/>
+        <DCCReference Include="Oracle\Trysil.Tests.Oracle.Validation.pas"/>
+        <DCCReference Include="Oracle\Trysil.Tests.Oracle.Join.pas"/>
+        <DCCReference Include="Oracle\Trysil.Tests.Oracle.Session.pas"/>
+        <DCCReference Include="Oracle\Trysil.Tests.Oracle.Transaction.pas"/>
+        <DCCReference Include="Oracle\Trysil.Tests.Oracle.Lazy.pas"/>
+        <DCCReference Include="Oracle\Trysil.Tests.Oracle.Events.pas"/>
+        <DCCReference Include="Oracle\Trysil.Tests.Oracle.Relation.pas"/>
+        <DCCReference Include="Oracle\Trysil.Tests.Oracle.ContextApi.pas"/>
+        <DCCReference Include="Oracle\Trysil.Tests.Oracle.UpdateMode.pas"/>
+        <DCCReference Include="Oracle\Trysil.Tests.Oracle.JSon.pas"/>
+        <DCCReference Include="Oracle\Trysil.Tests.Oracle.AllTypes.pas"/>
+        <DCCReference Include="Oracle\Trysil.Tests.Oracle.AllTypesJSon.pas"/>
+        <DCCReference Include="Oracle\Trysil.Tests.Oracle.NullablePrimitives.pas"/>
+        <DCCReference Include="Oracle\Trysil.Tests.Oracle.NullablePrimitivesJSon.pas"/>
+        <DCCReference Include="Oracle\Trysil.Tests.Oracle.Register.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

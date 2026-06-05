@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{F76DA175-0189-4838-8E3E-BB610DB8F59E}</ProjectGuid>
     </PropertyGroup>
@@ -16,6 +16,15 @@
             <Dependencies/>
         </Projects>
         <Projects Include="Trysil.SqlServer370.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Trysil.InterBase370.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Trysil.MariaDB370.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Trysil.Oracle370.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="Trysil.JSon370.dproj">
@@ -77,6 +86,33 @@
     <Target Name="Trysil_SqlServer370:Make">
         <MSBuild Projects="Trysil.SqlServer370.dproj" Targets="Make"/>
     </Target>
+    <Target Name="Trysil_InterBase370">
+        <MSBuild Projects="Trysil.InterBase370.dproj"/>
+    </Target>
+    <Target Name="Trysil_InterBase370:Clean">
+        <MSBuild Projects="Trysil.InterBase370.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil_InterBase370:Make">
+        <MSBuild Projects="Trysil.InterBase370.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Trysil_MariaDB370">
+        <MSBuild Projects="Trysil.MariaDB370.dproj"/>
+    </Target>
+    <Target Name="Trysil_MariaDB370:Clean">
+        <MSBuild Projects="Trysil.MariaDB370.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil_MariaDB370:Make">
+        <MSBuild Projects="Trysil.MariaDB370.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Trysil_Oracle370">
+        <MSBuild Projects="Trysil.Oracle370.dproj"/>
+    </Target>
+    <Target Name="Trysil_Oracle370:Clean">
+        <MSBuild Projects="Trysil.Oracle370.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil_Oracle370:Make">
+        <MSBuild Projects="Trysil.Oracle370.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Trysil_JSon370">
         <MSBuild Projects="Trysil.JSon370.dproj"/>
     </Target>
@@ -96,13 +132,13 @@
         <MSBuild Projects="Trysil.Http370.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="Trysil370;Trysil_FirebirdSQL370;Trysil_PostgreSQL370;Trysil_SQLite370;Trysil_SqlServer370;Trysil_JSon370;Trysil_Http370"/>
+        <CallTarget Targets="Trysil370;Trysil_FirebirdSQL370;Trysil_PostgreSQL370;Trysil_SQLite370;Trysil_SqlServer370;Trysil_InterBase370;Trysil_MariaDB370;Trysil_Oracle370;Trysil_JSon370;Trysil_Http370"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Trysil370:Clean;Trysil_FirebirdSQL370:Clean;Trysil_PostgreSQL370:Clean;Trysil_SQLite370:Clean;Trysil_SqlServer370:Clean;Trysil_JSon370:Clean;Trysil_Http370:Clean"/>
+        <CallTarget Targets="Trysil370:Clean;Trysil_FirebirdSQL370:Clean;Trysil_PostgreSQL370:Clean;Trysil_SQLite370:Clean;Trysil_SqlServer370:Clean;Trysil_InterBase370:Clean;Trysil_MariaDB370:Clean;Trysil_Oracle370:Clean;Trysil_JSon370:Clean;Trysil_Http370:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Trysil370:Make;Trysil_FirebirdSQL370:Make;Trysil_PostgreSQL370:Make;Trysil_SQLite370:Make;Trysil_SqlServer370:Make;Trysil_JSon370:Make;Trysil_Http370:Make"/>
+        <CallTarget Targets="Trysil370:Make;Trysil_FirebirdSQL370:Make;Trysil_PostgreSQL370:Make;Trysil_SQLite370:Make;Trysil_SqlServer370:Make;Trysil_InterBase370:Make;Trysil_MariaDB370:Make;Trysil_Oracle370:Make;Trysil_JSon370:Make;Trysil_Http370:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Win32 &amp; Win64'">
@@ -138,6 +174,24 @@
         </BuildGroupProject>
         <BuildGroupProject Include="Trysil.PostgreSQL370.dproj">
             <ProjectGuid>{79A50B37-BA72-4827-9391-771B955E44D7}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.InterBase370.dproj">
+            <ProjectGuid>{056F5EF4-D35C-457E-8E77-4F9A02ECA4CD}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.MariaDB370.dproj">
+            <ProjectGuid>{955CDB58-E1E4-460C-8676-4D997B611D42}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.Oracle370.dproj">
+            <ProjectGuid>{76B1FFAE-DCFE-4B6D-A0BD-432731C97273}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
@@ -182,6 +236,24 @@
         </BuildGroupProject>
         <BuildGroupProject Include="Trysil.PostgreSQL370.dproj">
             <ProjectGuid>{79A50B37-BA72-4827-9391-771B955E44D7}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Linux64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.InterBase370.dproj">
+            <ProjectGuid>{056F5EF4-D35C-457E-8E77-4F9A02ECA4CD}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Linux64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.MariaDB370.dproj">
+            <ProjectGuid>{955CDB58-E1E4-460C-8676-4D997B611D42}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Linux64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.Oracle370.dproj">
+            <ProjectGuid>{76B1FFAE-DCFE-4B6D-A0BD-432731C97273}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Linux64</Platforms>
             <Enabled>True</Enabled>

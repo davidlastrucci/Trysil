@@ -22,7 +22,7 @@
 ## Features
 
 - **Attribute-based mapping** — decorate classes with `[TTable]`, `[TColumn]`, `[TPrimaryKey]` and you're done
-- **4 database drivers** — SQLite, PostgreSQL, SQL Server, Firebird — all through FireDAC
+- **7 database drivers** — SQLite, PostgreSQL, SQL Server, Firebird, InterBase, MariaDB, Oracle — all through FireDAC
 - **Fluent query builder** — type-safe filtering with `TTFilterBuilder<T>`
 - **Lazy loading** — `TTLazy<T>` and `TTLazyList<T>` for related entities
 - **Change tracking & soft delete** — `[TCreatedAt]`, `[TUpdatedAt]`, `[TDeletedAt]` with automatic timestamps and user tracking
@@ -129,10 +129,15 @@ end;
 
 | Database | Driver unit | Notes |
 |---|---|---|
-| SQLite | `Trysil.Data.FireDAC.SQLite` | Great for development and testing |
-| PostgreSQL | `Trysil.Data.FireDAC.PostgreSQL` | Full support |
+| SQLite | `Trysil.Data.FireDAC.SQLite` | Community edition; great for development and testing |
+| InterBase | `Trysil.Data.FireDAC.InterBase` | Community edition; generator-based sequences |
+| PostgreSQL | `Trysil.Data.FireDAC.PostgreSQL` | Localhost on Community; remote server requires Enterprise |
+| Firebird | `Trysil.Data.FireDAC.FirebirdSQL` | Localhost/embedded on Community; remote server requires Enterprise |
+| MariaDB | `Trysil.Data.FireDAC.MariaDB` | MariaDB 10.3+ (native sequences), via the FireDAC MySQL driver; localhost on Community, remote requires Enterprise |
 | SQL Server | `Trysil.Data.FireDAC.SqlServer` | Requires Enterprise edition |
-| Firebird | `Trysil.Data.FireDAC.FirebirdSQL` | Full support |
+| Oracle | `Trysil.Data.FireDAC.Oracle` | Requires Enterprise edition; EZConnect descriptor `//host:port/service` |
+
+FireDAC driver availability follows the [RAD Studio edition matrix](https://www.embarcadero.com/products/rad-studio/firedac): Professional/Community covers local/embedded access (SQLite, InterBase, and localhost-only PostgreSQL/MySQL-MariaDB/Firebird), while full client/server connectivity — and SQL Server and Oracle in any form — requires Enterprise/Architect.
 
 ## Delphi Compatibility
 
@@ -144,7 +149,7 @@ end;
 | Delphi 12 | Athens |
 | **Delphi 13** | **Florence** (active development) |
 
-All packages support Community Edition, except `Trysil.SqlServer` which requires Enterprise.
+All packages build on Community Edition, except `Trysil.SqlServer` and `Trysil.Oracle`, which require Enterprise/Architect (their FireDAC driver units ship only with those editions).
 
 ## Installation
 
@@ -205,7 +210,10 @@ TTConnection (abstract)
         ├── SQLite
         ├── PostgreSQL
         ├── SQL Server
-        └── Firebird
+        ├── Firebird
+        ├── InterBase
+        ├── MariaDB
+        └── Oracle
 
 Modules
   ├── Trysil          → ORM core
