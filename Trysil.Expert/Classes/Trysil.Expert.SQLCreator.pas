@@ -1,4 +1,4 @@
-(*
+﻿(*
 
   Trysil
   Copyright © David Lastrucci
@@ -183,8 +183,8 @@ type
     ctMariaDB,
     ctOracle,
     ctPostgreSQL,
-    ctSQLite,
-    ctMSSQL);
+    ctMSSQL,
+    ctSQLite);
 
 { TTSQLCreator }
 
@@ -671,7 +671,7 @@ procedure TTSQLCreator.CreateEntities(const AEntities: TList<TTEntity>);
 const
   CreatorClasses: array [TTSQLCreatorType] of TTAbstractSQLCreatorClass = (
     TTFirebirdSQLCreator, TTInterBaseCreator, TTMariaDBCreator, TTOracleCreator,
-    TTPostgreSQLCreator, TTSQLiteCreator, TTMSSQLCreator);
+    TTPostgreSQLCreator, TTMSSQLCreator, TTSQLiteCreator);
 var
   LCreator: TTAbstractSQLCreator;
   LEntity: TTEntity;

@@ -2,6 +2,7 @@ inherited TGenerateSQL: TTGenerateSQL
   ClientHeight = 340
   ClientWidth = 554
   Color = clWhite
+  StyleElements = [seFont, seClient, seBorder]
   OnShow = FormShow
   ExplicitWidth = 570
   ExplicitHeight = 379
@@ -9,8 +10,7 @@ inherited TGenerateSQL: TTGenerateSQL
   inherited ContentPanel: TPanel
     Width = 554
     Height = 291
-    ExplicitLeft = 0
-    ExplicitTop = 0
+    StyleElements = [seFont, seBorder]
     ExplicitWidth = 554
     ExplicitHeight = 291
     object DatabaseTypeLabel: TLabel
@@ -33,17 +33,15 @@ inherited TGenerateSQL: TTGenerateSQL
       Width = 470
       Height = 23
       Style = csDropDownList
-      ItemIndex = 0
       TabOrder = 0
-      Text = 'Firebird SQL'
       Items.Strings = (
         'Firebird SQL'
         'InterBase'
         'MariaDB'
         'Oracle'
         'PostgreSQL'
-        'SQLite'
-        'Microsoft SQL Server')
+        'SQL Server'
+        'SQLite')
     end
     object EntitiesListView: TListView
       Left = 72
@@ -62,6 +60,7 @@ inherited TGenerateSQL: TTGenerateSQL
   inherited ButtonsPanel: TPanel
     Top = 291
     Width = 554
+    StyleElements = [seFont, seBorder]
     ExplicitTop = 291
     ExplicitWidth = 554
     object CancelButton: TButton

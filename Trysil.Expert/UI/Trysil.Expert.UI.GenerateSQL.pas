@@ -28,6 +28,7 @@ uses
   Vcl.ExtCtrls,
   Vcl.ComCtrls,
   Vcl.Menus,
+  Vcl.Imaging.PngImage,
 
   Trysil.Expert.Consts,
   Trysil.Expert.Classes,
