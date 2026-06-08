@@ -16,6 +16,8 @@ uses
   System.Classes,
   System.SysUtils,
   System.TypInfo,
+  System.Hash,
+  System.Generics.Defaults,
   Data.DB,
 
   Trysil.Classes,
@@ -86,24 +88,54 @@ type
 { TTMetadataProvider }
 
   TTMetadataProvider = class abstract
+  strict protected
+    function GetConnectionName: String; virtual; abstract;
   public
     procedure GetMetadata(
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata); virtual; abstract;
+
+    property ConnectionName: String read GetConnectionName;
+  end;
+
+{ TTMetadataKey }
+
+  TTMetadataKey = record
+  strict private
+    FConnectionName: String;
+    FTypeInfo: PTypeInfo;
+  public
+    constructor Create(
+      const AConnectionName: String; const ATypeInfo: PTypeInfo);
+
+    property ConnectionName: String read FConnectionName;
+    property TypeInfo: PTypeInfo read FTypeInfo;
+  end;
+
+{ TTMetadataKeyComparer }
+
+  TTMetadataKeyComparer = class(TEqualityComparer<TTMetadataKey>)
+  public
+    function Equals(
+      const ALeft: TTMetadataKey;
+      const ARight: TTMetadataKey): Boolean; override;
+    function GetHashCode(const AValue: TTMetadataKey): Integer; override;
   end;
 
 { TTMetadataCache }
 
-  TTMetadataCache = class(TTCache<PTypeInfo, TTTableMetadata>)
+  TTMetadataCache = class(TTCache<TTMetadataKey, TTTableMetadata>)
   strict private
     class var FInstance: TTMetadataCache;
+
     class constructor ClassCreate;
     class destructor ClassDestroy;
   strict protected
     function CreateObject(
-      const ATypeInfo: PTypeInfo): TTTableMetadata; override;
+      const AKey: TTMetadataKey): TTTableMetadata; override;
   public
     function Load(
+      const AConnectionName: String;
       const ATypeInfo: PTypeInfo;
       const AAfterCreate: TTAfterCreateObjectMethod<
         TTTableMetaData>): TTTableMetaData;
@@ -207,11 +239,36 @@ begin
   inherited Destroy;
 end;
 
+{ TTMetadataKey }
+
+constructor TTMetadataKey.Create(
+  const AConnectionName: String; const ATypeInfo: PTypeInfo);
+begin
+  FConnectionName := AConnectionName;
+  FTypeInfo := ATypeInfo;
+end;
+
+{ TTMetadataKeyComparer }
+
+function TTMetadataKeyComparer.Equals(
+  const ALeft: TTMetadataKey; const ARight: TTMetadataKey): Boolean;
+begin
+  result := (ALeft.TypeInfo = ARight.TypeInfo) and
+    (String.Compare(ALeft.ConnectionName, ARight.ConnectionName, True) = 0);
+end;
+
+function TTMetadataKeyComparer.GetHashCode(
+  const AValue: TTMetadataKey): Integer;
+begin
+  result := THashBobJenkins.GetHashValue(AValue.ConnectionName.ToLower) xor
+    Integer(NativeInt(AValue.TypeInfo));
+end;
+
 { TTMetadataCache }
 
 class constructor TTMetadataCache.ClassCreate;
 begin
-  FInstance := TTMetadataCache.Create;
+  FInstance := TTMetadataCache.Create(TTMetadataKeyComparer.Create);
 end;
 
 class destructor TTMetadataCache.ClassDestroy;
@@ -220,20 +277,22 @@ begin
 end;
 
 function TTMetadataCache.CreateObject(
-  const ATypeInfo: PTypeInfo): TTTableMetadata;
+  const AKey: TTMetadataKey): TTTableMetadata;
 var
   LTableMap: TTTableMap;
 begin
-  LTableMap := TTMapper.Instance.Load(ATypeInfo);
+  LTableMap := TTMapper.Instance.Load(AKey.TypeInfo);
   result := TTTableMetadata.Create(LTableMap);
 end;
 
 function TTMetadataCache.Load(
+  const AConnectionName: String;
   const ATypeInfo: PTypeInfo;
   const AAfterCreate: TTAfterCreateObjectMethod<
     TTTableMetaData>): TTTableMetaData;
 begin
-  result := GetValueOrCreate(ATypeInfo, AAfterCreate);
+  result := GetValueOrCreate(
+    TTMetadataKey.Create(AConnectionName, ATypeInfo), AAfterCreate);
 end;
 
 { TTMetadata }
@@ -252,6 +311,7 @@ end;
 function TTMetadata.Load(const ATypeInfo: PTypeInfo): TTTableMetaData;
 begin
   result := TTMetadataCache.Instance.Load(
+    FMetadataProvider.ConnectionName,
     ATypeInfo,
     procedure(const AMetaData: TTTableMetaData)
     var

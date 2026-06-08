@@ -126,6 +126,7 @@ type
       const ASQL: String; const AFilter: TTFilter): TDataSet; override;
     function GetInTransaction: Boolean; override;
     function GetSupportTransaction: Boolean; override;
+    function GetConnectionName: String; override;
   protected // internal
     class procedure InternalRegisterConnection(
       const AName: String;
@@ -374,6 +375,11 @@ begin
   finally
     LDataSet.Free;
   end;
+end;
+
+function TTFireDACConnection.GetConnectionName: String;
+begin
+  result := FConnectionName;
 end;
 
 procedure TTFireDACConnection.StartTransaction;

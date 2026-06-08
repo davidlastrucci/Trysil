@@ -55,6 +55,8 @@ type
 { TTestFakeMetadataProvider }
 
   TTestFakeMetadataProvider = class(TTMetadataProvider)
+  strict protected
+    function GetConnectionName: String; override;
   public
     procedure GetMetadata(
       const ATableMap: TTTableMap;
@@ -123,6 +125,11 @@ type
 implementation
 
 { TTestFakeMetadataProvider }
+
+function TTestFakeMetadataProvider.GetConnectionName: String;
+begin
+  result := 'Fake';
+end;
 
 procedure TTestFakeMetadataProvider.GetMetadata(
   const ATableMap: TTTableMap;
