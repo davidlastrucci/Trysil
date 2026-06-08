@@ -38,9 +38,12 @@ inherited TGenerateSQL: TTGenerateSQL
       Text = 'Firebird SQL'
       Items.Strings = (
         'Firebird SQL'
-        'Microsoft SQL Server'
+        'InterBase'
+        'MariaDB'
+        'Oracle'
         'PostgreSQL'
-        'SQLite')
+        'SQLite'
+        'Microsoft SQL Server')
     end
     object EntitiesListView: TListView
       Left = 72

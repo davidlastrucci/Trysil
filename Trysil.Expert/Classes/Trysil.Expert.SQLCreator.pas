@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright © David Lastrucci
+  Copyright Â© David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -90,9 +90,37 @@ type
       const AColumnName: String; const AEntity: TTEntity): String; override;
   end;
 
-{ TTMSSQLCreator }
+{ TTInterBaseCreator }
 
-  TTMSSQLCreator = class(TTAbstractSQLCreator)
+  TTInterBaseCreator = class(TTAbstractSQLCreator)
+  strict protected
+    procedure AddCreateSequence(
+      const ASource: TTSourceWriter; const AEntity: TTEntity); override;
+
+    function GetType(
+      const ADatatype: TTDataType;
+      const ASize: Integer): String; override;
+    function GetPrimaryKeySyntax(
+      const AColumnName: String; const AEntity: TTEntity): String; override;
+  end;
+
+{ TTMariaDBCreator }
+
+  TTMariaDBCreator = class(TTAbstractSQLCreator)
+  strict protected
+    procedure AddCreateSequence(
+      const ASource: TTSourceWriter; const AEntity: TTEntity); override;
+
+    function GetType(
+      const ADatatype: TTDataType;
+      const ASize: Integer): String; override;
+    function GetPrimaryKeySyntax(
+      const AColumnName: String; const AEntity: TTEntity): String; override;
+  end;
+
+{ TTOracleCreator }
+
+  TTOracleCreator = class(TTAbstractSQLCreator)
   strict protected
     procedure AddCreateSequence(
       const ASource: TTSourceWriter; const AEntity: TTEntity); override;
@@ -133,13 +161,30 @@ type
       const AColumnName: String; const AEntity: TTEntity): String; override;
   end;
 
+{ TTMSSQLCreator }
+
+  TTMSSQLCreator = class(TTAbstractSQLCreator)
+  strict protected
+    procedure AddCreateSequence(
+      const ASource: TTSourceWriter; const AEntity: TTEntity); override;
+
+    function GetType(
+      const ADatatype: TTDataType;
+      const ASize: Integer): String; override;
+    function GetPrimaryKeySyntax(
+      const AColumnName: String; const AEntity: TTEntity): String; override;
+  end;
+
 { TTSQLCreatorType }
 
   TTSQLCreatorType = (
     ctFirebird,
-    ctMSSQL,
+    ctInterBase,
+    ctMariaDB,
+    ctOracle,
     ctPostgreSQL,
-    ctSQLite);
+    ctSQLite,
+    ctMSSQL);
 
 { TTSQLCreator }
 
@@ -292,7 +337,7 @@ begin
     dtDateTime:
       result := 'TIMESTAMP';
     dtGuid:
-      result := '???';
+      result := 'CHAR(16) CHARACTER SET OCTETS';
     dtBlob:
       result := 'BLOB';
     dtVersion:
@@ -310,57 +355,152 @@ begin
     AEntity.TableName, AColumnName]);
 end;
 
-{ TTMSSQLCreator }
+{ TTInterBaseCreator }
 
-procedure TTMSSQLCreator.AddCreateSequence(
+procedure TTInterBaseCreator.AddCreateSequence(
   const ASource: TTSourceWriter; const AEntity: TTEntity);
 begin
-  ASource.Append('CREATE SEQUENCE %s', [AEntity.SequenceName]);
-  ASource.Append('  AS int');
-  ASource.Append('  START WITH 1');
-  ASource.Append('  INCREMENT BY 1;');
+  ASource.Append('CREATE GENERATOR %s;', [AEntity.SequenceName]);
   ASource.AppendLine;
 end;
 
-function TTMSSQLCreator.GetType(
+function TTInterBaseCreator.GetType(
   const ADatatype: TTDataType; const ASize: Integer): String;
 begin
   case ADatatype of
     dtPrimaryKey:
-      result := 'int';
+      result := 'INTEGER';
     dtString:
-      result := Format('nvarchar(%d)', [ASize]);
+      result := Format('VARCHAR(%d)', [ASize]);
     dtMemo:
-      result := 'nvarchar(max)';
+      result := 'BLOB SUB_TYPE 1';
     dtSmallint:
-      result := 'smallint';
+      result := 'SMALLINT';
     dtInteger:
-      result := 'int';
+      result := 'INTEGER';
     dtLargeInteger:
-      result := 'bigint';
+      result := 'NUMERIC(18,0)';
     dtDouble:
-      result := 'float';
+      result := 'DOUBLE PRECISION';
     dtBoolean:
-      result := 'bit';
+      result := 'BOOLEAN';
     dtDateTime:
-      result := 'datetime';
+      result := 'TIMESTAMP';
     dtGuid:
-      result := 'uniqueidentifier';
+      result := 'CHAR(16) CHARACTER SET OCTETS';
     dtBlob:
-      result := 'varbinary(max)';
+      result := 'BLOB SUB_TYPE 0';
     dtVersion:
-      result := 'int';
+      result := 'INTEGER';
 
     else
       raise ETExpertException.Create(SInvalidColumnType);
   end;
 end;
 
-function TTMSSQLCreator.GetPrimaryKeySyntax(
+function TTInterBaseCreator.GetPrimaryKeySyntax(
   const AColumnName: String; const AEntity: TTEntity): String;
 begin
-  result := Format('CONSTRAINT PK_%s PRIMARY KEY CLUSTERED (%s ASC)', [
+  result := Format('CONSTRAINT PK_%s PRIMARY KEY (%s)', [
     AEntity.TableName, AColumnName]);
+end;
+
+{ TTMariaDBCreator }
+
+procedure TTMariaDBCreator.AddCreateSequence(
+  const ASource: TTSourceWriter; const AEntity: TTEntity);
+begin
+  ASource.Append('CREATE SEQUENCE %s START WITH 1;', [AEntity.SequenceName]);
+  ASource.AppendLine;
+end;
+
+function TTMariaDBCreator.GetType(
+  const ADatatype: TTDataType; const ASize: Integer): String;
+begin
+  case ADatatype of
+    dtPrimaryKey:
+      result := 'INT';
+    dtString:
+      result := Format('VARCHAR(%d)', [ASize]);
+    dtMemo:
+      result := 'TEXT';
+    dtSmallint:
+      result := 'SMALLINT';
+    dtInteger:
+      result := 'INT';
+    dtLargeInteger:
+      result := 'BIGINT';
+    dtDouble:
+      result := 'DECIMAL(18,4)';
+    dtBoolean:
+      result := 'BOOLEAN';
+    dtDateTime:
+      result := 'DATETIME';
+    dtGuid:
+      result := 'CHAR(38)';
+    dtBlob:
+      result := 'BLOB';
+    dtVersion:
+      result := 'INT';
+
+    else
+      raise ETExpertException.Create(SInvalidColumnType);
+  end;
+end;
+
+function TTMariaDBCreator.GetPrimaryKeySyntax(
+  const AColumnName: String; const AEntity: TTEntity): String;
+begin
+  result := Format('PRIMARY KEY (%s)', [AColumnName]);
+end;
+
+{ TTOracleCreator }
+
+procedure TTOracleCreator.AddCreateSequence(
+  const ASource: TTSourceWriter; const AEntity: TTEntity);
+begin
+  ASource.Append('CREATE SEQUENCE %s START WITH 1;', [AEntity.SequenceName]);
+  ASource.AppendLine;
+end;
+
+function TTOracleCreator.GetType(
+  const ADatatype: TTDataType; const ASize: Integer): String;
+begin
+  case ADatatype of
+    dtPrimaryKey:
+      result := 'NUMBER(9)';
+    dtString:
+      result := Format('VARCHAR2(%d)', [ASize]);
+    dtMemo:
+      result := 'CLOB';
+    dtSmallint:
+      result := 'NUMBER(5)';
+    dtInteger:
+      result := 'NUMBER(9)';
+    dtLargeInteger:
+      result := 'NUMBER(19)';
+    dtDouble:
+      result := 'NUMBER(18,4)';
+    dtBoolean:
+      result := 'BOOLEAN';
+    dtDateTime:
+      result := 'TIMESTAMP';
+    dtGuid:
+      result := 'RAW(16)';
+    dtBlob:
+      result := 'BLOB';
+    dtVersion:
+      result := 'NUMBER(9)';
+
+    else
+      raise ETExpertException.Create(SInvalidColumnType);
+  end;
+end;
+
+function TTOracleCreator.GetPrimaryKeySyntax(
+  const AColumnName: String; const AEntity: TTEntity): String;
+begin
+  result := Format('PRIMARY KEY (%s)', [AColumnName]);
 end;
 
 { TTPostgreSQLCreator }
@@ -419,7 +559,6 @@ begin
   // Do nothing
 end;
 
-
 function TTSQLiteCreator.GetType(
   const ADatatype: TTDataType; const ASize: Integer): String;
 begin
@@ -443,7 +582,7 @@ begin
     dtDateTime:
       result := 'DATETIME';
     dtGuid:
-      result := '???';
+      result := 'GUID';
     dtBlob:
       result := 'BLOB';
     dtVersion:
@@ -458,6 +597,59 @@ function TTSQLiteCreator.GetPrimaryKeySyntax(
   const AColumnName: String; const AEntity: TTEntity): String;
 begin
   result := Format('PRIMARY KEY (%s)', [AColumnName]);
+end;
+
+{ TTMSSQLCreator }
+
+procedure TTMSSQLCreator.AddCreateSequence(
+  const ASource: TTSourceWriter; const AEntity: TTEntity);
+begin
+  ASource.Append('CREATE SEQUENCE %s', [AEntity.SequenceName]);
+  ASource.Append('  AS int');
+  ASource.Append('  START WITH 1');
+  ASource.Append('  INCREMENT BY 1;');
+  ASource.AppendLine;
+end;
+
+function TTMSSQLCreator.GetType(
+  const ADatatype: TTDataType; const ASize: Integer): String;
+begin
+  case ADatatype of
+    dtPrimaryKey:
+      result := 'int';
+    dtString:
+      result := Format('nvarchar(%d)', [ASize]);
+    dtMemo:
+      result := 'nvarchar(max)';
+    dtSmallint:
+      result := 'smallint';
+    dtInteger:
+      result := 'int';
+    dtLargeInteger:
+      result := 'bigint';
+    dtDouble:
+      result := 'float';
+    dtBoolean:
+      result := 'bit';
+    dtDateTime:
+      result := 'datetime';
+    dtGuid:
+      result := 'uniqueidentifier';
+    dtBlob:
+      result := 'varbinary(max)';
+    dtVersion:
+      result := 'int';
+
+    else
+      raise ETExpertException.Create(SInvalidColumnType);
+  end;
+end;
+
+function TTMSSQLCreator.GetPrimaryKeySyntax(
+  const AColumnName: String; const AEntity: TTEntity): String;
+begin
+  result := Format('CONSTRAINT PK_%s PRIMARY KEY CLUSTERED (%s ASC)', [
+    AEntity.TableName, AColumnName]);
 end;
 
 { TTSQLCreator }
@@ -478,7 +670,8 @@ end;
 procedure TTSQLCreator.CreateEntities(const AEntities: TList<TTEntity>);
 const
   CreatorClasses: array [TTSQLCreatorType] of TTAbstractSQLCreatorClass = (
-    TTFirebirdSQLCreator, TTMSSQLCreator, TTPostgreSQLCreator, TTSQLiteCreator);
+    TTFirebirdSQLCreator, TTInterBaseCreator, TTMariaDBCreator, TTOracleCreator,
+    TTPostgreSQLCreator, TTSQLiteCreator, TTMSSQLCreator);
 var
   LCreator: TTAbstractSQLCreator;
   LEntity: TTEntity;
