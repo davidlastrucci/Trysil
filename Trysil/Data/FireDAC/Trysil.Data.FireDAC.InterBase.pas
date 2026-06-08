@@ -46,7 +46,6 @@ type
     class destructor ClassDestroy;
   strict protected
     function CreateSyntaxClasses: TTSyntaxClasses; override;
-    function GetDatabaseVersion: String; override;
 
     class function GetDriver: String; override;
     class procedure InternalRegisterConnection(
@@ -108,11 +107,6 @@ end;
 function TTInterBaseConnection.CreateSyntaxClasses: TTSyntaxClasses;
 begin
   result := TTInterBaseSyntaxClasses.Create;
-end;
-
-function TTInterBaseConnection.GetDatabaseVersion: String;
-begin
-  result := Format('InterBase %s', [inherited GetDatabaseVersion]);
 end;
 
 class function TTInterBaseConnection.GetDriver: String;

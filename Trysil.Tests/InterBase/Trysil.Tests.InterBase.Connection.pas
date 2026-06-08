@@ -121,12 +121,12 @@ const
   DDL_ALL_TYPES =
     'CREATE TABLE AllTypes (' +
     ' ID INTEGER NOT NULL,' +
-    ' LargeNumber BIGINT NOT NULL,' +
+    ' LargeNumber NUMERIC(18,0) NOT NULL,' +
     ' IsActive BOOLEAN NOT NULL,' +
     ' BirthDate TIMESTAMP NOT NULL,' +
     ' UniqueID CHAR(16) CHARACTER SET OCTETS NOT NULL,' +
     ' Payload BLOB SUB_TYPE 0 NOT NULL,' +
-    ' OptLargeNumber BIGINT,' +
+    ' OptLargeNumber NUMERIC(18,0),' +
     ' OptIsActive BOOLEAN,' +
     ' OptBirthDate TIMESTAMP,' +
     ' OptUniqueID CHAR(16) CHARACTER SET OCTETS,' +
@@ -171,30 +171,30 @@ end;
 
 class procedure TTInterBaseTestConnection.DropSequences;
 begin
-  SafeExecute('DROP SEQUENCE CustomersID');
-  SafeExecute('DROP SEQUENCE CountriesID');
-  SafeExecute('DROP SEQUENCE OrdersID');
-  SafeExecute('DROP SEQUENCE TasksID');
-  SafeExecute('DROP SEQUENCE TrackedUsersID');
-  SafeExecute('DROP SEQUENCE ValidatedItemsID');
-  SafeExecute('DROP SEQUENCE FullValidationID');
-  SafeExecute('DROP SEQUENCE SimpleItemsID');
-  SafeExecute('DROP SEQUENCE AllTypesID');
-  SafeExecute('DROP SEQUENCE NullablePrimitivesID');
+  SafeExecute('DROP GENERATOR CustomersID');
+  SafeExecute('DROP GENERATOR CountriesID');
+  SafeExecute('DROP GENERATOR OrdersID');
+  SafeExecute('DROP GENERATOR TasksID');
+  SafeExecute('DROP GENERATOR TrackedUsersID');
+  SafeExecute('DROP GENERATOR ValidatedItemsID');
+  SafeExecute('DROP GENERATOR FullValidationID');
+  SafeExecute('DROP GENERATOR SimpleItemsID');
+  SafeExecute('DROP GENERATOR AllTypesID');
+  SafeExecute('DROP GENERATOR NullablePrimitivesID');
 end;
 
 class procedure TTInterBaseTestConnection.CreateSequences;
 begin
-  FConnection.Execute('CREATE SEQUENCE CustomersID');
-  FConnection.Execute('CREATE SEQUENCE CountriesID');
-  FConnection.Execute('CREATE SEQUENCE OrdersID');
-  FConnection.Execute('CREATE SEQUENCE TasksID');
-  FConnection.Execute('CREATE SEQUENCE TrackedUsersID');
-  FConnection.Execute('CREATE SEQUENCE ValidatedItemsID');
-  FConnection.Execute('CREATE SEQUENCE FullValidationID');
-  FConnection.Execute('CREATE SEQUENCE SimpleItemsID');
-  FConnection.Execute('CREATE SEQUENCE AllTypesID');
-  FConnection.Execute('CREATE SEQUENCE NullablePrimitivesID');
+  FConnection.Execute('CREATE GENERATOR CustomersID');
+  FConnection.Execute('CREATE GENERATOR CountriesID');
+  FConnection.Execute('CREATE GENERATOR OrdersID');
+  FConnection.Execute('CREATE GENERATOR TasksID');
+  FConnection.Execute('CREATE GENERATOR TrackedUsersID');
+  FConnection.Execute('CREATE GENERATOR ValidatedItemsID');
+  FConnection.Execute('CREATE GENERATOR FullValidationID');
+  FConnection.Execute('CREATE GENERATOR SimpleItemsID');
+  FConnection.Execute('CREATE GENERATOR AllTypesID');
+  FConnection.Execute('CREATE GENERATOR NullablePrimitivesID');
 end;
 
 class procedure TTInterBaseTestConnection.CreateTables;

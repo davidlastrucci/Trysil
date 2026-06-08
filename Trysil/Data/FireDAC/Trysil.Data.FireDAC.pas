@@ -43,6 +43,7 @@ type
   strict protected
     function GetName: String; override;
     function GetSize: Integer; override;
+    function GetDataType: TFieldType; override;
 
     function GetAsString: String; override;
     procedure SetAsString(const AValue: String); override;
@@ -127,6 +128,8 @@ type
     function GetInTransaction: Boolean; override;
     function GetSupportTransaction: Boolean; override;
     function GetConnectionName: String; override;
+
+    procedure ConfigureConnection(const AConnection: TFDConnection); virtual;
   protected // internal
     class procedure InternalRegisterConnection(
       const AName: String;
@@ -203,6 +206,11 @@ end;
 function TTFDParam.GetSize: Integer;
 begin
   result := FParam.Size;
+end;
+
+function TTFDParam.GetDataType: TFieldType;
+begin
+  result := FParam.DataType;
 end;
 
 function TTFDParam.GetAsString: String;
@@ -348,7 +356,13 @@ begin
 
   FConnection.ConnectionDefName := FConnectionName;
   FConnection.LoginPrompt := False;
+  ConfigureConnection(FConnection);
   FConnection.Open;
+end;
+
+procedure TTFireDACConnection.ConfigureConnection(
+  const AConnection: TFDConnection);
+begin
 end;
 
 function TTFireDACConnection.Execute(

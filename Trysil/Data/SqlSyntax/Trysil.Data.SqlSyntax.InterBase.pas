@@ -67,20 +67,22 @@ end;
 function TTInterBaseSelectSyntax.GetSQL: String;
 var
   LResult: TStringBuilder;
+  LWhere: String;
 begin
   LResult := TStringBuilder.Create;
   try
     LResult.Append('SELECT ');
-    if not FFilter.Paging.IsEmpty then
-      LResult.AppendFormat(' %s', [GetFilterPagingSyntax()]);
     LResult.Append(GetColumns());
     LResult.AppendFormat(' FROM %s', [
       FConnection.GetDatabaseObjectName(FTableMap.Name)]);
     if FTableMap.HasJoins then
       LResult.Append(GetJoins());
-    if not FFilter.Where.IsEmpty then
-      LResult.AppendFormat(' WHERE %s', [FFilter.Where]);
+    LWhere := GetWhere();
+    if not LWhere.IsEmpty then
+      LResult.AppendFormat(' WHERE %s', [LWhere]);
     LResult.Append(GetOrderBy());
+    if not FFilter.Paging.IsEmpty then
+      LResult.AppendFormat(' %s', [GetFilterPagingSyntax()]);
 
     result := LResult.ToString();
   finally
@@ -90,16 +92,15 @@ end;
 
 function TTInterBaseSelectSyntax.GetFilterPagingSyntax: String;
 begin
-  result := Format('FIRST %d SKIP %d', [
-    FFilter.Paging.Limit, FFilter.Paging.Start]);
+  result := Format('ROWS %d TO %d', [
+    FFilter.Paging.Start + 1, FFilter.Paging.Start + FFilter.Paging.Limit]);
 end;
 
 { TTInterBaseVersionSyntax }
 
 function TTInterBaseVersionSyntax.GetSQL: String;
 begin
-  result := 'SELECT rdb$get_context(''SYSTEM'', ''ENGINE_VERSION'') ' +
-    'from rdb$database';
+  result := 'SELECT CAST(''InterBase'' AS VARCHAR(20)) FROM RDB$DATABASE';
 end;
 
 { TTInterBaseSyntaxClasses }

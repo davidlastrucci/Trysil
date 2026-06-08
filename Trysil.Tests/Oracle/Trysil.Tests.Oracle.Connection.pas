@@ -46,44 +46,44 @@ implementation
 const
   DDL_CUSTOMERS =
     'CREATE TABLE Customers (' +
-    ' ID NUMBER(10) NOT NULL,' +
+    ' ID NUMBER(9) NOT NULL,' +
     ' Name VARCHAR2(100),' +
     ' Email VARCHAR2(255),' +
-    ' CountryID NUMBER(10) NULL,' +
+    ' CountryID NUMBER(9) NULL,' +
     ' DeletedAt TIMESTAMP NULL,' +
     ' DeletedBy VARCHAR2(100),' +
-    ' VersionID NUMBER(10) NOT NULL,' +
+    ' VersionID NUMBER(9) NOT NULL,' +
     ' PRIMARY KEY(ID))';
 
   DDL_COUNTRIES =
     'CREATE TABLE Countries (' +
-    ' ID NUMBER(10) NOT NULL,' +
+    ' ID NUMBER(9) NOT NULL,' +
     ' Name VARCHAR2(100),' +
-    ' VersionID NUMBER(10) NOT NULL,' +
+    ' VersionID NUMBER(9) NOT NULL,' +
     ' PRIMARY KEY(ID))';
 
   DDL_ORDERS =
     'CREATE TABLE Orders (' +
-    ' ID NUMBER(10) NOT NULL,' +
-    ' CustomerID NUMBER(10) NOT NULL,' +
+    ' ID NUMBER(9) NOT NULL,' +
+    ' CustomerID NUMBER(9) NOT NULL,' +
     ' Amount NUMBER(18,4) NOT NULL,' +
-    ' VersionID NUMBER(10) NOT NULL,' +
+    ' VersionID NUMBER(9) NOT NULL,' +
     ' PRIMARY KEY(ID))';
 
   DDL_TASKS =
     'CREATE TABLE Tasks (' +
-    ' ID NUMBER(10) NOT NULL,' +
+    ' ID NUMBER(9) NOT NULL,' +
     ' Title VARCHAR2(100),' +
-    ' VersionID NUMBER(10) NOT NULL,' +
+    ' VersionID NUMBER(9) NOT NULL,' +
     ' DeletedAt TIMESTAMP NULL,' +
     ' DeletedBy VARCHAR2(100),' +
     ' PRIMARY KEY(ID))';
 
   DDL_TRACKED_USERS =
     'CREATE TABLE TrackedUsers (' +
-    ' ID NUMBER(10) NOT NULL,' +
+    ' ID NUMBER(9) NOT NULL,' +
     ' Name VARCHAR2(100),' +
-    ' VersionID NUMBER(10) NOT NULL,' +
+    ' VersionID NUMBER(9) NOT NULL,' +
     ' CreatedAt TIMESTAMP NULL,' +
     ' CreatedBy VARCHAR2(100),' +
     ' UpdatedAt TIMESTAMP NULL,' +
@@ -92,55 +92,55 @@ const
 
   DDL_VALIDATED_ITEMS =
     'CREATE TABLE ValidatedItems (' +
-    ' ID NUMBER(10) NOT NULL,' +
+    ' ID NUMBER(9) NOT NULL,' +
     ' Name VARCHAR2(100),' +
     ' Code VARCHAR2(50),' +
-    ' VersionID NUMBER(10) NOT NULL,' +
+    ' VersionID NUMBER(9) NOT NULL,' +
     ' PRIMARY KEY(ID))';
 
   DDL_FULL_VALIDATION =
     'CREATE TABLE FullValidation (' +
-    ' ID NUMBER(10) NOT NULL,' +
+    ' ID NUMBER(9) NOT NULL,' +
     ' Code VARCHAR2(50),' +
-    ' Score NUMBER(10) NOT NULL,' +
-    ' Quantity NUMBER(10) NOT NULL,' +
+    ' Score NUMBER(9) NOT NULL,' +
+    ' Quantity NUMBER(9) NOT NULL,' +
     ' Price NUMBER(18,4) NOT NULL,' +
-    ' Discount NUMBER(10) NOT NULL,' +
+    ' Discount NUMBER(9) NOT NULL,' +
     ' Weight NUMBER(18,4) NOT NULL,' +
     ' Phone VARCHAR2(20),' +
     ' Email VARCHAR2(255),' +
-    ' VersionID NUMBER(10) NOT NULL,' +
+    ' VersionID NUMBER(9) NOT NULL,' +
     ' PRIMARY KEY(ID))';
 
   DDL_SIMPLE_ITEMS =
     'CREATE TABLE SimpleItems (' +
-    ' ID NUMBER(10) NOT NULL,' +
+    ' ID NUMBER(9) NOT NULL,' +
     ' Name VARCHAR2(100),' +
     ' PRIMARY KEY(ID))';
 
   DDL_ALL_TYPES =
     'CREATE TABLE AllTypes (' +
-    ' ID NUMBER(10) NOT NULL,' +
+    ' ID NUMBER(9) NOT NULL,' +
     ' LargeNumber NUMBER(19) NOT NULL,' +
-    ' IsActive NUMBER(1) NOT NULL,' +
+    ' IsActive BOOLEAN NOT NULL,' +
     ' BirthDate TIMESTAMP NOT NULL,' +
     ' UniqueID RAW(16) NOT NULL,' +
     ' Payload BLOB NOT NULL,' +
     ' OptLargeNumber NUMBER(19) NULL,' +
-    ' OptIsActive NUMBER(1) NULL,' +
+    ' OptIsActive BOOLEAN NULL,' +
     ' OptBirthDate TIMESTAMP NULL,' +
     ' OptUniqueID RAW(16) NULL,' +
     ' OptPayload BLOB NULL,' +
-    ' VersionID NUMBER(10) NOT NULL,' +
+    ' VersionID NUMBER(9) NOT NULL,' +
     ' PRIMARY KEY(ID))';
 
   DDL_NULLABLE_PRIMITIVES =
     'CREATE TABLE NullablePrimitives (' +
-    ' ID NUMBER(10) NOT NULL,' +
+    ' ID NUMBER(9) NOT NULL,' +
     ' Description VARCHAR2(100) NULL,' +
-    ' Quantity NUMBER(10) NULL,' +
+    ' Quantity NUMBER(9) NULL,' +
     ' Price NUMBER(18,4) NULL,' +
-    ' VersionID NUMBER(10) NOT NULL,' +
+    ' VersionID NUMBER(9) NOT NULL,' +
     ' PRIMARY KEY(ID))';
 
 { TTOracleTestConnection }

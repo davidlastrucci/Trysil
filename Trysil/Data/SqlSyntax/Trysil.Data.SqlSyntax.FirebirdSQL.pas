@@ -67,6 +67,7 @@ end;
 function TTFirebirdSQLSelectSyntax.GetSQL: String;
 var
   LResult: TStringBuilder;
+  LWhere: String;
 begin
   LResult := TStringBuilder.Create;
   try
@@ -78,8 +79,9 @@ begin
       FConnection.GetDatabaseObjectName(FTableMap.Name)]);
     if FTableMap.HasJoins then
       LResult.Append(GetJoins());
-    if not FFilter.Where.IsEmpty then
-      LResult.AppendFormat(' WHERE %s', [FFilter.Where]);
+    LWhere := GetWhere();
+    if not LWhere.IsEmpty then
+      LResult.AppendFormat(' WHERE %s', [LWhere]);
     LResult.Append(GetOrderBy());
 
     result := LResult.ToString();

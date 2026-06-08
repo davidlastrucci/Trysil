@@ -1,7 +1,7 @@
-(*
+ï»¿(*
 
   Trysil
-  Copyright © David Lastrucci
+  Copyright ï¿½ David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -108,6 +108,8 @@ type
 { TTGuidParameter }
 
   TTGuidParameter = class(TTParameter)
+  strict private
+    procedure WriteGuid(const AGuid: TGuid);
   public
     procedure SetValue(const AEntity: TObject); overload; override;
     procedure SetValue(const AValue: TTValue); overload; override;
@@ -153,6 +155,17 @@ type
 { TTParameterRegister }
 
   TTParameterRegister = class
+  strict private
+    class procedure RegisterStringParameterClasses(
+      const AInstance: TTParameterFactory);
+    class procedure RegisterIntegerParameterClasses(
+      const AInstance: TTParameterFactory);
+    class procedure RegisterDoubleParameterClasses(
+      const AInstance: TTParameterFactory);
+    class procedure RegisterDateTimeParameterClasses(
+      const AInstance: TTParameterFactory);
+    class procedure RegisterOtherParameterClasses(
+      const AInstance: TTParameterFactory);
   public
     class procedure RegisterParameterClasses;
   end;
@@ -447,6 +460,20 @@ end;
 
 { TTGuidParameter }
 
+procedure TTGuidParameter.WriteGuid(const AGuid: TGuid);
+var
+  LBytes: TBytes;
+begin
+  if (FParam.DataType <> ftGuid) and (FParam.Size <= SizeOf(TGuid)) then
+  begin
+    SetLength(LBytes, SizeOf(TGuid));
+    Move(AGuid, LBytes[0], SizeOf(TGuid));
+    FParam.AsBytes := LBytes;
+  end
+  else
+    FParam.AsGuid := AGuid;
+end;
+
 procedure TTGuidParameter.SetValue(const AEntity: TObject);
 var
   LValue: TTValue;
@@ -460,13 +487,13 @@ begin
     if LNullable.IsNull then
       FParam.Clear()
     else
-      FParam.AsGuid := LNullable;
+      WriteGuid(LNullable);
     LParamValue := LNullable.GetValueOrDefault;
   end
   else
   begin
     LParamValue := LValue.AsType<TGuid>();
-    FParam.AsGuid := LParamValue;
+    WriteGuid(LParamValue);
   end;
 
   LogParameter(FColumnMap.Name, LParamValue.ToString);
@@ -477,7 +504,7 @@ var
   LParamValue: TGuid;
 begin
   LParamValue := AValue.AsType<TGuid>();
-  FParam.AsGuid := LParamValue;
+  WriteGuid(LParamValue);
   LogParameter(FParam.Name, LParamValue.ToString);
 end;
 
@@ -555,54 +582,84 @@ function TTParameterFactory.CreateParameter(
 var
   LClass: TClass;
 begin
-  if not FParameterTypes.TryGetValue(AFieldType, LClass) then
-    raise ETException.CreateFmt(
-      TTLanguage.Instance.Translate(SParameterTypeError), [
-        TRttiEnumerationType.GetName<TFieldType>(AFieldType)]);
-  result := TTParameterClass(LClass).Create(AConnectionID, AParam, AColumnMap);
+  if Assigned(AColumnMap) and AColumnMap.IsGuid then
+    result := TTGuidParameter.Create(AConnectionID, AParam, AColumnMap)
+  else
+  begin
+    if not FParameterTypes.TryGetValue(AFieldType, LClass) then
+      raise ETException.CreateFmt(
+        TTLanguage.Instance.Translate(SParameterTypeError), [
+          TRttiEnumerationType.GetName<TFieldType>(AFieldType)]);
+    result := TTParameterClass(LClass).Create(AConnectionID, AParam, AColumnMap);
+  end;
 end;
 
 { TTParameterRegister }
 
-class procedure TTParameterRegister.RegisterParameterClasses;
-var
-  LInstance: TTParameterFactory;
+class procedure TTParameterRegister.RegisterStringParameterClasses(
+  const AInstance: TTParameterFactory);
 begin
-  LInstance := TTParameterFactory.Instance;
-
   // TTStringParameter
-  LInstance.RegisterParameterClass<TTStringParameter>(TFieldType.ftString);
-  LInstance.RegisterParameterClass<TTStringParameter>(TFieldType.ftWideString);
-  LInstance.RegisterParameterClass<TTStringParameter>(TFieldType.ftMemo);
-  LInstance.RegisterParameterClass<TTStringParameter>(TFieldType.ftWideMemo);
+  AInstance.RegisterParameterClass<TTStringParameter>(TFieldType.ftString);
+  AInstance.RegisterParameterClass<TTStringParameter>(TFieldType.ftWideString);
+  AInstance.RegisterParameterClass<TTStringParameter>(TFieldType.ftFixedChar);
+  AInstance.RegisterParameterClass<TTStringParameter>(TFieldType.ftFixedWideChar);
+  AInstance.RegisterParameterClass<TTStringParameter>(TFieldType.ftMemo);
+  AInstance.RegisterParameterClass<TTStringParameter>(TFieldType.ftWideMemo);
+end;
 
+class procedure TTParameterRegister.RegisterIntegerParameterClasses(
+  const AInstance: TTParameterFactory);
+begin
   // TTIntegerParameter
-  LInstance.RegisterParameterClass<TTIntegerParameter>(TFieldType.ftSmallint);
-  LInstance.RegisterParameterClass<TTIntegerParameter>(TFieldType.ftInteger);
+  AInstance.RegisterParameterClass<TTIntegerParameter>(TFieldType.ftSmallint);
+  AInstance.RegisterParameterClass<TTIntegerParameter>(TFieldType.ftInteger);
 
   // TTLargeIntegerParameter
-  LInstance.RegisterParameterClass<TTLargeIntegerParameter>(TFieldType.ftLargeint);
+  AInstance.RegisterParameterClass<TTLargeIntegerParameter>(TFieldType.ftLargeint);
+end;
 
+class procedure TTParameterRegister.RegisterDoubleParameterClasses(
+  const AInstance: TTParameterFactory);
+begin
   // TTDoubleParameter
-  LInstance.RegisterParameterClass<TTDoubleParameter>(TFieldType.ftFMTBcd);
-  LInstance.RegisterParameterClass<TTDoubleParameter>(TFieldType.ftBCD);
-  LInstance.RegisterParameterClass<TTDoubleParameter>(TFieldType.ftFloat);
-  LInstance.RegisterParameterClass<TTDoubleParameter>(TFieldType.ftSingle);
-  LInstance.RegisterParameterClass<TTDoubleParameter>(TFieldType.ftCurrency);
+  AInstance.RegisterParameterClass<TTDoubleParameter>(TFieldType.ftFMTBcd);
+  AInstance.RegisterParameterClass<TTDoubleParameter>(TFieldType.ftBCD);
+  AInstance.RegisterParameterClass<TTDoubleParameter>(TFieldType.ftFloat);
+  AInstance.RegisterParameterClass<TTDoubleParameter>(TFieldType.ftSingle);
+  AInstance.RegisterParameterClass<TTDoubleParameter>(TFieldType.ftCurrency);
+end;
 
-  // TTBooleanParameter
-  LInstance.RegisterParameterClass<TTBooleanParameter>(TFieldType.ftBoolean);
-
+class procedure TTParameterRegister.RegisterDateTimeParameterClasses(
+  const AInstance: TTParameterFactory);
+begin
   // TTDateTimeParameter
-  LInstance.RegisterParameterClass<TTDateTimeParameter>(TFieldType.ftDate);
-  LInstance.RegisterParameterClass<TTDateTimeParameter>(TFieldType.ftDateTime);
-  LInstance.RegisterParameterClass<TTDateTimeParameter>(TFieldType.ftTimeStamp);
+  AInstance.RegisterParameterClass<TTDateTimeParameter>(TFieldType.ftDate);
+  AInstance.RegisterParameterClass<TTDateTimeParameter>(TFieldType.ftDateTime);
+  AInstance.RegisterParameterClass<TTDateTimeParameter>(TFieldType.ftTimeStamp);
+end;
+
+class procedure TTParameterRegister.RegisterOtherParameterClasses(
+  const AInstance: TTParameterFactory);
+begin
+  // TTBooleanParameter
+  AInstance.RegisterParameterClass<TTBooleanParameter>(TFieldType.ftBoolean);
 
   // TTGuidParameter
-  LInstance.RegisterParameterClass<TTGuidParameter>(TFieldType.ftGuid);
+  AInstance.RegisterParameterClass<TTGuidParameter>(TFieldType.ftGuid);
 
   // TTBlobParameter
-  LInstance.RegisterParameterClass<TTBlobParameter>(TFieldType.ftBlob);
+  AInstance.RegisterParameterClass<TTBlobParameter>(TFieldType.ftBlob);
+  AInstance.RegisterParameterClass<TTBlobParameter>(TFieldType.ftOraBlob);
+end;
+
+class procedure TTParameterRegister.RegisterParameterClasses;
+begin
+  RegisterStringParameterClasses(TTParameterFactory.Instance);
+  RegisterIntegerParameterClasses(TTParameterFactory.Instance);
+  RegisterDoubleParameterClasses(TTParameterFactory.Instance);
+  RegisterDateTimeParameterClasses(TTParameterFactory.Instance);
+  RegisterOtherParameterClasses(TTParameterFactory.Instance);
 end;
 
 end.

@@ -75,6 +75,9 @@ type
     FAliasName: String;
     FDisplayName: String;
     FValidations: TTValidationsMap;
+    FIsGuid: Boolean;
+    FIsInteger: Boolean;
+    FIsInt64: Boolean;
 
     function GetLookupName: String;
     function GetValidationColumnName: String;
@@ -96,6 +99,8 @@ type
 
     destructor Destroy; override;
 
+    procedure AfterConstruction; override;
+
     procedure Validate(
       const AEntity: TObject;
       const AErrors: TTValidationErrors);
@@ -105,6 +110,9 @@ type
     property TableName: String read FTableName;
     property AliasName: String read FAliasName write FAliasName;
     property LookupName: String read GetLookupName;
+    property IsGuid: Boolean read FIsGuid;
+    property IsInteger: Boolean read FIsInteger;
+    property IsInt64: Boolean read FIsInt64;
   end;
 
 { TTChangeTrackingMap }
@@ -588,6 +596,20 @@ begin
   FValidations.Free;
   FMember.Free;
   inherited Destroy;
+end;
+
+procedure TTColumnMap.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  FIsGuid := Assigned(FMember) and (
+    TTRtti.IsSameType(TypeInfo(TGuid), FMember.RttiType) or
+    TTRtti.IsSameType(TypeInfo(TTNullable<TGuid>), FMember.RttiType));
+  FIsInteger := Assigned(FMember) and (
+    TTRtti.IsSameType(TypeInfo(Integer), FMember.RttiType) or
+    TTRtti.IsSameType(TypeInfo(TTNullable<Integer>), FMember.RttiType));
+  FIsInt64 := Assigned(FMember) and (
+    TTRtti.IsSameType(TypeInfo(Int64), FMember.RttiType) or
+    TTRtti.IsSameType(TypeInfo(TTNullable<Int64>), FMember.RttiType));
 end;
 
 procedure TTColumnMap.SearchValidations(const ARttiMember: TRttiMember);

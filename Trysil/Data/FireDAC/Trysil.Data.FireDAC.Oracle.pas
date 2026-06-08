@@ -17,6 +17,9 @@ uses
   System.SysUtils,
   FireDAC.Phys,
   FireDAC.Phys.Oracle,
+  FireDAC.Stan.Intf,
+  FireDAC.Stan.Option,
+  FireDAC.Comp.Client,
 
   Trysil.Data.FireDAC.ConnectionPool,
   Trysil.Data.FireDAC,
@@ -47,8 +50,16 @@ type
     class constructor ClassCreate;
     class destructor ClassDestroy;
   strict protected
+    procedure AddIntegerMapRule(
+      const AConnection: TFDConnection;
+      const ASourceType: TFDDataType;
+      const APrecMin: Integer;
+      const APrecMax: Integer;
+      const ATargetType: TFDDataType);
+
     function CreateSyntaxClasses: TTSyntaxClasses; override;
     function GetDatabaseVersion: String; override;
+    procedure ConfigureConnection(const AConnection: TFDConnection); override;
 
     class function GetDriver: String; override;
     class procedure InternalRegisterConnection(
@@ -113,6 +124,36 @@ end;
 function TTOracleConnection.CreateSyntaxClasses: TTSyntaxClasses;
 begin
   result := TTOracleSyntaxClasses.Create;
+end;
+
+procedure TTOracleConnection.AddIntegerMapRule(
+  const AConnection: TFDConnection;
+  const ASourceType: TFDDataType;
+  const APrecMin: Integer;
+  const APrecMax: Integer;
+  const ATargetType: TFDDataType);
+var
+  LRule: TFDMapRule;
+begin
+  LRule := AConnection.FormatOptions.MapRules.Add;
+  LRule.SourceDataType := ASourceType;
+  LRule.ScaleMin := 0;
+  LRule.ScaleMax := 0;
+  LRule.PrecMin := APrecMin;
+  LRule.PrecMax := APrecMax;
+  LRule.TargetDataType := ATargetType;
+end;
+
+procedure TTOracleConnection.ConfigureConnection(
+  const AConnection: TFDConnection);
+begin
+  inherited ConfigureConnection(AConnection);
+
+  AConnection.FormatOptions.OwnMapRules := True;
+  AddIntegerMapRule(AConnection, dtFmtBCD, 1, 9, dtInt32);
+  AddIntegerMapRule(AConnection, dtFmtBCD, 10, 19, dtInt64);
+  AddIntegerMapRule(AConnection, dtBCD, 1, 9, dtInt32);
+  AddIntegerMapRule(AConnection, dtBCD, 10, 19, dtInt64);
 end;
 
 function TTOracleConnection.GetDatabaseVersion: String;

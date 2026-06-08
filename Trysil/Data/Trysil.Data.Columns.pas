@@ -97,6 +97,8 @@ type
 { TTGuidColumn }
 
   TTGuidColumn = class(TTColumn)
+  strict private
+    function FieldToGuid: TGuid;
   strict protected
     function GetValue: TTValue; override;
     function GetNullableValue: TTValue; override;
@@ -268,9 +270,24 @@ end;
 
 { TTGuidColumn }
 
+function TTGuidColumn.FieldToGuid: TGuid;
+var
+  LBytes: TBytes;
+begin
+  if (FField.DataType <> ftGuid) and (FField.Size <= SizeOf(TGuid)) then
+  begin
+    LBytes := FField.AsBytes;
+    FillChar(result, SizeOf(result), 0);
+    if Length(LBytes) >= SizeOf(TGuid) then
+      Move(LBytes[0], result, SizeOf(TGuid));
+  end
+  else
+    result := TGUID.Create(FField.AsString);
+end;
+
 function TTGuidColumn.GetValue: TTValue;
 begin
-  result := TTValue.From<TGuid>(TGUID.Create(FField.AsString));
+  result := TTValue.From<TGuid>(FieldToGuid);
 end;
 
 function TTGuidColumn.GetNullableValue: TTValue;
@@ -280,7 +297,7 @@ begin
   if FField.IsNull then
     LValue := nil
   else
-    LValue := TGUID.Create(FField.AsString);
+    LValue := FieldToGuid;
   result := TTValue.From<TTNullable<TGuid>>(LValue);
 end;
 
@@ -337,10 +354,19 @@ function TTColumnFactory.CreateColumn(
 var
   LClass: TClass;
 begin
-  if not FColumnTypes.TryGetValue(AField.ClassType, LClass) then
-    raise ETException.CreateFmt(
-      TTLanguage.Instance.Translate(SColumnTypeError), [AField.ClassName]);
-  result := TTColumnClass(LClass).Create(AField, AColumnMap);
+  if Assigned(AColumnMap) and AColumnMap.IsGuid then
+    result := TTGuidColumn.Create(AField, AColumnMap)
+  else if Assigned(AColumnMap) and AColumnMap.IsInteger then
+    result := TTIntegerColumn.Create(AField, AColumnMap)
+  else if Assigned(AColumnMap) and AColumnMap.IsInt64 then
+    result := TTLargeIntegerColumn.Create(AField, AColumnMap)
+  else
+  begin
+    if not FColumnTypes.TryGetValue(AField.ClassType, LClass) then
+      raise ETException.CreateFmt(
+        TTLanguage.Instance.Translate(SColumnTypeError), [AField.ClassName]);
+    result := TTColumnClass(LClass).Create(AField, AColumnMap);
+  end;
 end;
 
 { TTColumnRegister }

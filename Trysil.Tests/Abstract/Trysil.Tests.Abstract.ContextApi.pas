@@ -53,6 +53,9 @@ type
 
     [Test]
     procedure GetMetadataReturnsColumns;
+
+    [Test]
+    procedure DatabaseVersionIsNotEmpty;
   end;
 
 implementation
@@ -182,6 +185,14 @@ begin
     'Columns must contain "Name"');
   Assert.IsNotNull(LMetadata.Columns.Find('Email'),
     'Columns must contain "Email"');
+end;
+
+procedure TTAbstractContextApiTests.DatabaseVersionIsNotEmpty;
+var
+  LVersion: String;
+begin
+  LVersion := Connection.DatabaseVersion;
+  Assert.IsFalse(LVersion.IsEmpty, 'Database version must not be empty');
 end;
 
 end.

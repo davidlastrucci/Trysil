@@ -37,6 +37,7 @@ type
   strict protected
     function GetName: String; virtual; abstract;
     function GetSize: Integer; virtual; abstract;
+    function GetDataType: TFieldType; virtual; abstract;
     function GetAsString: String; virtual; abstract;
     procedure SetAsString(const Value: String); virtual; abstract;
     function GetAsInteger: Integer; virtual; abstract;
@@ -57,6 +58,7 @@ type
 
     property Name: String read GetName;
     property Size: Integer read GetSize;
+    property DataType: TFieldType read GetDataType;
     property AsString: String write SetAsString;
     property AsInteger: Integer write SetAsInteger;
     property AsLargeInt: Int64 write SetAsLargeInt;
