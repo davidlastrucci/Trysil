@@ -173,26 +173,15 @@ end;
 procedure TTAbstractContextApiTests.GetMetadataReturnsColumns;
 var
   LMetadata: TTTableMetadata;
-  LColumn: TTColumnMetadata;
-  LFoundName: Boolean;
-  LFoundEmail: Boolean;
 begin
   LMetadata := FContext.GetMetadata<TTestCustomer>();
   Assert.IsFalse(LMetadata.Columns.Empty,
     'Columns must not be empty');
 
-  LFoundName := False;
-  LFoundEmail := False;
-  for LColumn in LMetadata.Columns do
-  begin
-    if LColumn.ColumnName = 'Name' then
-      LFoundName := True;
-    if LColumn.ColumnName = 'Email' then
-      LFoundEmail := True;
-  end;
-
-  Assert.IsTrue(LFoundName, 'Columns must contain "Name"');
-  Assert.IsTrue(LFoundEmail, 'Columns must contain "Email"');
+  Assert.IsNotNull(LMetadata.Columns.Find('Name'),
+    'Columns must contain "Name"');
+  Assert.IsNotNull(LMetadata.Columns.Find('Email'),
+    'Columns must contain "Email"');
 end;
 
 end.

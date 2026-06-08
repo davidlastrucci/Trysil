@@ -15,6 +15,7 @@ interface
 uses
   System.SysUtils,
   System.Classes,
+  System.Generics.Defaults,
   System.Generics.Collections,
 
   Trysil.Sync;
@@ -44,7 +45,8 @@ type
       const AKey: K;
       const AAfterCreate: TTAfterCreateObjectMethod<V>): V; overload;
   public
-    constructor Create;
+    constructor Create; overload;
+    constructor Create(const AComparer: IEqualityComparer<K>); overload;
     destructor Destroy; override;
   end;
 
@@ -54,9 +56,14 @@ implementation
 
 constructor TTCache<K, V>.Create;
 begin
+  Create(nil);
+end;
+
+constructor TTCache<K, V>.Create(const AComparer: IEqualityComparer<K>);
+begin
   inherited Create;
   FLock := TTMultiReadExclusiveWriteLock.Create;
-  FCache := TObjectDictionary<K, V>.Create([doOwnsValues]);
+  FCache := TObjectDictionary<K, V>.Create([doOwnsValues], AComparer);
 end;
 
 destructor TTCache<K, V>.Destroy;
