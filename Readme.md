@@ -22,7 +22,7 @@
 ## Features
 
 - **Attribute-based mapping** — decorate classes with `[TTable]`, `[TColumn]`, `[TPrimaryKey]` and you're done
-- **7 database drivers** — SQLite, PostgreSQL, SQL Server, Firebird, InterBase, MariaDB, Oracle — all through FireDAC
+- **7 database drivers** — Firebird, InterBase, MariaDB, Oracle, PostgreSQL, SQL Server, SQLite — all through FireDAC
 - **Fluent query builder** — type-safe filtering with `TTFilterBuilder<T>`
 - **Lazy loading** — `TTLazy<T>` and `TTLazyList<T>` for related entities
 - **Change tracking & soft delete** — `[TCreatedAt]`, `[TUpdatedAt]`, `[TDeletedAt]` with automatic timestamps and user tracking
@@ -129,13 +129,13 @@ end;
 
 | Database | Driver unit | Notes |
 |---|---|---|
-| SQLite | `Trysil.Data.FireDAC.SQLite` | Community edition; great for development and testing |
-| InterBase | `Trysil.Data.FireDAC.InterBase` | Community edition; generator-based sequences |
-| PostgreSQL | `Trysil.Data.FireDAC.PostgreSQL` | Localhost on Community; remote server requires Enterprise |
 | Firebird | `Trysil.Data.FireDAC.FirebirdSQL` | Localhost/embedded on Community; remote server requires Enterprise |
+| InterBase | `Trysil.Data.FireDAC.InterBase` | Community edition; generator-based sequences |
 | MariaDB | `Trysil.Data.FireDAC.MariaDB` | MariaDB 10.3+ (native sequences), via the FireDAC MySQL driver; localhost on Community, remote requires Enterprise |
-| SQL Server | `Trysil.Data.FireDAC.SqlServer` | Requires Enterprise edition |
 | Oracle | `Trysil.Data.FireDAC.Oracle` | Requires Enterprise edition; EZConnect descriptor `//host:port/service` |
+| PostgreSQL | `Trysil.Data.FireDAC.PostgreSQL` | Localhost on Community; remote server requires Enterprise |
+| SQL Server | `Trysil.Data.FireDAC.SqlServer` | Requires Enterprise edition |
+| SQLite | `Trysil.Data.FireDAC.SQLite` | Community edition; great for development and testing |
 
 FireDAC driver availability follows the [RAD Studio edition matrix](https://www.embarcadero.com/products/rad-studio/firedac): Professional/Community covers local/embedded access (SQLite, InterBase, and localhost-only PostgreSQL/MySQL-MariaDB/Firebird), while full client/server connectivity — and SQL Server and Oracle in any form — requires Enterprise/Architect.
 
