@@ -4,11 +4,11 @@ Projects and applications that use Trysil as their ORM layer.
 
 ---
 
-## [wippo](https://wippo.app)
+## [Wippo](https://wippo.app)
 
-**wippo** is a construction site management software developed by [Gioele Buonadonna](https://www.linkedin.com/in/gioelebuonadonna/). Trysil is part of its technology stack — more details on **wippo** [Technology](https://wippo.app/tecnologia.html) page.
+**Wippo** is a construction site management software developed by [Gioele Buonadonna](https://www.linkedin.com/in/gioelebuonadonna/). Trysil is part of its technology stack — more details on **wippo** [Technology](https://wippo.app/tecnologia.html) page.
 
-*"We use Trysil as our ORM for the **[wippo](https://wippo.app)** construction site management platform. It handles all database interactions, JSON serialization/deserialization for our data models, and powers the HTTP API layer for our REST service — making it central to the entire back-end architecture."*
+*"We use Trysil as our ORM for the **[Wippo](https://wippo.app)** construction site management platform. It handles all database interactions, JSON serialization/deserialization for our data models, and powers the HTTP API layer for our REST service — making it central to the entire back-end architecture."*
 
 ---
 
@@ -19,6 +19,14 @@ Projects and applications that use Trysil as their ORM layer.
 SmartLauncher is [well documented](https://smartlauncher.docs.husx.de/) (in German language). It's translated to English and German (default: English).
 
 *"Trysil is the tool of choice to manage logging and reporting features of SmartLauncher, so no backup is forgotten."*
+
+---
+
+## [OS1 Gravity](https://ositalia.com/os1-gravity/)
+
+[**OS1 Gravity**](https://ositalia.com/os1-gravity/) is the cloud-native ERP by [**OSItalia S.r.l.**](https://ositalia.com) - a cloud, multi-tenant ERP platform: horizontally designed yet fully customizable and verticalizable per industry (manufacturing, retail, healthcare, services), accessible from the browser and natively integrated with the rest of the OSItalia software suite (CRM, predictive analytics, BI).
+
+*"The OS1 Gravity back-end is built in Delphi as a set of REST API services, with Trysil as the ORM layer at its core, handling the attribute-driven entity mapping over our SQL Server schema. It has proven to be a solid, maintainable foundation for a large Delphi codebase."*
 
 ---
 
