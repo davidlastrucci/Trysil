@@ -119,3 +119,5 @@ Trysil includes an optional IDE Expert that integrates with the Delphi IDE.
     ```
 
 2. Register the expert by adding the appropriate registry key under your Delphi installation's `Experts` registry path.
+
+Once registered, the **Trysil** menu offers a visual entity designer, model and DDL generators, a REST API scaffolder, and an **Install AI assistant skills** command — see [AI Assistant Skills](../tooling/ai-skills.md).

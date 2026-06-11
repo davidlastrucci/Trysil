@@ -2,6 +2,12 @@
 
 Notable changes to Trysil, in reverse chronological order.
 
+## Trysil Expert — AI Assistant Skills
+
+- **"Install AI assistant skills" command** (`TTInstallSkillsForm`): new Trysil Expert menu entry that writes LLM instruction files — the `trysil-orm`, `trysil-json`, and `trysil-http` skills — into the active project, teaching AI coding assistants the Trysil API
+- **Multi-assistant support**: select one or more of Claude Code, Cursor, GitHub Copilot, Windsurf, or a generic (`llms.txt`) layout — each is written to that tool's own convention inside the project folder
+- **`TTSkillsInstaller`**: downloads the skills archive from the [`trysil-ai-skills`](https://github.com/davidlastrucci/trysil-ai-skills) repository and copies the selected tool folders into the project, prompting for confirmation before overwriting existing files
+
 ## Database Drivers — InterBase, MariaDB, Oracle
 
 - **InterBase driver** (`Trysil.Data.FireDAC.InterBase`): generator-based sequences (`GEN_ID`), `FIRST/SKIP` pagination — built on `TFDPhysIBDriverLink`

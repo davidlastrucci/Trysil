@@ -33,6 +33,7 @@ uses
   Trysil.Expert.UI.GenerateSQL,
   Trysil.Expert.UI.GenerateModel,
   Trysil.Expert.UI.APIRest,
+  Trysil.Expert.UI.InstallSkills,
   Trysil.Expert.UI.Settings,
   Trysil.Expert.UI.About;
 
@@ -47,6 +48,7 @@ type
     TTEGenerateSQLAction: TAction;
     TTEGenerateModelAction: TAction;
     TTENewAPIRESTAction: TAction;
+    TTEInstallSkillsAction: TAction;
     TTESettingsAction: TAction;
     TTEAboutAction: TAction;
     PopupMenu: TPopupMenu;
@@ -55,10 +57,12 @@ type
     TTEGenerateSQLMenuItem: TMenuItem;
     TTEGenerateModelMenuItem: TMenuItem;
     TTESeparator02MenuItem: TMenuItem;
-    TTENewAPIRestMenuItem: TMenuItem;
+    TTEInstallSkillsMenuItem: TMenuItem;
     TTESeparator03MenuItem: TMenuItem;
-    TTESettingsMenuItem: TMenuItem;
+    TTENewAPIRestMenuItem: TMenuItem;
     TTESeparator04MenuItem: TMenuItem;
+    TTESettingsMenuItem: TMenuItem;
+    TTESeparator05MenuItem: TMenuItem;
     TTEAboutMenuItem: TMenuItem;
     procedure TTEDesignActionUpdate(Sender: TObject);
     procedure TTEDesignActionExecute(Sender: TObject);
@@ -66,6 +70,8 @@ type
     procedure TTEGenerateSQLActionExecute(Sender: TObject);
     procedure TTEGenerateModelActionUpdate(Sender: TObject);
     procedure TTEGenerateModelActionExecute(Sender: TObject);
+    procedure TTEInstallSkillsActionUpdate(Sender: TObject);
+    procedure TTEInstallSkillsActionExecute(Sender: TObject);
     procedure TTENewAPIRESTActionUpdate(Sender: TObject);
     procedure TTENewAPIRESTActionExecute(Sender: TObject);
     procedure TTESettingsActionUpdate(Sender: TObject);
@@ -160,10 +166,12 @@ begin
   AddSubMenuItem(AServices, TTEGenerateSQLAction, TTEGenerateSQLMenuItem);
   AddSubMenuItem(AServices, TTEGenerateModelAction, TTEGenerateModelMenuItem);
   AddSubMenuItem(AServices, nil, TTESeparator02MenuItem);
-  AddSubMenuItem(AServices, TTENewAPIRESTAction, TTENewAPIRestMenuItem);
+  AddSubMenuItem(AServices, TTEInstallSkillsAction, TTEInstallSkillsMenuItem);
   AddSubMenuItem(AServices, nil, TTESeparator03MenuItem);
-  AddSubMenuItem(AServices, TTESettingsAction, TTESettingsMenuItem);
+  AddSubMenuItem(AServices, TTENewAPIRESTAction, TTENewAPIRestMenuItem);
   AddSubMenuItem(AServices, nil, TTESeparator04MenuItem);
+  AddSubMenuItem(AServices, TTESettingsAction, TTESettingsMenuItem);
+  AddSubMenuItem(AServices, nil, TTESeparator05MenuItem);
   AddSubMenuItem(AServices, TTEAboutAction, TTEAboutMenuItem);
 end;
 
@@ -243,6 +251,18 @@ procedure TTActionsMenuDatamodule.TTEGenerateModelActionExecute(Sender: TObject)
 begin
   if TTIOTA.IsActiveProject then
     TTGenerateModel.ShowDialog(ActiveTrysilProject);
+end;
+
+procedure TTActionsMenuDatamodule.TTEInstallSkillsActionUpdate(Sender: TObject);
+begin
+  TTEInstallSkillsAction.Enabled := TTIOTA.IsActiveProject;
+end;
+
+procedure TTActionsMenuDatamodule.TTEInstallSkillsActionExecute(
+  Sender: TObject);
+begin
+  if TTIOTA.IsActiveProject then
+    TTInstallSkillsForm.ShowDialog(ActiveTrysilProject);
 end;
 
 procedure TTActionsMenuDatamodule.TTENewAPIRESTActionUpdate(Sender: TObject);

@@ -34,6 +34,7 @@
 - **Nullable types** — `TTNullable<T>` generic wrapper
 - **Connection pooling** — delegated to FireDAC
 - **Structured logging** — SQL tracing with thread-safe correlation IDs
+- **IDE Expert** — visual entity designer, model & DDL generators, REST scaffolder, and one-click install of AI assistant skills (Claude Code, Cursor, Copilot, Windsurf)
 
 ## Quick Start
 

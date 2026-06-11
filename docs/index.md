@@ -23,7 +23,8 @@ Trysil maps your Delphi classes to database tables using attributes, giving you 
 - **Built-in validation attributes** -- `[TRequired]`, `[TMaxLength]`, `[TMinValue]`, `[TMaxValue]` and more
 - **JSON serialization module** -- `TTJSonContext` for entity-to-JSON and JSON-to-entity conversion
 - **HTTP REST server** -- attribute-based routing, authentication (Basic/Bearer/Digest/JWT), CORS, multi-tenant support
-- **Multi-database support** -- SQLite, SQL Server, PostgreSQL, and Firebird
+- **Multi-database support** -- SQLite, SQL Server, PostgreSQL, Firebird, InterBase, MariaDB, and Oracle
+- **AI assistant skills** -- install ready-made instruction files so AI coding agents (Claude Code, Cursor, Copilot, Windsurf) use the real Trysil API
 - **Connection pooling** -- built-in via FireDAC
 
 ## Why Trysil?

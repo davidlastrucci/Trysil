@@ -3,6 +3,7 @@ inherited TAboutForm: TTAboutForm
   ClientHeight = 463
   ClientWidth = 492
   Color = clWhite
+  StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 508
   ExplicitHeight = 502
   TextHeight = 15
@@ -10,10 +11,9 @@ inherited TAboutForm: TTAboutForm
     Width = 492
     Height = 414
     TabOrder = 1
-    ExplicitLeft = 0
-    ExplicitTop = 0
-    ExplicitWidth = 476
-    ExplicitHeight = 166
+    StyleElements = [seFont, seBorder]
+    ExplicitWidth = 492
+    ExplicitHeight = 414
     object Bevel01: TBevel
       Left = 68
       Top = 76
@@ -137,7 +137,7 @@ inherited TAboutForm: TTAboutForm
       Left = 84
       Top = 107
       Width = 380
-      Height = 45
+      Height = 30
       Caption = 
         'During world war II, ORM was a British operation to establish a ' +
         'reception base centred on Trysil in the eastern part of German-o' +
@@ -147,7 +147,7 @@ inherited TAboutForm: TTAboutForm
     object Trysil02Label: TLabel
       Left = 84
       Top = 142
-      Width = 178
+      Width = 180
       Height = 15
       Caption = 'That'#39's why I called Trysil my ORM!'
     end
@@ -249,8 +249,9 @@ inherited TAboutForm: TTAboutForm
     Top = 414
     Width = 492
     TabOrder = 0
-    ExplicitTop = 166
-    ExplicitWidth = 476
+    StyleElements = [seFont, seBorder]
+    ExplicitTop = 414
+    ExplicitWidth = 492
     object CloseButton: TButton
       Left = 405
       Top = 12
@@ -262,7 +263,6 @@ inherited TAboutForm: TTAboutForm
       Default = True
       ModalResult = 1
       TabOrder = 0
-      ExplicitLeft = 389
     end
   end
 end

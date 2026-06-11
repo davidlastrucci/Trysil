@@ -198,6 +198,7 @@
         <DCCReference Include="Classes\Trysil.Expert.ControllerCreator.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.APIHttpModifier.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.APIRestCreator.pas"/>
+        <DCCReference Include="Classes\Trysil.Expert.SkillsInstaller.pas"/>
         <DCCReference Include="Model\Trysil.Expert.Config.pas"/>
         <DCCReference Include="Model\Trysil.Expert.Model.pas"/>
         <DCCReference Include="Model\Trysil.Expert.Project.pas"/>
@@ -240,6 +241,9 @@
         </DCCReference>
         <DCCReference Include="UI\Trysil.Expert.UI.APIREST.pas">
             <Form>TAPIRestForm</Form>
+        </DCCReference>
+        <DCCReference Include="UI\Trysil.Expert.UI.InstallSkills.pas">
+            <Form>TInstallSkillsForm</Form>
         </DCCReference>
         <DCCReference Include="UI\Trysil.Expert.UI.Settings.pas">
             <Form>TSettingsForm</Form>

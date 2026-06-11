@@ -175,6 +175,7 @@
         </DelphiCompile>
         <DCCReference Include="Classes\Trysil.Expert.Consts.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.Classes.pas"/>
+        <DCCReference Include="Classes\Trysil.Expert.SkillsInstaller.pas"/>
         <DCCReference Include="IOTA\Trysil.Expert.IOTA.Services.pas"/>
         <DCCReference Include="IOTA\Trysil.Expert.IOTA.SourceFile.pas"/>
         <DCCReference Include="IOTA\Trysil.Expert.IOTA.ModuleCreator.pas"/>
@@ -238,6 +239,9 @@
         </DCCReference>
         <DCCReference Include="UI\Trysil.Expert.UI.Settings.pas">
             <Form>TSettingsForm</Form>
+        </DCCReference>
+        <DCCReference Include="UI\Trysil.Expert.UI.InstallSkills.pas">
+            <Form>TInstallSkillsForm</Form>
         </DCCReference>
         <DCCReference Include="UI\Trysil.Expert.UI.About.pas">
             <Form>TAboutForm</Form>

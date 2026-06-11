@@ -26,6 +26,7 @@ uses
   Vcl.StdCtrls,
   Vcl.ExtCtrls,
   Vcl.ComCtrls,
+  Vcl.Imaging.PngImage,
 
   Trysil.Expert.UI.Themed;
 

@@ -30,6 +30,7 @@ uses
   Trysil.Expert.ControllerCreator in 'Classes\Trysil.Expert.ControllerCreator.pas',
   Trysil.Expert.APIHttpModifier in 'Classes\Trysil.Expert.APIHttpModifier.pas',
   Trysil.Expert.APIRestCreator in 'Classes\Trysil.Expert.APIRestCreator.pas',
+  Trysil.Expert.SkillsInstaller in 'Classes\Trysil.Expert.SkillsInstaller.pas',
   Trysil.Expert.Config in 'Model\Trysil.Expert.Config.pas',
   Trysil.Expert.Model in 'Model\Trysil.Expert.Model.pas',
   Trysil.Expert.Project in 'Model\Trysil.Expert.Project.pas',
@@ -47,6 +48,7 @@ uses
   Trysil.Expert.UI.GenerateSQL in 'UI\Trysil.Expert.UI.GenerateSQL.pas' {TGenerateSQL},
   Trysil.Expert.UI.GenerateModel in 'UI\Trysil.Expert.UI.GenerateModel.pas' {TGenerateModel},
   Trysil.Expert.UI.APIREST in 'UI\Trysil.Expert.UI.APIREST.pas' {TAPIRestForm},
+  Trysil.Expert.UI.InstallSkills in 'UI\Trysil.Expert.UI.InstallSkills.pas' {TInstallSkillsForm},
   Trysil.Expert.UI.Settings in 'UI\Trysil.Expert.UI.Settings.pas' {TSettingsForm},
   Trysil.Expert.UI.About in 'UI\Trysil.Expert.UI.About.pas' {TAboutForm};
 
