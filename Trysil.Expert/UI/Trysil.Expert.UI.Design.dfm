@@ -2,6 +2,7 @@ inherited TDesignForm: TTDesignForm
   ClientHeight = 651
   ClientWidth = 1044
   Color = clWhite
+  StyleElements = [seFont, seClient, seBorder]
   OnDblClick = EditEntity
   OnShow = FormShow
   ExplicitWidth = 1060
@@ -10,8 +11,7 @@ inherited TDesignForm: TTDesignForm
   inherited ContentPanel: TPanel
     Width = 1044
     Height = 602
-    ExplicitLeft = 0
-    ExplicitTop = 0
+    StyleElements = [seFont, seBorder]
     ExplicitWidth = 1044
     ExplicitHeight = 602
     object ListViewPanel: TPanel
@@ -266,6 +266,7 @@ inherited TDesignForm: TTDesignForm
   inherited ButtonsPanel: TPanel
     Top = 602
     Width = 1044
+    StyleElements = [seFont, seBorder]
     ExplicitTop = 602
     ExplicitWidth = 1044
     object SaveButton: TButton

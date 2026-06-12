@@ -18,6 +18,8 @@ uses
   System.SysUtils,
   System.Variants,
   System.Classes,
+  System.Actions,
+  System.ImageList,
   Vcl.Graphics,
   Vcl.Controls,
   Vcl.Forms,
@@ -26,6 +28,9 @@ uses
   Vcl.ExtCtrls,
   Vcl.ComCtrls,
   Vcl.Buttons,
+  Vcl.ActnList,
+  Vcl.ImgList,
+  Vcl.Imaging.PngImage,
   Vcl.AppEvnts,
 
   Trysil.Expert.Consts,
@@ -39,15 +44,13 @@ uses
   Trysil.Expert.UI.DesignColumn,
   Trysil.Expert.UI.DesignColumn.DataTypeColumn,
   Trysil.Expert.UI.DesignColumn.EntityTypeColumn,
-  Trysil.Expert.UI.DesignColumn.EntityListTypeColumn, System.Actions,
-  Vcl.ActnList, System.ImageList, Vcl.ImgList;
+  Trysil.Expert.UI.DesignColumn.EntityListTypeColumn;
 
 type
 
 { TTDesignForm }
 
   TTDesignForm = class(TTThemedForm)
-    ImageList: TImageList;
     ActionList: TActionList;
     AddNewEntityAction: TAction;
     EditEntityAction: TAction;

@@ -1,16 +1,16 @@
 inherited TInstallSkillsForm: TTInstallSkillsForm
   Caption = 'Install AI assistant skills'
-  ClientHeight = 397
+  ClientHeight = 390
   ClientWidth = 555
   Color = clWhite
   StyleElements = [seFont, seClient, seBorder]
   OnShow = FormShow
   ExplicitWidth = 571
-  ExplicitHeight = 436
+  ExplicitHeight = 429
   TextHeight = 15
   inherited ContentPanel: TPanel
     Width = 555
-    Height = 348
+    Height = 341
     StyleElements = [seFont, seBorder]
     ExplicitWidth = 555
     ExplicitHeight = 348
@@ -28,13 +28,13 @@ inherited TInstallSkillsForm: TTInstallSkillsForm
     object DownloadFromLabel: TLabel
       Left = 72
       Top = 304
-      Width = 168
+      Width = 165
       Height = 15
-      Caption = 'The skills are downloaded from:'
+      Caption = 'The skills are downloaded from'
     end
     object RepositoryLabel: TLabel
-      Left = 72
-      Top = 318
+      Left = 240
+      Top = 304
       Width = 254
       Height = 15
       Cursor = crHandPoint
@@ -72,7 +72,7 @@ inherited TInstallSkillsForm: TTInstallSkillsForm
     end
   end
   inherited ButtonsPanel: TPanel
-    Top = 348
+    Top = 341
     Width = 555
     StyleElements = [seFont, seBorder]
     ExplicitTop = 348
