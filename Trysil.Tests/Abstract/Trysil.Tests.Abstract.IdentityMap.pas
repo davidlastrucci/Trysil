@@ -40,6 +40,9 @@ type
 
     [Test]
     procedure WithoutIdentityMapGetReturnsDifferentInstances;
+
+    [Test]
+    procedure TwoUnsavedCreateEntityDoNotLeak;
   end;
 
 implementation
@@ -108,6 +111,22 @@ begin
   finally
     LSecondContext.Free;
   end;
+end;
+
+procedure TTAbstractIdentityMapTests.TwoUnsavedCreateEntityDoNotLeak;
+var
+  LFirst: TTestCustomer;
+  LSecond: TTestCustomer;
+begin
+  LFirst := FContext.CreateEntity<TTestCustomer>();
+  Assert.IsNotNull(LFirst,
+    'First CreateEntity must return an instance');
+
+  LSecond := FContext.CreateEntity<TTestCustomer>();
+  Assert.IsNotNull(LSecond,
+    'Second CreateEntity must return an instance');
+  Assert.IsTrue(LSecond.ID > 0,
+    'Second created entity must have a valid primary key');
 end;
 
 procedure TTAbstractIdentityMapTests.WithoutIdentityMapGetReturnsDifferentInstances;

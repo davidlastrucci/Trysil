@@ -67,7 +67,10 @@ type
     procedure DifferentPrimaryKeysReturnDifferentInstances;
 
     [Test]
-    procedure AddWithDuplicateKeyDoesNotReplace;
+    procedure AddWithDuplicateKeyReplacesAndFreesPrevious;
+
+    [Test]
+    procedure AddSameInstanceTwiceDoesNotFree;
 
     [Test]
     procedure DifferentEntityTypesDoNotCollideOnSameKey;
@@ -165,7 +168,7 @@ begin
   end;
 end;
 
-procedure TTIdentityMapTests.AddWithDuplicateKeyDoesNotReplace;
+procedure TTIdentityMapTests.AddWithDuplicateKeyReplacesAndFreesPrevious;
 var
   LMap: TTIdentityMap;
   LFirst: TTestEntityA;
@@ -175,13 +178,30 @@ begin
   try
     LFirst := TTestEntityA.Create(10);
     LSecond := TTestEntityA.Create(20);
-    try
-      LMap.AddEntity<TTestEntityA>(1, LFirst);
-      LMap.AddEntity<TTestEntityA>(1, LSecond);
-      Assert.AreSame(LFirst, LMap.GetEntity<TTestEntityA>(1));
-    finally
-      LSecond.Free;
-    end;
+    LMap.AddEntity<TTestEntityA>(1, LFirst);
+    LMap.AddEntity<TTestEntityA>(1, LSecond);
+    Assert.AreSame(LSecond, LMap.GetEntity<TTestEntityA>(1),
+      'A colliding key must replace the previous instance');
+    Assert.AreEqual(Integer(1), TTestEntityA.DestroyCount,
+      'The replaced instance must be freed by the identity map');
+  finally
+    LMap.Free;
+  end;
+end;
+
+procedure TTIdentityMapTests.AddSameInstanceTwiceDoesNotFree;
+var
+  LMap: TTIdentityMap;
+  LEntity: TTestEntityA;
+begin
+  LMap := TTIdentityMap.Create;
+  try
+    LEntity := TTestEntityA.Create(42);
+    LMap.AddEntity<TTestEntityA>(1, LEntity);
+    LMap.AddEntity<TTestEntityA>(1, LEntity);
+    Assert.AreSame(LEntity, LMap.GetEntity<TTestEntityA>(1));
+    Assert.AreEqual(Integer(0), TTestEntityA.DestroyCount,
+      'Re-adding the same instance must not free it');
   finally
     LMap.Free;
   end;

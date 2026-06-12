@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright © David Lastrucci
+  Copyright ï¿½ David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -73,8 +73,18 @@ end;
 
 procedure TTEntityIdentityMap.Add(
   const APrimaryKey: TTPrimaryKey; const AEntity: TObject);
+var
+  LEntity: TObject;
 begin
-  if not FCache.ContainsKey(APrimaryKey) then
+  if FCache.TryGetValue(APrimaryKey, LEntity) then
+  begin
+    if LEntity <> AEntity then
+    begin
+      FCache.Remove(APrimaryKey);
+      FCache.Add(APrimaryKey, AEntity);
+    end;
+  end
+  else
     FCache.Add(APrimaryKey, AEntity);
 end;
 
