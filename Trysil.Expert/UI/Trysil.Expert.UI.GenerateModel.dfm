@@ -1,16 +1,16 @@
 inherited TGenerateModel: TTGenerateModel
-  ClientHeight = 414
+  ClientHeight = 435
   ClientWidth = 555
   Color = clWhite
+  StyleElements = [seFont, seClient, seBorder]
   OnShow = FormShow
   ExplicitWidth = 571
-  ExplicitHeight = 453
+  ExplicitHeight = 474
   TextHeight = 15
   inherited ContentPanel: TPanel
     Width = 555
-    Height = 365
-    ExplicitLeft = 0
-    ExplicitTop = 0
+    Height = 386
+    StyleElements = [seFont, seBorder]
     ExplicitWidth = 555
     ExplicitHeight = 365
     object EntitiesLabel: TLabel
@@ -65,16 +65,25 @@ inherited TGenerateModel: TTGenerateModel
     end
     object APIControllersCheckbox: TCheckBox
       Left = 72
-      Top = 335
+      Top = 355
       Width = 237
       Height = 17
       Caption = 'Generate && register API REST controllers'
+      TabOrder = 4
+    end
+    object FilterPropertiesCheckbox: TCheckBox
+      Left = 72
+      Top = 335
+      Width = 227
+      Height = 17
+      Caption = 'Generate filter properties companion'
       TabOrder = 3
     end
   end
   inherited ButtonsPanel: TPanel
-    Top = 365
+    Top = 386
     Width = 555
+    StyleElements = [seFont, seBorder]
     ExplicitTop = 365
     ExplicitWidth = 555
     object CancelButton: TButton

@@ -368,7 +368,9 @@ begin
     TTDataType.dtMemo:
       result := 'String';
 
-    TTDataType.dtSmallint,
+    TTDataType.dtSmallint:
+      result := 'Smallint';
+
     TTDataType.dtInteger:
       result := 'Integer';
 

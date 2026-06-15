@@ -162,6 +162,7 @@
         <DCCReference Include="..\..\Trysil\Trysil.Events.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Exceptions.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Factory.pas"/>
+        <DCCReference Include="..\..\Trysil\Trysil.Filter.Expression.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Filter.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.Generics.Collections.pas"/>
         <DCCReference Include="..\..\Trysil\Trysil.IdentityMap.pas"/>

@@ -24,6 +24,7 @@ uses
   Trysil.Mapping,
   Trysil.Metadata,
   Trysil.Filter,
+  Trysil.Filter.Expression,
   Trysil.Exceptions;
 
 type
@@ -120,6 +121,39 @@ type
 
     [Test]
     procedure UnknownColumnOnWhereRaisesETException;
+
+    [Test]
+    procedure ExpressionEqualBuildsExpectedWhere;
+
+    [Test]
+    procedure ExpressionGroupedOrAndKeepsParentheses;
+
+    [Test]
+    procedure ExpressionMixedWithFluentRenumbersParameters;
+
+    [Test]
+    procedure ExpressionNotWrapsGroupWithNot;
+
+    [Test]
+    procedure ExpressionBetweenEmitsTwoParameters;
+
+    [Test]
+    procedure ExpressionInValuesEmitsParameterList;
+
+    [Test]
+    procedure ExpressionIsNullEmitsIsNullWithoutParameter;
+
+    [Test]
+    procedure OrderByDescPropertySetsOrderByWithDescSuffix;
+
+    [Test]
+    procedure ExpressionUnknownColumnRaisesETException;
+
+    [Test]
+    procedure AliasedPropertyQualifiesWhereAndParameter;
+
+    [Test]
+    procedure OrderByDescAliasedPropertyQualifiesColumn;
   end;
 
 implementation
@@ -392,6 +426,206 @@ begin
         LRaised := True;
     end;
     Assert.IsTrue(LRaised, 'Expected ETException on unknown column');
+  finally
+    LBuilder.Free;
+  end;
+end;
+
+procedure TTFilterBuilderTests.ExpressionEqualBuildsExpectedWhere;
+var
+  LCode: TTProperty;
+  LBuilder: TTFilterBuilder<TTestFilterItem>;
+  LFilter: TTFilter;
+begin
+  LCode := TTProperty.Create('Code');
+  LBuilder := NewBuilder;
+  try
+    LBuilder.Where(LCode = 'X01');
+    LFilter := LBuilder.Build;
+    Assert.AreEqual('Code = :p0', LFilter.Where);
+    Assert.AreEqual<Integer>(1, Length(LFilter.Parameters));
+    Assert.AreEqual('X01', LFilter.Parameters[0].Value.AsString);
+  finally
+    LBuilder.Free;
+  end;
+end;
+
+procedure TTFilterBuilderTests.ExpressionGroupedOrAndKeepsParentheses;
+var
+  LCode: TTProperty;
+  LQuantity: TTProperty;
+  LBuilder: TTFilterBuilder<TTestFilterItem>;
+  LFilter: TTFilter;
+begin
+  LCode := TTProperty.Create('Code');
+  LQuantity := TTProperty.Create('Quantity');
+  LBuilder := NewBuilder;
+  try
+    LBuilder
+      .Where((LCode = 'A') or (LCode = 'B'))
+      .AndWhere(LQuantity >= 18);
+    LFilter := LBuilder.Build;
+    Assert.AreEqual(
+      '(Code = :p0 OR Code = :p1) AND Quantity >= :p2', LFilter.Where);
+    Assert.AreEqual<Integer>(3, Length(LFilter.Parameters));
+  finally
+    LBuilder.Free;
+  end;
+end;
+
+procedure TTFilterBuilderTests.ExpressionMixedWithFluentRenumbersParameters;
+var
+  LQuantity: TTProperty;
+  LBuilder: TTFilterBuilder<TTestFilterItem>;
+  LFilter: TTFilter;
+begin
+  LQuantity := TTProperty.Create('Quantity');
+  LBuilder := NewBuilder;
+  try
+    LBuilder.Where('Code').Equal('A');
+    LBuilder.AndWhere(LQuantity > 5);
+    LFilter := LBuilder.Build;
+    Assert.AreEqual('Code = :p0 AND Quantity > :p1', LFilter.Where);
+    Assert.AreEqual<Integer>(2, Length(LFilter.Parameters));
+  finally
+    LBuilder.Free;
+  end;
+end;
+
+procedure TTFilterBuilderTests.ExpressionNotWrapsGroupWithNot;
+var
+  LCode: TTProperty;
+  LBuilder: TTFilterBuilder<TTestFilterItem>;
+  LFilter: TTFilter;
+begin
+  LCode := TTProperty.Create('Code');
+  LBuilder := NewBuilder;
+  try
+    LBuilder.Where(not ((LCode = 'A') or (LCode = 'B')));
+    LFilter := LBuilder.Build;
+    Assert.AreEqual('NOT ((Code = :p0 OR Code = :p1))', LFilter.Where);
+  finally
+    LBuilder.Free;
+  end;
+end;
+
+procedure TTFilterBuilderTests.ExpressionBetweenEmitsTwoParameters;
+var
+  LQuantity: TTProperty;
+  LBuilder: TTFilterBuilder<TTestFilterItem>;
+  LFilter: TTFilter;
+begin
+  LQuantity := TTProperty.Create('Quantity');
+  LBuilder := NewBuilder;
+  try
+    LBuilder.Where(LQuantity.Between(1, 10));
+    LFilter := LBuilder.Build;
+    Assert.AreEqual('Quantity BETWEEN :p0 AND :p1', LFilter.Where);
+    Assert.AreEqual<Integer>(2, Length(LFilter.Parameters));
+  finally
+    LBuilder.Free;
+  end;
+end;
+
+procedure TTFilterBuilderTests.ExpressionInValuesEmitsParameterList;
+var
+  LCode: TTProperty;
+  LBuilder: TTFilterBuilder<TTestFilterItem>;
+  LFilter: TTFilter;
+begin
+  LCode := TTProperty.Create('Code');
+  LBuilder := NewBuilder;
+  try
+    LBuilder.Where(LCode.InValues(['A', 'B', 'C']));
+    LFilter := LBuilder.Build;
+    Assert.AreEqual('Code IN (:p0, :p1, :p2)', LFilter.Where);
+    Assert.AreEqual<Integer>(3, Length(LFilter.Parameters));
+  finally
+    LBuilder.Free;
+  end;
+end;
+
+procedure TTFilterBuilderTests.ExpressionIsNullEmitsIsNullWithoutParameter;
+var
+  LCode: TTProperty;
+  LBuilder: TTFilterBuilder<TTestFilterItem>;
+  LFilter: TTFilter;
+begin
+  LCode := TTProperty.Create('Code');
+  LBuilder := NewBuilder;
+  try
+    LBuilder.Where(LCode.IsNull);
+    LFilter := LBuilder.Build;
+    Assert.AreEqual('Code IS NULL', LFilter.Where);
+    Assert.AreEqual<Integer>(0, Length(LFilter.Parameters));
+  finally
+    LBuilder.Free;
+  end;
+end;
+
+procedure TTFilterBuilderTests.OrderByDescPropertySetsOrderByWithDescSuffix;
+var
+  LCode: TTProperty;
+  LBuilder: TTFilterBuilder<TTestFilterItem>;
+  LFilter: TTFilter;
+begin
+  LCode := TTProperty.Create('Code');
+  LBuilder := NewBuilder;
+  try
+    LBuilder.OrderByDesc(LCode);
+    LFilter := LBuilder.Build;
+    Assert.AreEqual('Code DESC', LFilter.Paging.OrderBy);
+  finally
+    LBuilder.Free;
+  end;
+end;
+
+procedure TTFilterBuilderTests.ExpressionUnknownColumnRaisesETException;
+var
+  LUnknown: TTProperty;
+  LBuilder: TTFilterBuilder<TTestFilterItem>;
+  LRaised: Boolean;
+begin
+  LUnknown := TTProperty.Create('DoesNotExist');
+  LBuilder := NewBuilder;
+  try
+    LRaised := False;
+    try
+      LBuilder.Where(LUnknown = 'x');
+    except
+      on E: ETException do
+        LRaised := True;
+    end;
+    Assert.IsTrue(LRaised, 'Expected ETException on unknown column');
+  finally
+    LBuilder.Free;
+  end;
+end;
+
+procedure TTFilterBuilderTests.AliasedPropertyQualifiesWhereAndParameter;
+var
+  LProperty: TTProperty;
+  LExpression: TTExpression;
+begin
+  LProperty := TTProperty.Create('Customers', 'Name');
+  LExpression := LProperty = 'Acme';
+  Assert.AreEqual('Customers.Name = ?', LExpression.Sql);
+  Assert.AreEqual<Integer>(1, Length(LExpression.Params));
+  Assert.AreEqual('Customers_Name', LExpression.Params[0].ColumnName);
+end;
+
+procedure TTFilterBuilderTests.OrderByDescAliasedPropertyQualifiesColumn;
+var
+  LProperty: TTProperty;
+  LBuilder: TTFilterBuilder<TTestFilterItem>;
+  LFilter: TTFilter;
+begin
+  LProperty := TTProperty.Create('Customers', 'Name');
+  LBuilder := NewBuilder;
+  try
+    LBuilder.OrderByDesc(LProperty);
+    LFilter := LBuilder.Build;
+    Assert.AreEqual('Customers.Name DESC', LFilter.Paging.OrderBy);
   finally
     LBuilder.Free;
   end;

@@ -2,6 +2,15 @@
 
 Notable changes to Trysil, in reverse chronological order.
 
+## Algebraic Filter Expressions
+
+- **Expression filter API** (`Trysil.Filter.Expression.pas`): `TTProperty` and `TTExpression` records add operator-overloaded WHERE building to `TTFilterBuilder<T>`. Combine comparisons with `and` / `or` / `not` to produce correctly **parenthesized** groups — e.g. `((City = 'Roma') or (City = 'Milano')) and (Age >= 18)` — which the flat fluent chain cannot express
+- **`TTProperty` operators & methods**: `=`, `<>`, `>`, `>=`, `<`, `<=`, plus `Like`, `NotLike`, `IsNull`, `IsNotNull`, `Between`, `InValues`
+- **Builder overloads**: `Where` / `AndWhere` / `OrWhere` accept a `TTExpression`; `OrderByAsc` / `OrderByDesc` accept a `TTProperty`. Both forms share one parameter counter, so they mix freely in a single builder
+- **Join entity filtering**: the two-argument `TTProperty.Create(Alias, Column)` qualifies the WHERE reference as `Alias.Column` and validates against the joined column's output alias `Alias_Column` — the first filter form that resolves join aliases
+- **Trysil Expert — companion record generation**: the "Generate entity model" dialog can emit a `T<Entity>Properties` companion record next to each entity (one `TTProperty` per column, primary key included, version column excluded), so column names are checked by the compiler at the call site. Controlled by a checkbox (on by default)
+- **Trysil Expert — Smallint type**: smallint columns now generate a `Smallint` field instead of `Integer`
+
 ## Trysil Expert — AI Assistant Skills
 
 - **"Install AI assistant skills" command** (`TTInstallSkillsForm`): new Trysil Expert menu entry that writes LLM instruction files — the `trysil-orm`, `trysil-json`, and `trysil-http` skills — into the active project, teaching AI coding assistants the Trysil API

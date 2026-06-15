@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright © David Lastrucci
+  Copyright ï¿½ David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -63,6 +63,7 @@ type
     FModelDirectory: String;
     FUnitFilenames: String;
     FControllers: Boolean;
+    FFilterProperties: Boolean;
     FDatabaseType: Integer;
 
     function GetConfigFileName: String;
@@ -76,6 +77,8 @@ type
     property ModelDirectory: String read FModelDirectory write FModelDirectory;
     property UnitFilenames: String read FUnitFilenames write FUnitFilenames;
     property Controllers: Boolean read FControllers write FControllers;
+    property FilterProperties: Boolean
+      read FFilterProperties write FFilterProperties;
     property DatabaseType: Integer read FDatabaseType write FDatabaseType;
   end;
 
@@ -193,6 +196,7 @@ begin
     FModelDirectory := LJSon.GetValue<String>('modelDirectory', TTConfig.Instance.ModelDirectory);
     FUnitFilenames := LJSon.GetValue<String>('unitFilenames', TTConfig.Instance.UnitFilenames);
     FControllers := LJSon.GetValue<Boolean>('controllers', True);
+    FFilterProperties := LJSon.GetValue<Boolean>('filterProperties', True);
     FDatabaseType := LJSon.GetValue<Integer>('databaseType', 0);
   finally
     LJSon.Free;
@@ -204,6 +208,7 @@ begin
   FModelDirectory := TTConfig.Instance.ModelDirectory;
   FUnitFilenames := TTConfig.Instance.UnitFilenames;
   FControllers := True;
+  FFilterProperties := True;
   FDatabaseType := 0;
 end;
 
@@ -216,6 +221,7 @@ begin
     LJSon.AddPair('modelDirectory', FModelDirectory);
     LJSon.AddPair('unitFilenames', FUnitFilenames);
     LJSon.AddPair('controllers', TJSonBool.Create(FControllers));
+    LJSon.AddPair('filterProperties', TJSonBool.Create(FFilterProperties));
     LJSon.AddPair('databaseType', TJSonNumber.Create(FDatabaseType));
 
     TDirectory.CreateDirectory(TPath.GetDirectoryName(FFilename));

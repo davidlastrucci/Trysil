@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright © David Lastrucci
+  Copyright ï¿½ David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -33,7 +33,9 @@ type
     FProjectName: String;
     FUnitNames: String;
     FPascalDirectory: String;
+    FFilterProperties: Boolean;
 
+    function IsFilterColumn(const AColumn: TTAbstractColumn): Boolean;
     procedure AddUses(
       const ASource: TTSourceWriter;
       const AColumns: TEnumerable<TTAbstractColumn>;
@@ -52,6 +54,12 @@ type
     procedure AddGetterAndSetterImplementation(
       const ASource: TTSourceWriter;
       const AEntity: TTEntity);
+    procedure AddFilterProperties(
+      const ASource: TTSourceWriter;
+      const AEntity: TTEntity);
+    procedure AddFilterPropertiesImplementation(
+      const ASource: TTSourceWriter;
+      const AEntity: TTEntity);
 
     procedure CreateModel(
       const AEntity: TTEntity;
@@ -64,7 +72,8 @@ type
     constructor Create(
       const AProjectName: String;
       const AUnitNames: String;
-      const APascalDirectory: String);
+      const APascalDirectory: String;
+      const AFilterProperties: Boolean);
 
     procedure CreateModels(
       const AAll: TTEntities; const ASelected: TList<TTEntity>);
@@ -77,12 +86,21 @@ implementation
 constructor TTModelCreator.Create(
   const AProjectName: String;
   const AUnitNames: String;
-  const APascalDirectory: String);
+  const APascalDirectory: String;
+  const AFilterProperties: Boolean);
 begin
   inherited Create;
   FProjectName := AProjectName;
   FUnitNames := AUnitNames;
   FPascalDirectory := APascalDirectory;
+  FFilterProperties := AFilterProperties;
+end;
+
+function TTModelCreator.IsFilterColumn(
+  const AColumn: TTAbstractColumn): Boolean;
+begin
+  result := (AColumn is TTColumn) and
+    (TTColumn(AColumn).DataType <> TTDataType.dtVersion);
 end;
 
 procedure TTModelCreator.CreateModels(
@@ -126,6 +144,8 @@ begin
     ASource.Append('  System.SysUtils,');
     ASource.Append('  Trysil.Types,');
     ASource.Append('  Trysil.Attributes,');
+    if FFilterProperties then
+      ASource.Append('  Trysil.Filter.Expression,');
 
     if not LLazy then
       ASource.Append('  Trysil.Validation.Attributes;')
@@ -308,6 +328,54 @@ begin
     end;
 end;
 
+procedure TTModelCreator.AddFilterProperties(
+  const ASource: TTSourceWriter;
+  const AEntity: TTEntity);
+var
+  LFirst: Boolean;
+  LColumn: TTAbstractColumn;
+begin
+  ASource.Append('{ T%sProperties }', [AEntity.Name]);
+  ASource.AppendLine;
+  ASource.Append('  T%sProperties = record', [AEntity.Name]);
+  ASource.Append('  public');
+
+  LFirst := True;
+  for LColumn in AEntity.Columns.Columns do
+    if IsFilterColumn(LColumn) then
+    begin
+      LFirst := False;
+      ASource.Append('    %s: TTProperty;', [LColumn.Name]);
+    end;
+
+  if not LFirst then
+    ASource.AppendLine;
+  ASource.Append(
+    '    class function Create: T%sProperties; static;', [AEntity.Name]);
+  ASource.Append('  end;');
+  ASource.AppendLine;
+end;
+
+procedure TTModelCreator.AddFilterPropertiesImplementation(
+  const ASource: TTSourceWriter;
+  const AEntity: TTEntity);
+var
+  LColumn: TTAbstractColumn;
+begin
+  ASource.Append('{ T%sProperties }', [AEntity.Name]);
+  ASource.AppendLine;
+  ASource.Append(
+    'class function T%sProperties.Create: T%sProperties;', [
+    AEntity.Name, AEntity.Name]);
+  ASource.Append('begin');
+  for LColumn in AEntity.Columns.Columns do
+    if IsFilterColumn(LColumn) then
+      ASource.Append('  result.%s := TTProperty.Create(''%s'');', [
+        LColumn.Name, LColumn.ColumnName]);
+  ASource.Append('end;');
+  ASource.AppendLine;
+end;
+
 procedure TTModelCreator.CreateModel(
   const AEntity: TTEntity;
   const AUses: TEnumerable<TTEntity>;
@@ -343,9 +411,13 @@ begin
     AddProperties(LSource, AEntity.Columns.Columns);
     LSource.Append('  end;');
     LSource.AppendLine;
+    if FFilterProperties then
+      AddFilterProperties(LSource, AEntity);
     LSource.Append('implementation');
     LSource.AppendLine;
     AddGetterAndSetterImplementation(LSource, AEntity);
+    if FFilterProperties then
+      AddFilterPropertiesImplementation(LSource, AEntity);
     LSource.Append('end.');
 
     CreateUnit(TPath.Combine(FPascalDirectory, LUnitName), LSource);

@@ -104,7 +104,117 @@ LBuilder
 - `AndWhere` adds a condition with AND.
 - `OrWhere` adds a condition with OR.
 
-Conditions are combined in declaration order. The builder does not support explicit grouping with parentheses.
+Conditions are combined in declaration order. The fluent chain does not place parentheses — for grouped conditions like `(A or B) and C`, use the [expression API](#expression-filters-grouping) below.
+
+## Expression Filters (Grouping) {#expression-filters-grouping}
+
+Because SQL binds `AND` tighter than `OR`, a flat `Where`/`OrWhere`/`AndWhere` chain produces the wrong grouping for *"(Admin or Manager) and Active"*:
+
+```pascal
+// WRONG GROUPING — flat chain
+LBuilder
+  .Where('Role').Equal('Admin')
+  .OrWhere('Role').Equal('Manager')
+  .AndWhere('Active').Equal(True);
+// SQL: Role = :p0 OR Role = :p1 AND Active = :p2
+// reads as: Admin OR (Manager AND Active)  -- not what you meant
+```
+
+The **expression API** in `Trysil.Filter.Expression.pas` fixes this. It overloads operators on a `TTProperty` value to build a `TTExpression` that carries its own parentheses, and feeds it to `Where` / `AndWhere` / `OrWhere`.
+
+### Declaring properties
+
+A `TTProperty` wraps a column name:
+
+```pascal
+uses Trysil.Filter.Expression;
+
+var
+  LRole: TTProperty;
+  LActive: TTProperty;
+begin
+  LRole := TTProperty.Create('Role');
+  LActive := TTProperty.Create('Active');
+```
+
+### Building grouped expressions
+
+Combine comparisons with `and`, `or`, `not` — each combinator wraps its operands in parentheses, so the grouping is explicit and correct:
+
+```pascal
+var LFilter := LContext.CreateFilterBuilder<TUser>()
+  .Where((LRole = 'Admin') or (LRole = 'Manager'))
+  .AndWhere(LActive = True)
+  .Build;
+// SQL: (Role = :p0 OR Role = :p1) AND Active = :p2
+```
+
+!!! warning "Parenthesize every comparison"
+    Delphi binds `and` / `or` tighter than the comparison operators, so each comparison must be wrapped in parentheses: write `(LRole = 'Admin') or (LRole = 'Manager')`, never `LRole = 'Admin' or LRole = 'Manager'`.
+
+### Operators and methods on TTProperty
+
+| Expression | SQL |
+|---|---|
+| `LProp = value` | `= :p` |
+| `LProp <> value` | `<> :p` |
+| `LProp > value` | `> :p` |
+| `LProp >= value` | `>= :p` |
+| `LProp < value` | `< :p` |
+| `LProp <= value` | `<= :p` |
+| `LProp.Like(pattern)` | `LIKE :p` |
+| `LProp.NotLike(pattern)` | `NOT LIKE :p` |
+| `LProp.IsNull` | `IS NULL` |
+| `LProp.IsNotNull` | `IS NOT NULL` |
+| `LProp.Between(lo, hi)` | `BETWEEN :p AND :p` |
+| `LProp.InValues([a, b, c])` | `IN (:p, :p, :p)` |
+| `not (expr)` | `NOT (...)` |
+
+### Ordering with a property
+
+`OrderByAsc` and `OrderByDesc` also accept a `TTProperty`:
+
+```pascal
+LBuilder
+  .Where(LActive = True)
+  .OrderByDesc(LRole);
+```
+
+### Mixing with the fluent form
+
+Both forms share the same parameter counter, so you can mix them in one builder without `:pN` collisions:
+
+```pascal
+LBuilder
+  .Where('Lastname').Equal('Smith')                     // fluent -> :p0
+  .AndWhere((LRole = 'Admin') or (LRole = 'Manager'));  // expression -> :p1, :p2
+```
+
+### Generated companion record
+
+Instead of declaring `TTProperty` locals by hand, let the Trysil Expert generate a companion record next to each entity (enabled by default). For `TCustomer` it emits `TCustomerProperties` with one `TTProperty` per column, so column names are checked by the compiler at the call site:
+
+```pascal
+var C := TCustomerProperties.Create;
+LBuilder
+  .Where((C.City = 'Roma') or (C.City = 'Milano'))
+  .AndWhere(C.Age >= 18);
+```
+
+### Join entities
+
+For [join entities](joins.md), use the two-argument `TTProperty.Create(Alias, Column)`. It qualifies the WHERE reference as `Alias.Column` and validates against the joined column's output alias `Alias_Column`:
+
+```pascal
+var LCustomerName := TTProperty.Create('Customers', 'CompanyName');
+
+var LFilter := LContext.CreateFilterBuilder<TOrderReport>()
+  .Where(LCustomerName.Like('Acme%'))
+  .Build;
+// WHERE: Customers.CompanyName LIKE :p0
+```
+
+The alias matches the one in the `[TColumn('Alias', 'Column')]` attribute. For a column that comes from the FROM table, use the FROM table name as the alias (e.g. `TTProperty.Create('Orders', 'ID')`). This is the only filtering form that resolves join aliases — the fluent string form does not (see below).
 
 ## Sorting and Pagination
 
@@ -167,7 +277,17 @@ end;
 
 ## Filtering Join Entities
 
-`TTFilterBuilder<T>` does not resolve join aliases in v1. For filtered queries on [join entities](joins.md), use `TTFilter.Create` with manually qualified column names:
+The **expression API** resolves join aliases via the two-argument `TTProperty.Create(Alias, Column)` — see [Join entities](#join-entities) above. This is the recommended way to filter [join entities](joins.md):
+
+```pascal
+var LCustomerName := TTProperty.Create('Customers', 'CompanyName');
+var LFilter := LContext.CreateFilterBuilder<TOrderReport>()
+  .Where(LCustomerName.Like('Acme%'))
+  .Build;
+LContext.Select<TOrderReport>(LOrders, LFilter);
+```
+
+The fluent **string** form (`.Where('Column')`) does not qualify join aliases. As an alternative, `TTFilter.Create` with a manually written WHERE also works:
 
 ```pascal
 var LFilter := TTFilter.Create('Customers.CompanyName LIKE :Name');

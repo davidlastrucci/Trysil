@@ -46,6 +46,7 @@ contains
   Trysil.Events in '..\..\Trysil\Trysil.Events.pas',
   Trysil.Exceptions in '..\..\Trysil\Trysil.Exceptions.pas',
   Trysil.Factory in '..\..\Trysil\Trysil.Factory.pas',
+  Trysil.Filter.Expression in '..\..\Trysil\Trysil.Filter.Expression.pas',
   Trysil.Filter in '..\..\Trysil\Trysil.Filter.pas',
   Trysil.Generics.Collections in '..\..\Trysil\Trysil.Generics.Collections.pas',
   Trysil.IdentityMap in '..\..\Trysil\Trysil.IdentityMap.pas',

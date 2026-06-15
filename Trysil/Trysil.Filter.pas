@@ -21,7 +21,8 @@ uses
   Trysil.Exceptions,
   Trysil.Metadata,
   Trysil.Generics.Collections,
-  Trysil.Rtti;
+  Trysil.Rtti,
+  Trysil.Filter.Expression;
 
 type
 
@@ -168,6 +169,12 @@ type
     FParamCounter: Integer;
 
     function BuildWhereClause: String;
+    function ReplaceFirstPlaceholder(
+      const ASql: String;
+      const AParamName: String): String;
+    function AddExpression(
+      const AOperator: TTFilterOperator;
+      const AExpression: TTExpression): TTFilterBuilder<T>;
   private
     function NextParamIndex: Integer;
     procedure AppendCondition(
@@ -183,12 +190,23 @@ type
 
     procedure AfterConstruction; override;
 
-    function Where(const AColumnName: String): TTFilterCondition<T>;
-    function AndWhere(const AColumnName: String): TTFilterCondition<T>;
-    function OrWhere(const AColumnName: String): TTFilterCondition<T>;
+    function Where(const AColumnName: String): TTFilterCondition<T>; overload;
+    function AndWhere(const AColumnName: String): TTFilterCondition<T>; overload;
+    function OrWhere(const AColumnName: String): TTFilterCondition<T>; overload;
 
-    function OrderByAsc(const AColumnName: String): TTFilterBuilder<T>;
-    function OrderByDesc(const AColumnName: String): TTFilterBuilder<T>;
+    function Where(const AExpression: TTExpression): TTFilterBuilder<T>; overload;
+    function AndWhere(
+      const AExpression: TTExpression): TTFilterBuilder<T>; overload;
+    function OrWhere(
+      const AExpression: TTExpression): TTFilterBuilder<T>; overload;
+
+    function OrderByAsc(const AColumnName: String): TTFilterBuilder<T>; overload;
+    function OrderByDesc(
+      const AColumnName: String): TTFilterBuilder<T>; overload;
+    function OrderByAsc(
+      const AProperty: TTProperty): TTFilterBuilder<T>; overload;
+    function OrderByDesc(
+      const AProperty: TTProperty): TTFilterBuilder<T>; overload;
     function Limit(const ALimit: Integer): TTFilterBuilder<T>;
     function Offset(const AStart: Integer): TTFilterBuilder<T>;
     function IncludeDeleted: TTFilterBuilder<T>;
@@ -499,6 +517,59 @@ begin
   FConditions.Add(result);
 end;
 
+function TTFilterBuilder<T>.ReplaceFirstPlaceholder(
+  const ASql: String;
+  const AParamName: String): String;
+var
+  LPosition: Integer;
+begin
+  LPosition := Pos('?', ASql);
+  if LPosition = 0 then
+    result := ASql
+  else
+    result := Format('%s:%s%s', [
+      Copy(ASql, 1, LPosition - 1),
+      AParamName,
+      Copy(ASql, LPosition + 1, Length(ASql))]);
+end;
+
+function TTFilterBuilder<T>.AddExpression(
+  const AOperator: TTFilterOperator;
+  const AExpression: TTExpression): TTFilterBuilder<T>;
+var
+  LSql: String;
+  LParamName: String;
+  LParameter: TTExpressionParam;
+begin
+  LSql := AExpression.Sql;
+  for LParameter in AExpression.Params do
+  begin
+    LParamName := Format('p%d', [NextParamIndex]);
+    LSql := ReplaceFirstPlaceholder(LSql, LParamName);
+    AppendParameter(LParameter.ColumnName, LParamName, LParameter.Value);
+  end;
+  AppendCondition(AOperator, LSql);
+  result := Self;
+end;
+
+function TTFilterBuilder<T>.Where(
+  const AExpression: TTExpression): TTFilterBuilder<T>;
+begin
+  result := AddExpression(foAnd, AExpression);
+end;
+
+function TTFilterBuilder<T>.AndWhere(
+  const AExpression: TTExpression): TTFilterBuilder<T>;
+begin
+  result := AddExpression(foAnd, AExpression);
+end;
+
+function TTFilterBuilder<T>.OrWhere(
+  const AExpression: TTExpression): TTFilterBuilder<T>;
+begin
+  result := AddExpression(foOr, AExpression);
+end;
+
 function TTFilterBuilder<T>.OrderByAsc(
   const AColumnName: String): TTFilterBuilder<T>;
 begin
@@ -511,6 +582,18 @@ function TTFilterBuilder<T>.OrderByDesc(
 begin
   FOrderBy := Format('%s DESC', [AColumnName]);
   result := Self;
+end;
+
+function TTFilterBuilder<T>.OrderByAsc(
+  const AProperty: TTProperty): TTFilterBuilder<T>;
+begin
+  result := OrderByAsc(AProperty.SqlReference);
+end;
+
+function TTFilterBuilder<T>.OrderByDesc(
+  const AProperty: TTProperty): TTFilterBuilder<T>;
+begin
+  result := OrderByDesc(AProperty.SqlReference);
 end;
 
 function TTFilterBuilder<T>.Limit(const ALimit: Integer): TTFilterBuilder<T>;

@@ -1,7 +1,7 @@
-(*
+ï»¿(*
 
   Trysil
-  Copyright © David Lastrucci
+  Copyright ï¿½ David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -42,7 +42,7 @@ uses
   Trysil.Expert.Validator,
   Trysil.Expert.ModelCreator,
   Trysil.Expert.ControllerCreator,
-  Trysil.Expert.APIHttpModifier;
+  Trysil.Expert.APIHttpModifier, Vcl.Imaging.pngimage;
 
 type
 
@@ -59,6 +59,7 @@ type
     EntitiesLabel: TLabel;
     EntitiesListView: TListView;
     APIControllersCheckbox: TCheckBox;
+    FilterPropertiesCheckbox: TCheckBox;
     SaveButton: TButton;
     CancelButton: TButton;
     procedure FormShow(Sender: TObject);
@@ -142,6 +143,7 @@ begin
   UnitFilenamesTextbox.Text := FConfig.UnitFilenames;
   APIControllersCheckbox.Checked :=
     APIControllersCheckbox.Enabled and FConfig.Controllers;
+  FilterPropertiesCheckbox.Checked := FConfig.FilterProperties;
 end;
 
 procedure TTGenerateModel.ControlsToConfig;
@@ -150,6 +152,7 @@ begin
   FConfig.UnitFilenames := UnitFilenamesTextbox.Text;
   FConfig.Controllers :=
     APIControllersCheckbox.Enabled and APIControllersCheckbox.Checked;
+  FConfig.FilterProperties := FilterPropertiesCheckbox.Checked;
   FConfig.Save;
 end;
 
@@ -265,7 +268,8 @@ begin
   LCreator := TTModelCreator.Create(
     FProject.Name,
     UnitFilenamesTextbox.Text,
-    TTUtils.ModelFolder(FProject.Directory, ModelDirectoryTextbox.Text));
+    TTUtils.ModelFolder(FProject.Directory, ModelDirectoryTextbox.Text),
+    FilterPropertiesCheckbox.Checked);
   try
     LCreator.CreateModels(FEntities, AEntities);
   finally
