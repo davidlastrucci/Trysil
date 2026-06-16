@@ -244,14 +244,26 @@ end;
 
 function TTAbstractSQLCreator.GetNull(const AColumn: TTAbstractColumn): String;
 var
+  LColumn: TTColumn;
   LRequired: Boolean;
+  LAllowEmpty: Boolean;
 begin
   LRequired := (AColumn is TTColumn) and
     (TTColumn(AColumn).DataType in [TTDataType.dtPrimaryKey, TTDataType.dtVersion]);
   if not LRequired then
     LRequired := AColumn.Required;
+
+  LAllowEmpty := False;
+  if (not LRequired) and (AColumn is TTColumn) then
+  begin
+    LColumn := TTColumn(AColumn);
+    LAllowEmpty := (LColumn.DataType = TTDataType.dtString) and LColumn.AllowEmpty;
+  end;
+
   if LRequired then
     result := 'NOT NULL'
+  else if LAllowEmpty then
+    result := Format('NULL DEFAULT %s', [QuotedStr('')])
   else
     result := 'NULL';
 end;

@@ -1,7 +1,7 @@
-(*
+ï»¿(*
 
   Trysil
-  Copyright © David Lastrucci
+  Copyright ï¿½ David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -45,10 +45,12 @@ type
     DataSizeLabel: TLabel;
     DataSizeTextbox: TEdit;
     RequiredCheckbox: TCheckBox;
+    AllowEmptyCheckbox: TCheckBox;
     SaveButton: TButton;
     CancelButton: TButton;
     procedure NameTextboxChange(Sender: TObject);
     procedure DataTypeComboBoxChange(Sender: TObject);
+    procedure RequiredCheckboxClick(Sender: TObject);
     procedure SaveButtonClick(Sender: TObject);
   strict private
     FEntity: TTEntity;
@@ -57,6 +59,7 @@ type
     FNamePrompter: TTPrompter;
 
     procedure SetSizeEnabled;
+    procedure SetAllowEmptyEnabled;
     procedure ColumnToControls;
     procedure CheckColumn;
     procedure CheckNames;
@@ -114,9 +117,23 @@ begin
     DataSizeTextbox.Text := '0';
 end;
 
+procedure TTDesignDataTypeColumnForm.SetAllowEmptyEnabled;
+begin
+  AllowEmptyCheckbox.Enabled :=
+    (DataTypeComboBox.ItemIndex = 0) and (not RequiredCheckbox.Checked);
+  if not AllowEmptyCheckbox.Enabled then
+    AllowEmptyCheckbox.Checked := False;
+end;
+
 procedure TTDesignDataTypeColumnForm.DataTypeComboBoxChange(Sender: TObject);
 begin
   SetSizeEnabled;
+  SetAllowEmptyEnabled;
+end;
+
+procedure TTDesignDataTypeColumnForm.RequiredCheckboxClick(Sender: TObject);
+begin
+  SetAllowEmptyEnabled;
 end;
 
 procedure TTDesignDataTypeColumnForm.ColumnToControls;
@@ -129,6 +146,8 @@ begin
   SetSizeEnabled;
   DataSizeTextbox.Text := FColumn.Size.ToString();
   RequiredCheckbox.Checked := FColumn.Required;
+  AllowEmptyCheckbox.Checked := FColumn.AllowEmpty;
+  SetAllowEmptyEnabled;
 
   FNamePrompter.Start;
 end;
@@ -169,6 +188,7 @@ begin
   FColumn.DataType := TTDataType(DataTypeComboBox.ItemIndex + 1);
   FColumn.Size := Integer.Parse(DataSizeTextbox.Text);
   FColumn.Required := RequiredCheckbox.Checked;
+  FColumn.AllowEmpty := AllowEmptyCheckbox.Enabled and AllowEmptyCheckbox.Checked;
 end;
 
 procedure TTDesignDataTypeColumnForm.SaveButtonClick(Sender: TObject);

@@ -92,9 +92,11 @@ type
   strict private
     FDataType: TTDataType;
     FSize: Integer;
+    FAllowEmpty: Boolean;
 
     procedure SetDataType(const AValue: TTDataType);
     procedure SetSize(const AValue: Integer);
+    procedure SetAllowEmpty(const AValue: Boolean);
   strict protected
     function GetColumnType: String; override;
   public
@@ -105,6 +107,7 @@ type
 
     property DataType: TTDataType read FDataType write SetDataType;
     property Size: Integer read FSize write SetSize;
+    property AllowEmpty: Boolean read FAllowEmpty write SetAllowEmpty;
   end;
 
 { TTObjectColumn }
@@ -358,6 +361,15 @@ begin
   end;
 end;
 
+procedure TTColumn.SetAllowEmpty(const AValue: Boolean);
+begin
+  if FAllowEmpty <> AValue then
+  begin
+    FAllowEmpty := AValue;
+    NotifyChanged;
+  end;
+end;
+
 function TTColumn.GetColumnType: String;
 begin
   case FDataType of
@@ -400,7 +412,8 @@ begin
   end;
 
   if (not Required) and
-    (not (FDataType in [TTDataType.dtPrimaryKey, TTDataType.dtVersion])) then
+    (not (FDataType in [TTDataType.dtPrimaryKey, TTDataType.dtVersion])) and
+    (not ((FDataType = TTDataType.dtString) and FAllowEmpty)) then
     result := Format('TTNullable<%s>', [result]);
 end;
 
@@ -412,6 +425,7 @@ begin
       TypeInfo(TTDataType),
       Format('dt%s', [AJSon.GetValue<String>('type', String.Empty)])));
   FSize := AJSon.GetValue<Integer>('size', 0);
+  FAllowEmpty := AJSon.GetValue<Boolean>('allowEmpty', false);
 end;
 
 procedure TTColumn.ToJSon(const AJSon: TJSonObject);
@@ -420,6 +434,8 @@ begin
   AJSon.AddPair('type',DataTypeToString);
   if FSize <> 0 then
     AJSon.AddPair('size', TJSonNumber.Create(FSize));
+  if FAllowEmpty then
+    AJSon.AddPair('allowEmpty', TJSonBool.Create(FAllowEmpty));
 end;
 
 { TTObjectColumn }

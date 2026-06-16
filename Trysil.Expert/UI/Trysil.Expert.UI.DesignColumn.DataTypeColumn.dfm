@@ -1,14 +1,14 @@
 inherited TDesignDataTypeColumnForm: TTDesignDataTypeColumnForm
-  ClientHeight = 307
+  ClientHeight = 324
   ClientWidth = 466
   Color = clWhite
   StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 482
-  ExplicitHeight = 346
+  ExplicitHeight = 363
   TextHeight = 15
   inherited ContentPanel: TPanel
     Width = 466
-    Height = 258
+    Height = 275
     StyleElements = [seFont, seBorder]
     ExplicitWidth = 466
     ExplicitHeight = 258
@@ -88,6 +88,15 @@ inherited TDesignDataTypeColumnForm: TTDesignDataTypeColumnForm
       Height = 17
       Caption = 'Required'
       TabOrder = 4
+      OnClick = RequiredCheckboxClick
+    end
+    object AllowEmptyCheckbox: TCheckBox
+      Left = 72
+      Top = 248
+      Width = 89
+      Height = 17
+      Caption = 'Allow empty'
+      TabOrder = 5
     end
     object DataSizeTextbox: TEdit
       Left = 72
@@ -101,7 +110,7 @@ inherited TDesignDataTypeColumnForm: TTDesignDataTypeColumnForm
     end
   end
   inherited ButtonsPanel: TPanel
-    Top = 258
+    Top = 275
     Width = 466
     StyleElements = [seFont, seBorder]
     ExplicitTop = 258
