@@ -1,0 +1,96 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{3BABC716-1370-4982-AEBE-B457FE10983A}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Simple.SQLite\Demo.SQLite.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Simple\Demo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Blob\Blob.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Orders\Orders.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Expressions\Expressions.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="APIRest\API.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="Demo_SQLite">
+        <MSBuild Projects="Simple.SQLite\Demo.SQLite.dproj"/>
+    </Target>
+    <Target Name="Demo_SQLite:Clean">
+        <MSBuild Projects="Simple.SQLite\Demo.SQLite.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Demo_SQLite:Make">
+        <MSBuild Projects="Simple.SQLite\Demo.SQLite.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Demo">
+        <MSBuild Projects="Simple\Demo.dproj"/>
+    </Target>
+    <Target Name="Demo:Clean">
+        <MSBuild Projects="Simple\Demo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Demo:Make">
+        <MSBuild Projects="Simple\Demo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Blob">
+        <MSBuild Projects="Blob\Blob.dproj"/>
+    </Target>
+    <Target Name="Blob:Clean">
+        <MSBuild Projects="Blob\Blob.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Blob:Make">
+        <MSBuild Projects="Blob\Blob.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Orders">
+        <MSBuild Projects="Orders\Orders.dproj"/>
+    </Target>
+    <Target Name="Orders:Clean">
+        <MSBuild Projects="Orders\Orders.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Orders:Make">
+        <MSBuild Projects="Orders\Orders.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Expressions">
+        <MSBuild Projects="Expressions\Expressions.dproj"/>
+    </Target>
+    <Target Name="Expressions:Clean">
+        <MSBuild Projects="Expressions\Expressions.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Expressions:Make">
+        <MSBuild Projects="Expressions\Expressions.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="API">
+        <MSBuild Projects="APIRest\API.dproj"/>
+    </Target>
+    <Target Name="API:Clean">
+        <MSBuild Projects="APIRest\API.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="API:Make">
+        <MSBuild Projects="APIRest\API.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="Demo_SQLite;Demo;Blob;Orders;Expressions;API"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="Demo_SQLite:Clean;Demo:Clean;Blob:Clean;Orders:Clean;Expressions:Clean;API:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="Demo_SQLite:Make;Demo:Make;Blob:Make;Orders:Make;Expressions:Make;API:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
