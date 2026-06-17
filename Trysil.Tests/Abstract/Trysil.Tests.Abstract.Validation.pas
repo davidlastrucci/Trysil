@@ -84,6 +84,9 @@ type
     procedure EmailAcceptsValidAddress;
 
     [Test]
+    procedure EmailAcceptsLongTld;
+
+    [Test]
     procedure EmailRejectsInvalidAddress;
 
     [Test]
@@ -417,6 +420,17 @@ begin
   LItem.Email := 'user@domain.com';
   FContext.Validate<TTestFullValidation>(LItem);
   Assert.Pass;
+end;
+
+procedure TTAbstractValidationTests.EmailAcceptsLongTld;
+var
+  LItem: TTestFullValidation;
+begin
+  LItem := FContext.CreateEntity<TTestFullValidation>();
+  SetValidDefaults(LItem);
+  LItem.Email := 'user@domain.info';
+  FContext.Validate<TTestFullValidation>(LItem);
+  Assert.Pass('EMail must accept a top-level domain longer than 3 letters');
 end;
 
 procedure TTAbstractValidationTests.EmailRejectsInvalidAddress;

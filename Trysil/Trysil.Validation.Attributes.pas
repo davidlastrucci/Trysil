@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright © David Lastrucci
+  Copyright ï¿½ David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -287,7 +287,7 @@ type
 
   TEMailAttribute = class(TRegexAttribute)
   strict private
-    const EmailRegex: string = '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$';
+    const EmailRegex: string = '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,})+$';
   public
     constructor Create; overload;
     constructor Create(const AErrorMessage: String); overload;
