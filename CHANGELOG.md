@@ -2,6 +2,10 @@
 
 Notable changes to Trysil, in reverse chronological order.
 
+## HTTP Filter - Include Deleted
+
+- **`includeDeleted` in the select payload**: `TTHttpFilter<T>` now reads the `includeDeleted` boolean from the select request JSON and propagates it to `TTFilter.IncludeDeleted`, so the REST `select` and `exporttoexcel` endpoints can return soft-deleted rows on demand (defaults to `False`, so existing clients are unaffected)
+
 ## Algebraic Filter Expressions
 
 - **Expression filter API** (`Trysil.Filter.Expression.pas`): `TTProperty` and `TTExpression` records add operator-overloaded WHERE building to `TTFilterBuilder<T>`. Combine comparisons with `and` / `or` / `not` to produce correctly **parenthesized** groups — e.g. `((City = 'Roma') or (City = 'Milano')) and (Age >= 18)` — which the flat fluent chain cannot express

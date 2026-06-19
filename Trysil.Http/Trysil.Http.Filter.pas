@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright © David Lastrucci
+  Copyright ï¿½ David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -268,6 +268,7 @@ var
   LWhere: TTHttpFilterWhereList;
   LStart, LLimit: Integer;
   LOrderBy: TTHttpFilterOrderByList;
+  LIncludeDeleted: Boolean;
 begin
   LTableMetadata := AContext.GetMetadata<T>();
 
@@ -277,9 +278,11 @@ begin
   LLimit := AJSon.GetValue<Integer>('limit', 0);
   LOrderBy := TTHttpFilterOrderByList.Create(
     AJSon.GetValue<TJSonArray>('orderBy', nil), LTableMetadata);
+  LIncludeDeleted := AJSon.GetValue<Boolean>('includeDeleted', False);
 
   FFilter := TTFilter.Create(
     LWhere.ToString, LStart, LLimit, LOrderBy.ToString);
+  FFilter.IncludeDeleted := LIncludeDeleted;
 end;
 
 end.
