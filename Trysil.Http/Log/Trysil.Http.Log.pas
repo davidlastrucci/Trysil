@@ -41,7 +41,7 @@ type
     procedure LogAction(const ATaskID: String; const AAction: String);
     procedure LogRequest(const ARequest: TTHttpRequest);
     procedure LogResponse(
-      const AUser: TTHttpUser; const AResponse: TTHttpResponse);
+      const ARequest: TTHttpRequest; const AResponse: TTHttpResponse);
   end;
 
 implementation
@@ -99,13 +99,13 @@ begin
 end;
 
 procedure TTHttpLog.LogResponse(
-  const AUser: TTHttpUser; const AResponse: TTHttpResponse);
+  const ARequest: TTHttpRequest; const AResponse: TTHttpResponse);
 var
   LLogThread: TTHttpLogThread;
 begin
   LLogThread := FLogThreads.Next;
   if Assigned(LLogThread) then
-    LLogThread.Add(TTHttpLogResponse.Create(AUser, AResponse));
+    LLogThread.Add(TTHttpLogResponse.Create(ARequest, AResponse));
 end;
 
 end.

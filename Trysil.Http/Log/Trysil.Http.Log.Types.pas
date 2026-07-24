@@ -131,6 +131,7 @@ type
   strict private
     FTaskID: TTHttpTaskID;
     FDateTime: TDateTime;
+    FHost: String;
     FUser: TTHttpLogUser;
     FStatusCode: Integer;
     FContentType: String;
@@ -141,12 +142,14 @@ type
 
     function GetBinaryContent(const AResponse: TTHttpResponse): String;
   public
-    constructor Create(const AUser: TTHttpUser; const AResponse: TTHttpResponse);
+    constructor Create(
+      const ARequest: TTHttpRequest; const AResponse: TTHttpResponse);
 
     function ToJSon: String;
 
     property TaskID: TTHttpTaskID read FTaskID;
     property DateTime: TDateTime read FDateTime;
+    property Host: String read FHost;
     property User: TTHttpLogUser read FUser;
     property StatusCode: Integer read FStatusCode;
     property ContentType: String read FContentType;
@@ -359,11 +362,12 @@ end;
 { TTHttpLogResponse }
 
 constructor TTHttpLogResponse.Create(
-  const AUser: TTHttpUser; const AResponse: TTHttpResponse);
+  const ARequest: TTHttpRequest; const AResponse: TTHttpResponse);
 begin
   FTaskID := AResponse.TaskID;
-  FDateTime := TTimeZone.Local.ToUniversalTime(Now);;
-  FUser := TTHttpLogUser.Create(AUser);
+  FDateTime := TTimeZone.Local.ToUniversalTime(Now);
+  FHost := ARequest.Host;
+  FUser := TTHttpLogUser.Create(ARequest.User);
   FStatusCode := AResponse.StatusCode;
   FContentType := AResponse.ContentType;
   FContentEncoding := AResponse.ContentEncoding;

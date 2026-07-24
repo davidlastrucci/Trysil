@@ -367,7 +367,7 @@ begin
         FListener.HandleRequest(LRequest, LResponse);
         SetContentStream(LResponse, AResponseInfo);
 
-        FLog.LogResponse(LRequest.User, LResponse);
+        FLog.LogResponse(LRequest, LResponse);
       finally
         LResponse.Free;
       end;
