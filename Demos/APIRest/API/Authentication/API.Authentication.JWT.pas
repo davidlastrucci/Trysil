@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright © David Lastrucci
+  Copyright ï¿½ David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -19,15 +19,16 @@ uses
   System.JSon,
   System.DateUtils,
   Trysil.Http.Exceptions,
-  Trysil.Http.JWT;
+  Trysil.Http.JWT,
+  Trysil.Http.JWT.Payload.HS256;
 
 type
 
 { TAPIJWTPayload }
 
-  TAPIJWTPayload = class(TTHttpJWTAbstractPayload)
+  TAPIJWTPayload = class(TTHttpJWTHS256Payload)
   strict private
-    const Secret: String ='958o77!9#37c9@447€%b142^557d5382B756';
+    const Secret: String ='958o77!9#37c9@447ï¿½%b142^557d5382B756';
   strict private
     FUsername: String;
     FAreas: TList<String>;

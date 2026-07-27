@@ -18,6 +18,7 @@ uses
 
   Trysil.Http.Classes,
   Trysil.Http.Authentication,
+  Trysil.Http.JWT.Payload,
   Trysil.Http.JWT;
 
 type

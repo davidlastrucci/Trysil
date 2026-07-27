@@ -1,4 +1,4 @@
-﻿(*
+(*
 
   Trysil
   Copyright © David Lastrucci
@@ -13,61 +13,32 @@ unit Trysil.Http.JWT;
 interface
 
 uses
-  System.Classes,
   System.SysUtils,
   System.JSon,
   System.NetEncoding,
-  System.Hash;
+
+  Trysil.Http.JWT.Payload;
 
 type
-
-{ TTHttpJWTHeader }
-
-  TTHttpJWTHeader = class
-  strict protected
-    FAlgorithm: String;
-    FTokenType: String;
-  public
-    procedure AfterConstruction; override;
-
-    function ToJSon: String;
-
-    property Algorithm: String read FAlgorithm;
-    property TokenType: String read FTokenType;
-  end;
-
-{ TTHttpJWTAbstractPayload }
-
-  TTHttpJWTAbstractPayload = class abstract
-  strict protected
-    function GetSecret: String; virtual; abstract;
-  public
-    function ToJSon: String; virtual; abstract;
-    procedure FromJSon(const AContext: String); virtual; abstract;
-
-    property Secret: String read GetSecret;
-  end;
 
 { TTHttpJWTEncoding }
 
   TTHttpJWTEncoding = class
   public
-    class function Encode(const AValue: String): String;
-    class function Decode(const AValue: String): String;
+    class function Encode(const ABytes: TBytes): String;
+    class function Decode(const AValue: String): TBytes;
   end;
 
 { TTHttpJWT<P> }
 
   TTHttpJWT<P: TTHttpJWTAbstractPayload> = class
   strict private
-    FHeader: TTHttpJWTHeader;
     FPayload: P;
 
-    function GetSignature(
-      const AHeader: String; const APayload: String): String;
+    function BuildHeader: String;
+    function CheckAlgorithm(const AHeaderSegment: String): Boolean;
   public
     constructor Create(const APayload: P);
-    destructor Destroy; override;
 
     function ToToken: String;
     function LoadFromToken(const AToken: String): Boolean;
@@ -77,35 +48,12 @@ type
 
 implementation
 
-{ TTHttpJWTHeader }
-
-procedure TTHttpJWTHeader.AfterConstruction;
-begin
-  inherited AfterConstruction;
-  FAlgorithm := 'HS256';
-  FTokenType := 'JWT';
-end;
-
-function TTHttpJWTHeader.ToJSon: String;
-var
-  LJSon: TJSonObject;
-begin
-  LJSon := TJSonObject.Create;
-  try
-    LJSon.AddPair('alg', FAlgorithm);
-    LJSon.AddPair('typ', FTokenType);
-
-    result := LJSon.ToJSon();
-  finally
-    LJSon.Free;
-  end;
-end;
-
 { TTHttpJWTEncoding }
 
-class function TTHttpJWTEncoding.Encode(const AValue: String): String;
+class function TTHttpJWTEncoding.Encode(const ABytes: TBytes): String;
 begin
-  result := AValue.
+  // base64url senza padding
+  result := TNetEncoding.Base64.EncodeBytesToString(ABytes).
     Replace(#13#10, '', [rfReplaceAll]).
     Replace(#13, '', [rfReplaceAll]).
     Replace(#10, '', [rfReplaceAll]).
@@ -114,12 +62,15 @@ begin
     TrimRight(['=']);
 end;
 
-class function TTHttpJWTEncoding.Decode(const AValue: String): String;
+class function TTHttpJWTEncoding.Decode(const AValue: String): TBytes;
+var
+  LValue: String;
 begin
-  result := AValue + StringOfChar('=', (4 - (AValue.Length mod 4)) mod 4);
-  result := result.
+  LValue := AValue.
     Replace('-', '+', [rfReplaceAll]).
     Replace('_', '/', [rfReplaceAll]);
+  LValue := LValue + StringOfChar('=', (4 - (LValue.Length mod 4)) mod 4);
+  result := TNetEncoding.Base64.DecodeStringToBytes(LValue);
 end;
 
 { TTHttpJWT<P> }
@@ -127,64 +78,79 @@ end;
 constructor TTHttpJWT<P>.Create(const APayload: P);
 begin
   inherited Create;
-  FHeader := TTHttpJWTHeader.Create;
   FPayload := APayload;
 end;
 
-destructor TTHttpJWT<P>.Destroy;
-begin
-  FHeader.Free;
-  inherited Destroy;
-end;
-
-function TTHttpJWT<P>.GetSignature(
-  const AHeader: String; const APayload: String): String;
+function TTHttpJWT<P>.BuildHeader: String;
 var
-  LBytes: TBytes;
+  LJSon: TJSonObject;
 begin
-  result := Format('%s.%s', [AHeader, APayload]);
-
-  LBytes := THashSHA2.GetHMACAsBytes(
-    result, FPayload.Secret, THashSHA2.TSHA2Version.SHA256);
-
-  LBytes := TNetEncoding.Base64.Encode(LBytes);
-  result := TTHttpJWTEncoding.Encode(TEncoding.UTF8.GetString(LBytes));
+  LJSon := TJSonObject.Create;
+  try
+    LJSon.AddPair('alg', FPayload.Algorithm);
+    LJSon.AddPair('typ', 'JWT');
+    result := LJSon.ToJSon();
+  finally
+    LJSon.Free;
+  end;
 end;
 
 function TTHttpJWT<P>.ToToken: String;
 var
-  LHeader, LPayload, LSignature: String;
+  LHeaderSeg, LPayloadSeg, LSignatureSeg: String;
+  LSigningInput: TBytes;
 begin
-  LHeader := TTHttpJWTEncoding.Encode(
-    TNetEncoding.Base64.Encode(FHeader.ToJSon()));
-  LPayload := TTHttpJWTEncoding.Encode(
-    TNetEncoding.Base64.Encode(FPayload.ToJSon()));
-  LSignature := GetSignature(LHeader, LPayload);
+  LHeaderSeg := TTHttpJWTEncoding.Encode(
+    TEncoding.UTF8.GetBytes(BuildHeader));
+  LPayloadSeg := TTHttpJWTEncoding.Encode(
+    TEncoding.UTF8.GetBytes(FPayload.ToJSon()));
+  LSigningInput := TEncoding.UTF8.GetBytes(
+    Format('%s.%s', [LHeaderSeg, LPayloadSeg]));
+  LSignatureSeg := TTHttpJWTEncoding.Encode(FPayload.Sign(LSigningInput));
+  result := Format('%s.%s.%s', [LHeaderSeg, LPayloadSeg, LSignatureSeg]);
+end;
 
-  result := Format('%s.%s.%s', [LHeader, LPayload, LSignature]);
+function TTHttpJWT<P>.CheckAlgorithm(const AHeaderSegment: String): Boolean;
+var
+  LJSon: TJSonObject;
+  LAlgorithm: String;
+begin
+  // algorithm pinning: si fissa l'atteso (dal payload), non ci si fida
+  // del campo 'alg' del token -> difesa contro l'alg-confusion attack.
+  result := False;
+  LJSon := TJSonObject.ParseJSonValue(
+    TEncoding.UTF8.GetString(
+      TTHttpJWTEncoding.Decode(AHeaderSegment))) as TJSonObject;
+  if Assigned(LJSon) then
+    try
+      LAlgorithm := LJSon.GetValue<String>('alg', String.Empty);
+      result := (not FPayload.Algorithm.IsEmpty) and
+        SameText(LAlgorithm, FPayload.Algorithm);
+    finally
+      LJSon.Free;
+    end;
 end;
 
 function TTHttpJWT<P>.LoadFromToken(const AToken: String): Boolean;
 var
   LParts: TArray<String>;
-  LSignature, LHeader, LPayload: String;
+  LSigningInput, LSignature: TBytes;
 begin
-  result := True;
-
+  result := False;
   LParts := AToken.Split(['.']);
-  if Length(LParts) <> 3 then
-    Exit(False);
-
-  LSignature := GetSignature(LParts[0], LParts[1]);
-  if not LSignature.Equals(LParts[2]) then
-    Exit(False);
-
-  LHeader := TNetEncoding.Base64.Decode(TTHttpJWTEncoding.Decode(LParts[0]));
-  if not LHeader.Equals(FHeader.ToJSon()) then
-    Exit(False);
-
-  LPayload := TNetEncoding.Base64.Decode(TTHttpJWTEncoding.Decode(LParts[1]));
-  FPayload.FromJSon(LPayload);
+  if Length(LParts) = 3 then
+    if CheckAlgorithm(LParts[0]) then
+    begin
+      LSigningInput := TEncoding.UTF8.GetBytes(
+        Format('%s.%s', [LParts[0], LParts[1]]));
+      LSignature := TTHttpJWTEncoding.Decode(LParts[2]);
+      if FPayload.Verify(LSigningInput, LSignature) then
+      begin
+        FPayload.FromJSon(
+          TEncoding.UTF8.GetString(TTHttpJWTEncoding.Decode(LParts[1])));
+        result := True;
+      end;
+    end;
 end;
 
 end.

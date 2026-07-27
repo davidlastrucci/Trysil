@@ -17,13 +17,14 @@ uses
   System.JSON,
   DUnitX.TestFramework,
 
-  Trysil.Http.JWT;
+  Trysil.Http.JWT,
+  Trysil.Http.JWT.Payload.HS256;
 
 type
 
 { TTestJWTPayload }
 
-  TTestJWTPayload = class(TTHttpJWTAbstractPayload)
+  TTestJWTPayload = class(TTHttpJWTHS256Payload)
   strict private
     FUsername: String;
     FRole: String;
