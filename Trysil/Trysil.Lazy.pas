@@ -144,7 +144,10 @@ begin
     if (not FContext.UseIdentityMap) and Assigned(FEntity) then
       FEntity.Free;
 
-    FEntity := AEntity;
+    if FContext.UseIdentityMap then
+      FEntity := AEntity
+    else
+      FEntity := FContext.CloneEntity<T>(AEntity);
     LTableMap := TTMapper.Instance.Load<T>();
     if Assigned(LTableMap.PrimaryKey) then
     begin
