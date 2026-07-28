@@ -161,7 +161,11 @@ end;
 
 procedure TTHttpServer<C>.Log(const AText: String);
 begin
-  FLog.LogAction(TTHttpTaskID.NewID.ToString, AText);
+  try
+    FLog.LogAction(TTHttpTaskID.NewID.ToString, AText);
+  except
+    // Logging must not break the operation being logged
+  end;
 end;
 
 procedure TTHttpServer<C>.RegisterLogWriter<W>;
