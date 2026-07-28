@@ -98,7 +98,7 @@ end;
 procedure TTMariaDBDriver.AfterConstruction;
 begin
   inherited AfterConstruction;
-  FDriverLink.DriverID := 'Trysil_MariaDB';
+  FDriverLink.DriverID := 'MariaDB';
   FDriverLink.VendorLib := 'libmariadb.dll';
 end;
 

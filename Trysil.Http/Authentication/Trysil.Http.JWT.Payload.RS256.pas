@@ -40,13 +40,13 @@ implementation
 const
 {$IFDEF MSWINDOWS}
   {$IFDEF WIN64}
-  SLibCrypto = 'libcrypto-3-x64.dll';
+  SLibCrypto = 'libcrypto-4-x64.dll';
   {$ELSE}
-  SLibCrypto = 'libcrypto-3.dll';
+  SLibCrypto = 'libcrypto-4.dll';
   {$ENDIF}
 {$ENDIF}
 {$IFDEF LINUX}
-  SLibCrypto = 'libcrypto.so.3';
+  SLibCrypto = 'libcrypto.so.4';
 {$ENDIF}
 
 { OpenSSL libcrypto }
