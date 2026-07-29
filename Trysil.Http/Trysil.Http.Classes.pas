@@ -130,6 +130,9 @@ type
     function GetJSonContent: TJSonValue;
     function GetHeaders: TTHttpHeaders;
     function GetRemoteIP: String;
+    function GetClientIP: String;
+    function FindHeader(const AName: String): String;
+    function StripPort(const AValue: String): String;
 
     function GetContentText: String;
   public
@@ -145,6 +148,7 @@ type
     property JSonContent: TJSonValue read GetJSonContent;
     property Headers: TTHttpHeaders read GetHeaders;
     property RemoteIP: String read GetRemoteIP;
+    property ClientIP: String read GetClientIP;
     property User: TTHttpUser read FUser;
   end;
 
@@ -392,6 +396,60 @@ end;
 function TTHttpRequest.GetRemoteIP: String;
 begin
   result := FRequestInfo.RemoteIP;
+end;
+
+function TTHttpRequest.StripPort(const AValue: String): String;
+var
+  LColon: Integer;
+begin
+  result := AValue.Trim();
+  if result.StartsWith('[') then
+  begin
+    LColon := result.IndexOf(']');
+    if LColon > 0 then
+      result := result.Substring(1, LColon - 1);
+  end
+  else
+  begin
+    LColon := result.IndexOf(':');
+    if (LColon > 0) and (result.IndexOf(':', LColon + 1) < 0) then
+      result := result.Substring(0, LColon);
+  end;
+end;
+
+function TTHttpRequest.FindHeader(const AName: String): String;
+var
+  LIndex: Integer;
+  LHeaders: TTHttpHeaders;
+begin
+  result := String.Empty;
+  LHeaders := GetHeaders;
+  for LIndex := 0 to LHeaders.Count - 1 do
+    if SameText(LHeaders.NameValue[LIndex].Name, AName) then
+      result := LHeaders.NameValue[LIndex].Value.Trim();
+end;
+
+function TTHttpRequest.GetClientIP: String;
+var
+  LForwarded: String;
+  LComma: Integer;
+begin
+  result := GetRemoteIP;
+
+  if result.Equals('127.0.0.1') or result.Equals('::1') then
+  begin
+    LForwarded := FindHeader('X-Forwarded-For');
+    if not LForwarded.IsEmpty then
+    begin
+      LComma := LForwarded.IndexOf(',');
+      if LComma >= 0 then
+        LForwarded := LForwarded.Substring(0, LComma);
+
+      LForwarded := StripPort(LForwarded);
+      if not LForwarded.IsEmpty then
+        result := LForwarded;
+    end;
+  end;
 end;
 
 function TTHttpRequest.GetContentText: String;
