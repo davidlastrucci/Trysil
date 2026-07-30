@@ -24,6 +24,11 @@ type
 { TTHttpJWTAbstractPayload }
 
   TTHttpJWTAbstractPayload = class abstract
+  strict private
+    FTokenKeyID: String;
+
+  strict protected
+    function GetSigningKeyID: String; virtual;
   public
     function Algorithm: String; virtual; abstract;
 
@@ -34,8 +39,18 @@ type
     function Verify(
       const ASigningInput: TBytes;
       const ASignature: TBytes): Boolean; virtual; abstract;
+
+    property SigningKeyID: String read GetSigningKeyID;
+    property TokenKeyID: String read FTokenKeyID write FTokenKeyID;
   end;
 
 implementation
+
+{ TTHttpJWTAbstractPayload }
+
+function TTHttpJWTAbstractPayload.GetSigningKeyID: String;
+begin
+  result := String.Empty;
+end;
 
 end.
