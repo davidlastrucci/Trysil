@@ -36,4 +36,6 @@
 
 ## Delivered
 
+- **JWT RS256 and key rotation** - asymmetric token signing on OpenSSL `libcrypto` (issuer holds the private key, verifiers only the public one) plus the `kid` header, so keys can be rotated without invalidating tokens already issued
+- **Algebraic filter expressions** - `TTProperty` / `TTExpression` with operator overloading, for grouped conditions such as `(A or B) and C` that the fluent chain cannot express
 - **InterBase, MariaDB, Oracle drivers** — three additional FireDAC drivers (MariaDB chosen over MySQL: it has native `CREATE SEQUENCE`, which Trysil's client-assigned primary keys require)

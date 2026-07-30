@@ -233,6 +233,18 @@ LContext.ApplyAll<TPerson>(LInsertList, LUpdateList, LDeleteList);
 
 The three lists are processed in order: inserts first, then updates, then deletes. If any operation fails, the entire transaction is rolled back.
 
+`ApplyAll` starts a transaction only when the write connection does not already have one. Called inside a transaction you opened yourself, it joins it instead of nesting: the whole unit of work stays atomic, and commit or rollback remains the caller's decision.
+
+```pascal
+LTransaction := LContext.CreateTransaction;
+try
+  LContext.ApplyAll<TPerson>(LInsertList, LUpdateList, LDeleteList);
+  LContext.ApplyAll<TOrder>(LOrderInserts, LOrderUpdates, LOrderDeletes);
+finally
+  LTransaction.Free;   // commits, or call Rollback to abort both
+end;
+```
+
 ## Factory Methods
 
 ### CreateEntity

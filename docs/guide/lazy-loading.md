@@ -50,6 +50,7 @@ end;
 
 - The related entity is loaded on the first access to `.Entity`. Subsequent accesses return the cached instance.
 - Setting `.Entity` to a different object updates the internal foreign key ID and frees the previous entity (unless the identity map is active).
+- **Assignment does not transfer ownership.** Without the identity map, `.Entity := AValue` stores a *clone* of the assigned entity: the lazy field owns its copy and the caller keeps owning the instance it passed in, so neither is freed twice. With the identity map active the instance is shared, because the map owns it.
 - When the `ID` property on the lazy field changes, the cached entity is cleared and will be reloaded on next access.
 - **Soft-deleted parents resolve.** The lazy load uses `Get<T>(ID, True)`, so a parent that has been soft-deleted still resolves through its foreign key — a child referencing a logically deleted master is not left with a dangling `nil` reference.
 

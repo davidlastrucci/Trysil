@@ -2,6 +2,32 @@
 
 Notable changes to Trysil, in reverse chronological order.
 
+## JWT - Signing Algorithms & Key Rotation
+
+- **Payload split into algorithm units**: `TTHttpJWTAbstractPayload` (`Trysil.Http.JWT.Payload.pas`) now declares only the signing contract (`Algorithm`, `Sign`, `Verify`, `ToJSon`, `FromJSon`); the actual cryptography lives in `TTHttpJWTHS256Payload` (`Trysil.Http.JWT.Payload.HS256.pas`) and `TTHttpJWTRS256Payload` (`Trysil.Http.JWT.Payload.RS256.pas`)
+- **BREAKING CHANGE**: application payloads must now inherit from `TTHttpJWTHS256Payload` (previous behavior: HMAC-SHA256 with the secret returned by `GetSecret`) or from `TTHttpJWTRS256Payload`, no longer from `TTHttpJWTAbstractPayload`
+- **RS256 (RSA-SHA256)**: asymmetric signing built on OpenSSL `libcrypto`. Override `GetPrivateKey` on the issuer and `GetPublicKey` on the verifier, so a resource server can validate tokens without holding the signing key. Signing without a private key raises `ETHttpJWTException`
+- **`libcrypto` resolved dynamically at first use**: the RS256 unit compiles on every platform and only fails (with `ETHttpJWTException`) when a token is actually signed or verified without OpenSSL present. Candidate library names cover Windows (`libcrypto-4/3/1_1[-x64].dll`), Linux, macOS (including the Homebrew paths) and Android; resolution is guarded by a critical section and the library is intentionally left loaded. HS256 has no external dependency
+- **`kid` header for key rotation**: `TTHttpJWTAbstractPayload.SigningKeyID` (override to emit a `kid` in the header when a token is generated) and `TokenKeyID` (populated from the incoming header *before* verification), so a payload can select the verification key that matches the token
+- **Header is parsed, not compared byte-for-byte**: `LoadFromToken` reads the header JSON and matches `alg` case-insensitively against the payload's own algorithm; a token signed with a different algorithm is rejected, and additional header members such as `kid` no longer invalidate the token
+- **`TTHttpJWTEncoding` works on bytes**: `Encode(TBytes): String` / `Decode(String): TBytes` produce and consume base64url without padding directly, replacing the previous double base64 string round-trip. The `TTHttpJWTHeader` class is gone: the header is built by `TTHttpJWT<P>`
+- **Constant-time HS256 signature comparison**: `TTHttpJWTHS256Payload` compares signatures without early exit, removing the timing side channel of a plain string equality test
+
+## HTTP - Client IP Behind a Proxy
+
+- **`TTHttpRequest.ClientIP`**: returns `RemoteIP` for direct connections. When the connection comes from loopback (`127.*`, `::1`, `0:0:0:0:0:0:0:1`, including `::ffff:`-mapped forms), it takes the **last** `X-Forwarded-For` entry, which is the one written by the trusted local reverse proxy, strips any port, and unwraps bracketed IPv6 literals. Client-supplied entries earlier in the chain are ignored, so the header cannot be spoofed from outside
+- **`TTHttpLogRequest.ClientIP`**: exposed next to `RemoteIP` and emitted in the request log JSON, so logs behind a proxy show the real caller
+
+## Fixes
+
+- **`TTContext.ApplyAll<T>` inside an open transaction**: it no longer opens a second transaction when the write connection already has one. It joins the caller's transaction, and rollback/commit stay with whoever started it
+- **`TTLazy<T>` double free**: assigning an entity to a lazy relation with the identity map disabled now stores a **clone** of that entity. Previously the caller and the lazy field owned the same instance and both freed it
+- **A failing log writer no longer breaks the server**: `TTHttpServer<C>.Log` swallows exceptions raised by a log writer, so logging cannot abort the operation being logged
+- **`Host` in `TTHttpLogResponse`**: the response log record is now built from the request and carries `Host` alongside the user
+- **Sqids round-trip on a lazy relation foreign key**: JSON deserialization decodes the raw string value of the FK instead of its quoted JSON representation
+- **MariaDB driver ID**: the FireDAC driver link registered by `TTMariaDBDriver` is now named `MariaDB` instead of `Trysil_MariaDB` (the other drivers keep the `Trysil_<engine>` form derived from their base driver ID). Only relevant to code that referenced the driver ID directly
+- **Trysil Expert - API REST generation**: after generating the project the Expert opens `<ProjectName>.dproj` instead of a non-existent `<ProjectName>Group.groupproj`
+
 ## HTTP Filter - Include Deleted
 
 - **`includeDeleted` in the select payload**: `TTHttpFilter<T>` now reads the `includeDeleted` boolean from the select request JSON and propagates it to `TTFilter.IncludeDeleted`, so the REST `select` and `exporttoexcel` endpoints can return soft-deleted rows on demand (defaults to `False`, so existing clients are unaffected)

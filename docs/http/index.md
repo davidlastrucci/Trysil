@@ -62,6 +62,9 @@ end;
 | `Trysil.Http.Authentication` | Authentication base classes |
 | `Trysil.Http.Authentication.Bearer` | Bearer/JWT authentication |
 | `Trysil.Http.JWT` | JWT token generation and validation |
+| `Trysil.Http.JWT.Payload` | JWT payload contract (`TTHttpJWTAbstractPayload`) |
+| `Trysil.Http.JWT.Payload.HS256` | HS256 payload base class (HMAC-SHA256) |
+| `Trysil.Http.JWT.Payload.RS256` | RS256 payload base class (RSA-SHA256, OpenSSL) |
 | `Trysil.Http.Log` | Structured HTTP logging |
 | `Trysil.Http.MultiTenant` | Multi-tenant support |
 

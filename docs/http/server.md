@@ -97,6 +97,15 @@ end;
 | `RegisterAuthentication<T>()` | Register an authentication handler |
 | `RegisterLogWriter<T>()` | Register a log writer |
 
+### Log Writers
+
+A log writer receives a `TTHttpLogAction`, a `TTHttpLogRequest`, or a `TTHttpLogResponse` and persists it wherever you choose (file, database, external collector).
+
+- `TTHttpLogRequest` carries `Host`, `Uri`, `Params`, `MethodType`, `Content`, `Headers`, `RemoteIP` and `ClientIP` (see [Caller IP address](controllers.md#caller-ip-address)).
+- `TTHttpLogResponse` carries `Host`, `User`, `StatusCode`, `ContentType`, `ContentEncoding` and the content.
+
+Request and response entries are queued to background log threads; action entries are written inline. In both paths an exception raised inside the writer is caught and discarded, so a log destination that is full, locked, or unreachable never breaks the request being served, and never crashes a log thread.
+
 ## Lifecycle
 
 1. **Startup:** Call `LServer.Start` to begin listening for HTTP requests.

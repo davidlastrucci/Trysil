@@ -30,7 +30,7 @@
 - **Identity map** — per-context, multi-tenant safe
 - **Unit of Work** — `TTSession<T>` tracks and applies changes automatically
 - **JSON serialization** — full round-trip with `TTJSonContext`
-- **REST HTTP module** — attribute-based routing, CORS, JWT, multi-tenant support
+- **REST HTTP module** — attribute-based routing, CORS, JWT (HS256 and RS256, with `kid` key rotation), multi-tenant support
 - **Nullable types** — `TTNullable<T>` generic wrapper
 - **Connection pooling** — delegated to FireDAC
 - **Structured logging** — SQL tracing with thread-safe correlation IDs

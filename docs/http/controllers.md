@@ -130,6 +130,26 @@ begin
 end;
 ```
 
+### Caller IP Address
+
+`TTHttpRequest` exposes two IP properties:
+
+| Property | Value |
+|---|---|
+| `RemoteIP` | the peer of the TCP connection, always the raw socket address |
+| `ClientIP` | the originating caller, resolving `X-Forwarded-For` when the request arrives through a local reverse proxy |
+
+`ClientIP` returns `RemoteIP` unchanged for direct connections. Only when the connection comes from loopback (`127.*`, `::1`, including `::ffff:`-mapped forms), which means a reverse proxy on the same host, does it read `X-Forwarded-For` and take the **last** entry: the one written by that proxy. Earlier entries in the chain come from the client and are ignored, so the header cannot be forged from outside. Ports and bracketed IPv6 literals are stripped.
+
+```pascal
+procedure TAuditController.Post;
+begin
+  FContext.Audit(FRequest.ClientIP, FRequest.User.Username);
+end;
+```
+
+Use `ClientIP` for audit trails and rate limiting, `RemoteIP` when you need to know which host actually opened the connection.
+
 ## Generic CRUD Controllers
 
 A powerful pattern is building reusable generic controllers that handle standard CRUD operations for any entity type:
