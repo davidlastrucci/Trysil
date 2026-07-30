@@ -132,6 +132,7 @@ type
     function GetRemoteIP: String;
     function GetClientIP: String;
     function FindHeader(const AName: String): String;
+    function IsLoopback(const AValue: String): Boolean;
     function StripPort(const AValue: String): String;
 
     function GetContentText: String;
@@ -429,6 +430,19 @@ begin
       result := LHeaders.NameValue[LIndex].Value.Trim();
 end;
 
+function TTHttpRequest.IsLoopback(const AValue: String): Boolean;
+var
+  LValue: String;
+begin
+  LValue := AValue.Trim();
+  if LValue.StartsWith('::ffff:', True) then
+    LValue := LValue.Substring(7);
+
+  result := LValue.StartsWith('127.') or
+    LValue.Equals('::1') or
+    LValue.Equals('0:0:0:0:0:0:0:1');
+end;
+
 function TTHttpRequest.GetClientIP: String;
 var
   LForwarded: String;
@@ -436,14 +450,14 @@ var
 begin
   result := GetRemoteIP;
 
-  if result.Equals('127.0.0.1') or result.Equals('::1') then
+  if IsLoopback(result) then
   begin
     LForwarded := FindHeader('X-Forwarded-For');
     if not LForwarded.IsEmpty then
     begin
-      LComma := LForwarded.IndexOf(',');
+      LComma := LForwarded.LastIndexOf(',');
       if LComma >= 0 then
-        LForwarded := LForwarded.Substring(0, LComma);
+        LForwarded := LForwarded.Substring(LComma + 1);
 
       LForwarded := StripPort(LForwarded);
       if not LForwarded.IsEmpty then
