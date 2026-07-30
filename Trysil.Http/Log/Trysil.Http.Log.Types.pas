@@ -82,6 +82,7 @@ type
     FContent: String;
     FHeaders: TTHttpLogNameValues;
     FRemoteIP: String;
+    FClientIP: String;
   public
     constructor Create(const ARequest: TTHttpRequest);
 
@@ -96,6 +97,7 @@ type
     property Content: String read FContent;
     property Headers: TTHttpLogNameValues read FHeaders;
     property RemoteIP: String read FRemoteIP;
+    property ClientIP: String read FClientIP;
   end;
 
 { TTHttpLogUserAreas }
@@ -278,6 +280,7 @@ begin
 
   FHeaders := TTHttpLogNameValues.Create(ARequest.Headers);
   FRemoteIP := ARequest.RemoteIP;
+  FClientIP := ARequest.ClientIP;
 end;
 
 function TTHttpLogRequest.ToJSon: String;
@@ -294,6 +297,7 @@ begin
     LJSon.AddPair('MethodType', FMethodType);
     LJSon.AddPair('Content', TJSonObject.ParseJSONValue(FContent));
     LJSon.AddPair('RemoteIP', FRemoteIP);
+    LJSon.AddPair('ClientIP', FClientIP);
 
     result := LJSon.ToJSon();
   finally
