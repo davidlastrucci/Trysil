@@ -36,7 +36,7 @@ type
     FPayload: P;
 
     function BuildHeader: String;
-    function CheckAlgorithm(const AHeaderSegment: String): Boolean;
+    function LoadHeader(const AHeaderSegment: String): Boolean;
   public
     constructor Create(const APayload: P);
 
@@ -88,6 +88,8 @@ begin
   LJSon := TJSonObject.Create;
   try
     LJSon.AddPair('alg', FPayload.Algorithm);
+    if not FPayload.SigningKeyID.IsEmpty then
+      LJSon.AddPair('kid', FPayload.SigningKeyID);
     LJSon.AddPair('typ', 'JWT');
     result := LJSon.ToJSon();
   finally
@@ -110,20 +112,20 @@ begin
   result := Format('%s.%s.%s', [LHeaderSeg, LPayloadSeg, LSignatureSeg]);
 end;
 
-function TTHttpJWT<P>.CheckAlgorithm(const AHeaderSegment: String): Boolean;
+function TTHttpJWT<P>.LoadHeader(const AHeaderSegment: String): Boolean;
 var
   LJSon: TJSonObject;
   LAlgorithm: String;
 begin
-  // algorithm pinning: si fissa l'atteso (dal payload), non ci si fida
-  // del campo 'alg' del token -> difesa contro l'alg-confusion attack.
   result := False;
+  FPayload.TokenKeyID := String.Empty;
   LJSon := TJSonObject.ParseJSonValue(
     TEncoding.UTF8.GetString(
       TTHttpJWTEncoding.Decode(AHeaderSegment))) as TJSonObject;
   if Assigned(LJSon) then
     try
       LAlgorithm := LJSon.GetValue<String>('alg', String.Empty);
+      FPayload.TokenKeyID := LJSon.GetValue<String>('kid', String.Empty);
       result := (not FPayload.Algorithm.IsEmpty) and
         SameText(LAlgorithm, FPayload.Algorithm);
     finally
@@ -139,7 +141,7 @@ begin
   result := False;
   LParts := AToken.Split(['.']);
   if Length(LParts) = 3 then
-    if CheckAlgorithm(LParts[0]) then
+    if LoadHeader(LParts[0]) then
     begin
       LSigningInput := TEncoding.UTF8.GetBytes(
         Format('%s.%s', [LParts[0], LParts[1]]));
