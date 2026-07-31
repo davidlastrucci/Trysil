@@ -1,0 +1,39 @@
+# Line endings
+#
+# Delphi sources and project files must be CRLF in the working tree: the IDE
+# warns on LF ("Line endings are LF, but RAD Studio requires CRLF"). Git stores
+# them normalized (LF) and checks them out as CRLF on every platform.
+
+* text=auto
+
+*.pas text eol=crlf
+*.dpr text eol=crlf
+*.dpk text eol=crlf
+*.inc text eol=crlf
+*.dfm text eol=crlf
+*.fmx text eol=crlf
+*.dproj text eol=crlf
+*.groupproj text eol=crlf
+*.bdsproj text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binaries: never touch the content
+
+*.res binary
+*.dcu binary
+*.dcp binary
+*.bpl binary
+*.dcr binary
+*.exe binary
+*.dll binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.fdb binary
+*.gdb binary
+*.db binary
