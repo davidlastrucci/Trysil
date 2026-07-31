@@ -25,7 +25,7 @@ The payload class is also the signer: it decides how the token is signed and ver
 | Base class | Unit | Algorithm | Keys |
 |---|---|---|---|
 | `TTHttpJWTHS256Payload` | `Trysil.Http.JWT.Payload.HS256` | `HS256` (HMAC-SHA256) | one shared secret (`GetSecret`) |
-| `TTHttpJWTRS256Payload` | `Trysil.Http.JWT.Payload.RS256` | `RS256` (RSA-SHA256) | RSA key pair (`GetPrivateKey` / `GetPublicKey`) |
+| `TTHttpJWTRS256Payload` | `Trysil.Http.JWT.Payload.RS256` | `RS256` (RSA-SHA256) | RSA key objects (`GetSigningKey` / `GetVerificationKey`) |
 
 `TTHttpJWTAbstractPayload` (`Trysil.Http.JWT.Payload`) declares only the contract, so it cannot be inherited from directly.
 
@@ -76,62 +76,117 @@ end;
 
 #### RS256 Variant
 
+RSA keys are **objects, not strings**: `TTHttpJWTRSAPrivateKey` and `TTHttpJWTRSAPublicKey` (`Trysil.Http.JWT.RSAKey`) parse their PEM once, in the constructor, and hold the parsed key for their whole lifetime. Create them **once at startup**, keep them in your configuration object, and let the payload borrow them:
+
 ```pascal
 uses
   Trysil.Http.JWT,
-  Trysil.Http.JWT.Payload.RS256;
+  Trysil.Http.JWT.Payload.RS256,
+  Trysil.Http.JWT.RSAKey;
+
+// once, at startup
+FSigningKey := TTHttpJWTRSAPrivateKey.Create(LPrivatePem, '2026-07');
 
 type
   TMyPayload = class(TTHttpJWTRS256Payload)
   strict protected
-    function GetPrivateKey: String; override;   // PEM, issuer only
-    function GetPublicKey: String; override;    // PEM, issuer and verifiers
+    function GetSigningKey: TTHttpJWTRSAPrivateKey; override;
+    function GetVerificationKey(
+      const AKeyID: String): TTHttpJWTRSAAbstractKey; override;
   public
     // same ToJSon / FromJSon as above
   end;
+
+function TMyPayload.GetSigningKey: TTHttpJWTRSAPrivateKey;
+begin
+  Result := TMyConfig.Instance.SigningKey;
+end;
+
+function TMyPayload.GetVerificationKey(
+  const AKeyID: String): TTHttpJWTRSAAbstractKey;
+begin
+  Result := TMyConfig.Instance.KeyFor(AKeyID);   // AKeyID is the token's kid
+end;
 ```
 
-Both keys are PEM strings. Overriding `GetPrivateKey` is optional: a verifier that only validates tokens can leave it out, and `Sign` then raises `ETHttpJWTException`.
+The payload **borrows** the keys: your application owns them and frees them at shutdown. A payload is created per request, so a key created inside it would be parsed on every request, which is exactly what this API is shaped to avoid.
+
+A verify-only server is expressed by the type, not by a runtime check: hand it a `TTHttpJWTRSAPublicKey`, which has no `Sign` method at all. `GetSigningKey` is optional (it defaults to `nil`) and signing without it raises `ETHttpJWTException`. `GetVerificationKey` is called at verify time and can return `nil` for an unknown `kid`: verification then fails closed, returning `False` rather than raising.
+
+Both key classes take an optional key ID (`Create(APem, AKeyID)`), which the payload emits as the `kid` header, so a key and its identifier are declared together.
 
 !!! note "OpenSSL requirement"
-    RS256 uses OpenSSL `libcrypto`, loaded dynamically at first sign or verify. The unit compiles on every platform, and raises `ETHttpJWTException` at runtime if the library is missing. On Windows deploy `libcrypto-3-x64.dll` (or `libcrypto-1_1-x64.dll`) next to the executable; on Linux and macOS the system or Homebrew OpenSSL 3 is used. `HS256` has no external dependency.
+    RS256 uses OpenSSL `libcrypto`, loaded dynamically when the first key is constructed. The unit compiles on every platform, and raises `ETHttpJWTException` at runtime if the library is missing. On Windows deploy `libcrypto-3-x64.dll` (or `libcrypto-1_1-x64.dll`) next to the executable; on Linux and macOS the system or Homebrew OpenSSL 3 is used. `HS256` has no external dependency.
+
+!!! tip "Thread safety"
+    One key instance can sign and verify from several threads at once: the constructor runs a warm-up operation while still single-threaded, so nothing inside OpenSSL is initialized lazily under concurrency. Share one key across the server, do not create one per request or per thread.
 
 ### Key Rotation (`kid`)
 
 Rotating a key means old tokens must still verify while new ones are signed with the new key. The standard `kid` header identifies which key a token was signed with:
 
+Say you signed with one secret until June, you switched to a new one in July, and June tokens must keep working until they expire:
+
 ```pascal
+const
+  SecretJune = 'old-secret';
+  SecretJuly = 'new-secret';
+
 type
   TMyPayload = class(TTHttpJWTHS256Payload)
   strict protected
     function GetSigningKeyID: String; override;
     function GetSecret: String; override;
+    function GetSecretFor(const AKeyID: String): String; override;
   end;
 
+// the name of the key I am signing with now
 function TMyPayload.GetSigningKeyID: String;
 begin
-  Result := '2026-07';   // key currently used to sign
+  Result := 'july';
 end;
 
+// the secret I am signing with now
 function TMyPayload.GetSecret: String;
 begin
-  // TokenKeyID is the kid of the incoming token, empty on a payload
-  // created to sign. SecretOf is your own key lookup (config, vault, ...)
-  if TokenKeyID.IsEmpty then
-    Result := SecretOf(GetSigningKeyID)
+  Result := SecretJuly;
+end;
+
+// a token claims it was signed with key X: give me the secret of X
+function TMyPayload.GetSecretFor(const AKeyID: String): String;
+begin
+  if AKeyID = 'june' then
+    Result := SecretJune
   else
-    Result := SecretOf(TokenKeyID);
+    Result := SecretJuly;
 end;
 ```
 
-Keep the retired keys in the lookup as long as tokens signed with them can still be presented, and drop them once the longest token lifetime has elapsed.
+What happens at runtime:
+
+1. **Login.** `Sign` uses `GetSecret`, so the token is signed with `SecretJuly`, and the header carries `kid: july` from `GetSigningKeyID`.
+2. **A request with a new token.** The header says `kid: july`, `GetSecretFor('july')` returns `SecretJuly`, the signature matches.
+3. **A request with a June token.** The header says `kid: june`, `GetSecretFor('june')` returns `SecretJune`, the signature matches.
+4. **Once every June token has expired**, delete the `june` branch and the constant.
+
+The three methods answer three different questions, which is why there are three of them:
+
+| Method | Question | Called by |
+|---|---|---|
+| `GetSecret` | which secret do I sign with? | `Sign`, at login |
+| `GetSigningKeyID` | what is that key called? | header construction |
+| `GetSecretFor` | given this name, which secret is it? | `Verify`, on every request |
+
+Rotating means changing `GetSigningKeyID` and `GetSecret` together, leaving the retired secret reachable from `GetSecretFor` until the tokens signed with it have expired.
 
 | Member | Direction | Meaning |
 |---|---|---|
 | `SigningKeyID` | outgoing | when not empty, written as `kid` in the token header |
-| `TokenKeyID` | incoming | the `kid` read from the token header, set before `Verify` runs |
+| `AKeyID` argument | incoming | the `kid` read from the token header, passed to `GetSecretFor` (HS256) or `GetVerificationKey` (RS256) |
 
-The same pattern works for RS256, returning the public key that matches `TokenKeyID`. Leave `GetSigningKeyID` alone and no `kid` is emitted, exactly as before.
+The `kid` of an incoming token is an **argument**, not payload state: `GetSecretFor` and `GetVerificationKey` receive it at verification time. Overriding `GetSecretFor` is optional and it defaults to `GetSecret`, so an application that does not rotate keys is unaffected.
+
+The example above is HS256. With RS256 you do not override `GetSigningKeyID` at all: the key ID travels with the key object (`Create(APem, AKeyID)`) and the payload emits the `kid` of the key it signs with. In both cases, leaving the signing key ID empty emits no `kid`.
 
 The header `alg` is always matched against the payload's own algorithm, so a token signed with a different algorithm is rejected before its signature is checked.
 

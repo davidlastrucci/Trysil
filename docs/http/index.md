@@ -65,6 +65,7 @@ end;
 | `Trysil.Http.JWT.Payload` | JWT payload contract (`TTHttpJWTAbstractPayload`) |
 | `Trysil.Http.JWT.Payload.HS256` | HS256 payload base class (HMAC-SHA256) |
 | `Trysil.Http.JWT.Payload.RS256` | RS256 payload base class (RSA-SHA256, OpenSSL) |
+| `Trysil.Http.JWT.RSAKey` | RSA key objects (`TTHttpJWTRSAPrivateKey` / `PublicKey`) |
 | `Trysil.Http.Log` | Structured HTTP logging |
 | `Trysil.Http.MultiTenant` | Multi-tenant support |
 
