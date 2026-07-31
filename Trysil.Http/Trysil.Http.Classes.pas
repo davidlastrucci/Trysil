@@ -537,7 +537,7 @@ begin
   begin
     AStream.Clear;
     LBytes := FEncoding.GetEncoding(
-      FResponseInfo.ContentEncoding).GetBytes(FContent);
+      FResponseInfo.CharSet).GetBytes(FContent);
     AStream.Write(LBytes, Length(LBytes));
   end;
 end;
@@ -564,12 +564,12 @@ end;
 
 function TTHttpResponse.GetContentEncoding: String;
 begin
-  result := FResponseInfo.ContentEncoding;
+  result := FResponseInfo.CharSet;
 end;
 
 procedure TTHttpResponse.SetContentEncoding(const AValue: String);
 begin
-  FResponseInfo.ContentEncoding := AValue;
+  FResponseInfo.CharSet := AValue;
 end;
 
 procedure TTHttpResponse.SetContent(const AValue: String);
