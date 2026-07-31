@@ -172,6 +172,7 @@
         <DCCReference Include="..\..\Trysil.Http\Authentication\Trysil.Http.JWT.Payload.pas"/>
         <DCCReference Include="..\..\Trysil.Http\Authentication\Trysil.Http.JWT.Payload.HS256.pas"/>
         <DCCReference Include="..\..\Trysil.Http\Authentication\Trysil.Http.JWT.Payload.RS256.pas"/>
+        <DCCReference Include="..\..\Trysil.Http\Authentication\Trysil.Http.JWT.RSAKey.pas"/>
         <DCCReference Include="..\..\Trysil.Http\Log\Trysil.Http.Log.Classes.pas"/>
         <DCCReference Include="..\..\Trysil.Http\Log\Trysil.Http.Log.Consts.pas"/>
         <DCCReference Include="..\..\Trysil.Http\Log\Trysil.Http.Log.pas"/>

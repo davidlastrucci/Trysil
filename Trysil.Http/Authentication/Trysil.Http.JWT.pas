@@ -36,7 +36,8 @@ type
     FPayload: P;
 
     function BuildHeader: String;
-    function LoadHeader(const AHeaderSegment: String): Boolean;
+    function LoadHeader(
+      const AHeaderSegment: String; out AKeyID: String): Boolean;
   public
     constructor Create(const APayload: P);
 
@@ -112,20 +113,21 @@ begin
   result := Format('%s.%s.%s', [LHeaderSeg, LPayloadSeg, LSignatureSeg]);
 end;
 
-function TTHttpJWT<P>.LoadHeader(const AHeaderSegment: String): Boolean;
+function TTHttpJWT<P>.LoadHeader(
+  const AHeaderSegment: String; out AKeyID: String): Boolean;
 var
   LJSon: TJSonObject;
   LAlgorithm: String;
 begin
   result := False;
-  FPayload.TokenKeyID := String.Empty;
+  AKeyID := String.Empty;
   LJSon := TJSonObject.ParseJSonValue(
     TEncoding.UTF8.GetString(
       TTHttpJWTEncoding.Decode(AHeaderSegment))) as TJSonObject;
   if Assigned(LJSon) then
     try
       LAlgorithm := LJSon.GetValue<String>('alg', String.Empty);
-      FPayload.TokenKeyID := LJSon.GetValue<String>('kid', String.Empty);
+      AKeyID := LJSon.GetValue<String>('kid', String.Empty);
       result := (not FPayload.Algorithm.IsEmpty) and
         SameText(LAlgorithm, FPayload.Algorithm);
     finally
@@ -136,17 +138,18 @@ end;
 function TTHttpJWT<P>.LoadFromToken(const AToken: String): Boolean;
 var
   LParts: TArray<String>;
+  LKeyID: String;
   LSigningInput, LSignature: TBytes;
 begin
   result := False;
   LParts := AToken.Split(['.']);
   if Length(LParts) = 3 then
-    if LoadHeader(LParts[0]) then
+    if LoadHeader(LParts[0], LKeyID) then
     begin
       LSigningInput := TEncoding.UTF8.GetBytes(
         Format('%s.%s', [LParts[0], LParts[1]]));
       LSignature := TTHttpJWTEncoding.Decode(LParts[2]);
-      if FPayload.Verify(LSigningInput, LSignature) then
+      if FPayload.Verify(LSigningInput, LSignature, LKeyID) then
       begin
         FPayload.FromJSon(
           TEncoding.UTF8.GetString(TTHttpJWTEncoding.Decode(LParts[1])));

@@ -24,9 +24,6 @@ type
 { TTHttpJWTAbstractPayload }
 
   TTHttpJWTAbstractPayload = class abstract
-  strict private
-    FTokenKeyID: String;
-
   strict protected
     function GetSigningKeyID: String; virtual;
   public
@@ -38,10 +35,10 @@ type
     function Sign(const ASigningInput: TBytes): TBytes; virtual; abstract;
     function Verify(
       const ASigningInput: TBytes;
-      const ASignature: TBytes): Boolean; virtual; abstract;
+      const ASignature: TBytes;
+      const AKeyID: String): Boolean; virtual; abstract;
 
     property SigningKeyID: String read GetSigningKeyID;
-    property TokenKeyID: String read FTokenKeyID write FTokenKeyID;
   end;
 
 implementation

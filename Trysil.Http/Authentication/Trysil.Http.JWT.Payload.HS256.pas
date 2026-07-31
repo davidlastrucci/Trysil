@@ -23,8 +23,12 @@ type
 { TTHttpJWTHS256Payload }
 
   TTHttpJWTHS256Payload = class abstract(TTHttpJWTAbstractPayload)
+  strict private
+    class function ComputeHMAC(
+      const ASecret: String; const AInput: TBytes): TBytes;
   strict protected
     function GetSecret: String; virtual; abstract;
+    function GetSecretFor(const AKeyID: String): String; virtual;
 
     class function SameSignature(
       const ALeft: TBytes; const ARight: TBytes): Boolean;
@@ -32,7 +36,9 @@ type
     function Algorithm: String; override;
     function Sign(const ASigningInput: TBytes): TBytes; override;
     function Verify(
-      const ASigningInput: TBytes; const ASignature: TBytes): Boolean; override;
+      const ASigningInput: TBytes;
+      const ASignature: TBytes;
+      const AKeyID: String): Boolean; override;
 
     property Secret: String read GetSecret;
   end;
@@ -46,18 +52,32 @@ begin
   result := 'HS256';
 end;
 
-function TTHttpJWTHS256Payload.Sign(const ASigningInput: TBytes): TBytes;
+function TTHttpJWTHS256Payload.GetSecretFor(const AKeyID: String): String;
+begin
+  result := GetSecret;
+end;
+
+class function TTHttpJWTHS256Payload.ComputeHMAC(
+  const ASecret: String; const AInput: TBytes): TBytes;
 begin
   result := THashSHA2.GetHMACAsBytes(
-    TEncoding.UTF8.GetString(ASigningInput),
-    GetSecret,
+    TEncoding.UTF8.GetString(AInput),
+    ASecret,
     THashSHA2.TSHA2Version.SHA256);
 end;
 
-function TTHttpJWTHS256Payload.Verify(
-  const ASigningInput: TBytes; const ASignature: TBytes): Boolean;
+function TTHttpJWTHS256Payload.Sign(const ASigningInput: TBytes): TBytes;
 begin
-  result := SameSignature(Sign(ASigningInput), ASignature);
+  result := ComputeHMAC(GetSecret, ASigningInput);
+end;
+
+function TTHttpJWTHS256Payload.Verify(
+  const ASigningInput: TBytes;
+  const ASignature: TBytes;
+  const AKeyID: String): Boolean;
+begin
+  result := SameSignature(
+    ComputeHMAC(GetSecretFor(AKeyID), ASigningInput), ASignature);
 end;
 
 class function TTHttpJWTHS256Payload.SameSignature(

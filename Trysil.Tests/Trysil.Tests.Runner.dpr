@@ -30,6 +30,7 @@ uses
   Trysil.Tests.Abstract.UpdateMode in 'Abstract\Trysil.Tests.Abstract.UpdateMode.pas',
   Trysil.Tests.Http.Exceptions in 'Trysil.Tests.Http.Exceptions.pas',
   Trysil.Tests.Http.JWT in 'Trysil.Tests.Http.JWT.pas',
+  Trysil.Tests.Http.JWT.RS256 in 'Trysil.Tests.Http.JWT.RS256.pas',
   Trysil.Tests.Http.Uri in 'Trysil.Tests.Http.Uri.pas',
   Trysil.Tests.Http.Log in 'Trysil.Tests.Http.Log.pas',
   Trysil.Tests.Logger in 'Trysil.Tests.Logger.pas',
