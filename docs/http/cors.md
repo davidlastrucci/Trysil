@@ -9,7 +9,6 @@ Cross-Origin Resource Sharing (CORS) allows web browsers to make requests to you
 ## Configuration
 
 ```pascal
-LServer.CorsConfig.AllowHeaders := 'Content-Type, Authorization';
 LServer.CorsConfig.AllowOrigin := '*';
 ```
 
@@ -19,22 +18,28 @@ To restrict access to a specific origin:
 LServer.CorsConfig.AllowOrigin := 'https://myapp.com';
 ```
 
+`Content-Type` is always allowed, and `Authorization` is added automatically for every controller that requires authentication. Set `AllowHeaders` only when your client sends additional custom headers:
+
+```pascal
+LServer.CorsConfig.AllowHeaders := 'X-Tenant, X-Request-ID';
+```
+
 ## Configuration Properties
 
 | Property | Type | Description |
 |---|---|---|
 | `AllowOrigin` | `String` | Allowed origin(s). Use `'*'` for any origin, or a specific URL. |
-| `AllowHeaders` | `String` | Comma-separated list of allowed request headers. |
+| `AllowHeaders` | `String` | Comma-separated list of **additional** allowed request headers. `Content-Type` and `Authorization` are handled automatically; duplicates are ignored. |
 
 ## How It Works
 
-CORS headers are automatically added to all HTTP responses. The `TTHttpCors` module handles this transparently:
+The `TTHttpCors` module handles CORS transparently:
 
-1. **Preflight requests:** When a browser sends an `OPTIONS` request to check CORS policy, Trysil responds automatically with the configured headers. You do not need to define `OPTIONS` endpoints in your controllers.
+1. **Preflight requests:** When a browser sends an `OPTIONS` request to check CORS policy, Trysil responds automatically with `Access-Control-Allow-Headers` and `Access-Control-Allow-Methods` built from the registered controller for that URI. You do not need to define `OPTIONS` endpoints in your controllers.
 
-2. **Regular requests:** The `Access-Control-Allow-Origin` and `Access-Control-Allow-Headers` headers are added to every response.
+2. **Regular requests:** Only `Access-Control-Allow-Origin` is added, since the other CORS headers are meaningful on preflight responses alone.
 
-3. **Controller registration:** When you register your controllers, `TTHttpCors` internally registers matching CORS controllers for their URI patterns. This ensures that preflight requests are handled for every endpoint you define.
+3. **Controller registration:** When you register your controllers, `TTHttpCors` internally registers matching CORS controllers for their URI patterns. Each one collects the HTTP methods of the endpoint plus the request headers it accepts. This ensures that preflight requests are handled for every endpoint you define.
 
 ## Typical Setup
 
@@ -46,7 +51,6 @@ try
 
   // Allow requests from any origin during development
   LServer.CorsConfig.AllowOrigin := '*';
-  LServer.CorsConfig.AllowHeaders := 'Content-Type, Authorization';
 
   LServer.RegisterAuthentication<TMyAuth>();
   LServer.RegisterController<TPersonController>();

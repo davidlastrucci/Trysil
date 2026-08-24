@@ -35,7 +35,7 @@ A complete REST API server demonstrating Trysil's HTTP module with JWT authentic
        "port": 4450
      },
      "cors": {
-       "allowHeaders": "*",
+       "allowHeaders": "",
        "allowOrigin": "*"
      },
      "database": {

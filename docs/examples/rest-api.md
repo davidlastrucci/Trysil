@@ -160,7 +160,7 @@ The application reads its configuration from a JSON file alongside the executabl
     "port": 4450
   },
   "cors": {
-    "allowHeaders": "Content-Type, Authorization",
+    "allowHeaders": "",
     "allowOrigin": "*"
   },
   "database": {

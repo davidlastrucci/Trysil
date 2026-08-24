@@ -22,7 +22,6 @@ try
   LServer.BaseUri := 'http://localhost';
   LServer.Port := 8080;
   LServer.CorsConfig.AllowOrigin := '*';
-  LServer.CorsConfig.AllowHeaders := 'Content-Type, Authorization';
 
   LServer.RegisterAuthentication<TMyAuthentication>();
   LServer.RegisterController<TMyController>();
