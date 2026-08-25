@@ -860,12 +860,22 @@ begin
           if LUsedEntity <> LEntity then
             LUses.Add(LUsedEntity);
 
-          if FEntityRelations.TryGetValue(LUsedEntity, LRelations) then
-            LRelations.Add(
-              TTRelation.Create(
-                LEntity.TableName,
-                LColumn.ColumnName,
-                (LColumn is TTLazyListColumn)));
+          if LColumn is TTLazyListColumn then
+          begin
+            if FEntityRelations.TryGetValue(LEntity, LRelations) then
+              LRelations.Add(
+                TTRelation.Create(
+                  LUsedEntity.TableName,
+                  LColumn.ColumnName,
+                  True));
+          end
+          else
+            if FEntityRelations.TryGetValue(LUsedEntity, LRelations) then
+              LRelations.Add(
+                TTRelation.Create(
+                  LEntity.TableName,
+                  LColumn.ColumnName,
+                  False));
         end;
 end;
 
