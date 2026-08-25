@@ -20,6 +20,12 @@ Decorate entity fields with one or more validation attributes:
 | `TEmail` | Must be a valid email address | `[TEmail]` |
 | `TDisplayName(name)` | Human-readable field name for error messages | `[TDisplayName('First Name')]` |
 
+The literal you pass picks the comparison type, and it has to match the field
+type: an integer literal for an `Integer` field, a float literal for a `Double`
+or a `Currency` one. `[TGreater(0)]` on a `Currency` field fails at runtime with
+"type not valid for validation"; write `[TGreater(0.0)]`. The attribute takes a
+`Double` in both cases - there is no `Currency` overload, and none is needed.
+
 ### Example
 
 ```pascal

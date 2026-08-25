@@ -78,3 +78,4 @@ CREATE TABLE Persons (
 - Not suitable for high-concurrency server applications (SQLite uses file-level locking).
 - No built-in user authentication or access control.
 - Limited ALTER TABLE support compared to server databases.
+- No decimal column type. A `DECIMAL(19,4)` column mapped to a `Currency` field gets NUMERIC affinity, but the value is stored as a float, so exactness is bounded by what a double can hold. Every other engine stores it as a true decimal.

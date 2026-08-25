@@ -143,7 +143,7 @@ type
     FOrderDate: TDateTime;
 
     [TColumn('Amount')]
-    FAmount: Double;
+    FAmount: Currency;
 
     [TColumn('Customers', 'CompanyName')]
     FCustomerName: String;
@@ -154,7 +154,7 @@ type
   public
     property ID: TTPrimaryKey read FID;
     property OrderDate: TDateTime read FOrderDate;
-    property Amount: Double read FAmount;
+    property Amount: Currency read FAmount;
     property CustomerName: String read FCustomerName;
   end;
 

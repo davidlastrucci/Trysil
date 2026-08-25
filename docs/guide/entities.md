@@ -55,6 +55,33 @@ Trysil supports the following field types for column mapping:
 
 For nullable columns, see [Nullable Types](nullable.md). For lazy loading, see [Lazy Loading](lazy-loading.md).
 
+### Monetary Amounts
+
+Use `Currency`, not `Double`, for money. `Currency` is a fixed-point type exact
+to four decimal places, and Trysil maps it end to end without converting through
+`Double`: values are read with `TField.AsCurrency` and written with the
+parameter's `AsCurrency`, so the four decimals survive the round trip.
+`TTNullable<Currency>` behaves the same way.
+
+Declare the column as `DECIMAL(19,4)`, which is what the Trysil Expert generates.
+Two exceptions: Firebird and InterBase cap precision at 18 digits, so use
+`DECIMAL(18,4)` there, and Oracle spells the same type `NUMBER(19,4)`. SQLite has
+no decimal type at all - the column keeps NUMERIC affinity, but the value is
+stored as a float, so exactness there is bounded by what a double can hold.
+
+```pascal
+[TRequired]
+[TRange(0.01, 99999.99)]
+[TColumn('Price')]
+FPrice: Currency;
+```
+
+Validation attributes take a `Double` argument; there is no `Currency` overload
+and none is needed, so keep writing float literals for a `Currency` field.
+
+Reserve `Double` for genuine floating-point quantities: measures, ratios,
+coordinates.
+
 ## Relations
 
 ```pascal
@@ -100,7 +127,7 @@ TActiveUser = class
 
 - **TWhereClause** adds a fixed WHERE clause to every query generated for this entity.
 - **TWhereClauseParameter** supplies named parameter values for the clause. Multiple parameters are supported by adding multiple attributes.
-- Parameters are **compile-time constants** only. Supported types: `String`, `Integer`, `Int64`, `Double`, `Boolean`, `TDateTime`.
+- Parameters are **compile-time constants** only. Supported types: `String`, `Integer`, `Int64`, `Double`, `Boolean`, `TDateTime`. There is no `Currency` constructor: for a `Currency` column, pass the constant as a `Double`.
 - For dynamic, runtime-constructed filters, use [TTFilterBuilder\<T\>](filtering.md) instead.
 
 ## JOIN Queries

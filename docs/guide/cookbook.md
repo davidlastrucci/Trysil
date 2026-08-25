@@ -304,7 +304,7 @@ type
     [TRequired]
     [TRange(0.01, 99999.99)]
     [TColumn('Price')]
-    FPrice: Double;
+    FPrice: Currency;
 
     [TEmail]
     [TColumn('ContactEmail')]
@@ -332,8 +332,8 @@ type
   [TTable('Orders')]
   TOrder = class
   strict private
-    FTotal: Double;
-    FDiscount: Double;
+    FTotal: Currency;
+    FDiscount: Currency;
   public
     [TBeforeInsertEvent]
     [TBeforeUpdateEvent]
@@ -409,11 +409,11 @@ type
     FOrderCount: Integer;
 
     [TColumn('Total')]
-    FTotal: Double;
+    FTotal: Currency;
   public
     property CustomerName: String read FCustomerName;
     property OrderCount: Integer read FOrderCount;
-    property Total: Double read FTotal;
+    property Total: Currency read FTotal;
   end;
 ```
 

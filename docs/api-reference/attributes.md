@@ -123,7 +123,7 @@ TActiveAdmin = class
 
 Adds a fixed WHERE clause to every query on this entity. Parameters are **compile-time constants only**. For dynamic filtering, use [`TTFilterBuilder<T>`](../guide/filtering.md).
 
-`TWhereClauseParameter` constructors accept: `String`, `Integer`, `Int64`, `Double`, `Boolean`, `TDateTime`.
+`TWhereClauseParameter` constructors accept: `String`, `Integer`, `Int64`, `Double`, `Boolean`, `TDateTime`. For a `Currency` column, pass the constant as a `Double`.
 
 ### TJoin
 

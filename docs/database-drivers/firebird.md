@@ -71,6 +71,10 @@ type
   end;
 ```
 
+## Type notes
+
+- **Money** (`Currency`): `DECIMAL(18,4)`. Firebird 3 caps numeric precision at 18 digits, so the `DECIMAL(19,4)` used on most other engines is rejected (Firebird 4 raises the cap to 38). 18 digits still cover any realistic amount.
+
 ## Schema Example
 
 ```sql

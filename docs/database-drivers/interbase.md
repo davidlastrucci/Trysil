@@ -22,6 +22,7 @@ InterBase databases used with Trysil must be created with **SQL Dialect 3**. Dia
 - **64-bit integers** (`Int64`): InterBase has no `BIGINT` keyword (a Firebird extension) — use `NUMERIC(18,0)`.
 - **GUID** (`TGUID`): `CHAR(16) CHARACTER SET OCTETS` (16-byte binary).
 - **Boolean**: native `BOOLEAN` (Dialect 3 only).
+- **Money** (`Currency`): `DECIMAL(18,4)`. InterBase caps numeric precision at 18 digits, so the `DECIMAL(19,4)` used on most other engines is rejected. 18 digits still cover any realistic amount.
 
 ## Setup
 

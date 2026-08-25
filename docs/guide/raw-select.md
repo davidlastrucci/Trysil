@@ -26,11 +26,11 @@ type
     FOrderCount: Integer;
 
     [TColumn('Total')]
-    FTotal: Double;
+    FTotal: Currency;
   public
     property CustomerName: String read FCustomerName;
     property OrderCount: Integer read FOrderCount;
-    property Total: Double read FTotal;
+    property Total: Currency read FTotal;
   end;
 ```
 
