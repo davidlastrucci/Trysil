@@ -49,7 +49,7 @@ LValue := nil;
 - No default constructor — uninitialized state is null
 - Supports implicit conversion from `T`
 - Operators: `=`, `<>`
-- Supported types: `String`, `Integer`, `Int64`, `Double`, `Boolean`, `TDateTime`, `TGUID`
+- Supported types: `String`, `Integer`, `Int64`, `Double`, `Currency`, `Boolean`, `TDateTime`, `TGUID`
 
 ## TTValue
 

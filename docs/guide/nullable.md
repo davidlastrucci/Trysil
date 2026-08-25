@@ -69,6 +69,7 @@ LName := LPerson.MiddleName.GetValueOrDefault('N/A');
 - `Integer`
 - `Int64`
 - `Double`
+- `Currency`
 - `Boolean`
 - `TDateTime`
 - `TGUID`

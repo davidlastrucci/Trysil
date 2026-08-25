@@ -84,6 +84,17 @@ type
 { TTDoubleParameter }
 
   TTDoubleParameter = class(TTParameter)
+  strict private
+    procedure SetCurrencyValue(const AValue: TTValue);
+    procedure SetDoubleValue(const AValue: TTValue);
+  public
+    procedure SetValue(const AEntity: TObject); overload; override;
+    procedure SetValue(const AValue: TTValue); overload; override;
+  end;
+
+{ TTCurrencyParameter }
+
+  TTCurrencyParameter = class(TTParameter)
   public
     procedure SetValue(const AEntity: TObject); overload; override;
     procedure SetValue(const AValue: TTValue); overload; override;
@@ -377,13 +388,66 @@ begin
   LogParameter(FColumnMap.Name, LParamValue.ToString);
 end;
 
-procedure TTDoubleParameter.SetValue(const AValue: TTValue);
+procedure TTDoubleParameter.SetCurrencyValue(const AValue: TTValue);
+var
+  LParamValue: Currency;
+begin
+  LParamValue := AValue.AsType<Currency>();
+  FParam.AsCurrency := LParamValue;
+  LogParameter(FParam.Name, CurrToStr(LParamValue));
+end;
+
+procedure TTDoubleParameter.SetDoubleValue(const AValue: TTValue);
 var
   LParamValue: Double;
 begin
   LParamValue := AValue.AsType<Double>();
   FParam.AsDouble := LParamValue;
   LogParameter(FParam.Name, LParamValue.ToString);
+end;
+
+procedure TTDoubleParameter.SetValue(const AValue: TTValue);
+begin
+  if AValue.TypeInfo = TypeInfo(Currency) then
+    SetCurrencyValue(AValue)
+  else
+    SetDoubleValue(AValue);
+end;
+
+{ TTCurrencyParameter }
+
+procedure TTCurrencyParameter.SetValue(const AEntity: TObject);
+var
+  LValue: TTValue;
+  LNullable: TTNullable<Currency>;
+  LParamValue: Currency;
+begin
+  LValue := FColumnMap.Member.GetValue(AEntity);
+  if FColumnMap.Member.IsNullable then
+  begin
+    LNullable := LValue.AsType<TTNullable<Currency>>();
+    if LNullable.IsNull then
+      FParam.Clear()
+    else
+      FParam.AsCurrency := LNullable;
+    LParamValue := LNullable.GetValueOrDefault;
+  end
+  else
+  begin
+    LParamValue := LValue.AsType<Currency>();
+    FParam.AsCurrency := LParamValue;
+  end;
+
+  LogParameter(FColumnMap.Name, CurrToStr(LParamValue));
+end;
+
+procedure TTCurrencyParameter.SetValue(const AValue: TTValue);
+var
+  LParamValue: Currency;
+begin
+  LParamValue := AValue.AsType<Currency>();
+  FParam.AsCurrency := LParamValue;
+  LogParameter(FParam.Name, CurrToStr(LParamValue));
 end;
 
 { TTBooleanParameter }
@@ -584,6 +648,8 @@ var
 begin
   if Assigned(AColumnMap) and AColumnMap.IsGuid then
     result := TTGuidParameter.Create(AConnectionID, AParam, AColumnMap)
+  else if Assigned(AColumnMap) and AColumnMap.IsCurrency then
+    result := TTCurrencyParameter.Create(AConnectionID, AParam, AColumnMap)
   else
   begin
     if not FParameterTypes.TryGetValue(AFieldType, LClass) then

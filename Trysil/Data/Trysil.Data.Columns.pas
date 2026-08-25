@@ -78,6 +78,14 @@ type
     function GetNullableValue: TTValue; override;
   end;
 
+{ TTCurrencyColumn }
+
+  TTCurrencyColumn = class(TTColumn)
+  strict protected
+    function GetValue: TTValue; override;
+    function GetNullableValue: TTValue; override;
+  end;
+
 { TTBooleanColumn }
 
   TTBooleanColumn = class(TTColumn)
@@ -232,6 +240,24 @@ begin
   result := TTValue.From<TTNullable<Double>>(LValue);
 end;
 
+{ TTCurrencyColumn }
+
+function TTCurrencyColumn.GetValue: TTValue;
+begin
+  result := TTValue.From<Currency>(FField.AsCurrency);
+end;
+
+function TTCurrencyColumn.GetNullableValue: TTValue;
+var
+  LValue: TTNullable<Currency>;
+begin
+  if FField.IsNull then
+    LValue := nil
+  else
+    LValue := FField.AsCurrency;
+  result := TTValue.From<TTNullable<Currency>>(LValue);
+end;
+
 { TTBooleanColumn }
 
 function TTBooleanColumn.GetValue: TTValue;
@@ -360,6 +386,8 @@ begin
     result := TTIntegerColumn.Create(AField, AColumnMap)
   else if Assigned(AColumnMap) and AColumnMap.IsInt64 then
     result := TTLargeIntegerColumn.Create(AField, AColumnMap)
+  else if Assigned(AColumnMap) and AColumnMap.IsCurrency then
+    result := TTCurrencyColumn.Create(AField, AColumnMap)
   else
   begin
     if not FColumnTypes.TryGetValue(AField.ClassType, LClass) then

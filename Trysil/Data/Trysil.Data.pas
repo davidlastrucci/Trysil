@@ -46,6 +46,8 @@ type
     procedure SetAsLargeInt(const Value: Int64); virtual; abstract;
     function GetAsDouble: Double; virtual; abstract;
     procedure SetAsDouble(const Value: Double); virtual; abstract;
+    function GetAsCurrency: Currency; virtual; abstract;
+    procedure SetAsCurrency(const Value: Currency); virtual; abstract;
     function GetAsBoolean: Boolean; virtual; abstract;
     procedure SetAsBoolean(const Value: Boolean); virtual; abstract;
     function GetAsDateTime: TDateTime; virtual; abstract;
@@ -63,6 +65,7 @@ type
     property AsInteger: Integer write SetAsInteger;
     property AsLargeInt: Int64 write SetAsLargeInt;
     property AsDouble: Double write SetAsDouble;
+    property AsCurrency: Currency write SetAsCurrency;
     property AsBoolean: Boolean write SetAsBoolean;
     property AsDateTime: TDateTime write SetAsDateTime;
     property AsGuid: TGUID write SetAsGuid;

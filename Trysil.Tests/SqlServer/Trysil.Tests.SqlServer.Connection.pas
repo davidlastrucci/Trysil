@@ -125,11 +125,13 @@ const
     ' BirthDate DATETIME NOT NULL,' +
     ' UniqueID UNIQUEIDENTIFIER NOT NULL,' +
     ' Payload VARBINARY(MAX) NOT NULL,' +
+    ' Price decimal(19,4) NOT NULL,' +
     ' OptLargeNumber BIGINT NULL,' +
     ' OptIsActive BIT NULL,' +
     ' OptBirthDate DATETIME NULL,' +
     ' OptUniqueID UNIQUEIDENTIFIER NULL,' +
     ' OptPayload VARBINARY(MAX) NULL,' +
+    ' OptPrice decimal(19,4) NULL,' +
     ' VersionID INT NOT NULL,' +
     ' PRIMARY KEY(ID))';
 

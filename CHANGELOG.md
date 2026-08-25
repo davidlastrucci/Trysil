@@ -2,6 +2,16 @@
 
 Notable changes to Trysil, in reverse chronological order.
 
+## Currency - First-Class Decimal Type
+
+- **`Currency` entity fields**: `Currency` and `TTNullable<Currency>` are now mapped end to end without going through `Double`. `TTColumnMap.IsCurrency` drives the choice, exactly like `IsGuid` / `IsInteger` / `IsInt64`, so a `Currency` member is read through `TTCurrencyColumn` (`TField.AsCurrency`) and written through `TTCurrencyParameter` (`TTParam.AsCurrency`), and its four decimals stay exact
+- **`TTParam.AsCurrency`**: new writer on the parameter contract, implemented by `TTFDParam`, the only implementation, so no driver had to change
+- **Filter values**: a `Currency` value bound to a filter parameter is now written as `Currency` instead of being converted to `Double`
+- **JSON**: `TTJSonCurrencySerializer` / `TTJSonCurrencyDeserializer` emit and parse the exact decimal representation with invariant formatting, replacing the previous aliasing on the `Double` serializer
+- **`TTDataset<T>`**: a `Currency` column is published as an `ftCurrency` field definition, and the record buffer is converted for both plain and nullable members. Previously a `TTNullable<Currency>` member was filled with the raw bit pattern of a `TTNullable<Double>`
+- **Trysil Expert**: new `Currency` column type, generating `DECIMAL(19,4)` (`NUMBER(19,4)` on Oracle, the same type). Firebird and InterBase get `DECIMAL(18,4)`, since they reject a precision above 18
+- **Tests**: `TTestAllTypes` gains a `Currency` and a `TTNullable<Currency>` column on all seven engines, with a round-trip test that accumulates 0.07 ten times and expects exactly 0.70
+
 ## JWT - Signing Algorithms & Key Rotation
 
 - **Payload split into algorithm units**: `TTHttpJWTAbstractPayload` (`Trysil.Http.JWT.Payload.pas`) now declares only the signing contract (`Algorithm`, `Sign`, `Verify`, `ToJSon`, `FromJSon`); the actual cryptography lives in `TTHttpJWTHS256Payload` (`Trysil.Http.JWT.Payload.HS256.pas`) and `TTHttpJWTRS256Payload` (`Trysil.Http.JWT.Payload.RS256.pas`)

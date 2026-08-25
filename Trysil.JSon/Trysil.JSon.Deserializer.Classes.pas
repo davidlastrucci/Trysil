@@ -67,6 +67,13 @@ type
     function FromJSon(const AJSon: TJSonValue): TTValue; override;
   end;
 
+{ TTJSonCurrencyDeserializer }
+
+  TTJSonCurrencyDeserializer = class(TTJSonAbstractDeserializer)
+  public
+    function FromJSon(const AJSon: TJSonValue): TTValue; override;
+  end;
+
 { TTJSonBooleanDeserializer }
 
   TTJSonBooleanDeserializer = class(TTJSonAbstractDeserializer)
@@ -147,6 +154,17 @@ end;
 function TTJSonDoubleDeserializer.FromJSon(const AJSon: TJSonValue): TTValue;
 begin
   result := TTValue.From<Double>(AJSon.GetValue<Double>());
+end;
+
+{ TTJSonCurrencyDeserializer }
+
+function TTJSonCurrencyDeserializer.FromJSon(const AJSon: TJSonValue): TTValue;
+var
+  LValue: Currency;
+begin
+  if not TryStrToCurr(AJSon.Value, LValue, TFormatSettings.Invariant) then
+    LValue := AJSon.GetValue<Double>();
+  result := TTValue.From<Currency>(LValue);
 end;
 
 { TTJSonBooleanDeserializer }
@@ -234,7 +252,7 @@ begin
 
   Self.Register<Double>(TTJSonDoubleDeserializer);
   Self.Register<Extended>(TTJSonDoubleDeserializer);
-  Self.Register<Currency>(TTJSonDoubleDeserializer);
+  Self.Register<Currency>(TTJSonCurrencyDeserializer);
 
   Self.Register<Boolean>(TTJSonBooleanDeserializer);
 

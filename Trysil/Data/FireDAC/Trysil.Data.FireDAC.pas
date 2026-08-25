@@ -53,6 +53,8 @@ type
     procedure SetAsLargeInt(const AValue: Int64); override;
     function GetAsDouble: Double; override;
     procedure SetAsDouble(const AValue: Double); override;
+    function GetAsCurrency: Currency; override;
+    procedure SetAsCurrency(const AValue: Currency); override;
     function GetAsBoolean: Boolean; override;
     procedure SetAsBoolean(const AValue: Boolean); override;
     function GetAsDateTime: TDateTime; override;
@@ -251,6 +253,16 @@ end;
 procedure TTFDParam.SetAsDouble(const AValue: Double);
 begin
   FParam.AsFloat := AValue;
+end;
+
+function TTFDParam.GetAsCurrency: Currency;
+begin
+  result := FParam.AsCurrency;
+end;
+
+procedure TTFDParam.SetAsCurrency(const AValue: Currency);
+begin
+  FParam.AsCurrency := AValue;
 end;
 
 function TTFDParam.GetAsBoolean: Boolean;

@@ -344,6 +344,8 @@ begin
       result := 'BIGINT';
     dtDouble:
       result := 'FLOAT';
+    dtCurrency:
+      result := 'DECIMAL(18,4)';
     dtBoolean:
       result := 'BOOLEAN';
     dtDateTime:
@@ -394,6 +396,8 @@ begin
       result := 'NUMERIC(18,0)';
     dtDouble:
       result := 'DOUBLE PRECISION';
+    dtCurrency:
+      result := 'DECIMAL(18,4)';
     dtBoolean:
       result := 'BOOLEAN';
     dtDateTime:
@@ -444,6 +448,8 @@ begin
       result := 'BIGINT';
     dtDouble:
       result := 'DECIMAL(18,4)';
+    dtCurrency:
+      result := 'DECIMAL(19,4)';
     dtBoolean:
       result := 'BOOLEAN';
     dtDateTime:
@@ -493,6 +499,8 @@ begin
       result := 'NUMBER(19)';
     dtDouble:
       result := 'NUMBER(18,4)';
+    dtCurrency:
+      result := 'NUMBER(19,4)';
     dtBoolean:
       result := 'BOOLEAN';
     dtDateTime:
@@ -542,6 +550,8 @@ begin
       result := 'bigint';
     dtDouble:
       result := 'decimal';
+    dtCurrency:
+      result := 'decimal(19,4)';
     dtBoolean:
       result := 'boolean';
     dtDateTime:
@@ -589,6 +599,8 @@ begin
       result := 'BIGINT';
     dtDouble:
       result := 'DOUBLE';
+    dtCurrency:
+      result := 'DECIMAL(19,4)';
     dtBoolean:
       result := 'BOOLEAN';
     dtDateTime:
@@ -641,6 +653,8 @@ begin
       result := 'bigint';
     dtDouble:
       result := 'float';
+    dtCurrency:
+      result := 'decimal(19,4)';
     dtBoolean:
       result := 'bit';
     dtDateTime:

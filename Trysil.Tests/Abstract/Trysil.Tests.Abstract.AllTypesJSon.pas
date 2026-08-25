@@ -111,6 +111,7 @@ begin
   LEntity.BirthDate := EncodeDateTime(2024, 1, 15, 10, 0, 0, 0);
   LEntity.UniqueID := GUID_SAMPLE;
   LEntity.Payload := TBytes.Create($01, $02, $03);
+  LEntity.Price := 1234.5678;
   FJSonContext.Insert<TTestAllTypes>(LEntity);
 
   LJson := FJSonContext.EntityToJSon<TTestAllTypes>(LEntity, LConfig);
@@ -126,6 +127,8 @@ begin
     Assert.IsNotNull(LObj.GetValue('birthDate'));
     Assert.IsNotNull(LObj.GetValue('uniqueID'));
     Assert.IsNotNull(LObj.GetValue('payload'));
+    Assert.AreEqual('1234.5678', LObj.GetValue('price').ToJSon,
+      'Currency must keep its four decimals in JSon');
   finally
     LValue.Free;
   end;
@@ -160,6 +163,7 @@ begin
     Assert.IsTrue(LObj.GetValue('optBirthDate') is TJSonNull);
     Assert.IsTrue(LObj.GetValue('optUniqueID') is TJSonNull);
     Assert.IsTrue(LObj.GetValue('optPayload') is TJSonNull);
+    Assert.IsTrue(LObj.GetValue('optPrice') is TJSonNull);
   finally
     LValue.Free;
   end;
@@ -183,6 +187,7 @@ begin
   LEntity.BirthDate := LExpectedDate;
   LEntity.UniqueID := GUID_SAMPLE;
   LEntity.Payload := TBytes.Create($AA, $BB);
+  LEntity.Price := -19.9999;
   FJSonContext.Insert<TTestAllTypes>(LEntity);
 
   LJson := FJSonContext.EntityToJSon<TTestAllTypes>(LEntity, LConfig);
@@ -195,6 +200,7 @@ begin
   Assert.AreEqual<Integer>(2, Length(LRestored.Payload));
   Assert.AreEqual<Byte>($AA, LRestored.Payload[0]);
   Assert.AreEqual<Byte>($BB, LRestored.Payload[1]);
+  Assert.AreEqual<Currency>(-19.9999, LRestored.Price);
 end;
 
 procedure TTAbstractAllTypesJSonTests.EntityFromJSonRoundTripsAllNullableFields;
@@ -217,6 +223,7 @@ begin
   LEntity.OptIsActive := TTNullable<Boolean>.Create(True);
   LEntity.OptUniqueID := TTNullable<TGuid>.Create(GUID_SAMPLE);
   LEntity.OptPayload := TTNullable<TBytes>.Create(TBytes.Create($FE, $ED));
+  LEntity.OptPrice := TTNullable<Currency>.Create(1000000.0001);
   FJSonContext.Insert<TTestAllTypes>(LEntity);
 
   LJson := FJSonContext.EntityToJSon<TTestAllTypes>(LEntity, LConfig);
@@ -233,6 +240,9 @@ begin
     IsEqualGUID(GUID_SAMPLE, LRestored.OptUniqueID.GetValueOrDefault));
   Assert.IsFalse(LRestored.OptPayload.IsNull);
   Assert.AreEqual<Integer>(2, Length(LRestored.OptPayload.GetValueOrDefault));
+  Assert.IsFalse(LRestored.OptPrice.IsNull);
+  Assert.AreEqual<Currency>(
+    1000000.0001, LRestored.OptPrice.GetValueOrDefault);
 end;
 
 procedure TTAbstractAllTypesJSonTests.EntityToJSonEncodesBlobAsBase64String;
@@ -315,6 +325,7 @@ begin
   Assert.IsTrue(LJson.Contains('isActive'));
   Assert.IsTrue(LJson.Contains('uniqueID'));
   Assert.IsTrue(LJson.Contains('payload'));
+  Assert.IsTrue(LJson.Contains('price'));
   Assert.IsTrue(LJson.Contains('AllTypes'),
     'MetadataToJSon must emit the table name');
 end;

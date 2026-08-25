@@ -66,6 +66,7 @@ inherited TDesignDataTypeColumnForm: TTDesignDataTypeColumnForm
         'Integer'
         'LargeInteger'
         'Double'
+        'Currency'
         'Boolean'
         'DateTime'
         'Guid'

@@ -44,6 +44,7 @@ Trysil supports the following field types for column mapping:
 | `Integer` | 32-bit integer |
 | `Int64` | 64-bit integer |
 | `Double` | Floating-point number |
+| `Currency` | Exact decimal with 4 decimal places, for monetary amounts |
 | `Boolean` | True/False |
 | `TDateTime` | Date and time |
 | `TGUID` | Globally unique identifier |

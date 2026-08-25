@@ -55,6 +55,9 @@ type
 
     [Test]
     procedure SelectAllReturnsMultipleRows;
+
+    [Test]
+    procedure CurrencyRoundTripKeepsFourDecimals;
   end;
 
 implementation
@@ -97,10 +100,12 @@ begin
   LEntity.BirthDate := LExpectedDate;
   LEntity.UniqueID := GUID_ONE;
   LEntity.Payload := LExpectedPayload;
+  LEntity.Price := 1234.5678;
   FContext.Insert<TTestAllTypes>(LEntity);
 
   LLoaded := FContext.Get<TTestAllTypes>(LEntity.ID);
   Assert.AreEqual<Int64>(Int64(9000000000), LLoaded.LargeNumber);
+  Assert.AreEqual<Currency>(1234.5678, LLoaded.Price);
   Assert.IsTrue(LLoaded.IsActive);
   Assert.AreEqual(LExpectedDate, LLoaded.BirthDate);
   Assert.IsTrue(IsEqualGUID(GUID_ONE, LLoaded.UniqueID));
@@ -130,6 +135,7 @@ begin
   LEntity.OptBirthDate := TTNullable<TDateTime>.Create(LExpectedDate);
   LEntity.OptUniqueID := TTNullable<TGuid>.Create(GUID_TWO);
   LEntity.OptPayload := TTNullable<TBytes>.Create(LExpectedPayload);
+  LEntity.OptPrice := TTNullable<Currency>.Create(-19.9999);
   FContext.Insert<TTestAllTypes>(LEntity);
 
   LLoaded := FContext.Get<TTestAllTypes>(LEntity.ID);
@@ -143,6 +149,8 @@ begin
   Assert.IsTrue(IsEqualGUID(GUID_TWO, LLoaded.OptUniqueID.GetValueOrDefault));
   Assert.IsFalse(LLoaded.OptPayload.IsNull);
   Assert.AreEqual<Integer>(2, Length(LLoaded.OptPayload.GetValueOrDefault));
+  Assert.IsFalse(LLoaded.OptPrice.IsNull);
+  Assert.AreEqual<Currency>(-19.9999, LLoaded.OptPrice.GetValueOrDefault);
 end;
 
 procedure TTAbstractAllTypesTests.NullableFieldsDefaultToNull;
@@ -165,6 +173,7 @@ begin
   Assert.IsTrue(LLoaded.OptBirthDate.IsNull);
   Assert.IsTrue(LLoaded.OptUniqueID.IsNull);
   Assert.IsTrue(LLoaded.OptPayload.IsNull);
+  Assert.IsTrue(LLoaded.OptPrice.IsNull);
 end;
 
 procedure TTAbstractAllTypesTests.UpdateRewritesAllValues;
@@ -190,6 +199,7 @@ begin
   LEntity.BirthDate := LUpdatedDate;
   LEntity.UniqueID := GUID_TWO;
   LEntity.Payload := TBytes.Create($FF, $00);
+  LEntity.Price := 99.9999;
   FContext.Update<TTestAllTypes>(LEntity);
 
   LLoaded := FContext.Get<TTestAllTypes>(LEntity.ID);
@@ -198,6 +208,7 @@ begin
   Assert.AreEqual(LUpdatedDate, LLoaded.BirthDate);
   Assert.AreEqual(GUID_TWO.ToString, LLoaded.UniqueID.ToString);
   Assert.AreEqual<Integer>(2, Length(LLoaded.Payload));
+  Assert.AreEqual<Currency>(99.9999, LLoaded.Price);
 end;
 
 procedure TTAbstractAllTypesTests.DeleteRemovesRow;
@@ -243,6 +254,33 @@ begin
   finally
     LList.Free;
   end;
+end;
+
+procedure TTAbstractAllTypesTests.CurrencyRoundTripKeepsFourDecimals;
+var
+  LEntity: TTestAllTypes;
+  LLoaded: TTestAllTypes;
+  LIndex: Integer;
+  LPrice: Currency;
+begin
+  LPrice := 0;
+  for LIndex := 1 to 10 do
+    LPrice := LPrice + 0.07;
+
+  LEntity := FContext.CreateEntity<TTestAllTypes>();
+  LEntity.LargeNumber := 1;
+  LEntity.IsActive := True;
+  LEntity.BirthDate := Now;
+  LEntity.UniqueID := GUID_ONE;
+  LEntity.Payload := TBytes.Create($01);
+  LEntity.Price := LPrice;
+  LEntity.OptPrice := TTNullable<Currency>.Create(1000000.0001);
+  FContext.Insert<TTestAllTypes>(LEntity);
+
+  LLoaded := FContext.Get<TTestAllTypes>(LEntity.ID);
+  Assert.AreEqual<Currency>(0.7, LLoaded.Price);
+  Assert.IsFalse(LLoaded.OptPrice.IsNull);
+  Assert.AreEqual<Currency>(1000000.0001, LLoaded.OptPrice.GetValueOrDefault);
 end;
 
 end.

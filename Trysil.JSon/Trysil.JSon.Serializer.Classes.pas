@@ -67,6 +67,13 @@ type
     function ToJSon(const AValue: TTValue): TJSonValue; override;
   end;
 
+{ TTJSonCurrencySerializer }
+
+  TTJSonCurrencySerializer = class(TTJSonAbstractSerializer)
+  public
+    function ToJSon(const AValue: TTValue): TJSonValue; override;
+  end;
+
 { TTJSonBooleanSerializer }
 
   TTJSonBooleanSerializer = class(TTJSonAbstractSerializer)
@@ -149,6 +156,14 @@ end;
 function TTJSonDoubleSerializer.ToJSon(const AValue: TTValue): TJSonValue;
 begin
   result := TJSonNumber.Create(AValue.AsType<Double>());
+end;
+
+{ TTJSonCurrencySerializer }
+
+function TTJSonCurrencySerializer.ToJSon(const AValue: TTValue): TJSonValue;
+begin
+  result := TJSonNumber.Create(
+    CurrToStr(AValue.AsType<Currency>(), TFormatSettings.Invariant));
 end;
 
 { TTJSonBooleanSerializer }
@@ -236,7 +251,7 @@ begin
 
   Self.Register<Double>(TTJSonDoubleSerializer);
   Self.Register<Extended>(TTJSonDoubleSerializer);
-  Self.Register<Currency>(TTJSonDoubleSerializer);
+  Self.Register<Currency>(TTJSonCurrencySerializer);
 
   Self.Register<Boolean>(TTJSonBooleanSerializer);
 

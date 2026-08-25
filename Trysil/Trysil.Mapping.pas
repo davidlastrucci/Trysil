@@ -78,6 +78,7 @@ type
     FIsGuid: Boolean;
     FIsInteger: Boolean;
     FIsInt64: Boolean;
+    FIsCurrency: Boolean;
 
     function GetLookupName: String;
     function GetValidationColumnName: String;
@@ -113,6 +114,7 @@ type
     property IsGuid: Boolean read FIsGuid;
     property IsInteger: Boolean read FIsInteger;
     property IsInt64: Boolean read FIsInt64;
+    property IsCurrency: Boolean read FIsCurrency;
   end;
 
 { TTChangeTrackingMap }
@@ -610,6 +612,9 @@ begin
   FIsInt64 := Assigned(FMember) and (
     TTRtti.IsSameType(TypeInfo(Int64), FMember.RttiType) or
     TTRtti.IsSameType(TypeInfo(TTNullable<Int64>), FMember.RttiType));
+  FIsCurrency := Assigned(FMember) and (
+    TTRtti.IsSameType(TypeInfo(Currency), FMember.RttiType) or
+    TTRtti.IsSameType(TypeInfo(TTNullable<Currency>), FMember.RttiType));
 end;
 
 procedure TTColumnMap.SearchValidations(const ARttiMember: TRttiMember);

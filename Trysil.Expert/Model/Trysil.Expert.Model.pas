@@ -80,6 +80,7 @@ type
     dtInteger,
     dtLargeInteger,
     dtDouble,
+    dtCurrency,
     dtBoolean,
     dtDateTime,
     dtGuid,
@@ -391,6 +392,9 @@ begin
 
     TTDataType.dtDouble:
       result := 'Double';
+
+    TTDataType.dtCurrency:
+      result := 'Currency';
 
     TTDataType.dtBoolean:
       result := 'Boolean';

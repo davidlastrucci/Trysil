@@ -126,11 +126,13 @@ const
     ' BirthDate TIMESTAMP NOT NULL,' +
     ' UniqueID RAW(16) NOT NULL,' +
     ' Payload BLOB NOT NULL,' +
+    ' Price NUMBER(19,4) NOT NULL,' +
     ' OptLargeNumber NUMBER(19) NULL,' +
     ' OptIsActive BOOLEAN NULL,' +
     ' OptBirthDate TIMESTAMP NULL,' +
     ' OptUniqueID RAW(16) NULL,' +
     ' OptPayload BLOB NULL,' +
+    ' OptPrice NUMBER(19,4) NULL,' +
     ' VersionID NUMBER(9) NOT NULL,' +
     ' PRIMARY KEY(ID))';
 

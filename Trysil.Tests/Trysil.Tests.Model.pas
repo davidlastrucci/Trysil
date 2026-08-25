@@ -727,6 +727,9 @@ type
     [TColumn('Payload')]
     FPayload: TBytes;
 
+    [TColumn('Price')]
+    FPrice: Currency;
+
     [TColumn('OptLargeNumber')]
     FOptLargeNumber: TTNullable<Int64>;
 
@@ -742,6 +745,9 @@ type
     [TColumn('OptPayload')]
     FOptPayload: TTNullable<TBytes>;
 
+    [TColumn('OptPrice')]
+    FOptPrice: TTNullable<Currency>;
+
     [TVersionColumn]
     [TColumn('VersionID')]
     FVersion: TTVersion;
@@ -752,6 +758,7 @@ type
     property BirthDate: TDateTime read FBirthDate write FBirthDate;
     property UniqueID: TGuid read FUniqueID write FUniqueID;
     property Payload: TBytes read FPayload write FPayload;
+    property Price: Currency read FPrice write FPrice;
     property OptLargeNumber: TTNullable<Int64>
       read FOptLargeNumber write FOptLargeNumber;
     property OptIsActive: TTNullable<Boolean>
@@ -762,6 +769,8 @@ type
       read FOptUniqueID write FOptUniqueID;
     property OptPayload: TTNullable<TBytes>
       read FOptPayload write FOptPayload;
+    property OptPrice: TTNullable<Currency>
+      read FOptPrice write FOptPrice;
     property Version: TTVersion read FVersion;
   end;
 
