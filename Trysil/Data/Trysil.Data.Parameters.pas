@@ -16,6 +16,7 @@ uses
   System.Classes,
   System.SysUtils,
   System.Generics.Collections,
+  System.TypInfo,
   System.Rtti,
   Data.DB,
 
