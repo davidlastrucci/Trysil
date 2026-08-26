@@ -1,52 +1,70 @@
 # Transactions
 
-`TTTransaction` wraps explicit transaction management in Trysil. It is defined in `Trysil.Transaction.pas`.
+Transactions are implemented by `TTTransaction` (`Trysil.Transaction.pas`) and exposed through `TTContext`.
 
-## Basic Usage
+## RunInTransaction
+
+The recommended form. It is a method of `TTContext`:
 
 ```pascal
-var LTransaction := LContext.CreateTransaction;
+LContext.RunInTransaction(
+  procedure
+  begin
+    LContext.Insert<TOrder>(LOrder);
+    LContext.Insert<TOrderLine>(LLine1);
+    LContext.Insert<TOrderLine>(LLine2);
+  end);
+```
+
+It commits when the procedure returns normally, and on an exception it rolls back and re-raises.
+
+If a transaction is already active on the connection, the procedure **joins it** instead of opening a second one. A domain method that wraps itself in `RunInTransaction` is therefore atomic both when called on its own and when called from inside a larger transaction, without having to know which case it is in:
+
+```pascal
+procedure TOrderService.Confirm(const AOrder: TOrder);
+begin
+  FContext.RunInTransaction(
+    procedure
+    begin
+      // ...
+    end);
+end;
+```
+
+## Explicit transactions
+
+`CreateTransaction` takes a `TTTransactionMode` that decides what destruction means when neither `Commit` nor `Rollback` has been called:
+
+| Mode | On destroy |
+|---|---|
+| `TTTransactionMode.RollbackOnDestroy` | rolls back |
+| `TTTransactionMode.CommitOnDestroy` | commits |
+
+```pascal
+var LTransaction := LContext.CreateTransaction(
+  TTTransactionMode.RollbackOnDestroy);
 try
   LContext.Insert<TOrder>(LOrder);
-  LContext.Insert<TOrderLine>(LLine1);
-  LContext.Insert<TOrderLine>(LLine2);
-  // Auto-commits when LTransaction is freed
+  LContext.Insert<TOrderLine>(LLine);
+
+  LTransaction.Commit;
 finally
   LTransaction.Free;
 end;
 ```
 
-The transaction starts automatically on construction (`AfterConstruction`) and commits automatically on destruction (`BeforeDestruction`). There is no need to call a `Commit` method explicitly.
+Prefer `RollbackOnDestroy`. Any path that leaves the block without reaching `Commit` — an exception included — rolls back, which makes the ordinary `try..finally` correct. With `CommitOnDestroy` the same `try..finally` commits partial work when the block is left through an exception, because there destruction is what commits.
 
-## Rollback
+`CreateTransaction` with no arguments is deprecated and maps to `CommitOnDestroy`.
 
-To abort a transaction, call `Rollback` before the transaction is freed:
+## Behaviour
 
-```pascal
-var LTransaction := LContext.CreateTransaction;
-try
-  try
-    LContext.Insert<TOrder>(LOrder);
-    LContext.Insert<TOrderLine>(LLine);
-    // Something fails...
-  except
-    LTransaction.Rollback;
-    raise;
-  end;
-finally
-  LTransaction.Free;
-end;
-```
+- **Start**: the transaction starts in `AfterConstruction`. If the connection is already in a transaction no local transaction is started, and the object does nothing for the rest of its life. Trysil does not use savepoints, so an inner transaction is not independent of the outer one. Creating a `RollbackOnDestroy` transaction inside another one raises, because it could not honour what it declares.
+- **Commit and Rollback**: both clear the internal flag, so destruction never repeats work already done. A failed `Commit` attempts a rollback and re-raises, leaving the connection clean.
+- **Destruction**: whatever happens there is silent by design. An exception escaping a destructor would replace the error that caused the unwind with a less useful one, and would stop the instance from being freed.
+- **Internal use**: single writes (`Insert`, `Update`, `Delete`), the batch methods (`InsertAll`, `UpdateAll`, `DeleteAll`, `ApplyAll`) and `TTSession<T>.ApplyChanges` are already wrapped. You need a transaction of your own only to make several of those atomic together.
 
-After `Rollback` is called, the auto-commit on destruction is skipped.
-
-## Behavior
-
-- **Auto-start**: The transaction starts in `AfterConstruction`. If the connection already has an active transaction, a new local transaction is not started (nested transaction support depends on the database driver).
-- **Auto-commit**: The transaction commits in `BeforeDestruction`, unless `Rollback` was called or the connection does not support transactions.
-- **Internal use**: The resolver uses `TTTransaction` internally for write operations (`Insert`, `Update`, `Delete`). When you use `InsertAll`, `UpdateAll`, `DeleteAll`, or `ApplyAll`, the context wraps the batch in a transaction automatically.
-
-## Checking Transaction State
+## Checking transaction state
 
 ```pascal
 if LContext.InTransaction then
@@ -61,21 +79,15 @@ if LContext.SupportTransaction then
 | `InTransaction` | `True` if the write connection currently has an active transaction |
 | `SupportTransaction` | `True` if the write connection supports transaction management |
 
-## Transaction with Session
+## Transactions with a session
 
-When using `TTSession<T>.ApplyChanges`, the session creates its own transaction if one is not already active. You can wrap the session in an explicit transaction to combine it with other operations:
+`TTSession<T>.ApplyChanges` opens its own transaction only when none is active, so it joins the surrounding one:
 
 ```pascal
-var LTransaction := LContext.CreateTransaction;
-try
-  try
+LContext.RunInTransaction(
+  procedure
+  begin
     LSession.ApplyChanges;
     LContext.Insert<TAuditLog>(LAuditEntry);
-  except
-    LTransaction.Rollback;
-    raise;
-  end;
-finally
-  LTransaction.Free;
-end;
+  end);
 ```

@@ -239,15 +239,13 @@ procedure TOrderDialog.ApplyEntity;
 var
   LTransaction: TTTransaction;
 begin
-  LTransaction := Context.CreateTransaction;
+  LTransaction := Context.CreateTransaction(
+    TTTransactionMode.RollbackOnDestroy);
   try
-    try
-      Context.Save<TOrder>(FOrder);
-      FSession.ApplyChanges;
-    except
-      LTransaction.Rollback;
-      raise;
-    end;
+    Context.Save<TOrder>(FOrder);
+    FSession.ApplyChanges;
+
+    LTransaction.Commit;
   finally
     LTransaction.Free;
   end;

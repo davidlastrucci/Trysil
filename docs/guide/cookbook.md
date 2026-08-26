@@ -147,33 +147,34 @@ end;
 Wrap multiple operations in a transaction with automatic commit/rollback:
 
 ```pascal
-var LTransaction := LContext.CreateTransaction;
-try
-  LContext.Insert<TOrder>(LOrder);
-  LContext.Insert<TOrderDetail>(LDetail1);
-  LContext.Insert<TOrderDetail>(LDetail2);
-  // auto-commits on Free
-finally
-  LTransaction.Free;
-end;
+LContext.RunInTransaction(
+  procedure
+  begin
+    LContext.Insert<TOrder>(LOrder);
+    LContext.Insert<TOrderDetail>(LDetail1);
+    LContext.Insert<TOrderDetail>(LDetail2);
+  end);
 ```
 
-To roll back explicitly:
+It commits on clean exit and rolls back and re-raises on an exception. If a
+transaction is already active it joins it instead of opening a second one.
+
+When you need to decide commit and rollback yourself:
 
 ```pascal
-var LTransaction := LContext.CreateTransaction;
+var LTransaction := LContext.CreateTransaction(
+  TTTransactionMode.RollbackOnDestroy);
 try
-  try
-    LContext.Insert<TOrder>(LOrder);
-    LContext.Update<TProduct>(LProduct);
-  except
-    LTransaction.Rollback;
-    raise;
-  end;
+  LContext.Insert<TOrder>(LOrder);
+  LContext.Update<TProduct>(LProduct);
+
+  LTransaction.Commit;
 finally
   LTransaction.Free;
 end;
 ```
+
+Leaving the block without reaching `Commit` rolls back.
 
 ## Lazy Loading a Related Entity
 

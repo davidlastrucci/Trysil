@@ -30,6 +30,10 @@ begin
   TTLanguage.Instance.Add(SDuplicateWhereClauseAttribute, 'Attributo TWhereClause duplicato.');
   TTLanguage.Instance.Add(SDuplicatePrimaryKeyAttribute, 'Attributo TPrimaryKey duplicato.');
   TTLanguage.Instance.Add(SDuplicateVersionColumnAttribute, 'Attributo TVersionColumn duplicato.');
+  TTLanguage.Instance.Add(SDuplicateChangedAtAttribute, 'Attributo "At" di change tracking duplicato: %0:s.');
+  TTLanguage.Instance.Add(SDuplicateChangedByAttribute, 'Attributo "By" di change tracking duplicato: %0:s.');
+  TTLanguage.Instance.Add(SInvalidChangedAtType, 'L''attributo "At" di change tracking richiede un campo TTNullable<TDateTime>: %0:s.');
+  TTLanguage.Instance.Add(SInvalidChangedByType, 'L''attributo "By" di change tracking richiede un campo String: %0:s.');
   TTLanguage.Instance.Add(SInsertEventAttribute, 'Attributo TInsertEventAttribute duplicato.');
   TTLanguage.Instance.Add(SUpdateEventAttribute, 'Attributo TUpdateEventAttribute duplicato.');
   TTLanguage.Instance.Add(SDeleteEventAttribute, 'Attributo TDeleteEventAttribute duplicato.');
@@ -73,8 +77,12 @@ begin
   TTLanguage.Instance.Add(SInTransaction, '%0:s: transazione già avviata.');
   TTLanguage.Instance.Add(SNotInTransaction, '%0:s: transazione non ancora avviata.');
   TTLanguage.Instance.Add(SNotValidTransaction, 'La transazione non è più valida.');
+  TTLanguage.Instance.Add(SProcNotAssigned, 'La procedura non è assegnata.');
+  TTLanguage.Instance.Add(SNestedRollbackNotSupported, 'RollbackOnDestroy non è supportato dentro un''altra transazione.');
   TTLanguage.Instance.Add(SNotValidConnectionDriver, 'Connessione non trovata per il driver "%s".');
   TTLanguage.Instance.Add(SNotValidConnection, 'Connessione non trovata "%s".');
+  TTLanguage.Instance.Add(SJoinEntityReadOnly, 'Le entità di join sono di sola lettura: Insert, Update e Delete non sono supportate.');
+  TTLanguage.Instance.Add(SUndeleteNotSupported, 'Undelete non è supportato: l''entità non ha una colonna di cancellazione logica.');
 end;
 
 end.

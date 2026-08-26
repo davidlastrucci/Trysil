@@ -2,6 +2,18 @@
 
 Notable changes to Trysil, in reverse chronological order.
 
+## Transactions - Explicit Mode & RunInTransaction
+
+- **`TTContext.RunInTransaction(AProc)`**: runs a procedure inside a transaction. It commits on clean exit, rolls back and re-raises on an exception, and **joins the active transaction** when one is already open, so a domain method that wraps itself in it is atomic both when called on its own and when called from inside a larger unit of work
+- **`TTTransactionMode`** (`Trysil.Transaction.pas`, scoped enum): `CommitOnDestroy` or `RollbackOnDestroy`, passed to `CreateTransaction`, decides what destruction means when neither `Commit` nor `Rollback` was called. `RollbackOnDestroy` makes the ordinary `try..finally LTransaction.Free` correct, because any path that does not reach `Commit` rolls back
+- **`TTTransaction.Commit` is now public**, and clears the local flag so that destruction never repeats work already done. A failed `Commit` attempts a rollback and re-raises, instead of leaving the transaction open on the connection
+- **`CreateTransaction()` with no arguments is deprecated** and maps to `CommitOnDestroy`. Existing behaviour is unchanged, so nothing breaks: `try..finally LTransaction.Free` still commits on the way out of an exception, which is exactly why the deprecation is there
+- **A nested `RollbackOnDestroy` raises**: Trysil does not use savepoints, so an inner transaction cannot roll back independently of the outer one. Declaring that intention now fails immediately instead of silently doing nothing
+- **Destruction is silent by design**: whatever happens in `BeforeDestruction` is swallowed, because an exception escaping a destructor would replace the error that caused the unwind and would stop the instance from being freed
+- **`TTTransaction.Run(AConnection, AProc)`**: the shared implementation, at the connection layer. `TTContext.RunInTransaction`, `TTContext.InternalApplyAll`, `TTSession<T>.ApplyChanges` and `TTGenericCommand.ExecuteCommand` all route through it, so `TTTransaction` is now constructed in exactly two places
+- **`ExecuteCommand` no longer builds a transaction object per command** when the connection is already in one
+- **Tests**: six new cases in `Trysil.Tests.Abstract.Transaction.pas` - `RollbackOnDestroy` with and without an explicit `Commit`, a nested `RollbackOnDestroy` raising, and `RunInTransaction` committing, rolling back and joining an outer transaction
+
 ## Currency - First-Class Decimal Type
 
 - **`Currency` entity fields**: `Currency` and `TTNullable<Currency>` are now mapped end to end without going through `Double`. `TTColumnMap.IsCurrency` drives the choice, exactly like `IsGuid` / `IsInteger` / `IsInt64`, so a `Currency` member is read through `TTCurrencyColumn` (`TField.AsCurrency`) and written through `TTCurrencyParameter` (`TTParam.AsCurrency`), and its four decimals stay exact

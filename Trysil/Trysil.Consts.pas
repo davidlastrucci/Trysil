@@ -116,6 +116,9 @@ resourcestring
   SInTransaction = '%0:s: transaction already started.';
   SNotInTransaction = '%0:s: transaction not yet started.';
   SNotValidTransaction = 'Transaction is no longer valid.';
+  SProcNotAssigned = 'The procedure is not assigned.';
+  SNestedRollbackNotSupported =
+    'RollbackOnDestroy is not supported inside another transaction.';
   SNotValidConnectionDriver = 'Connection not found for "%s" driver.';
   SNotValidConnection = 'Connection not found "%s".';
   SJoinEntityReadOnly = 'Join entities are read-only: Insert, Update, and Delete are not supported.';

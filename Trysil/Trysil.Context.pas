@@ -83,8 +83,14 @@ type
     function CloneEntity<T: class>(const AEntity: T): T;
     procedure FreeEntity<T: class>(const AEntity: T);
 
-    function CreateTransaction(): TTTransaction;
+    function CreateTransaction(): TTTransaction; overload;
+      deprecated 'Use CreateTransaction(TTTransactionMode.CommitOnDestroy)';
+    function CreateTransaction(
+      const ATransactionMode: TTTransactionMode): TTTransaction; overload;
+    procedure RunInTransaction(const AProc: TProc);
+
     function CreateSession<T: class>(const AList: TList<T>): TTSession<T>;
+
     function CreateFilterBuilder<T: class>(): TTFilterBuilder<T>;
 
     function GetMetadata<T: class>(): TTTableMetadata;
@@ -259,10 +265,26 @@ end;
 
 function TTContext.CreateTransaction: TTTransaction;
 begin
+  result := CreateTransaction(TTTransactionMode.CommitOnDestroy);
+end;
+
+function TTContext.CreateTransaction(
+  const ATransactionMode: TTTransactionMode): TTTransaction;
+begin
   if not FWriteConnection.SupportTransaction then
     raise ETException.Create(
       TTLanguage.Instance.Translate(STransactionNotSupported));
-  result := TTTransaction.Create(FWriteConnection);
+  result := TTTransaction.Create(
+    FWriteConnection, ATransactionMode);
+end;
+
+procedure TTContext.RunInTransaction(const AProc: TProc);
+begin
+  if not FWriteConnection.SupportTransaction then
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(STransactionNotSupported));
+
+  TTTransaction.Run(FWriteConnection, AProc);
 end;
 
 function TTContext.CreateSession<T>(const AList: TList<T>): TTSession<T>;
@@ -350,29 +372,16 @@ end;
 
 procedure TTContext.InternalApplyAll<T>(
   const AList: TTList<T>; const AApplyAllMethod: TTApplyAllMethod<T>);
-var
-  LTransaction: TTTransaction;
-  LEntity: T;
 begin
   if Assigned(AApplyAllMethod) then
-  begin
-    LTransaction := nil;
-    if not FWriteConnection.InTransaction then
-      LTransaction := TTTransaction.Create(FWriteConnection);
-    try
-      try
+    RunInTransaction(
+      procedure()
+      var
+        LEntity: T;
+      begin
         for LEntity in AList do
           AApplyAllMethod(LEntity);
-      except
-        if Assigned(LTransaction) then
-          LTransaction.Rollback;
-        raise;
-      end;
-    finally
-      if Assigned(LTransaction) then
-        LTransaction.Free;
-    end;
-  end;
+      end);
 end;
 
 procedure TTContext.Save<T>(const AEntity: T);
@@ -453,26 +462,14 @@ procedure TTContext.ApplyAll<T>(
   const AInsertList: TTList<T>;
   const AUpdateList: TTList<T>;
   const ADeleteList: TTList<T>);
-var
-  LTransaction: TTTransaction;
 begin
-  LTransaction := nil;
-  if not FWriteConnection.InTransaction then
-    LTransaction := TTTransaction.Create(FWriteConnection);
-  try
-    try
+  RunInTransaction(
+    procedure()
+    begin
       InsertAll<T>(AInsertList);
       UpdateAll<T>(AUpdateList);
       DeleteAll<T>(ADeleteList);
-    except
-      if Assigned(LTransaction) then
-        LTransaction.Rollback;
-      raise;
-    end;
-  finally
-    if Assigned(LTransaction) then
-      LTransaction.Free;
-  end;
+    end);
 end;
 
 end.

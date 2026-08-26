@@ -30,6 +30,10 @@ begin
   TTLanguage.Instance.Add(SDuplicateWhereClauseAttribute, 'Attribut TWhereClause en double.');
   TTLanguage.Instance.Add(SDuplicatePrimaryKeyAttribute, 'Attribut TPrimaryKey en double.');
   TTLanguage.Instance.Add(SDuplicateVersionColumnAttribute, 'Attribut TVersionColumn en double.');
+  TTLanguage.Instance.Add(SDuplicateChangedAtAttribute, 'Attribut "At" de suivi des modifications en double : %0:s.');
+  TTLanguage.Instance.Add(SDuplicateChangedByAttribute, 'Attribut "By" de suivi des modifications en double : %0:s.');
+  TTLanguage.Instance.Add(SInvalidChangedAtType, 'L''attribut "At" de suivi des modifications requiert un champ TTNullable<TDateTime> : %0:s.');
+  TTLanguage.Instance.Add(SInvalidChangedByType, 'L''attribut "By" de suivi des modifications requiert un champ String : %0:s.');
   TTLanguage.Instance.Add(SInsertEventAttribute, 'Attribut TInsertEventAttribute en double.');
   TTLanguage.Instance.Add(SUpdateEventAttribute, 'Attribut TUpdateEventAttribute en double.');
   TTLanguage.Instance.Add(SDeleteEventAttribute, 'Attribut TDeleteEventAttribute en double.');
@@ -73,8 +77,12 @@ begin
   TTLanguage.Instance.Add(SInTransaction, '%0:s : transaction déjà démarrée.');
   TTLanguage.Instance.Add(SNotInTransaction, '%0:s : transaction pas encore démarrée.');
   TTLanguage.Instance.Add(SNotValidTransaction, 'La transaction n''est plus valide.');
+  TTLanguage.Instance.Add(SProcNotAssigned, 'La procédure n''est pas assignée.');
+  TTLanguage.Instance.Add(SNestedRollbackNotSupported, 'RollbackOnDestroy n''est pas supporté dans une autre transaction.');
   TTLanguage.Instance.Add(SNotValidConnectionDriver, 'Connexion introuvable pour le pilote "%s".');
   TTLanguage.Instance.Add(SNotValidConnection, 'Connexion introuvable "%s".');
+  TTLanguage.Instance.Add(SJoinEntityReadOnly, 'Les entités de jointure sont en lecture seule : Insert, Update et Delete ne sont pas pris en charge.');
+  TTLanguage.Instance.Add(SUndeleteNotSupported, 'Undelete n''est pas pris en charge : l''entité n''a pas de colonne de suppression logique.');
 end;
 
 end.

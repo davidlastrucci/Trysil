@@ -236,13 +236,12 @@ The three lists are processed in order: inserts first, then updates, then delete
 `ApplyAll` starts a transaction only when the write connection does not already have one. Called inside a transaction you opened yourself, it joins it instead of nesting: the whole unit of work stays atomic, and commit or rollback remains the caller's decision.
 
 ```pascal
-LTransaction := LContext.CreateTransaction;
-try
-  LContext.ApplyAll<TPerson>(LInsertList, LUpdateList, LDeleteList);
-  LContext.ApplyAll<TOrder>(LOrderInserts, LOrderUpdates, LOrderDeletes);
-finally
-  LTransaction.Free;   // commits, or call Rollback to abort both
-end;
+LContext.RunInTransaction(
+  procedure
+  begin
+    LContext.ApplyAll<TPerson>(LInsertList, LUpdateList, LDeleteList);
+    LContext.ApplyAll<TOrder>(LOrderInserts, LOrderUpdates, LOrderDeletes);
+  end);
 ```
 
 ## Factory Methods
@@ -263,12 +262,28 @@ Deep-clone an existing entity:
 LClone := LContext.CloneEntity<TPerson>(LPerson);
 ```
 
-### CreateTransaction
+### RunInTransaction
 
-Create an explicit transaction. See [Transactions](transactions.md):
+Run a procedure inside a transaction: it commits on clean exit, rolls back and
+re-raises on an exception, and joins the current transaction if one is already
+active. See [Transactions](transactions.md):
 
 ```pascal
-LTransaction := LContext.CreateTransaction;
+LContext.RunInTransaction(
+  procedure
+  begin
+    LContext.Insert<TOrder>(LOrder);
+  end);
+```
+
+### CreateTransaction
+
+Create an explicit transaction when you need to decide commit and rollback
+yourself. See [Transactions](transactions.md):
+
+```pascal
+LTransaction := LContext.CreateTransaction(
+  TTTransactionMode.RollbackOnDestroy);
 ```
 
 ### CreateSession

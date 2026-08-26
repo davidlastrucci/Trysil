@@ -282,27 +282,16 @@ begin
 end;
 
 procedure TTSession<T>.ApplyChanges;
-var
-  LTransaction: TTTransaction;
 begin
   if FApplied then
     raise ETException.Create(TTLanguage.Instance.Translate(SSessionNotTwice));
 
-  LTransaction := nil;
-  if not FConnection.InTransaction then
-    LTransaction := TTTransaction.Create(FConnection);
-  try
-    try
+  TTTransaction.Run(
+    FConnection,
+    procedure
+    begin
       InternalApplyChanges;
-    except
-      if Assigned(LTransaction) then
-        LTransaction.Rollback;
-      raise;
-    end;
-  finally
-    if Assigned(LTransaction) then
-      LTransaction.Free;
-  end;
+    end);
 
   FApplied := True;
 end;

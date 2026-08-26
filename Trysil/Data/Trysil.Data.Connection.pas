@@ -469,13 +469,13 @@ procedure TTGenericCommand.ExecuteCommand(
   const AEvent: TTEvent;
   const ABeforeEventMethodType: TTEventMethodType;
   const AAfterEventMethodType: TTEventMethodType);
-var
-  LTransaction: TTTransaction;
-  LRowsAffected: Integer;
 begin
-  LTransaction := TTTransaction.Create(FConnection);
-  try
-    try
+  TTTransaction.Run(
+    FConnection,
+    procedure
+    var
+      LRowsAffected: Integer;
+    begin
       BeforeExecute(AEntity, AEvent, ABeforeEventMethodType);
 
       TTLogger.Instance.LogCommand(FConnection.ConnectionID, ASQL);
@@ -492,13 +492,7 @@ begin
         raise ETDataIntegrityException.Create(TTLanguage.Instance.Translate(SSyntaxError));
 
       AfterExecute(AEntity, AEvent, AAfterEventMethodType);
-    except
-      LTransaction.Rollback;
-      raise;
-    end;
-  finally
-    LTransaction.Free;
-  end;
+    end);
 end;
 
 { TTGenericInsertCommand }
