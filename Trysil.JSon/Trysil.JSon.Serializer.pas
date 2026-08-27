@@ -42,6 +42,7 @@ type
 
     procedure AddLazyID(
       const AObject: TObject; const AName: String; const AJSon: TJSonObject);
+    function CanSerializeLevel: Boolean;
     function GetJSonValue(const AValue: TTValue): TJSonValue;
     function GetJSonNullableValue(const AValue: TTValue): TJSonValue;
     function GetJSonObjectOrArrayValue(const AValue: TTValue): TJSonValue;
@@ -115,6 +116,11 @@ begin
   end;
 end;
 
+function TTJSonSerializer.CanSerializeLevel: Boolean;
+begin
+  result := (FConfig.MaxLevels < 0) or (FLevel <= FConfig.MaxLevels);
+end;
+
 function TTJSonSerializer.GetJSonValue(const AValue: TTValue): TJSonValue;
 var
   LSerializer: TTJSonAbstractSerializer;
@@ -151,8 +157,11 @@ var
   LObject: TObject;
   LList: TTJSonList;
 begin
-  LObject := GetLazyObject(AValue.AsObject);
   result := nil;
+  LObject := nil;
+  if CanSerializeLevel then
+    LObject := GetLazyObject(AValue.AsObject);
+
   if Assigned(LObject) then
   begin
     try
@@ -184,7 +193,7 @@ end;
 function TTJSonSerializer.GetJSonObjectValue(
   const AObject: TObject): TJSonObject;
 begin
-  if (FConfig.MaxLevels < 0) or (FLevel <= FConfig.MaxLevels) then
+  if CanSerializeLevel then
   begin
     result := TJSonObject.Create;
     try
