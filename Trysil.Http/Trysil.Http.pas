@@ -194,7 +194,7 @@ begin
     raise;
   end;
 
-  FLog.RegisterWriter(FRttiLogWriter, DefaultLogThreadPoolSize);
+  FLog.RegisterWriter(FRttiLogWriter, ALogThreadPoolSize);
 end;
 
 procedure TTHttpServer<C>.RegisterAuthentication<H>;
