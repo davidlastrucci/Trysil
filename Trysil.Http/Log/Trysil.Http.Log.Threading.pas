@@ -70,8 +70,8 @@ end;
 
 procedure TTHttpLogThread.BeforeDestruction;
 begin
-  FEvent.SetEvent;
   Terminate;
+  FEvent.SetEvent;
   WaitFor;
   inherited BeforeDestruction;
 end;
@@ -97,6 +97,7 @@ begin
   try
     while not Terminated do
     begin
+      FEvent.ResetEvent;
       while not FQueue.IsEmpty do
       begin
         LValue := FQueue.Dequeue;
@@ -111,10 +112,7 @@ begin
       end;
 
       if not Terminated then
-      begin
-        FEvent.ResetEvent;
         FEvent.WaitFor(20000);
-      end;
     end;
   finally
     LWriter.Free;
