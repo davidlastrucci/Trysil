@@ -142,6 +142,11 @@ resourcestring
   SColumnNotFound = 'Column %s not found.';
   SConditionNotValid = 'Condition %s not valid.';
   SDirectionNotValid = 'Direction %s not valid.';
+  SValueNotValid = 'Value %0:s not valid for column %1:s.';
+  SColumnNotFilterable = 'Column %s cannot be used in a filter.';
+  SConditionNotValidForColumn =
+    'Condition %0:s not valid for column %1:s.';
+  SWhereNotValid = 'WHERE Clause not valid.';
 
 implementation
 

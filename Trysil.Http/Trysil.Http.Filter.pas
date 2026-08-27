@@ -17,7 +17,10 @@ uses
   System.Classes,
   System.Generics.Collections,
   System.JSon,
+  Data.DB,
   Trysil.Consts,
+  Trysil.Rtti,
+  Trysil.Data.Parameters,
   Trysil.Metadata,
   Trysil.Context,
   Trysil.Filter,
@@ -44,13 +47,23 @@ type
     FColumnName: String;
     FCondition: String;
     FValue: String;
+    FParameterName: String;
 
     FColumnMetadata: TTColumnMetadata;
 
+    function IsStringColumn: Boolean;
+    function IsLikeCondition: Boolean;
     procedure ValidateCondition;
+    procedure ValidateConditionForColumn;
+    procedure RaiseValueNotValid;
+    function GetParameterValue: TTValue;
   public
     constructor Create(
-      const AJSon: TJSonObject; const ATableMetadata: TTTableMetadata);
+      const AJSon: TJSonObject;
+      const ATableMetadata: TTTableMetadata;
+      const AParameterIndex: Integer);
+
+    procedure AddParameter(var AFilter: TTFilter);
 
     function ToString: String;
   end;
@@ -63,6 +76,8 @@ type
   public
     constructor Create(
       const AJSon: TJSonArray; const ATableMetadata: TTTableMetadata);
+
+    procedure AddParameters(var AFilter: TTFilter);
 
     function ToString: String;
   end;
@@ -132,20 +147,70 @@ end;
 { TTHttpFilterWhere }
 
 constructor TTHttpFilterWhere.Create(
-  const AJSon: TJSonObject; const ATableMetadata: TTTableMetadata);
+  const AJSon: TJSonObject;
+  const ATableMetadata: TTTableMetadata;
+  const AParameterIndex: Integer);
 begin
   FColumnName := AJSon.GetValue<String>('columnName', String.Empty);
   FCondition := AJSon.GetValue<String>('condition', String.Empty);
   FValue := AJSon.GetValue<String>('value', String.Empty);
+  FParameterName := Format('p%d', [AParameterIndex]);
 
   FColumnMetadata := ATableMetadata.FindColumn(FColumnName);
   ValidateCondition;
+  ValidateConditionForColumn;
 end;
 
 function TTHttpFilterWhere.ToString: String;
 begin
-  // TODO: FColumnMetadata.DataType
-  result := Format('%s %s %s', [FColumnName, FCondition, QuotedStr(FValue)]);
+  result := Format('%s %s :%s', [FColumnName, FCondition, FParameterName]);
+end;
+
+procedure TTHttpFilterWhere.AddParameter(var AFilter: TTFilter);
+begin
+  AFilter.AddParameter(
+    FParameterName,
+    FColumnMetadata.DataType,
+    FColumnMetadata.DataSize,
+    GetParameterValue);
+end;
+
+function TTHttpFilterWhere.IsStringColumn: Boolean;
+begin
+  result := FColumnMetadata.DataType in [
+    TFieldType.ftString,
+    TFieldType.ftWideString,
+    TFieldType.ftFixedChar,
+    TFieldType.ftFixedWideChar,
+    TFieldType.ftMemo,
+    TFieldType.ftWideMemo];
+end;
+
+function TTHttpFilterWhere.IsLikeCondition: Boolean;
+begin
+  result := (String.Compare(FCondition, 'LIKE', True) = 0) or
+    (String.Compare(FCondition, 'NOT LIKE', True) = 0);
+end;
+
+procedure TTHttpFilterWhere.ValidateConditionForColumn;
+begin
+  if IsLikeCondition and (not IsStringColumn) then
+    raise ETHttpBadRequest.CreateFmt(
+      TTLanguage.Instance.Translate(SConditionNotValidForColumn), [
+        FCondition, FColumnName]);
+end;
+
+procedure TTHttpFilterWhere.RaiseValueNotValid;
+begin
+  raise ETHttpBadRequest.CreateFmt(
+    TTLanguage.Instance.Translate(SValueNotValid), [FValue, FColumnName]);
+end;
+
+function TTHttpFilterWhere.GetParameterValue: TTValue;
+begin
+  if not TTParameterFactory.Instance.TryValueFromString(
+    FColumnMetadata.DataType, FValue, result) then
+    RaiseValueNotValid;
 end;
 
 procedure TTHttpFilterWhere.ValidateCondition;
@@ -177,10 +242,23 @@ begin
   begin
     SetLength(FList, AJSon.Count);
     for LIndex := 0 to AJSon.Count - 1 do
-      if AJSon.Items[LIndex] is TJSonObject then
-        FList[LIndex] := TTHttpFilterWhere.Create(
-          TJSonObject(AJSon.Items[LIndex]), ATableMetadata);
+    begin
+      if not (AJSon.Items[LIndex] is TJSonObject) then
+        raise ETHttpBadRequest.Create(
+          TTLanguage.Instance.Translate(SWhereNotValid));
+
+      FList[LIndex] := TTHttpFilterWhere.Create(
+        TJSonObject(AJSon.Items[LIndex]), ATableMetadata, LIndex);
+    end;
   end;
+end;
+
+procedure TTHttpFilterWhereList.AddParameters(var AFilter: TTFilter);
+var
+  LIndex: Integer;
+begin
+  for LIndex := Low(FList) to High(FList) do
+    FList[LIndex].AddParameter(AFilter);
 end;
 
 function TTHttpFilterWhereList.ToString: String;
@@ -283,6 +361,7 @@ begin
   FFilter := TTFilter.Create(
     LWhere.ToString, LStart, LLimit, LOrderBy.ToString);
   FFilter.IncludeDeleted := LIncludeDeleted;
+  LWhere.AddParameters(FFilter);
 end;
 
 end.
