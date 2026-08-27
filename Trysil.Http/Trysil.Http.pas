@@ -128,10 +128,10 @@ end;
 
 destructor TTHttpServer<C>.Destroy;
 begin
-  FControllers.Free;
-
   if FHttpServer.Active then
     Stop;
+
+  FControllers.Free;
   FHttpServer.Free;
   FLog.Free;
   FListener.Free;
