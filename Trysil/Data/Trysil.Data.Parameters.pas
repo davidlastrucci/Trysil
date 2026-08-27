@@ -15,6 +15,7 @@ interface
 uses
   System.Classes,
   System.SysUtils,
+  System.DateUtils,
   System.Generics.Collections,
   System.TypInfo,
   System.Rtti,
@@ -48,6 +49,11 @@ type
       const AParam: TTParam;
       const AColumnMap: TTColumnMap); overload;
 
+    class function TryValueFromString(
+      const AFieldType: TFieldType;
+      const AValue: String;
+      out AResult: TTValue): Boolean; virtual;
+
     procedure SetValue(const AEntity: TObject); overload; virtual; abstract;
     procedure SetValue(const AValue: TTValue); overload; virtual; abstract;
   end;
@@ -62,6 +68,11 @@ type
   public
     procedure SetValue(const AEntity: TObject); overload; override;
     procedure SetValue(const AValue: TTValue); overload; override;
+
+    class function TryValueFromString(
+      const AFieldType: TFieldType;
+      const AValue: String;
+      out AResult: TTValue): Boolean; override;
   end;
 
 { TTIntegerParameter }
@@ -72,6 +83,11 @@ type
   public
     procedure SetValue(const AEntity: TObject); overload; override;
     procedure SetValue(const AValue: TTValue); overload; override;
+
+    class function TryValueFromString(
+      const AFieldType: TFieldType;
+      const AValue: String;
+      out AResult: TTValue): Boolean; override;
   end;
 
 { TTLargeIntegerParameter }
@@ -80,6 +96,11 @@ type
   public
     procedure SetValue(const AEntity: TObject); overload; override;
     procedure SetValue(const AValue: TTValue); overload; override;
+
+    class function TryValueFromString(
+      const AFieldType: TFieldType;
+      const AValue: String;
+      out AResult: TTValue): Boolean; override;
   end;
 
 { TTDoubleParameter }
@@ -91,6 +112,11 @@ type
   public
     procedure SetValue(const AEntity: TObject); overload; override;
     procedure SetValue(const AValue: TTValue); overload; override;
+
+    class function TryValueFromString(
+      const AFieldType: TFieldType;
+      const AValue: String;
+      out AResult: TTValue): Boolean; override;
   end;
 
 { TTCurrencyParameter }
@@ -99,6 +125,11 @@ type
   public
     procedure SetValue(const AEntity: TObject); overload; override;
     procedure SetValue(const AValue: TTValue); overload; override;
+
+    class function TryValueFromString(
+      const AFieldType: TFieldType;
+      const AValue: String;
+      out AResult: TTValue): Boolean; override;
   end;
 
 { TTBooleanParameter }
@@ -107,6 +138,11 @@ type
   public
     procedure SetValue(const AEntity: TObject); overload; override;
     procedure SetValue(const AValue: TTValue); overload; override;
+
+    class function TryValueFromString(
+      const AFieldType: TFieldType;
+      const AValue: String;
+      out AResult: TTValue): Boolean; override;
   end;
 
 { TTDateTimeParameter }
@@ -115,6 +151,11 @@ type
   public
     procedure SetValue(const AEntity: TObject); overload; override;
     procedure SetValue(const AValue: TTValue); overload; override;
+
+    class function TryValueFromString(
+      const AFieldType: TFieldType;
+      const AValue: String;
+      out AResult: TTValue): Boolean; override;
   end;
 
 { TTGuidParameter }
@@ -125,6 +166,11 @@ type
   public
     procedure SetValue(const AEntity: TObject); overload; override;
     procedure SetValue(const AValue: TTValue); overload; override;
+
+    class function TryValueFromString(
+      const AFieldType: TFieldType;
+      const AValue: String;
+      out AResult: TTValue): Boolean; override;
   end;
 
 { TTBlobParameter }
@@ -160,6 +206,11 @@ type
       const AFieldType: TFieldType;
       const AParam: TTParam;
       const AColumnMap: TTColumnMap): TTParameter; overload;
+
+    function TryValueFromString(
+      const AFieldType: TFieldType;
+      const AValue: String;
+      out AResult: TTValue): Boolean;
 
     class property Instance: TTParameterFactory read FInstance;
   end;
@@ -206,6 +257,15 @@ end;
 procedure TTParameter.LogParameter(const AName: String; const AValue: String);
 begin
   TTLogger.Instance.LogParameter(FConnectionID, AName, AValue);
+end;
+
+class function TTParameter.TryValueFromString(
+  const AFieldType: TFieldType;
+  const AValue: String;
+  out AResult: TTValue): Boolean;
+begin
+  AResult := TTValue.Empty;
+  result := False;
 end;
 
 { TTStringParameter }
@@ -255,6 +315,15 @@ begin
   LParamValue := AValue.AsType<String>();
   SetParameterValue(nil, LParamValue);
   LogParameter(FParam.Name, LParamValue);
+end;
+
+class function TTStringParameter.TryValueFromString(
+  const AFieldType: TFieldType;
+  const AValue: String;
+  out AResult: TTValue): Boolean;
+begin
+  AResult := TTValue.From<String>(AValue);
+  result := True;
 end;
 
 { TTIntegerParameter }
@@ -326,6 +395,19 @@ begin
   LogParameter(FColumnMap.Name, LParamValue.ToString);
 end;
 
+class function TTIntegerParameter.TryValueFromString(
+  const AFieldType: TFieldType;
+  const AValue: String;
+  out AResult: TTValue): Boolean;
+var
+  LValue: Integer;
+begin
+  AResult := TTValue.Empty;
+  result := TryStrToInt(AValue, LValue);
+  if result then
+    AResult := TTValue.From<Integer>(LValue);
+end;
+
 { TTLargeIntegerParameter }
 
 procedure TTLargeIntegerParameter.SetValue(const AEntity: TObject);
@@ -360,6 +442,19 @@ begin
   LParamValue := AValue.AsType<Int64>();
   FParam.AsLargeInt := LParamValue;
   LogParameter(FParam.Name, LParamValue.ToString);
+end;
+
+class function TTLargeIntegerParameter.TryValueFromString(
+  const AFieldType: TFieldType;
+  const AValue: String;
+  out AResult: TTValue): Boolean;
+var
+  LValue: Int64;
+begin
+  AResult := TTValue.Empty;
+  result := TryStrToInt64(AValue, LValue);
+  if result then
+    AResult := TTValue.From<Int64>(LValue);
 end;
 
 { TTDoubleParameter }
@@ -415,6 +510,29 @@ begin
     SetDoubleValue(AValue);
 end;
 
+class function TTDoubleParameter.TryValueFromString(
+  const AFieldType: TFieldType;
+  const AValue: String;
+  out AResult: TTValue): Boolean;
+var
+  LCurrency: Currency;
+  LDouble: Double;
+begin
+  AResult := TTValue.Empty;
+  if AFieldType = TFieldType.ftCurrency then
+  begin
+    result := TryStrToCurr(AValue, LCurrency, TFormatSettings.Invariant);
+    if result then
+      AResult := TTValue.From<Currency>(LCurrency);
+  end
+  else
+  begin
+    result := TryStrToFloat(AValue, LDouble, TFormatSettings.Invariant);
+    if result then
+      AResult := TTValue.From<Double>(LDouble);
+  end;
+end;
+
 { TTCurrencyParameter }
 
 procedure TTCurrencyParameter.SetValue(const AEntity: TObject);
@@ -449,6 +567,19 @@ begin
   LParamValue := AValue.AsType<Currency>();
   FParam.AsCurrency := LParamValue;
   LogParameter(FParam.Name, CurrToStr(LParamValue));
+end;
+
+class function TTCurrencyParameter.TryValueFromString(
+  const AFieldType: TFieldType;
+  const AValue: String;
+  out AResult: TTValue): Boolean;
+var
+  LValue: Currency;
+begin
+  AResult := TTValue.Empty;
+  result := TryStrToCurr(AValue, LValue, TFormatSettings.Invariant);
+  if result then
+    AResult := TTValue.From<Currency>(LValue);
 end;
 
 { TTBooleanParameter }
@@ -487,6 +618,24 @@ begin
   LogParameter(FParam.Name, LParamValue.ToString);
 end;
 
+class function TTBooleanParameter.TryValueFromString(
+  const AFieldType: TFieldType;
+  const AValue: String;
+  out AResult: TTValue): Boolean;
+var
+  LValue: String;
+begin
+  AResult := TTValue.Empty;
+  LValue := AValue.ToLower();
+  result := True;
+  if LValue.Equals('true') or LValue.Equals('1') then
+    AResult := TTValue.From<Boolean>(True)
+  else if LValue.Equals('false') or LValue.Equals('0') then
+    AResult := TTValue.From<Boolean>(False)
+  else
+    result := False;
+end;
+
 { TTDateTimeParameter }
 
 procedure TTDateTimeParameter.SetValue(const AEntity: TObject);
@@ -521,6 +670,19 @@ begin
   LParamValue := AValue.AsType<TDateTime>();
   FParam.AsDateTime := LParamValue;
   LogParameter(FParam.Name, DateTimeToStr(LParamValue));
+end;
+
+class function TTDateTimeParameter.TryValueFromString(
+  const AFieldType: TFieldType;
+  const AValue: String;
+  out AResult: TTValue): Boolean;
+var
+  LValue: TDateTime;
+begin
+  AResult := TTValue.Empty;
+  result := TryISO8601ToDate(AValue, LValue, True);
+  if result then
+    AResult := TTValue.From<TDateTime>(TTimeZone.Local.ToLocalTime(LValue));
 end;
 
 { TTGuidParameter }
@@ -571,6 +733,24 @@ begin
   LParamValue := AValue.AsType<TGuid>();
   WriteGuid(LParamValue);
   LogParameter(FParam.Name, LParamValue.ToString);
+end;
+
+class function TTGuidParameter.TryValueFromString(
+  const AFieldType: TFieldType;
+  const AValue: String;
+  out AResult: TTValue): Boolean;
+var
+  LValue: TGuid;
+begin
+  AResult := TTValue.Empty;
+  result := True;
+  try
+    LValue := TGuid.Create(AValue);
+  except
+    result := False;
+  end;
+  if result then
+    AResult := TTValue.From<TGuid>(LValue);
 end;
 
 { TTBlobParameter }
@@ -659,6 +839,20 @@ begin
           TRttiEnumerationType.GetName<TFieldType>(AFieldType)]);
     result := TTParameterClass(LClass).Create(AConnectionID, AParam, AColumnMap);
   end;
+end;
+
+function TTParameterFactory.TryValueFromString(
+  const AFieldType: TFieldType;
+  const AValue: String;
+  out AResult: TTValue): Boolean;
+var
+  LClass: TClass;
+begin
+  AResult := TTValue.Empty;
+  result := FParameterTypes.TryGetValue(AFieldType, LClass);
+  if result then
+    result := TTParameterClass(LClass).TryValueFromString(
+      AFieldType, AValue, AResult);
 end;
 
 { TTParameterRegister }
