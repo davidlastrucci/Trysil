@@ -24,6 +24,7 @@ uses
   FireDAC.Phys,
 
   Trysil.Consts,
+  Trysil.Sync,
   Trysil.Filter,
   Trysil.Exceptions,
   Trysil.Metadata,
@@ -169,8 +170,12 @@ type
     class constructor ClassCreate;
     class destructor ClassDestroy;
   strict private
+    FLock: TTMultiReadExclusiveWriteLock;
     FDrivers: TDictionary<String, TTFireDACConnectionClass>;
     FConnections: TDictionary<String, TTFireDACConnectionClass>;
+
+    function GetDriverClass(
+      const ADriver: String): TTFireDACConnectionClass;
   public
     constructor Create;
     destructor Destroy; override;
@@ -546,6 +551,7 @@ end;
 constructor TTFireDACConnectionFactory.Create;
 begin
   inherited Create;
+  FLock := TTMultiReadExclusiveWriteLock.Create;
   FDrivers := TDictionary<String, TTFireDACConnectionClass>.Create;
   FConnections := TDictionary<String, TTFireDACConnectionClass>.Create;
 end;
@@ -554,12 +560,35 @@ destructor TTFireDACConnectionFactory.Destroy;
 begin
   FConnections.Free;
   FDrivers.Free;
+  FLock.Free;
   inherited Destroy;
+end;
+
+function TTFireDACConnectionFactory.GetDriverClass(
+  const ADriver: String): TTFireDACConnectionClass;
+begin
+  FLock.BeginRead;
+  try
+    if not FDrivers.TryGetValue(
+      TTFireDACDriver.GetDriverID(ADriver).ToLower(), result) then
+      result := nil;
+  finally
+    FLock.EndRead;
+  end;
+
+  if not Assigned(result) then
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SNotValidConnectionDriver), [ADriver]);
 end;
 
 procedure TTFireDACConnectionFactory.RegisterDriver<T>();
 begin
-  FDrivers.Add(T.GetDriver().ToLower(), T);
+  FLock.BeginWrite;
+  try
+    FDrivers.Add(T.GetDriver().ToLower(), T);
+  finally
+    FLock.EndWrite;
+  end;
 end;
 
 procedure TTFireDACConnectionFactory.RegisterConnection(
@@ -568,13 +597,13 @@ procedure TTFireDACConnectionFactory.RegisterConnection(
 var
   LConnectionClass: TTFireDACConnectionClass;
 begin
-  if not FDrivers.TryGetValue(
-    TTFireDACDriver.GetDriverID(AParameters.Driver).ToLower(),
-    LConnectionClass) then
-    raise ETException.CreateFmt(
-      TTLanguage.Instance.Translate(SNotValidConnectionDriver), [
-        AParameters.Driver]);
-  FConnections.Add(AName.ToLower(), LConnectionClass);
+  LConnectionClass := GetDriverClass(AParameters.Driver);
+  FLock.BeginWrite;
+  try
+    FConnections.Add(AName.ToLower(), LConnectionClass);
+  finally
+    FLock.EndWrite;
+  end;
   LConnectionClass.InternalRegisterConnection(AName, AParameters);
 end;
 
@@ -583,7 +612,15 @@ function TTFireDACConnectionFactory.CreateConnection(
 var
   LConnectionClass: TTFireDACConnectionClass;
 begin
-  if not FConnections.TryGetValue(AName.ToLower(), LConnectionClass) then
+  FLock.BeginRead;
+  try
+    if not FConnections.TryGetValue(AName.ToLower(), LConnectionClass) then
+      LConnectionClass := nil;
+  finally
+    FLock.EndRead;
+  end;
+
+  if not Assigned(LConnectionClass) then
     raise ETException.CreateFmt(
       TTLanguage.Instance.Translate(SNotValidConnection), [AName]);
   result := LConnectionClass.Create(AName);
