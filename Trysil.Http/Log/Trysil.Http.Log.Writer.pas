@@ -33,6 +33,8 @@ type
       const ALogResponse: TTHttpLogResponse); virtual; abstract;
     procedure WriteDiscarded(
       const ADiscarded: TTHttpLogDiscarded); virtual;
+    procedure WriteError(
+      const ALogError: TTHttpLogError); virtual;
   end;
 
 implementation
@@ -46,6 +48,14 @@ begin
     String.Empty,
     Format(TTLanguage.Instance.Translate(SLogQueueDiscarded), [
       ADiscarded.Count, ADiscarded.Host])));
+end;
+
+procedure TTHttpLogAbstractWriter.WriteError(
+  const ALogError: TTHttpLogError);
+begin
+  WriteAction(TTHttpLogAction.Create(
+    ALogError.TaskID.ToString(),
+    Format(TTLanguage.Instance.Translate(SLogError), [ALogError.ToJSon()])));
 end;
 
 end.

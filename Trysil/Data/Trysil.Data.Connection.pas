@@ -40,6 +40,9 @@ type
   strict protected
     function CreateSyntaxClasses: TTSyntaxClasses; virtual; abstract;
 
+    function FindColumnMap(
+      const ATableMap: TTTableMap; const AColumnName: String): TTColumnMap;
+
     function GetColumnMap(
       const ATableMap: TTTableMap; const AColumnName: String): TTColumnMap;
 
@@ -99,7 +102,6 @@ type
   strict private
     FConnection: TTGenericConnection;
     FSyntax: TTSelectSyntax;
-    FFilter: TTFilter;
   strict protected
     function GetDataset: TDataset; override;
   public
@@ -229,11 +231,13 @@ function TTGenericConnection.SelectCount(
   const ATableMap: TTTableMap; const AFilter: TTFilter): Integer;
 var
   LSyntax: TTSelectCountSyntax;
+  LSql: String;
   LDataset: TDataset;
 begin
   LSyntax := FSyntaxClasses.SelectCount.Create(Self, ATableMap, AFilter);
   try
-    LDataset := CreateDataSet(LSyntax.SQL, AFilter);
+    LSql := LSyntax.SQL;
+    LDataset := CreateDataSet(LSql, LSyntax.Filter);
     try
       result := LDataset.Fields[0].AsInteger;
     finally
@@ -285,19 +289,24 @@ begin
     Self, ATableMap, ATableMetadata, FUpdateMode);
 end;
 
-function TTGenericConnection.GetColumnMap(
+function TTGenericConnection.FindColumnMap(
   const ATableMap: TTTableMap; const AColumnName: String): TTColumnMap;
 var
   LColumn: TTColumnMap;
 begin
   result := nil;
   for LColumn in ATableMap.Columns do
-    if String.Compare(LColumn.Name, AColumnName, True) = 0 then
+    if String.Compare(LColumn.LookupName, AColumnName, True) = 0 then
     begin
       result := LColumn;
       Break;
     end;
+end;
 
+function TTGenericConnection.GetColumnMap(
+  const ATableMap: TTTableMap; const AColumnName: String): TTColumnMap;
+begin
+  result := FindColumnMap(ATableMap, AColumnName);
   if not Assigned(result) then
     raise ETException.CreateFmt(
       TTLanguage.Instance.Translate(SColumnNotFound), [AColumnName]);
@@ -331,16 +340,22 @@ var
   LSyntax: TTMetadataSyntax;
   LDataset: TDataset;
   LIndex: Integer;
+  LColumnMap: TTColumnMap;
 begin
   LSyntax := FSyntaxClasses.Metadata.Create(Self, ATableMap);
   try
     LDataset := CreateDataSet(LSyntax.SQL, TTFilter.Empty);
     try
       for LIndex := 0 to LDataset.FieldDefs.Count - 1 do
+      begin
+        LColumnMap := FindColumnMap(
+          ATableMap, LDataset.FieldDefs[LIndex].Name);
         ATableMetadata.Columns.Add(
           LDataset.FieldDefs[LIndex].Name,
           LDataset.FieldDefs[LIndex].DataType,
-          LDataset.FieldDefs[LIndex].Size);
+          LDataset.FieldDefs[LIndex].Size,
+          LColumnMap);
+      end;
     finally
       LDataset.Free;
     end;
@@ -406,7 +421,6 @@ begin
   FConnection := AConnection;
   FSyntax := AConnection.SyntaxClasses.Select.Create(
     AConnection, ATableMap, AFilter);
-  FFilter := AFilter;
 end;
 
 destructor TTGenericReader.Destroy;
@@ -416,9 +430,12 @@ begin
 end;
 
 function TTGenericReader.GetDataset: TDataset;
+var
+  LSql: String;
 begin
-  result := FConnection.CreateDataset(FSyntax.SQL, FFilter);
-  TTLogger.Instance.LogSyntax(FConnection.ConnectionID, FSyntax.SQL);
+  LSql := FSyntax.SQL;
+  result := FConnection.CreateDataset(LSql, FSyntax.Filter);
+  TTLogger.Instance.LogSyntax(FConnection.ConnectionID, LSql);
 end;
 
 { TTGenericCommand }

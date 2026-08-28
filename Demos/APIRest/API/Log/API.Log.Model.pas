@@ -75,6 +75,12 @@ type
     [TColumn('Uri')]
     FUri: String;
 
+    [TColumn('ParamsCount')]
+    FParamsCount: Integer;
+
+    [TColumn('ParamsOmitted')]
+    FParamsOmitted: Boolean;
+
     [TColumn('Params')]
     FParams: String;
 
@@ -89,6 +95,12 @@ type
 
     [TColumn('Content')]
     FContent: String;
+
+    [TColumn('HeadersCount')]
+    FHeadersCount: Integer;
+
+    [TColumn('HeadersOmitted')]
+    FHeadersOmitted: Boolean;
 
     [TColumn('Headers')]
     FHeaders: String;
@@ -106,11 +118,15 @@ type
     property TaskID: String read FTaskID;
     property Date: TDateTime read FDate;
     property Uri: String read FUri;
+    property ParamsCount: Integer read FParamsCount;
+    property ParamsOmitted: Boolean read FParamsOmitted;
     property Params: String read FParams;
     property MethodType: String read FMethodType;
     property ContentLength: Int64 read FContentLength;
     property ContentOmitted: Boolean read FContentOmitted;
     property Content: String read FContent;
+    property HeadersCount: Integer read FHeadersCount;
+    property HeadersOmitted: Boolean read FHeadersOmitted;
     property Headers: String read FHeaders;
     property RemoteIP: String read FRemoteIP;
     property VersionID: TTVersion read FVersionID;
@@ -131,6 +147,9 @@ type
 
     [TColumn('Date')]
     FDate: TDateTime;
+
+    [TColumn('Uri')]
+    FUri: String;
 
     [TColumn('Username')]
     FUsername: String;
@@ -168,6 +187,7 @@ type
     property ID: TTPrimaryKey read FID;
     property TaskID: String read FTaskID;
     property Date: TDateTime read FDate;
+    property Uri: String read FUri;
     property Username: String read FUsername;
     property UserAreas: String read FUserAreas;
     property StatusCode: Integer read FStatusCode;
@@ -230,11 +250,15 @@ begin
   FTaskID := ARequest.TaskID.ToString;
   FDate := ARequest.DateTime;
   FUri := ARequest.Uri;
+  FParamsCount := ARequest.ParamsCount;
+  FParamsOmitted := ARequest.ParamsOmitted;
   FParams := ARequest.Params.ToString;
   FMethodType := ARequest.MethodType;
   FContentLength := ARequest.ContentLength;
   FContentOmitted := ARequest.ContentOmitted;
   FContent := ARequest.Content;
+  FHeadersCount := ARequest.HeadersCount;
+  FHeadersOmitted := ARequest.HeadersOmitted;
   FHeaders := ARequest.Headers.ToString;
   FRemoteIP := ARequest.RemoteIP;
 end;
@@ -245,6 +269,7 @@ procedure TLogResponse.SetValues(const AResponse: TTHttpLogResponse);
 begin
   FTaskID := AResponse.TaskID.ToString;
   FDate := AResponse.DateTime;
+  FUri := AResponse.Uri;
   FUsername := AResponse.User.Username;
   FUserAreas := AResponse.User.Areas.ToString;
   FStatusCode := AResponse.StatusCode;

@@ -16,6 +16,7 @@ uses
   System.SysUtils,
   System.Classes,
   System.JSon,
+  Trysil.Consts,
   Trysil.Exceptions,
 
   Trysil.Http.Consts;
@@ -85,6 +86,14 @@ type
     constructor Create(const AMessage: String);
   end;
 
+{ ETHttpConflict }
+
+  ETHttpConflict = class(ETHttpException)
+  public
+    constructor CreateFmt(const AMessage: String; const AArgs: array of const);
+    constructor Create(const AMessage: String);
+  end;
+
 { ETHttpInternalServerError }
 
   ETHttpInternalServerError = class(ETHttpException)
@@ -93,12 +102,14 @@ type
     constructor Create(const AMessage: String);
   end;
 
-{ TExceptionHelper }
+{ TTHttpErrorResponse }
 
-  TExceptionHelper = class helper for Exception
+  TTHttpErrorResponse = record
   public
-    function ToJSon(): String; overload;
-    procedure ToJSon(const AJSon: TJSonObject); overload;
+    class function ToJSon(const ATaskID: String): String; overload; static;
+    class function ToJSon(
+      const AStatusCode: Integer;
+      const ATaskID: String): String; overload; static;
   end;
 
 implementation
@@ -199,6 +210,19 @@ begin
   inherited Create(TTHttpStatusCodeTypes.MethodNotAllowed, AMessage);
 end;
 
+{ ETHttpConflict }
+
+constructor ETHttpConflict.CreateFmt(
+  const AMessage: String; const AArgs: array of const);
+begin
+  inherited CreateFmt(TTHttpStatusCodeTypes.Conflict, AMessage, AArgs);
+end;
+
+constructor ETHttpConflict.Create(const AMessage: String);
+begin
+  inherited Create(TTHttpStatusCodeTypes.Conflict, AMessage);
+end;
+
 { ETHttpInternalServerError }
 
 constructor ETHttpInternalServerError.CreateFmt(
@@ -213,42 +237,28 @@ begin
   inherited Create(TTHttpStatusCodeTypes.InternalServerError, AMessage);
 end;
 
-{ TExceptionHelper }
+{ TTHttpErrorResponse }
 
-function TExceptionHelper.ToJSon(): String;
+class function TTHttpErrorResponse.ToJSon(const ATaskID: String): String;
+begin
+  result := ToJSon(TTHttpStatusCodeTypes.InternalServerError, ATaskID);
+end;
+
+class function TTHttpErrorResponse.ToJSon(
+  const AStatusCode: Integer;
+  const ATaskID: String): String;
 var
   LResult: TJSonObject;
 begin
   LResult := TJSonObject.Create;
   try
-    ToJSon(LResult);
+    LResult.AddPair('status', TJSonNumber.Create(AStatusCode));
+    LResult.AddPair(
+      'message', TTLanguage.Instance.Translate(SInternalServerError));
+    LResult.AddPair('taskId', ATaskID);
     result := LResult.ToJSon();
   finally
     LResult.Free;
-  end;
-end;
-
-procedure TExceptionHelper.ToJSon(const AJSon: TJSonObject);
-var
-  LJSon: TJSonObject;
-  LException: ETException;
-begin
-  AJSon.AddPair('status', TJSonNumber.Create(500));
-  AJSon.AddPair('message', Self.Message);
-  if (Self is ETException) then
-  begin
-    LException := ETException(Self);
-    if Assigned(LException.NestedException) then
-    begin
-      LJSon := TJSonObject.Create;
-      try
-        LException.NestedException.ToJSon(LJSon);
-        AJSon.AddPair('nestedException', LJSon);
-      except
-        LJSon.Free;
-        raise;
-      end;
-    end;
   end;
 end;
 

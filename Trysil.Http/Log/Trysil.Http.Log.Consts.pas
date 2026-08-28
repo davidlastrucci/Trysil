@@ -21,6 +21,7 @@ resourcestring
   SRegisterControllerError = 'Controller registration error: %s';
   SLogQueueDiscarded =
     'Log queue full: %d entries discarded for host %s';
+  SLogError = 'Unhandled error: %s';
 
 implementation
 

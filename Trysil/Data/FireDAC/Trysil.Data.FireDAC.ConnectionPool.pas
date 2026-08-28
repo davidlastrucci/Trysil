@@ -74,6 +74,7 @@ type
   TTFireDACConnectionPool = class
   strict private
     class var FInstance: TTFireDACConnectionPool;
+    class var FInstanceLock: TObject;
 
     class constructor ClassCreate;
     class destructor ClassDestroy;
@@ -151,20 +152,27 @@ end;
 class constructor TTFireDACConnectionPool.ClassCreate;
 begin
   FInstance := nil;
+  FInstanceLock := TObject.Create;
 end;
 
 class destructor TTFireDACConnectionPool.ClassDestroy;
 begin
   if Assigned(FInstance) then
     FInstance.Free;
+  FInstanceLock.Free;
 end;
 
 class function TTFireDACConnectionPool.GetInstance:
   TTFireDACConnectionPool;
 begin
-  if not Assigned(FInstance) then
-    FInstance := TTFireDACConnectionPool.Create;
-  result := FInstance;
+  TMonitor.Enter(FInstanceLock);
+  try
+    if not Assigned(FInstance) then
+      FInstance := TTFireDACConnectionPool.Create;
+    result := FInstance;
+  finally
+    TMonitor.Exit(FInstanceLock);
+  end;
 end;
 
 constructor TTFireDACConnectionPool.Create;

@@ -25,7 +25,8 @@ uses
   Trysil.Http.Cors,
   Trysil.Http.Rtti,
   Trysil.Http.Controller,
-  Trysil.Http.Authentication;
+  Trysil.Http.Authentication,
+  Trysil.Http.Log;
 
 type
 
@@ -36,6 +37,7 @@ type
     FCors: TTHttpCors;
     FRttiControllers: TTHttpRttiControllers<C>;
     FFreeControllerIDs: TList<TTHttpControllerID>;
+    FLog: TTHttpLog;
     FRttiAuthentication: TTHttpRttiAuthentication<C>;
 
     function InternalIsFreeController(
@@ -64,11 +66,18 @@ type
       const AResponse: TTHttpResponse;
       const AStatusCode: Integer;
       const AContent: String);
+
+    procedure MakeInternalServerErrorResponse(
+      const ARequest: TTHttpRequest;
+      const AResponse: TTHttpResponse;
+      const AStatusCode: Integer;
+      const AException: Exception);
   public
     constructor Create(
       const ACors: TTHttpCors;
       const ARttiControllers: TTHttpRttiControllers<C>;
-      const AFreeControllerIDs: TList<TTHttpControllerID>);
+      const AFreeControllerIDs: TList<TTHttpControllerID>;
+      const ALog: TTHttpLog);
 
     procedure SetRttiAuthentication(
       const ARttiAuthentication: TTHttpRttiAuthentication<C>);
@@ -84,12 +93,14 @@ implementation
 constructor TTHttpListener<C>.Create(
   const ACors: TTHttpCors;
   const ARttiControllers: TTHttpRttiControllers<C>;
-  const AFreeControllerIDs: TList<TTHttpControllerID>);
+  const AFreeControllerIDs: TList<TTHttpControllerID>;
+  const ALog: TTHttpLog);
 begin
   inherited Create;
   FCors := ACors;
   FRttiControllers := ARttiControllers;
   FFreeControllerIDs := AFreeControllerIDs;
+  FLog := ALog;
   FRttiAuthentication := nil;
 end;
 
@@ -110,12 +121,17 @@ begin
       InternalHandleRequest(ARequest, AResponse);
   except
     on E: ETHttpException do
-      MakeResponse(AResponse, E.StatusCode, E.ToJSon());
+      if E.StatusCode >= TTHttpStatusCodeTypes.InternalServerError then
+        MakeInternalServerErrorResponse(
+          ARequest, AResponse, E.StatusCode, E)
+      else
+        MakeResponse(AResponse, E.StatusCode, E.ToJSon());
     on E: Exception do
-      MakeResponse(
+      MakeInternalServerErrorResponse(
+        ARequest,
         AResponse,
         TTHttpStatusCodeTypes.InternalServerError,
-        E.ToJSon());
+        E);
   end;
 end;
 
@@ -223,6 +239,19 @@ procedure TTHttpListener<C>.MakeResponse(
 begin
   AResponse.StatusCode := AStatusCode;
   AResponse.Content := AContent;
+end;
+
+procedure TTHttpListener<C>.MakeInternalServerErrorResponse(
+  const ARequest: TTHttpRequest;
+  const AResponse: TTHttpResponse;
+  const AStatusCode: Integer;
+  const AException: Exception);
+begin
+  FLog.LogError(ARequest, AException);
+  MakeResponse(
+    AResponse,
+    AStatusCode,
+    TTHttpErrorResponse.ToJSon(AStatusCode, ARequest.TaskID.ToString()));
 end;
 
 end.

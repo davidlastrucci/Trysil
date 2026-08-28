@@ -462,7 +462,11 @@ begin
     LParam := TTFDParam.Create(LFireDACParam);
     try
       LParameter := TTParameterFactory.Instance.CreateParameter(
-        ConnectionID, AParameter.DataType, LParam);
+        ConnectionID,
+        AParameter.DataType,
+        LParam,
+        AParameter.IsGuid,
+        AParameter.IsCurrency);
       try
         LParameter.SetValue(AParameter.Value);
       finally

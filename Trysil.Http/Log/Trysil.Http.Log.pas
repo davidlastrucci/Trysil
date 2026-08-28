@@ -43,6 +43,8 @@ type
       const AParameters: TTHttpLogParameters);
 
     procedure LogAction(const ATaskID: String; const AAction: String);
+    procedure LogError(
+      const ARequest: TTHttpRequest; const AException: Exception);
     procedure LogRequest(const ARequest: TTHttpRequest);
     procedure LogResponse(
       const ARequest: TTHttpRequest; const AResponse: TTHttpResponse);
@@ -102,6 +104,23 @@ begin
     finally
       LWriter.Free;
     end;
+  end;
+end;
+
+procedure TTHttpLog.LogError(
+  const ARequest: TTHttpRequest; const AException: Exception);
+var
+  LLogThread: TTHttpLogThread;
+begin
+  try
+    if Assigned(FRttiLogWriter) then
+    begin
+      LLogThread := FLogThreads.Next;
+      if Assigned(LLogThread) then
+        LLogThread.Add(TTHttpLogError.Create(ARequest, AException));
+    end;
+  except
+    // Logging must not break the operation being logged
   end;
 end;
 

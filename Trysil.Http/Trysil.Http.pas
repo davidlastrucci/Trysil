@@ -43,10 +43,11 @@ type
 
   TTHttpServer<C: class, constructor> = class
   strict private
-    const DefaultPort = 8022;
+    const DefaultPort: Word = 8022;
     const DefaultLogThreadPoolSize: Integer = 1;
     const DefaultLogQueueCapacity: Integer = 10000;
-    const DefaultMaxLogContentLength: Integer = -1;
+    const DefaultMaxLogContentLength: Integer = 65536;
+    const DefaultMaxLogItemCount: Integer = 128;
   strict private
     FRttiLogWriter: TTHttpRttiLogWriter;
     FRttiAuthentication: TTHttpRttiAuthentication<C>;
@@ -127,9 +128,9 @@ begin
   FRttiControllers := TTHttpRttiControllers<C>.Create;
   FFreeControllerIDs := TList<TTHttpControllerID>.Create;
   FCors := TTHttpCors.Create;
-  FListener := TTHttpListener<C>.Create(
-    FCors, FRttiControllers, FFreeControllerIDs);
   FLog := TTHttpLog.Create;
+  FListener := TTHttpListener<C>.Create(
+    FCors, FRttiControllers, FFreeControllerIDs, FLog);
   FHttpServer := TIdHttpServer.Create(nil);
 
   FControllers := TObjectList<TTHttpRttiController<C>>.Create(True);
@@ -142,8 +143,8 @@ begin
 
   FControllers.Free;
   FHttpServer.Free;
-  FLog.Free;
   FListener.Free;
+  FLog.Free;
   FCors.Free;
   FRttiControllers.Free;
   FFreeControllerIDs.Free;
@@ -188,7 +189,8 @@ begin
   RegisterLogWriter<W>(TTHttpLogParameters.Create(
     ALogThreadPoolSize,
     DefaultLogQueueCapacity,
-    DefaultMaxLogContentLength));
+    DefaultMaxLogContentLength,
+    DefaultMaxLogItemCount));
 end;
 
 procedure TTHttpServer<C>.RegisterLogWriter<W>(
@@ -369,12 +371,12 @@ begin
   LContentStream := TMemoryStream.Create;
   try
     AResponse.GetContentStream(LContentStream);
-    AResponseInfo.ContentStream := LContentStream;
     AResponseInfo.ContentLength := LContentStream.Size;
   except
-    AResponseInfo.ContentStream.Free;
+    LContentStream.Free;
     raise;
   end;
+  AResponseInfo.ContentStream := LContentStream;
 end;
 
 procedure TTHttpServer<C>.OnHttpServerCommand(

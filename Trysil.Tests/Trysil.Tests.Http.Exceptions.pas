@@ -17,6 +17,7 @@ uses
   System.JSON,
   DUnitX.TestFramework,
 
+  Trysil.Exceptions,
   Trysil.Http.Exceptions;
 
 type
@@ -42,10 +43,25 @@ type
     procedure MethodNotAllowedHasStatusCode405;
 
     [Test]
+    procedure ConflictHasStatusCode409;
+
+    [Test]
     procedure InternalServerErrorHasStatusCode500;
 
     [Test]
     procedure ToJSonContainsStatusAndMessage;
+
+    [Test]
+    procedure ErrorResponseHidesTheExceptionDetail;
+
+    [Test]
+    procedure NestedExceptionIsCapturedAsStrings;
+
+    [Test]
+    procedure NestedExceptionIsNotStolen;
+
+    [Test]
+    procedure ErrorResponseKeepsTheStatusCode;
   end;
 
 implementation
@@ -112,6 +128,18 @@ begin
   end;
 end;
 
+procedure TTHttpExceptionTests.ConflictHasStatusCode409;
+var
+  LException: ETHttpConflict;
+begin
+  LException := ETHttpConflict.Create('conflict');
+  try
+    Assert.AreEqual<Integer>(409, LException.StatusCode);
+  finally
+    LException.Free;
+  end;
+end;
+
 procedure TTHttpExceptionTests.InternalServerErrorHasStatusCode500;
 var
   LException: ETHttpInternalServerError;
@@ -147,6 +175,105 @@ begin
   finally
     LObj.Free;
   end;
+end;
+
+procedure TTHttpExceptionTests.ErrorResponseHidesTheExceptionDetail;
+var
+  LJson: String;
+  LObj: TJSonValue;
+begin
+  LJson := TTHttpErrorResponse.ToJSon('task-001');
+
+  LObj := TJSonObject.ParseJSonValue(LJson);
+  try
+    Assert.IsTrue(LObj is TJSonObject, 'ToJSon must return a JSON object');
+    Assert.AreEqual<Integer>(
+      500, TJSonObject(LObj).GetValue<Integer>('status'));
+    Assert.AreEqual(
+      'task-001', TJSonObject(LObj).GetValue<String>('taskId'));
+    Assert.IsFalse(
+      Assigned(TJSonObject(LObj).FindValue('nestedException')),
+      'The 500 body must not carry an exception chain');
+  finally
+    LObj.Free;
+  end;
+end;
+
+procedure TTHttpExceptionTests.ErrorResponseKeepsTheStatusCode;
+var
+  LJson: String;
+  LObj: TJSonValue;
+begin
+  LJson := TTHttpErrorResponse.ToJSon(503, 'task-002');
+
+  LObj := TJSonObject.ParseJSonValue(LJson);
+  try
+    Assert.AreEqual<Integer>(
+      503,
+      TJSonObject(LObj).GetValue<Integer>('status'),
+      'A 5xx other than 500 must keep its own status code');
+    Assert.AreEqual(
+      'task-002', TJSonObject(LObj).GetValue<String>('taskId'));
+  finally
+    LObj.Free;
+  end;
+end;
+
+procedure TTHttpExceptionTests.NestedExceptionIsCapturedAsStrings;
+var
+  LException: ETHttpBadRequest;
+  LClassName: String;
+  LMessage: String;
+begin
+  LClassName := String.Empty;
+  LMessage := String.Empty;
+  try
+    raise ETHttpNotFound.Create('original');
+  except
+    on E: Exception do
+    begin
+      LException := ETHttpBadRequest.Create('secondary');
+      try
+        LClassName := LException.NestedExceptionClassName;
+        LMessage := LException.NestedExceptionMessage;
+      finally
+        LException.Free;
+      end;
+    end;
+  end;
+
+  Assert.AreEqual('ETHttpNotFound', LClassName);
+  Assert.AreEqual('original', LMessage);
+end;
+
+procedure TTHttpExceptionTests.NestedExceptionIsNotStolen;
+var
+  LMessage: String;
+begin
+  LMessage := String.Empty;
+  try
+    try
+      raise ETHttpNotFound.Create('original');
+    except
+      on E: Exception do
+      begin
+        try
+          raise ETHttpBadRequest.Create('secondary');
+        except
+          // The nested exception must not take ownership of the outer one
+        end;
+        raise;
+      end;
+    end;
+  except
+    on E: Exception do
+      LMessage := E.Message;
+  end;
+
+  Assert.AreEqual(
+    'original',
+    LMessage,
+    'A Trysil exception must not free the exception in flight');
 end;
 
 initialization

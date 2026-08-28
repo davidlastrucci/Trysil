@@ -95,6 +95,8 @@ type
   strict private
     FID: String;
     FThreadID: TThreadID;
+
+    class function NewIDValue: String; static;
   public
     class function NewID: TTHttpTaskID; static;
 
@@ -248,15 +250,26 @@ end;
 
 { TTHttpTaskID }
 
+class function TTHttpTaskID.NewIDValue: String;
+var
+  LGuid: TGuid;
+  LValue: String;
+begin
+  LGuid := TGuid.NewGuid();
+  LValue := LGuid.ToString();
+  result := LValue.Substring(1, LValue.Length - 2).Replace(
+    '-', String.Empty, [rfReplaceAll]).ToLower();
+end;
+
 class function TTHttpTaskID.NewID: TTHttpTaskID;
 begin
-  result.FID := FormatDateTime('yyyymmddhhnnsszzzz', Now());
+  result.FID := TTHttpTaskID.NewIDValue;
   result.FThreadID := TThread.Current.ThreadID;
 end;
 
 function TTHttpTaskID.ToString: String;
 begin
-  result := Format('%s-%d', [FID, FThreadID]);
+  result := FID;
 end;
 
 end.

@@ -33,6 +33,7 @@ type
     const Forbidden: Integer = 403;
     const NotFound: Integer = 404;
     const MethodNotAllowed: Integer = 405;
+    const Conflict: Integer = 409;
     const InternalServerError: Integer = 500;
   end;
 
@@ -147,6 +148,12 @@ resourcestring
   SConditionNotValidForColumn =
     'Condition %0:s not valid for column %1:s.';
   SWhereNotValid = 'WHERE Clause not valid.';
+  SOrderByItemNotValid = 'ORDER BY Clause not valid.';
+  STooManyWhereConditions =
+    'Too many WHERE conditions: %0:d (maximum %1:d).';
+  STooManyOrderByColumns =
+    'Too many ORDER BY columns: %0:d (maximum %1:d).';
+  SInternalServerError = 'Internal server error.';
 
 implementation
 

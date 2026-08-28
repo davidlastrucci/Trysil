@@ -74,6 +74,10 @@ type
 
   TVersionColumnAttribute = class(TCustomAttribute);
 
+{ TNotFilterableAttribute }
+
+  TNotFilterableAttribute = class(TCustomAttribute);
+
 { TRelationAttribute }
 
   TRelationAttribute = class(TCustomAttribute)

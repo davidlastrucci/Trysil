@@ -54,6 +54,28 @@ type
     property Version: TTVersion read FVersion;
   end;
 
+{ TTestSecret - entity with a column excluded from dynamic filtering }
+
+  [TTable('Secrets')]
+  [TSequence('SecretsID')]
+  TTestSecret = class
+  strict private
+    [TPrimaryKey]
+    [TColumn('ID')]
+    FID: TTPrimaryKey;
+
+    [TColumn('Name')]
+    FName: String;
+
+    [TColumn('Password')]
+    [TNotFilterable]
+    FPassword: String;
+  public
+    property ID: TTPrimaryKey read FID;
+    property Name: String read FName write FName;
+    property Password: String read FPassword write FPassword;
+  end;
+
 { TTestTask - entity with soft delete support }
 
   [TTable('Tasks')]

@@ -28,11 +28,15 @@ CREATE TABLE [log].[Requests](
   [TaskID] [nvarchar](50) NULL,
   [Date] [datetime] NULL,
   [Uri] [nvarchar](255) NULL,
+  [ParamsCount] [int] NULL,
+  [ParamsOmitted] [bit] NULL,
   [Params] [nvarchar](max) NULL,
   [MethodType] [nvarchar](255) NULL,
   [ContentLength] [bigint] NULL,
   [ContentOmitted] [bit] NULL,
   [Content] [nvarchar](max) NULL,
+  [HeadersCount] [int] NULL,
+  [HeadersOmitted] [bit] NULL,
   [Headers] [nvarchar](max) NULL,
   [RemoteIP] [nvarchar](255) NULL,
   [VersionID] [int] NOT NULL,
@@ -46,6 +50,10 @@ ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_Uri] DEFAULT (N'') FOR 
 ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_MethodType] DEFAULT (N'') FOR [MethodType]
 ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_ContentLength] DEFAULT ((0)) FOR [ContentLength]
 ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_ContentOmitted] DEFAULT ((0)) FOR [ContentOmitted]
+ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_ParamsCount] DEFAULT ((0)) FOR [ParamsCount]
+ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_ParamsOmitted] DEFAULT ((0)) FOR [ParamsOmitted]
+ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_HeadersCount] DEFAULT ((0)) FOR [HeadersCount]
+ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_HeadersOmitted] DEFAULT ((0)) FOR [HeadersOmitted]
 ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_RemoteIP] DEFAULT (N'') FOR [RemoteIP]
 ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_VersionID] DEFAULT (0) FOR [VersionID]
 GO
@@ -60,6 +68,7 @@ CREATE TABLE [log].[Responses](
   [ID] [int] NOT NULL,
   [TaskID] [nvarchar](50) NULL,
   [Date] [datetime] NULL,
+  [Uri] [nvarchar](255) NULL,
   [Username] [nvarchar](255) NULL,
   [UserAreas] [nvarchar](max) NULL,
   [StatusCode] [smallint] NULL,
@@ -76,6 +85,7 @@ GO
 
 ALTER TABLE [log].[Responses] ADD CONSTRAINT [DF_Responses_ID] DEFAULT (0) FOR [ID]
 ALTER TABLE [log].[Responses] ADD CONSTRAINT [DF_Responses_TaskID] DEFAULT (N'') FOR [TaskID]
+ALTER TABLE [log].[Responses] ADD CONSTRAINT [DF_Responses_Uri] DEFAULT (N'') FOR [Uri]
 ALTER TABLE [log].[Responses] ADD CONSTRAINT [DF_Responses_Username] DEFAULT (N'') FOR [Username]
 ALTER TABLE [log].[Responses] ADD CONSTRAINT [DF_Responses_StatusCode] DEFAULT ((0)) FOR [StatusCode]
 ALTER TABLE [log].[Responses] ADD CONSTRAINT [DF_Responses_ContentType] DEFAULT (N'') FOR [ContentType]

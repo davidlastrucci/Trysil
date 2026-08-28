@@ -85,6 +85,8 @@ type
       const AConnection: TTConnection;
       const ATableMap: TTTableMap;
       const AFilter: TTFilter);
+
+    property Filter: TTFilter read FFilter;
   end;
 
 { TTSelectCountSyntax }

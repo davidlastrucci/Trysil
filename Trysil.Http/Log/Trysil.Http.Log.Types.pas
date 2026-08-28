@@ -18,6 +18,7 @@ uses
   System.DateUtils,
   System.JSon,
   System.NetEncoding,
+  Trysil.Exceptions,
 
   Trysil.Http.Consts,
   Trysil.Http.Types,
@@ -34,6 +35,7 @@ type
     FThreadPoolSize: Integer;
     FQueueCapacity: Integer;
     FMaxContentLength: Integer;
+    FMaxItemCount: Integer;
   public
     constructor Create(
       const AThreadPoolSize: Integer;
@@ -44,11 +46,19 @@ type
       const AQueueCapacity: Integer;
       const AMaxContentLength: Integer); overload;
 
+    constructor Create(
+      const AThreadPoolSize: Integer;
+      const AQueueCapacity: Integer;
+      const AMaxContentLength: Integer;
+      const AMaxItemCount: Integer); overload;
+
     function CanLogContent(const ALength: Int64): Boolean;
+    function CanLogItems(const ACount: Integer): Boolean;
 
     property ThreadPoolSize: Integer read FThreadPoolSize;
     property QueueCapacity: Integer read FQueueCapacity;
     property MaxContentLength: Integer read FMaxContentLength;
+    property MaxItemCount: Integer read FMaxItemCount;
   end;
 
 { TTHttpLogDiscarded }
@@ -88,7 +98,9 @@ type
     FName: String;
     FValue: String;
   public
-    constructor Create(const ANameValue: TTHttpNameValue);
+    constructor Create(const ANameValue: TTHttpNameValue); overload;
+    constructor Create(
+      const AName: String; const AValue: String); overload;
 
     property Name: String read FName;
     property Value: String read FValue;
@@ -98,9 +110,22 @@ type
 
   TTHttpLogNameValues = record
   strict private
+    const RedactedValue = '<redacted>';
+    const RedactedNames: array[0..4] of String = (
+      'Authorization',
+      'Proxy-Authorization',
+      'Cookie',
+      'Set-Cookie',
+      'X-Api-Key');
+  strict private
     FValues: TArray<TTHttpLogNameValue>;
+
+    class function IsRedacted(const AName: String): Boolean; static;
   public
-    constructor Create(const ANameValues: TTHttpNameValues);
+    constructor Create(const ANameValues: TTHttpNameValues); overload;
+    constructor Create(
+      const ANameValues: TTHttpNameValues;
+      const ARedact: Boolean); overload;
 
     function ToJSonArray(): TJSonArray;
     function ToString: String;
@@ -114,11 +139,15 @@ type
     FHost: String;
     FDateTime: TDateTime;
     FUri: String;
+    FParamsCount: Integer;
+    FParamsOmitted: Boolean;
     FParams: TTHttpLogNameValues;
     FMethodType: String;
     FContentLength: Int64;
     FContentOmitted: Boolean;
     FContent: String;
+    FHeadersCount: Integer;
+    FHeadersOmitted: Boolean;
     FHeaders: TTHttpLogNameValues;
     FRemoteIP: String;
     FClientIP: String;
@@ -133,11 +162,15 @@ type
     property Host: String read FHost;
     property DateTime: TDateTime read FDateTime;
     property Uri: String read FUri;
+    property ParamsCount: Integer read FParamsCount;
+    property ParamsOmitted: Boolean read FParamsOmitted;
     property Params: TTHttpLogNameValues read FParams;
     property MethodType: String read FMethodType;
     property ContentLength: Int64 read FContentLength;
     property ContentOmitted: Boolean read FContentOmitted;
     property Content: String read FContent;
+    property HeadersCount: Integer read FHeadersCount;
+    property HeadersOmitted: Boolean read FHeadersOmitted;
     property Headers: TTHttpLogNameValues read FHeaders;
     property RemoteIP: String read FRemoteIP;
     property ClientIP: String read FClientIP;
@@ -177,6 +210,7 @@ type
     FTaskID: TTHttpTaskID;
     FDateTime: TDateTime;
     FHost: String;
+    FUri: String;
     FUser: TTHttpLogUser;
     FStatusCode: Integer;
     FContentType: String;
@@ -199,6 +233,7 @@ type
     property TaskID: TTHttpTaskID read FTaskID;
     property DateTime: TDateTime read FDateTime;
     property Host: String read FHost;
+    property Uri: String read FUri;
     property User: TTHttpLogUser read FUser;
     property StatusCode: Integer read FStatusCode;
     property ContentType: String read FContentType;
@@ -209,9 +244,40 @@ type
     property BinaryContent: String read FBinaryContent;
   end;
 
+{ TTHttpLogError }
+
+  TTHttpLogError = record
+  strict private
+    FTaskID: TTHttpTaskID;
+    FDateTime: TDateTime;
+    FHost: String;
+    FUri: String;
+    FExceptionClassName: String;
+    FExceptionMessage: String;
+    FNestedExceptionClassName: String;
+    FNestedExceptionMessage: String;
+
+    procedure SetNestedException(const AException: Exception);
+  public
+    constructor Create(
+      const ARequest: TTHttpRequest; const AException: Exception);
+
+    function ToJSon: String;
+
+    property TaskID: TTHttpTaskID read FTaskID;
+    property DateTime: TDateTime read FDateTime;
+    property Host: String read FHost;
+    property Uri: String read FUri;
+    property ExceptionClassName: String read FExceptionClassName;
+    property ExceptionMessage: String read FExceptionMessage;
+    property NestedExceptionClassName: String
+      read FNestedExceptionClassName;
+    property NestedExceptionMessage: String read FNestedExceptionMessage;
+  end;
+
 { TTHttpLogQueueType }
 
-  TTHttpLogQueueType = (Request, Response);
+  TTHttpLogQueueType = (Request, Response, Error);
 
 { TTHttpLogQueueValue }
 
@@ -220,13 +286,16 @@ type
     FQueueType: TTHttpLogQueueType;
     FRequest: TTHttpLogRequest;
     FResponse: TTHttpLogResponse;
+    FError: TTHttpLogError;
   public
     constructor Create(const ARequest: TTHttpLogRequest); overload;
     constructor Create(const AResponse: TTHttpLogResponse); overload;
+    constructor Create(const AError: TTHttpLogError); overload;
 
     property QueueType: TTHttpLogQueueType read FQueueType;
     property Request: TTHttpLogRequest read FRequest;
     property Response: TTHttpLogResponse read FResponse;
+    property Error: TTHttpLogError read FError;
   end;
 
 implementation
@@ -237,9 +306,7 @@ constructor TTHttpLogParameters.Create(
   const AThreadPoolSize: Integer;
   const AQueueCapacity: Integer);
 begin
-  FThreadPoolSize := AThreadPoolSize;
-  FQueueCapacity := AQueueCapacity;
-  FMaxContentLength := -1;
+  Create(AThreadPoolSize, AQueueCapacity, -1, -1);
 end;
 
 constructor TTHttpLogParameters.Create(
@@ -247,15 +314,30 @@ constructor TTHttpLogParameters.Create(
   const AQueueCapacity: Integer;
   const AMaxContentLength: Integer);
 begin
+  Create(AThreadPoolSize, AQueueCapacity, AMaxContentLength, -1);
+end;
+
+constructor TTHttpLogParameters.Create(
+  const AThreadPoolSize: Integer;
+  const AQueueCapacity: Integer;
+  const AMaxContentLength: Integer;
+  const AMaxItemCount: Integer);
+begin
   FThreadPoolSize := AThreadPoolSize;
   FQueueCapacity := AQueueCapacity;
   FMaxContentLength := AMaxContentLength;
+  FMaxItemCount := AMaxItemCount;
 end;
 
 function TTHttpLogParameters.CanLogContent(
   const ALength: Int64): Boolean;
 begin
   result := (FMaxContentLength < 0) or (ALength <= FMaxContentLength);
+end;
+
+function TTHttpLogParameters.CanLogItems(const ACount: Integer): Boolean;
+begin
+  result := (FMaxItemCount < 0) or (ACount <= FMaxItemCount);
 end;
 
 { TTHttpLogDiscarded }
@@ -296,21 +378,54 @@ end;
 
 constructor TTHttpLogNameValue.Create(const ANameValue: TTHttpNameValue);
 begin
-  FName := ANameValue.Name;
-  FValue := ANameValue.Value;
+  Create(ANameValue.Name, ANameValue.Value);
+end;
+
+constructor TTHttpLogNameValue.Create(
+  const AName: String; const AValue: String);
+begin
+  FName := AName;
+  FValue := AValue;
 end;
 
 { TTHttpLogNameValues }
 
 constructor TTHttpLogNameValues.Create(const ANameValues: TTHttpNameValues);
+begin
+  Create(ANameValues, False);
+end;
+
+constructor TTHttpLogNameValues.Create(
+  const ANameValues: TTHttpNameValues;
+  const ARedact: Boolean);
 var
   LCount, LIndex: Integer;
+  LNameValue: TTHttpNameValue;
 begin
   LCount := ANameValues.Count;
   SetLength(FValues, LCount);
   for LIndex := 0 to LCount - 1 do
-    FValues[LIndex] :=
-      TTHttpLogNameValue.Create(ANameValues.NameValue[LIndex]);
+  begin
+    LNameValue := ANameValues.NameValue[LIndex];
+    if ARedact and IsRedacted(LNameValue.Name) then
+      FValues[LIndex] := TTHttpLogNameValue.Create(
+        LNameValue.Name, RedactedValue)
+    else
+      FValues[LIndex] := TTHttpLogNameValue.Create(LNameValue);
+  end;
+end;
+
+class function TTHttpLogNameValues.IsRedacted(const AName: String): Boolean;
+var
+  LIndex: Integer;
+begin
+  result := False;
+  for LIndex := Low(RedactedNames) to High(RedactedNames) do
+    if String.Compare(RedactedNames[LIndex], AName, True) = 0 then
+    begin
+      result := True;
+      Break;
+    end;
 end;
 
 function TTHttpLogNameValues.ToJSonArray: TJSonArray;
@@ -360,7 +475,6 @@ begin
   FHost := ARequest.Host;
   FDateTime := TTimeZone.Local.ToUniversalTime(Now);
   FUri := ARequest.ControllerID.Uri;
-  FParams := TTHttpLogNameValues.Create(ARequest.Parameters);
   FMethodType := ARequest.ControllerID.Method;
   FContentLength := ARequest.ContentLength;
   FContentOmitted := not AParameters.CanLogContent(FContentLength);
@@ -369,7 +483,17 @@ begin
   else
     FContent := ARequest.JSonContent.ToJSon();
 
-  FHeaders := TTHttpLogNameValues.Create(ARequest.Headers);
+  FParamsCount := ARequest.Parameters.Count;
+  FParamsOmitted := FContentOmitted or
+    (not AParameters.CanLogItems(FParamsCount));
+  if not FParamsOmitted then
+    FParams := TTHttpLogNameValues.Create(ARequest.Parameters);
+
+  FHeadersCount := ARequest.Headers.Count;
+  FHeadersOmitted := not AParameters.CanLogItems(FHeadersCount);
+  if not FHeadersOmitted then
+    FHeaders := TTHttpLogNameValues.Create(ARequest.Headers, True);
+
   FRemoteIP := ARequest.RemoteIP;
   FClientIP := ARequest.ClientIP;
 end;
@@ -383,8 +507,16 @@ begin
     LJSon.AddPair('TaskID', FTaskID.ToString());
     LJSon.AddPair('DateTime', DateToISO8601(FDateTime, True));
     LJSon.AddPair('Uri', FUri);
-    LJSon.AddPair('Params', FParams.ToJSonArray());
-    LJSon.AddPair('Headers', FHeaders.ToJSonArray());
+    LJSon.AddPair('ParamsCount', TJSonNumber.Create(FParamsCount));
+    if FParamsOmitted then
+      LJSon.AddPair('ParamsOmitted', TJSonBool.Create(True))
+    else
+      LJSon.AddPair('Params', FParams.ToJSonArray());
+    LJSon.AddPair('HeadersCount', TJSonNumber.Create(FHeadersCount));
+    if FHeadersOmitted then
+      LJSon.AddPair('HeadersOmitted', TJSonBool.Create(True))
+    else
+      LJSon.AddPair('Headers', FHeaders.ToJSonArray());
     LJSon.AddPair('MethodType', FMethodType);
     LJSon.AddPair('ContentLength', TJSonNumber.Create(FContentLength));
     if FContentOmitted then
@@ -468,6 +600,7 @@ begin
   FTaskID := AResponse.TaskID;
   FDateTime := TTimeZone.Local.ToUniversalTime(Now);
   FHost := ARequest.Host;
+  FUri := ARequest.ControllerID.Uri;
   FUser := TTHttpLogUser.Create(ARequest.User);
   FStatusCode := AResponse.StatusCode;
   FContentType := AResponse.ContentType;
@@ -514,6 +647,7 @@ begin
   try
     LJSon.AddPair('TaskID', FTaskID.ToString());
     LJSon.AddPair('DateTime', DateToISO8601(FDateTime, True));
+    LJSon.AddPair('Uri', FUri);
     LJSon.AddPair('User', FUser.ToJSon());
     LJSon.AddPair('StatusCode', TJSonNumber.Create(FStatusCode));
     LJSon.AddPair('ContentType', FContentType);
@@ -535,6 +669,58 @@ begin
   end;
 end;
 
+{ TTHttpLogError }
+
+constructor TTHttpLogError.Create(
+  const ARequest: TTHttpRequest; const AException: Exception);
+begin
+  FTaskID := ARequest.TaskID;
+  FDateTime := TTimeZone.Local.ToUniversalTime(Now);
+  FHost := ARequest.Host;
+  FUri := ARequest.ControllerID.Uri;
+  FExceptionClassName := AException.ClassName;
+  FExceptionMessage := AException.Message;
+  SetNestedException(AException);
+end;
+
+procedure TTHttpLogError.SetNestedException(const AException: Exception);
+var
+  LException: ETException;
+begin
+  FNestedExceptionClassName := String.Empty;
+  FNestedExceptionMessage := String.Empty;
+  if AException is ETException then
+  begin
+    LException := ETException(AException);
+    FNestedExceptionClassName := LException.NestedExceptionClassName;
+    FNestedExceptionMessage := LException.NestedExceptionMessage;
+  end;
+end;
+
+function TTHttpLogError.ToJSon: String;
+var
+  LJSon: TJSonObject;
+begin
+  LJSon := TJSonObject.Create;
+  try
+    LJSon.AddPair('TaskID', FTaskID.ToString());
+    LJSon.AddPair('DateTime', DateToISO8601(FDateTime, True));
+    LJSon.AddPair('Host', FHost);
+    LJSon.AddPair('Uri', FUri);
+    LJSon.AddPair('ExceptionClassName', FExceptionClassName);
+    LJSon.AddPair('ExceptionMessage', FExceptionMessage);
+    if not FNestedExceptionClassName.IsEmpty then
+    begin
+      LJSon.AddPair('NestedExceptionClassName', FNestedExceptionClassName);
+      LJSon.AddPair('NestedExceptionMessage', FNestedExceptionMessage);
+    end;
+
+    result := LJSon.ToJSon();
+  finally
+    LJSon.Free;
+  end;
+end;
+
 { TTHttpLogQueueValue }
 
 constructor TTHttpLogQueueValue.Create(const ARequest: TTHttpLogRequest);
@@ -547,6 +733,12 @@ constructor TTHttpLogQueueValue.Create(const AResponse: TTHttpLogResponse);
 begin
   FQueueType := TTHttpLogQueueType.Response;
   FResponse := AResponse;
+end;
+
+constructor TTHttpLogQueueValue.Create(const AError: TTHttpLogError);
+begin
+  FQueueType := TTHttpLogQueueType.Error;
+  FError := AError;
 end;
 
 end.

@@ -16,6 +16,7 @@ uses
   System.SysUtils,
   System.Classes,
   System.Generics.Collections,
+  Trysil.Exceptions,
   Trysil.Sync,
 
   Trysil.Http.MultiTenant.Config,
@@ -41,6 +42,40 @@ type
     property Connection: TTTenantConnection read FConnection;
   end;
 
+{ ETTenantUnavailable }
+
+  ETTenantUnavailable = class(ETException)
+  strict private
+    FTenantName: String;
+    FOriginalClassName: String;
+  public
+    constructor Create(
+      const ATenantName: String;
+      const AOriginalClassName: String;
+      const AMessage: String);
+
+    property TenantName: String read FTenantName;
+    property OriginalClassName: String read FOriginalClassName;
+  end;
+
+{ TTTenantFailure }
+
+  TTTenantFailure = record
+  strict private
+    FExpiration: UInt64;
+    FExceptionClassName: String;
+    FMessage: String;
+  public
+    constructor Create(
+      const AException: Exception; const ACooldown: Cardinal);
+
+    function IsExpired: Boolean;
+
+    property Expiration: UInt64 read FExpiration;
+    property ExceptionClassName: String read FExceptionClassName;
+    property Message: String read FMessage;
+  end;
+
 { TTMultiTenant<C> }
 
   TTMultiTenant<T: TTTenantConfig> = class
@@ -50,13 +85,26 @@ type
     class constructor ClassCreate;
     class destructor ClassDestroy;
   strict private
+    const DefaultFailureCooldown: Cardinal = 5000;
+    const MaxFailures: Integer = 128;
+  strict private
     FLock: TTMultiReadExclusiveWriteLock;
     FOwner: TObjectList<TTTenant<T>>;
     FTenants: TDictionary<String, TTTenant<T>>;
+    FFailures: TDictionary<String, TTTenantFailure>;
+    FFailureCooldown: Cardinal;
 
     function TryGetTenant(
       const AName: String; out ATenant: TTTenant<T>): Boolean;
     function CreateTenant(const AName: String): TTTenant<T>;
+    function CreateTenantOrFail(const AName: String): TTTenant<T>;
+    procedure CheckFailure(const AName: String);
+    procedure AddFailure(const AName: String; const AException: Exception);
+    procedure RemoveFailure(const AName: String);
+    procedure RemoveExpiredFailures;
+    procedure RemoveOldestFailure;
+    function GetFailureCooldown: Cardinal;
+    procedure SetFailureCooldown(const AValue: Cardinal);
   public
     constructor Create;
     destructor Destroy; override;
@@ -66,6 +114,9 @@ type
     function GetOrAdd(const AName: String): TTTenant<T>;
     function GetAll: TArray<string>;
     procedure Remove(const AName: String);
+
+    property FailureCooldown: Cardinal
+      read GetFailureCooldown write SetFailureCooldown;
 
     class property Instance: TTMultiTenant<T> read FInstance;
   end;
@@ -95,6 +146,33 @@ begin
   FConnection := TTTenantConnection.Create(FConfig);
 end;
 
+{ ETTenantUnavailable }
+
+constructor ETTenantUnavailable.Create(
+  const ATenantName: String;
+  const AOriginalClassName: String;
+  const AMessage: String);
+begin
+  inherited Create(AMessage);
+  FTenantName := ATenantName;
+  FOriginalClassName := AOriginalClassName;
+end;
+
+{ TTTenantFailure }
+
+constructor TTTenantFailure.Create(
+  const AException: Exception; const ACooldown: Cardinal);
+begin
+  FExpiration := TThread.GetTickCount64 + ACooldown;
+  FExceptionClassName := AException.ClassName;
+  FMessage := AException.Message;
+end;
+
+function TTTenantFailure.IsExpired: Boolean;
+begin
+  result := TThread.GetTickCount64 >= FExpiration;
+end;
+
 { TTMultiTenant<T> }
 
 class constructor TTMultiTenant<T>.ClassCreate;
@@ -113,10 +191,13 @@ begin
   FLock := TTMultiReadExclusiveWriteLock.Create;
   FOwner := TObjectList<TTTenant<T>>.Create(True);
   FTenants := TDictionary<String, TTTenant<T>>.Create;
+  FFailures := TDictionary<String, TTTenantFailure>.Create;
+  FFailureCooldown := DefaultFailureCooldown;
 end;
 
 destructor TTMultiTenant<T>.Destroy;
 begin
+  FFailures.Free;
   FTenants.Free;
   FOwner.Free;
   FLock.Free;
@@ -147,10 +228,10 @@ begin
       if not FTenants.TryGetValue(AName, result) then
       begin
         LTenant.RegisterConnection;
-        FTenants.Add(AName, LTenant);
         FOwner.Add(LTenant);
-        result := LTenant;
         LFreeTenant := False;
+        FTenants.Add(AName, LTenant);
+        result := LTenant;
       end;
     finally
       FLock.EndWrite;
@@ -167,25 +248,149 @@ begin
   result := TryGetTenant(AName.ToLower(), ATenant);
 end;
 
+function TTMultiTenant<T>.CreateTenantOrFail(
+  const AName: String): TTTenant<T>;
+begin
+  try
+    result := CreateTenant(AName);
+  except
+    on E: Exception do
+    begin
+      AddFailure(AName, E);
+      raise ETTenantUnavailable.Create(AName, E.ClassName, E.Message);
+    end;
+  end;
+  RemoveFailure(AName);
+end;
+
+procedure TTMultiTenant<T>.CheckFailure(const AName: String);
+var
+  LFailure: TTTenantFailure;
+  LFound: Boolean;
+begin
+  FLock.BeginRead;
+  try
+    LFound := FFailures.TryGetValue(AName, LFailure);
+  finally
+    FLock.EndRead;
+  end;
+
+  if LFound and (not LFailure.IsExpired) then
+    raise ETTenantUnavailable.Create(
+      AName, LFailure.ExceptionClassName, LFailure.Message);
+end;
+
+procedure TTMultiTenant<T>.AddFailure(
+  const AName: String; const AException: Exception);
+begin
+  FLock.BeginWrite;
+  try
+    RemoveExpiredFailures;
+    if not FFailures.ContainsKey(AName) then
+      RemoveOldestFailure;
+    FFailures.AddOrSetValue(
+      AName, TTTenantFailure.Create(AException, FFailureCooldown));
+  finally
+    FLock.EndWrite;
+  end;
+end;
+
+function TTMultiTenant<T>.GetFailureCooldown: Cardinal;
+begin
+  FLock.BeginRead;
+  try
+    result := FFailureCooldown;
+  finally
+    FLock.EndRead;
+  end;
+end;
+
+procedure TTMultiTenant<T>.SetFailureCooldown(const AValue: Cardinal);
+begin
+  FLock.BeginWrite;
+  try
+    FFailureCooldown := AValue;
+  finally
+    FLock.EndWrite;
+  end;
+end;
+
+procedure TTMultiTenant<T>.RemoveFailure(const AName: String);
+begin
+  FLock.BeginWrite;
+  try
+    FFailures.Remove(AName);
+  finally
+    FLock.EndWrite;
+  end;
+end;
+
+procedure TTMultiTenant<T>.RemoveExpiredFailures;
+var
+  LPair: TPair<String, TTTenantFailure>;
+  LExpired: TList<String>;
+  LName: String;
+begin
+  LExpired := TList<String>.Create;
+  try
+    for LPair in FFailures do
+      if LPair.Value.IsExpired then
+        LExpired.Add(LPair.Key);
+    for LName in LExpired do
+      FFailures.Remove(LName);
+  finally
+    LExpired.Free;
+  end;
+end;
+
+procedure TTMultiTenant<T>.RemoveOldestFailure;
+var
+  LPair: TPair<String, TTTenantFailure>;
+  LName: String;
+  LExpiration: UInt64;
+begin
+  if FFailures.Count >= MaxFailures then
+  begin
+    LName := String.Empty;
+    LExpiration := High(UInt64);
+    for LPair in FFailures do
+      if LPair.Value.Expiration <= LExpiration then
+      begin
+        LExpiration := LPair.Value.Expiration;
+        LName := LPair.Key;
+      end;
+
+    if not LName.IsEmpty then
+      FFailures.Remove(LName);
+  end;
+end;
+
 function TTMultiTenant<T>.GetOrAdd(const AName: String): TTTenant<T>;
 var
   LName: String;
 begin
   LName := AName.ToLower();
   if not TryGetTenant(LName, result) then
-    result := CreateTenant(LName);
+  begin
+    CheckFailure(LName);
+    result := CreateTenantOrFail(LName);
+  end;
 end;
 
 function TTMultiTenant<T>.GetAll: TArray<string>;
 var
-  LLength, LIndex: Integer;
+  LTenant: TTTenant<T>;
+  LIndex: Integer;
 begin
   FLock.BeginRead;
   try
-    LLength := FOwner.Count;
-    SetLength(result, LLength);
-    for LIndex := 0 to LLength - 1 do
-      result[LIndex] := FOwner[LIndex].Name;
+    SetLength(result, FTenants.Count);
+    LIndex := 0;
+    for LTenant in FTenants.Values do
+    begin
+      result[LIndex] := LTenant.Name;
+      Inc(LIndex);
+    end;
   finally
     FLock.EndRead;
   end;
@@ -194,16 +399,12 @@ end;
 procedure TTMultiTenant<T>.Remove(const AName: String);
 var
   LName: String;
-  LTenant: TTTenant<T>;
 begin
   LName := AName.ToLower();
   FLock.BeginWrite;
   try
-    if FTenants.TryGetValue(LName, LTenant) then
-    begin
-      FTenants.Remove(LName);
-      FOwner.Remove(LTenant);
-    end;
+    FTenants.Remove(LName);
+    FFailures.Remove(LName);
   finally
     FLock.EndWrite;
   end;

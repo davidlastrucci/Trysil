@@ -57,17 +57,29 @@ type
     FDataType: TFieldType;
     FSize: Integer;
     FValue: TTValue;
+    FIsGuid: Boolean;
+    FIsCurrency: Boolean;
   public
     constructor Create(
       const AName: String;
       const ADataType: TFieldType;
       const ASize: Integer;
-      const AValue: TTValue);
+      const AValue: TTValue); overload;
+
+    constructor Create(
+      const AName: String;
+      const ADataType: TFieldType;
+      const ASize: Integer;
+      const AValue: TTValue;
+      const AIsGuid: Boolean;
+      const AIsCurrency: Boolean); overload;
 
     property Name: String read FName;
     property DataType: TFieldType read FDataType;
     property Size: Integer read FSize;
     property Value: TTValue read FValue;
+    property IsGuid: Boolean read FIsGuid;
+    property IsCurrency: Boolean read FIsCurrency;
   end;
 
 { TTFilter }
@@ -104,6 +116,14 @@ type
       const ADataType: TFieldType;
       const ASize: Integer;
       const AValue: TTValue); overload;
+
+    procedure AddParameter(
+      const AName: String;
+      const ADataType: TFieldType;
+      const ASize: Integer;
+      const AValue: TTValue;
+      const AIsGuid: Boolean;
+      const AIsCurrency: Boolean); overload;
 
     property Where: String read FWhere write FWhere;
     property Parameters: TArray<TTFilterParameter> read FParameters;
@@ -251,10 +271,23 @@ constructor TTFilterParameter.Create(
   const ASize: Integer;
   const AValue: TTValue);
 begin
+  Create(AName, ADataType, ASize, AValue, False, False);
+end;
+
+constructor TTFilterParameter.Create(
+  const AName: String;
+  const ADataType: TFieldType;
+  const ASize: Integer;
+  const AValue: TTValue;
+  const AIsGuid: Boolean;
+  const AIsCurrency: Boolean);
+begin
   FName := AName;
   FDataType := ADataType;
   FSize := ASize;
   FValue := AValue;
+  FIsGuid := AIsGuid;
+  FIsCurrency := AIsCurrency;
 end;
 
 { TTFilter }
@@ -303,13 +336,24 @@ procedure TTFilter.AddParameter(
   const ADataType: TFieldType;
   const ASize: Integer;
   const AValue: TTValue);
+begin
+  AddParameter(AName, ADataType, ASize, AValue, False, False);
+end;
+
+procedure TTFilter.AddParameter(
+  const AName: String;
+  const ADataType: TFieldType;
+  const ASize: Integer;
+  const AValue: TTValue;
+  const AIsGuid: Boolean;
+  const AIsCurrency: Boolean);
 var
   LLength: Integer;
 begin
   LLength := Length(FParameters);
   SetLength(FParameters, LLength + 1);
   FParameters[LLength] := TTFilterParameter.Create(
-    AName, ADataType, ASize, AValue);
+    AName, ADataType, ASize, AValue, AIsGuid, AIsCurrency);
 end;
 
 class function TTFilter.Empty: TTFilter;

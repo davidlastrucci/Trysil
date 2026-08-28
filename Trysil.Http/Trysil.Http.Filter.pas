@@ -37,6 +37,44 @@ type
     function FindColumn(const AName: String): TTColumnMetadata;
   end;
 
+{ TTHttpFilterParameters }
+
+  TTHttpFilterParameters = record
+  strict private
+    const DefaultMaxLimit: Integer = 1000;
+    const DefaultMaxWhereConditions: Integer = 32;
+    const DefaultMaxOrderByColumns: Integer = 8;
+  strict private
+    FMaxLimit: Integer;
+    FMaxWhereConditions: Integer;
+    FMaxOrderByColumns: Integer;
+    FIncludeDeleted: Boolean;
+
+    function GetMaxLimit: Integer;
+    function GetMaxWhereConditions: Integer;
+    function GetMaxOrderByColumns: Integer;
+  public
+    constructor Create(
+      const AMaxLimit: Integer;
+      const AMaxWhereConditions: Integer;
+      const AMaxOrderByColumns: Integer); overload;
+
+    constructor Create(
+      const AMaxLimit: Integer;
+      const AMaxWhereConditions: Integer;
+      const AMaxOrderByColumns: Integer;
+      const AIncludeDeleted: Boolean); overload;
+
+    class function Defaults: TTHttpFilterParameters; static;
+
+    function LimitOrDefault(const ALimit: Integer): Integer;
+
+    property MaxLimit: Integer read GetMaxLimit;
+    property MaxWhereConditions: Integer read GetMaxWhereConditions;
+    property MaxOrderByColumns: Integer read GetMaxOrderByColumns;
+    property IncludeDeleted: Boolean read FIncludeDeleted;
+  end;
+
 { TTHttpFilterWhere }
 
   TTHttpFilterWhere = record
@@ -75,7 +113,13 @@ type
     FList: TArray<TTHttpFilterWhere>;
   public
     constructor Create(
-      const AJSon: TJSonArray; const ATableMetadata: TTTableMetadata);
+      const AJSon: TJSonArray;
+      const ATableMetadata: TTTableMetadata); overload;
+
+    constructor Create(
+      const AJSon: TJSonArray;
+      const ATableMetadata: TTTableMetadata;
+      const AMaxConditions: Integer); overload;
 
     procedure AddParameters(var AFilter: TTFilter);
 
@@ -106,7 +150,13 @@ type
     FList: TArray<TTHttpFilterOrderBy>;
   public
     constructor Create(
-      const AJSon: TJSonArray; const ATableMetadata: TTTableMetadata);
+      const AJSon: TJSonArray;
+      const ATableMetadata: TTTableMetadata); overload;
+
+    constructor Create(
+      const AJSon: TJSonArray;
+      const ATableMetadata: TTTableMetadata;
+      const AMaxColumns: Integer); overload;
 
     function ToString: String;
   end;
@@ -117,7 +167,13 @@ type
   strict private
     FFilter: TTFilter;
   public
-    constructor Create(const AContext: TTContext; const AJSon: TJSonValue);
+    constructor Create(
+      const AContext: TTContext; const AJSon: TJSonValue); overload;
+
+    constructor Create(
+      const AContext: TTContext;
+      const AJSon: TJSonValue;
+      const AParameters: TTHttpFilterParameters); overload;
 
     property Filter: TTFilter read FFilter;
   end;
@@ -142,6 +198,76 @@ begin
   if not Assigned(result) then
     raise ETHttpBadRequest.CreateFmt(
       TTLanguage.Instance.Translate(SColumnNotFound), [AName]);
+
+  if not result.IsFilterable then
+    raise ETHttpBadRequest.CreateFmt(
+      TTLanguage.Instance.Translate(SColumnNotFilterable), [AName]);
+end;
+
+{ TTHttpFilterParameters }
+
+constructor TTHttpFilterParameters.Create(
+  const AMaxLimit: Integer;
+  const AMaxWhereConditions: Integer;
+  const AMaxOrderByColumns: Integer);
+begin
+  Create(AMaxLimit, AMaxWhereConditions, AMaxOrderByColumns, False);
+end;
+
+constructor TTHttpFilterParameters.Create(
+  const AMaxLimit: Integer;
+  const AMaxWhereConditions: Integer;
+  const AMaxOrderByColumns: Integer;
+  const AIncludeDeleted: Boolean);
+begin
+  FMaxLimit := AMaxLimit;
+  FMaxWhereConditions := AMaxWhereConditions;
+  FMaxOrderByColumns := AMaxOrderByColumns;
+  FIncludeDeleted := AIncludeDeleted;
+end;
+
+class function TTHttpFilterParameters.Defaults: TTHttpFilterParameters;
+begin
+  result := TTHttpFilterParameters.Create(
+    DefaultMaxLimit, DefaultMaxWhereConditions, DefaultMaxOrderByColumns);
+end;
+
+function TTHttpFilterParameters.GetMaxLimit: Integer;
+begin
+  if FMaxLimit = 0 then
+    result := DefaultMaxLimit
+  else
+    result := FMaxLimit;
+end;
+
+function TTHttpFilterParameters.GetMaxWhereConditions: Integer;
+begin
+  if FMaxWhereConditions = 0 then
+    result := DefaultMaxWhereConditions
+  else
+    result := FMaxWhereConditions;
+end;
+
+function TTHttpFilterParameters.GetMaxOrderByColumns: Integer;
+begin
+  if FMaxOrderByColumns = 0 then
+    result := DefaultMaxOrderByColumns
+  else
+    result := FMaxOrderByColumns;
+end;
+
+function TTHttpFilterParameters.LimitOrDefault(
+  const ALimit: Integer): Integer;
+var
+  LMaxLimit: Integer;
+begin
+  LMaxLimit := GetMaxLimit;
+  if LMaxLimit < 0 then
+    result := ALimit
+  else if (ALimit <= 0) or (ALimit > LMaxLimit) then
+    result := LMaxLimit
+  else
+    result := ALimit;
 end;
 
 { TTHttpFilterWhere }
@@ -151,12 +277,13 @@ constructor TTHttpFilterWhere.Create(
   const ATableMetadata: TTTableMetadata;
   const AParameterIndex: Integer);
 begin
-  FColumnName := AJSon.GetValue<String>('columnName', String.Empty);
   FCondition := AJSon.GetValue<String>('condition', String.Empty);
   FValue := AJSon.GetValue<String>('value', String.Empty);
   FParameterName := Format('p%d', [AParameterIndex]);
 
-  FColumnMetadata := ATableMetadata.FindColumn(FColumnName);
+  FColumnMetadata := ATableMetadata.FindColumn(
+    AJSon.GetValue<String>('columnName', String.Empty));
+  FColumnName := FColumnMetadata.ColumnName;
   ValidateCondition;
   ValidateConditionForColumn;
 end;
@@ -172,7 +299,9 @@ begin
     FParameterName,
     FColumnMetadata.DataType,
     FColumnMetadata.DataSize,
-    GetParameterValue);
+    GetParameterValue,
+    FColumnMetadata.IsGuid,
+    FColumnMetadata.IsCurrency);
 end;
 
 function TTHttpFilterWhere.IsStringColumn: Boolean;
@@ -209,7 +338,11 @@ end;
 function TTHttpFilterWhere.GetParameterValue: TTValue;
 begin
   if not TTParameterFactory.Instance.TryValueFromString(
-    FColumnMetadata.DataType, FValue, result) then
+    FColumnMetadata.DataType,
+    FColumnMetadata.IsGuid,
+    FColumnMetadata.IsCurrency,
+    FValue,
+    result) then
     RaiseValueNotValid;
 end;
 
@@ -235,11 +368,24 @@ end;
 
 constructor TTHttpFilterWhereList.Create(
   const AJSon: TJSonArray; const ATableMetadata: TTTableMetadata);
+begin
+  Create(AJSon, ATableMetadata, -1);
+end;
+
+constructor TTHttpFilterWhereList.Create(
+  const AJSon: TJSonArray;
+  const ATableMetadata: TTTableMetadata;
+  const AMaxConditions: Integer);
 var
   LIndex: Integer;
 begin
   if Assigned(AJSon) then
   begin
+    if (AMaxConditions >= 0) and (AJSon.Count > AMaxConditions) then
+      raise ETHttpBadRequest.CreateFmt(
+        TTLanguage.Instance.Translate(STooManyWhereConditions), [
+          AJSon.Count, AMaxConditions]);
+
     SetLength(FList, AJSon.Count);
     for LIndex := 0 to AJSon.Count - 1 do
     begin
@@ -277,11 +423,14 @@ end;
 
 constructor TTHttpFilterOrderBy.Create(
   const AJSon: TJSonObject; const ATableMetadata: TTTableMetadata);
+var
+  LColumnMetadata: TTColumnMetadata;
 begin
-  FColumnName := AJSon.GetValue<String>('columnName', String.Empty);
   FDirection := AJSon.GetValue<String>('direction', String.Empty);
 
-  ATableMetadata.FindColumn(FColumnName);
+  LColumnMetadata := ATableMetadata.FindColumn(
+    AJSon.GetValue<String>('columnName', String.Empty));
+  FColumnName := LColumnMetadata.ColumnName;
   ValidateDirection;
 end;
 
@@ -312,16 +461,34 @@ end;
 
 constructor TTHttpFilterOrderByList.Create(
   const AJSon: TJSonArray; const ATableMetadata: TTTableMetadata);
+begin
+  Create(AJSon, ATableMetadata, -1);
+end;
+
+constructor TTHttpFilterOrderByList.Create(
+  const AJSon: TJSonArray;
+  const ATableMetadata: TTTableMetadata;
+  const AMaxColumns: Integer);
 var
   LIndex: Integer;
 begin
   if Assigned(AJSon) then
   begin
+    if (AMaxColumns >= 0) and (AJSon.Count > AMaxColumns) then
+      raise ETHttpBadRequest.CreateFmt(
+        TTLanguage.Instance.Translate(STooManyOrderByColumns), [
+          AJSon.Count, AMaxColumns]);
+
     SetLength(FList, AJSon.Count);
     for LIndex := 0 to AJSon.Count - 1 do
-      if AJSon.Items[LIndex] is TJSonObject then
-        FList[LIndex] := TTHttpFilterOrderBy.Create(
-          TJSonObject(AJSon.Items[LIndex]), ATableMetadata);
+    begin
+      if not (AJSon.Items[LIndex] is TJSonObject) then
+        raise ETHttpBadRequest.Create(
+          TTLanguage.Instance.Translate(SOrderByItemNotValid));
+
+      FList[LIndex] := TTHttpFilterOrderBy.Create(
+        TJSonObject(AJSon.Items[LIndex]), ATableMetadata);
+    end;
   end;
 end;
 
@@ -341,26 +508,38 @@ end;
 
 constructor TTHttpFilter<T>.Create(
   const AContext: TTContext; const AJSon: TJSonValue);
+begin
+  Create(AContext, AJSon, TTHttpFilterParameters.Defaults);
+end;
+
+constructor TTHttpFilter<T>.Create(
+  const AContext: TTContext;
+  const AJSon: TJSonValue;
+  const AParameters: TTHttpFilterParameters);
 var
   LTableMetadata: TTTableMetadata;
   LWhere: TTHttpFilterWhereList;
   LStart, LLimit: Integer;
   LOrderBy: TTHttpFilterOrderByList;
-  LIncludeDeleted: Boolean;
 begin
   LTableMetadata := AContext.GetMetadata<T>();
 
   LWhere := TTHttpFilterWhereList.Create(
-    AJSon.GetValue<TJSonArray>('where', nil), LTableMetadata);
+    AJSon.GetValue<TJSonArray>('where', nil),
+    LTableMetadata,
+    AParameters.MaxWhereConditions);
   LStart := AJSon.GetValue<Integer>('start', 0);
-  LLimit := AJSon.GetValue<Integer>('limit', 0);
+  if LStart < 0 then
+    LStart := 0;
+  LLimit := AParameters.LimitOrDefault(AJSon.GetValue<Integer>('limit', 0));
   LOrderBy := TTHttpFilterOrderByList.Create(
-    AJSon.GetValue<TJSonArray>('orderBy', nil), LTableMetadata);
-  LIncludeDeleted := AJSon.GetValue<Boolean>('includeDeleted', False);
+    AJSon.GetValue<TJSonArray>('orderBy', nil),
+    LTableMetadata,
+    AParameters.MaxOrderByColumns);
 
   FFilter := TTFilter.Create(
     LWhere.ToString, LStart, LLimit, LOrderBy.ToString);
-  FFilter.IncludeDeleted := LIncludeDeleted;
+  FFilter.IncludeDeleted := AParameters.IncludeDeleted;
   LWhere.AddParameters(FFilter);
 end;
 

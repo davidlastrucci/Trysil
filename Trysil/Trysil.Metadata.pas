@@ -35,15 +35,27 @@ type
     FColumnName: String;
     FDataType: TFieldType;
     FDataSize: Integer;
+    FIsGuid: Boolean;
+    FIsCurrency: Boolean;
+    FIsFilterable: Boolean;
   public
     constructor Create(
       const AColumnName: String;
       const ADataType: TFieldType;
-      const ADataSize: Integer);
+      const ADataSize: Integer); overload;
+
+    constructor Create(
+      const AColumnName: String;
+      const ADataType: TFieldType;
+      const ADataSize: Integer;
+      const AColumnMap: TTColumnMap); overload;
 
     property ColumnName: String read FColumnName;
     property DataType: TFieldType read FDataType;
     property DataSize: Integer read FDataSize;
+    property IsGuid: Boolean read FIsGuid;
+    property IsCurrency: Boolean read FIsCurrency;
+    property IsFilterable: Boolean read FIsFilterable;
   end;
 
 { TTColumnsMetadata }
@@ -60,7 +72,13 @@ type
     procedure Add(
       const AColumnName: String;
       const ADataType: TFieldType;
-      const ADataSize: Integer);
+      const ADataSize: Integer); overload;
+
+    procedure Add(
+      const AColumnName: String;
+      const ADataType: TFieldType;
+      const ADataSize: Integer;
+      const AColumnMap: TTColumnMap); overload;
 
     function Find(const AColumnName: String): TTColumnMetadata;
 
@@ -164,10 +182,22 @@ constructor TTColumnMetadata.Create(
   const ADataType: TFieldType;
   const ADataSize: Integer);
 begin
+  Create(AColumnName, ADataType, ADataSize, nil);
+end;
+
+constructor TTColumnMetadata.Create(
+  const AColumnName: String;
+  const ADataType: TFieldType;
+  const ADataSize: Integer;
+  const AColumnMap: TTColumnMap);
+begin
   inherited Create;
   FColumnName := AColumnName;
   FDataType := ADataType;
   FDataSize := ADataSize;
+  FIsGuid := Assigned(AColumnMap) and AColumnMap.IsGuid;
+  FIsCurrency := Assigned(AColumnMap) and AColumnMap.IsCurrency;
+  FIsFilterable := (not Assigned(AColumnMap)) or AColumnMap.IsFilterable;
 end;
 
 { TTColumnsMetadata }
@@ -188,10 +218,20 @@ procedure TTColumnsMetadata.Add(
   const AColumnName: String;
   const ADataType: TFieldType;
   const ADataSize: Integer);
+begin
+  Add(AColumnName, ADataType, ADataSize, nil);
+end;
+
+procedure TTColumnsMetadata.Add(
+  const AColumnName: String;
+  const ADataType: TFieldType;
+  const ADataSize: Integer;
+  const AColumnMap: TTColumnMap);
 var
   LColumnMetadata: TTColumnMetadata;
 begin
-  LColumnMetadata := TTColumnMetadata.Create(AColumnName, ADataType, ADataSize);
+  LColumnMetadata := TTColumnMetadata.Create(
+    AColumnName, ADataType, ADataSize, AColumnMap);
   try
     FColumns.Add(LColumnMetadata);
   except

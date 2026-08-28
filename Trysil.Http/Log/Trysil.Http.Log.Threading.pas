@@ -29,11 +29,18 @@ type
 
   TTHttpLogThread = class(TThread)
   strict private
+    const DiscardedFlushInterval: Cardinal = 5000;
+    const WaitInterval: Cardinal = 20000;
+  strict private
     FRttiLogWriter: TTHttpRttiLogWriter;
     FQueue: TTHttpLogQueue;
     FEvent: TEvent;
 
     procedure WriteDiscarded(const AWriter: TTHttpLogAbstractWriter);
+    procedure WriteValue(
+      const AWriter: TTHttpLogAbstractWriter;
+      const AValue: TTHttpLogQueueValue);
+    procedure ProcessQueue(const AWriter: TTHttpLogAbstractWriter);
   strict protected
     procedure Execute; override;
   public
@@ -46,6 +53,7 @@ type
 
     procedure Add(const ARequest: TTHttpLogRequest); overload;
     procedure Add(const AResponse: TTHttpLogResponse); overload;
+    procedure Add(const AError: TTHttpLogError); overload;
   end;
 
 { TTHttpLogThreads }
@@ -109,32 +117,58 @@ begin
   FEvent.SetEvent;
 end;
 
+procedure TTHttpLogThread.Add(const AError: TTHttpLogError);
+begin
+  FQueue.Enqueue(AError);
+  FEvent.SetEvent;
+end;
+
+procedure TTHttpLogThread.WriteValue(
+  const AWriter: TTHttpLogAbstractWriter;
+  const AValue: TTHttpLogQueueValue);
+begin
+  try
+    case AValue.QueueType of
+      TTHttpLogQueueType.Request: AWriter.WriteRequest(AValue.Request);
+      TTHttpLogQueueType.Response: AWriter.WriteResponse(AValue.Response);
+      TTHttpLogQueueType.Error: AWriter.WriteError(AValue.Error);
+    end;
+  except
+    // Thread should not crash in case of exception
+  end;
+end;
+
+procedure TTHttpLogThread.ProcessQueue(
+  const AWriter: TTHttpLogAbstractWriter);
+var
+  LNextFlush: UInt64;
+begin
+  LNextFlush := TThread.GetTickCount64 + DiscardedFlushInterval;
+  while not FQueue.IsEmpty do
+  begin
+    WriteValue(AWriter, FQueue.Dequeue);
+    if TThread.GetTickCount64 >= LNextFlush then
+    begin
+      WriteDiscarded(AWriter);
+      LNextFlush := TThread.GetTickCount64 + DiscardedFlushInterval;
+    end;
+  end;
+  WriteDiscarded(AWriter);
+end;
+
 procedure TTHttpLogThread.Execute;
 var
   LWriter: TTHttpLogAbstractWriter;
-  LValue: TTHttpLogQueueValue;
 begin
   LWriter := FRttiLogWriter.CreateLogWriter;
   try
     while not Terminated do
     begin
       FEvent.ResetEvent;
-      while not FQueue.IsEmpty do
-      begin
-        LValue := FQueue.Dequeue;
-        try
-          case LValue.QueueType of
-            TTHttpLogQueueType.Request: LWriter.WriteRequest(LValue.Request);
-            TTHttpLogQueueType.Response: LWriter.WriteResponse(LValue.Response);
-          end;
-        except
-          // Thread should not crash in case of exception
-        end;
-      end;
-      WriteDiscarded(LWriter);
+      ProcessQueue(LWriter);
 
       if not Terminated then
-        FEvent.WaitFor(20000);
+        FEvent.WaitFor(WaitInterval);
     end;
   finally
     LWriter.Free;

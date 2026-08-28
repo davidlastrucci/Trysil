@@ -150,16 +150,22 @@ begin
   begin
     if (not FContext.UseIdentityMap) and Assigned(FEntity) then
       FEntity.Free;
+    FEntity := nil;
 
-    if FContext.UseIdentityMap then
-      FEntity := AEntity
+    if not Assigned(AEntity) then
+      FID := 0
     else
-      FEntity := FContext.CloneEntity<T>(AEntity);
-    LTableMap := TTMapper.Instance.Load<T>();
-    if Assigned(LTableMap.PrimaryKey) then
     begin
-      LValue := LTableMap.PrimaryKey.Member.GetValue(FEntity);
-      FID := LValue.AsType<TTPrimaryKey>();
+      if FContext.UseIdentityMap then
+        FEntity := AEntity
+      else
+        FEntity := FContext.CloneEntity<T>(AEntity);
+      LTableMap := TTMapper.Instance.Load<T>();
+      if Assigned(LTableMap.PrimaryKey) then
+      begin
+        LValue := LTableMap.PrimaryKey.Member.GetValue(FEntity);
+        FID := LValue.AsType<TTPrimaryKey>();
+      end;
     end;
   end;
 end;

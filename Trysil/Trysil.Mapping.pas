@@ -79,8 +79,10 @@ type
     FIsInteger: Boolean;
     FIsInt64: Boolean;
     FIsCurrency: Boolean;
+    FNotFilterable: Boolean;
 
     function GetLookupName: String;
+    function GetIsFilterable: Boolean;
     function GetValidationColumnName: String;
     procedure SearchValidations(const ARttiMember: TRttiMember);
   public
@@ -115,6 +117,7 @@ type
     property IsInteger: Boolean read FIsInteger;
     property IsInt64: Boolean read FIsInt64;
     property IsCurrency: Boolean read FIsCurrency;
+    property IsFilterable: Boolean read GetIsFilterable;
   end;
 
 { TTChangeTrackingMap }
@@ -624,6 +627,8 @@ begin
   for LAttribute in ARttiMember.GetAttributes do
     if LAttribute is TDisplayNameAttribute then
       FDisplayName := TDisplayNameAttribute(LAttribute).DisplayName
+    else if LAttribute is TNotFilterableAttribute then
+      FNotFilterable := True
     else if LAttribute is TValidationAttribute then
       FValidations.Add(
         TTValidationMap.Create(TValidationAttribute(LAttribute)));
@@ -635,6 +640,11 @@ begin
     result := FAliasName
   else
     result := FName;
+end;
+
+function TTColumnMap.GetIsFilterable: Boolean;
+begin
+  result := not FNotFilterable;
 end;
 
 function TTColumnMap.GetValidationColumnName: String;

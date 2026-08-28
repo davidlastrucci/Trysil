@@ -56,6 +56,18 @@ type
 
     [Test]
     procedure LogQueueWithNegativeCapacityIsUnbounded;
+
+    [Test]
+    procedure LogQueueCarriesErrorEntries;
+
+    [Test]
+    procedure LogQueueSanitizesTheDiscardedHost;
+
+    [Test]
+    procedure LogParametersUnlimitedItemsByDefault;
+
+    [Test]
+    procedure LogParametersRejectsItemsAboveTheCap;
   end;
 
 implementation
@@ -246,6 +258,71 @@ begin
     for LIndex := 1 to 100 do
       LQueue.Dequeue;
     Assert.IsTrue(LQueue.IsEmpty);
+  finally
+    LQueue.Free;
+  end;
+end;
+
+procedure TTHttpLogTests.LogParametersUnlimitedItemsByDefault;
+var
+  LParameters: TTHttpLogParameters;
+begin
+  LParameters := TTHttpLogParameters.Create(1, 100, 100);
+  Assert.IsTrue(
+    LParameters.CanLogItems(100000),
+    'Without an explicit item cap the count must stay unlimited');
+end;
+
+procedure TTHttpLogTests.LogParametersRejectsItemsAboveTheCap;
+var
+  LParameters: TTHttpLogParameters;
+begin
+  LParameters := TTHttpLogParameters.Create(1, 100, 100, 64);
+  Assert.IsTrue(LParameters.CanLogItems(64));
+  Assert.IsFalse(
+    LParameters.CanLogItems(65),
+    'A body split into many small parameters must not slip past the cap');
+end;
+
+procedure TTHttpLogTests.LogQueueCarriesErrorEntries;
+var
+  LQueue: TTHttpLogQueue;
+  LError: TTHttpLogError;
+  LValue: TTHttpLogQueueValue;
+begin
+  LError := Default(TTHttpLogError);
+  LQueue := TTHttpLogQueue.Create(2);
+  try
+    LQueue.Enqueue(LError);
+    Assert.IsFalse(LQueue.IsEmpty);
+
+    LValue := LQueue.Dequeue;
+    Assert.IsTrue(
+      LValue.QueueType = TTHttpLogQueueType.Error,
+      'The queue must carry error entries to the writer');
+  finally
+    LQueue.Free;
+  end;
+end;
+
+procedure TTHttpLogTests.LogQueueSanitizesTheDiscardedHost;
+var
+  LQueue: TTHttpLogQueue;
+  LRequest: TTHttpLogRequest;
+  LDiscarded: TArray<TTHttpLogDiscarded>;
+begin
+  LRequest := Default(TTHttpLogRequest);
+  LQueue := TTHttpLogQueue.Create(1);
+  try
+    LQueue.Enqueue(LRequest);
+    LQueue.Enqueue(LRequest);
+
+    LDiscarded := LQueue.TakeDiscarded;
+    Assert.AreEqual<Integer>(1, Length(LDiscarded));
+    Assert.AreEqual(
+      '<other>',
+      LDiscarded[0].Host,
+      'A host the client did not send must not become an empty key');
   finally
     LQueue.Free;
   end;

@@ -414,18 +414,23 @@ procedure TTHttpRttiController<C>.SearchHttpMethodAttribute(
   const AMethod: TRttiMethod);
 var
   LMethodAttribute: THttpMethodAttribute;
+  LAuthAttribute: TAuthorizationTypeAttribute;
   LRttiMethod: TTHttpRttiMethod;
 begin
   LMethodAttribute := AMethod.GetAttribute<THttpMethodAttribute>();
   if Assigned(LMethodAttribute) then
     if CheckParameters(AMethod, AUriAttribute, LMethodAttribute) then
     begin
+      LAuthAttribute := AMethod.GetAttribute<TAuthorizationTypeAttribute>();
+      if not Assigned(LAuthAttribute) then
+        LAuthAttribute := AAuthAttribute;
+
       LRttiMethod := TTHttpRttiMethod.Create(
         AMethod, FBaseUri, AUriAttribute, LMethodAttribute, AAreas);
       try
         begin
-          if Assigned(AAuthAttribute) then
-            LRttiMethod.SetAuthorizationType(AAuthAttribute);
+          if Assigned(LAuthAttribute) then
+            LRttiMethod.SetAuthorizationType(LAuthAttribute);
           FMethods.Add(LRttiMethod);
         end;
       except

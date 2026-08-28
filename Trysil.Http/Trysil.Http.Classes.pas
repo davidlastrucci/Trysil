@@ -16,6 +16,7 @@ uses
   System.SysUtils,
   System.Classes,
   System.Generics.Collections,
+  System.Generics.Defaults,
   System.JSon,
   IdCustomHttpServer,
 
@@ -47,6 +48,8 @@ type
   strict protected
     FValues: TList<TTHttpNameValue>;
     FNameValues: TDictionary<String, String>;
+
+    function CreateNameValues: TDictionary<String, String>; virtual;
   public
     constructor Create;
     destructor Destroy; override;
@@ -64,7 +67,14 @@ type
 
 { TTHttpHeaders }
 
-  TTHttpHeaders = class(TTHttpNameValues);
+  TTHttpHeaders = class(TTHttpNameValues)
+  strict private
+    class var FComparer: IEqualityComparer<String>;
+
+    class constructor ClassCreate;
+  strict protected
+    function CreateNameValues: TDictionary<String, String>; override;
+  end;
 
 { TTHttpEncoding }
 
@@ -213,7 +223,12 @@ constructor TTHttpNameValues.Create;
 begin
   inherited Create;
   FValues := TList<TTHttpNameValue>.Create;
-  FNameValues := TDictionary<String, String>.Create;
+  FNameValues := CreateNameValues;
+end;
+
+function TTHttpNameValues.CreateNameValues: TDictionary<String, String>;
+begin
+  result := TDictionary<String, String>.Create;
 end;
 
 destructor TTHttpNameValues.Destroy;
@@ -253,6 +268,18 @@ function TTHttpNameValues.GetValue(const AName: String): String;
 begin
   if not FNameValues.TryGetValue(AName, result) then
     result := String.Empty;
+end;
+
+{ TTHttpHeaders }
+
+class constructor TTHttpHeaders.ClassCreate;
+begin
+  FComparer := TIStringComparer.Ordinal;
+end;
+
+function TTHttpHeaders.CreateNameValues: TDictionary<String, String>;
+begin
+  result := TDictionary<String, String>.Create(FComparer);
 end;
 
 { TTHttpEncoding }
@@ -423,15 +450,8 @@ begin
 end;
 
 function TTHttpRequest.FindHeader(const AName: String): String;
-var
-  LIndex: Integer;
-  LHeaders: TTHttpHeaders;
 begin
-  result := String.Empty;
-  LHeaders := GetHeaders;
-  for LIndex := 0 to LHeaders.Count - 1 do
-    if SameText(LHeaders.NameValue[LIndex].Name, AName) then
-      result := LHeaders.NameValue[LIndex].Value.Trim();
+  result := GetHeaders.Value[AName].Trim();
 end;
 
 function TTHttpRequest.IsLoopback(const AValue: String): Boolean;

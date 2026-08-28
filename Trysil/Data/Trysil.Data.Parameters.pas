@@ -190,6 +190,14 @@ type
     class destructor ClassDestroy;
   strict private
     FParameterTypes: TDictionary<TFieldType, TClass>;
+
+    function InternalCreateParameter(
+      const AConnectionID: String;
+      const AFieldType: TFieldType;
+      const AParam: TTParam;
+      const AColumnMap: TTColumnMap;
+      const AIsGuid: Boolean;
+      const AIsCurrency: Boolean): TTParameter;
   public
     constructor Create;
     destructor Destroy; override;
@@ -206,11 +214,23 @@ type
       const AFieldType: TFieldType;
       const AParam: TTParam;
       const AColumnMap: TTColumnMap): TTParameter; overload;
+    function CreateParameter(
+      const AConnectionID: String;
+      const AFieldType: TFieldType;
+      const AParam: TTParam;
+      const AIsGuid: Boolean;
+      const AIsCurrency: Boolean): TTParameter; overload;
 
     function TryValueFromString(
       const AFieldType: TFieldType;
       const AValue: String;
-      out AResult: TTValue): Boolean;
+      out AResult: TTValue): Boolean; overload;
+    function TryValueFromString(
+      const AFieldType: TFieldType;
+      const AIsGuid: Boolean;
+      const AIsCurrency: Boolean;
+      const AValue: String;
+      out AResult: TTValue): Boolean; overload;
 
     class property Instance: TTParameterFactory read FInstance;
   end;
@@ -240,7 +260,7 @@ implementation
 constructor TTParameter.Create(
   const AConnectionID: String; const AParam: TTParam);
 begin
-  Create(FConnectionID, AParam, nil);
+  Create(AConnectionID, AParam, nil);
 end;
 
 constructor TTParameter.Create(
@@ -824,12 +844,40 @@ function TTParameterFactory.CreateParameter(
   const AFieldType: TFieldType;
   const AParam: TTParam;
   const AColumnMap: TTColumnMap): TTParameter;
+begin
+  result := InternalCreateParameter(
+    AConnectionID,
+    AFieldType,
+    AParam,
+    AColumnMap,
+    Assigned(AColumnMap) and AColumnMap.IsGuid,
+    Assigned(AColumnMap) and AColumnMap.IsCurrency);
+end;
+
+function TTParameterFactory.CreateParameter(
+  const AConnectionID: String;
+  const AFieldType: TFieldType;
+  const AParam: TTParam;
+  const AIsGuid: Boolean;
+  const AIsCurrency: Boolean): TTParameter;
+begin
+  result := InternalCreateParameter(
+    AConnectionID, AFieldType, AParam, nil, AIsGuid, AIsCurrency);
+end;
+
+function TTParameterFactory.InternalCreateParameter(
+  const AConnectionID: String;
+  const AFieldType: TFieldType;
+  const AParam: TTParam;
+  const AColumnMap: TTColumnMap;
+  const AIsGuid: Boolean;
+  const AIsCurrency: Boolean): TTParameter;
 var
   LClass: TClass;
 begin
-  if Assigned(AColumnMap) and AColumnMap.IsGuid then
+  if AIsGuid then
     result := TTGuidParameter.Create(AConnectionID, AParam, AColumnMap)
-  else if Assigned(AColumnMap) and AColumnMap.IsCurrency then
+  else if AIsCurrency then
     result := TTCurrencyParameter.Create(AConnectionID, AParam, AColumnMap)
   else
   begin
@@ -845,14 +893,32 @@ function TTParameterFactory.TryValueFromString(
   const AFieldType: TFieldType;
   const AValue: String;
   out AResult: TTValue): Boolean;
+begin
+  result := TryValueFromString(AFieldType, False, False, AValue, AResult);
+end;
+
+function TTParameterFactory.TryValueFromString(
+  const AFieldType: TFieldType;
+  const AIsGuid: Boolean;
+  const AIsCurrency: Boolean;
+  const AValue: String;
+  out AResult: TTValue): Boolean;
 var
   LClass: TClass;
 begin
   AResult := TTValue.Empty;
-  result := FParameterTypes.TryGetValue(AFieldType, LClass);
-  if result then
-    result := TTParameterClass(LClass).TryValueFromString(
-      AFieldType, AValue, AResult);
+  if AIsGuid then
+    result := TTGuidParameter.TryValueFromString(AFieldType, AValue, AResult)
+  else if AIsCurrency then
+    result := TTCurrencyParameter.TryValueFromString(
+      AFieldType, AValue, AResult)
+  else
+  begin
+    result := FParameterTypes.TryGetValue(AFieldType, LClass);
+    if result then
+      result := TTParameterClass(LClass).TryValueFromString(
+        AFieldType, AValue, AResult);
+  end;
 end;
 
 { TTParameterRegister }

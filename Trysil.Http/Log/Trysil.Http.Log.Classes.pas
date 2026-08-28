@@ -26,12 +26,18 @@ type
 
   TTHttpLogQueue = class
   strict private
+    const MaxDiscardedHosts: Integer = 64;
+    const MaxHostLength: Integer = 64;
+    const OtherHostKey: String = '<other>';
+  strict private
     FCriticalSection: TCriticalSection;
     FQueue: TQueue<TTHttpLogQueueValue>;
     FCapacity: Integer;
     FDiscarded: TDictionary<String, Integer>;
 
+    class function SanitizeHost(const AHost: String): String; static;
     function CanEnqueue: Boolean;
+    function DiscardKey(const AHost: String): String;
     procedure Discard(const AHost: String);
     function GetIsEmpty: Boolean;
   public
@@ -40,6 +46,7 @@ type
 
     procedure Enqueue(const ARequest: TTHttpLogRequest); overload;
     procedure Enqueue(const AResponse: TTHttpLogResponse); overload;
+    procedure Enqueue(const AError: TTHttpLogError); overload;
 
     function Dequeue: TTHttpLogQueueValue;
     function TakeDiscarded: TArray<TTHttpLogDiscarded>;
@@ -94,6 +101,19 @@ begin
   end;
 end;
 
+procedure TTHttpLogQueue.Enqueue(const AError: TTHttpLogError);
+begin
+  FCriticalSection.Enter;
+  try
+    if CanEnqueue then
+      FQueue.Enqueue(TTHttpLogQueueValue.Create(AError))
+    else
+      Discard(AError.Host);
+  finally
+    FCriticalSection.Leave;
+  end;
+end;
+
 function TTHttpLogQueue.Dequeue: TTHttpLogQueueValue;
 begin
   FCriticalSection.Enter;
@@ -125,12 +145,48 @@ begin
   end;
 end;
 
+class function TTHttpLogQueue.SanitizeHost(const AHost: String): String;
+var
+  LHost: String;
+  LChar: Char;
+  LResult: TStringBuilder;
+begin
+  LHost := AHost.ToLower();
+  if LHost.Length > MaxHostLength then
+    LHost := LHost.Substring(0, MaxHostLength);
+
+  LResult := TStringBuilder.Create;
+  try
+    for LChar in LHost do
+      if CharInSet(LChar, ['a'..'z', '0'..'9', '.', '-', ':', '_']) then
+        LResult.Append(LChar);
+    result := LResult.ToString();
+  finally
+    LResult.Free;
+  end;
+
+  if result.IsEmpty then
+    result := OtherHostKey;
+end;
+
+function TTHttpLogQueue.DiscardKey(const AHost: String): String;
+var
+  LKey: String;
+begin
+  LKey := SanitizeHost(AHost);
+  if FDiscarded.ContainsKey(LKey) or
+    (FDiscarded.Count < MaxDiscardedHosts) then
+    result := LKey
+  else
+    result := OtherHostKey;
+end;
+
 procedure TTHttpLogQueue.Discard(const AHost: String);
 var
   LKey: String;
   LCount: Integer;
 begin
-  LKey := AHost.ToLower();
+  LKey := DiscardKey(AHost);
   if not FDiscarded.TryGetValue(LKey, LCount) then
     LCount := 0;
   FDiscarded.AddOrSetValue(LKey, LCount + 1);
