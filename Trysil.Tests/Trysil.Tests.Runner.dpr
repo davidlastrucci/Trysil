@@ -11,6 +11,7 @@ uses
   FireDAC.ConsoleUI.Wait,
   Trysil.Tests.Config in 'Trysil.Tests.Config.pas',
   Trysil.Tests.Types in 'Trysil.Tests.Types.pas',
+  Trysil.Tests.Data.Parameters in 'Trysil.Tests.Data.Parameters.pas',
   Trysil.Tests.IdentityMap in 'Trysil.Tests.IdentityMap.pas',
   Trysil.Tests.Mapping in 'Trysil.Tests.Mapping.pas',
   Trysil.Tests.Filter in 'Trysil.Tests.Filter.pas',

@@ -212,6 +212,7 @@
         </DelphiCompile>
         <DCCReference Include="Trysil.Tests.Config.pas"/>
         <DCCReference Include="Trysil.Tests.Types.pas"/>
+        <DCCReference Include="Trysil.Tests.Data.Parameters.pas"/>
         <DCCReference Include="Trysil.Tests.IdentityMap.pas"/>
         <DCCReference Include="Trysil.Tests.Mapping.pas"/>
         <DCCReference Include="Trysil.Tests.Filter.pas"/>
