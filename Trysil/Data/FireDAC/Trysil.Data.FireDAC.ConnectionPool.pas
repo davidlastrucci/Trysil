@@ -15,13 +15,42 @@ interface
 uses
   System.Classes,
   System.SysUtils,
+  System.Generics.Collections,
   FireDAC.Stan.Consts,
   FireDAC.UI.Intf,
   FireDAC.Comp.Client,
 
+  Trysil.Sync,
   Trysil.Data.FireDAC.Common;
 
 type
+
+{ TTFireDACPoolParameters }
+
+  TTFireDACPoolParameters = record
+  strict private
+    FAssigned: Boolean;
+    FEnabled: Boolean;
+    FMaximumItems: Integer;
+    FCleanupTimeout: Cardinal;
+    FExpireTimeout: Cardinal;
+  public
+    constructor Create(
+      const AEnabled: Boolean;
+      const AMaximumItems: Integer); overload;
+
+    constructor Create(
+      const AEnabled: Boolean;
+      const AMaximumItems: Integer;
+      const ACleanupTimeout: Cardinal;
+      const AExpireTimeout: Cardinal); overload;
+
+    property IsAssigned: Boolean read FAssigned;
+    property Enabled: Boolean read FEnabled;
+    property MaximumItems: Integer read FMaximumItems;
+    property CleanupTimeout: Cardinal read FCleanupTimeout;
+    property ExpireTimeout: Cardinal read FExpireTimeout;
+  end;
 
 { TTFireDACConfigConnectionPool }
 
@@ -52,14 +81,21 @@ type
   strict private
     FManager: TFDManager;
     FConfig: TTFireDACConfigConnectionPool;
+    FLock: TTMultiReadExclusiveWriteLock;
+    FPoolParameters: TDictionary<String, TTFireDACPoolParameters>;
 
-    procedure AddConnectionPooling(const AParameters: TStrings);
+    function GetPoolParameters(
+      const AName: String): TTFireDACPoolParameters;
+    procedure AddConnectionPooling(
+      const AName: String; const AParameters: TStrings);
   public
     constructor Create;
     destructor Destroy; override;
 
     procedure AfterConstruction; override;
 
+    procedure RegisterConfig(
+      const AName: String; const AParameters: TTFireDACPoolParameters);
     procedure RegisterConnection(
       const AName: String;
       const ADriver: String;
@@ -72,6 +108,32 @@ type
   end;
 
 implementation
+
+{ TTFireDACPoolParameters }
+
+constructor TTFireDACPoolParameters.Create(
+  const AEnabled: Boolean;
+  const AMaximumItems: Integer);
+begin
+  FAssigned := True;
+  FEnabled := AEnabled;
+  FMaximumItems := AMaximumItems;
+  FCleanupTimeout := C_FD_PoolCleanupTimeout;
+  FExpireTimeout := C_FD_PoolExpireTimeout;
+end;
+
+constructor TTFireDACPoolParameters.Create(
+  const AEnabled: Boolean;
+  const AMaximumItems: Integer;
+  const ACleanupTimeout: Cardinal;
+  const AExpireTimeout: Cardinal);
+begin
+  FAssigned := True;
+  FEnabled := AEnabled;
+  FMaximumItems := AMaximumItems;
+  FCleanupTimeout := ACleanupTimeout;
+  FExpireTimeout := AExpireTimeout;
+end;
 
 { TTFireDACConfigConnectionPool }
 
@@ -110,10 +172,15 @@ begin
   inherited Create;
   FManager := TFDManager.Create(nil);
   FConfig := TTFireDACConfigConnectionPool.Create;
+  FLock := TTMultiReadExclusiveWriteLock.Create;
+  FPoolParameters :=
+    TDictionary<String, TTFireDACPoolParameters>.Create;
 end;
 
 destructor TTFireDACConnectionPool.Destroy;
 begin
+  FPoolParameters.Free;
+  FLock.Free;
   FConfig.Free;
   FManager.Free;
   inherited Destroy;
@@ -127,15 +194,49 @@ begin
   FManager.Open;
 end;
 
-procedure TTFireDACConnectionPool.AddConnectionPooling(
-  const AParameters: TStrings);
+function TTFireDACConnectionPool.GetPoolParameters(
+  const AName: String): TTFireDACPoolParameters;
 begin
-  if FConfig.Enabled then
+  FLock.BeginRead;
+  try
+    if not FPoolParameters.TryGetValue(AName.ToLower(), result) then
+      result := TTFireDACPoolParameters.Create(
+        FConfig.Enabled,
+        FConfig.MaximumItems,
+        FConfig.CleanupTimeout,
+        FConfig.ExpireTimeout);
+  finally
+    FLock.EndRead;
+  end;
+end;
+
+procedure TTFireDACConnectionPool.AddConnectionPooling(
+  const AName: String; const AParameters: TStrings);
+var
+  LPool: TTFireDACPoolParameters;
+begin
+  LPool := GetPoolParameters(AName);
+  if LPool.Enabled then
   begin
     AParameters.Add('Pooled=True');
-    AParameters.Add(Format('POOL_MaximumItems=%d', [FConfig.MaximumItems]));
-    AParameters.Add(Format('POOL_CleanupTimeout=%d', [FConfig.CleanupTimeout]));
-    AParameters.Add(Format('POOL_ExpireTimeout=%d', [FConfig.ExpireTimeout]));
+    AParameters.Add(Format('POOL_MaximumItems=%d', [LPool.MaximumItems]));
+    AParameters.Add(Format(
+      'POOL_CleanupTimeout=%d', [LPool.CleanupTimeout]));
+    AParameters.Add(Format('POOL_ExpireTimeout=%d', [LPool.ExpireTimeout]));
+  end;
+end;
+
+procedure TTFireDACConnectionPool.RegisterConfig(
+  const AName: String; const AParameters: TTFireDACPoolParameters);
+begin
+  if AParameters.IsAssigned then
+  begin
+    FLock.BeginWrite;
+    try
+      FPoolParameters.AddOrSetValue(AName.ToLower(), AParameters);
+    finally
+      FLock.EndWrite;
+    end;
   end;
 end;
 
@@ -148,10 +249,9 @@ var
 begin
   LParameters := TStringList.Create;
   try
-    AddConnectionPooling(AParameters);
     LParameters.Add(Format('DriverID=%s', [ADriver]));
-
     LParameters.AddStrings(AParameters);
+    AddConnectionPooling(AName, LParameters);
 
     FManager.AddConnectionDef(AName, ADriver, LParameters);
   finally
@@ -161,6 +261,12 @@ end;
 
 procedure TTFireDACConnectionPool.UnregisterConnection(const AName: String);
 begin
+  FLock.BeginWrite;
+  try
+    FPoolParameters.Remove(AName.ToLower());
+  finally
+    FLock.EndWrite;
+  end;
   FManager.DeleteConnectionDef(AName);
 end;
 

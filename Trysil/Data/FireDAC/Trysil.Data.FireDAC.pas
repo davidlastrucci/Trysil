@@ -99,6 +99,7 @@ type
     FUsername: String;
     FPassword: String;
     FDatabaseName: String;
+    FPoolParameters: TTFireDACPoolParameters;
   public
     property Driver: String read FDriver write FDriver;
     property Server: String read FServer write FServer;
@@ -106,6 +107,8 @@ type
     property Username: String read FUsername write FUsername;
     property Password: String read FPassword write FPassword;
     property DatabaseName: String read FDatabaseName write FDatabaseName;
+    property PoolParameters: TTFireDACPoolParameters
+      read FPoolParameters write FPoolParameters;
   end;
 
 { TTFireDACConnection }
@@ -604,6 +607,8 @@ begin
   finally
     FLock.EndWrite;
   end;
+  TTFireDACConnectionPool.Instance.RegisterConfig(
+    AName, AParameters.PoolParameters);
   LConnectionClass.InternalRegisterConnection(AName, AParameters);
 end;
 
