@@ -27,7 +27,7 @@ package Trysil.MariaDB290;
 {$ENDIF}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$IMPLICITBUILD ON}
+{$IMPLICITBUILD OFF}
 
 requires
   rtl,

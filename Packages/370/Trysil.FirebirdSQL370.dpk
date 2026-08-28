@@ -27,7 +27,7 @@ package Trysil.FirebirdSQL370;
 {$ENDIF}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$IMPLICITBUILD ON}
+{$IMPLICITBUILD OFF}
 
 requires
   rtl,
