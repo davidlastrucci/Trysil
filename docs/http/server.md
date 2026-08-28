@@ -178,6 +178,8 @@ end;
 
 `WriteDiscarded` is virtual but **not abstract**, so existing writers keep compiling. Its default implementation is not empty: it forwards to `WriteAction` with a formatted message, so discards are visible even without an override. Overriding it lets a multi-tenant writer put the row in the right tenant's log database.
 
+A repeated header keeps the **first** occurrence: names collapse regardless of case, and the later ones are dropped from the lookup and from the enumeration alike. The policy is positional, so nothing should be built on a second `Authorization` being visible - a proxy in front of the application is the right place to reject a duplicate.
+
 The `Host` is the client's own text, so it is bounded before it becomes a key: lowercased, truncated to 64 characters, and stripped of anything outside `a-z 0-9 . - : _`. Distinct hosts are capped at 64, and everything past that accumulates under `<other>` -- which is also where a request that sent no `Host` header lands. Without the cap the counters would be a dictionary keyed by a value the caller chooses.
 
 #### Unhandled errors

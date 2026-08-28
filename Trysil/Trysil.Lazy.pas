@@ -197,7 +197,7 @@ begin
   try
     FList.Add(result);
   except
-    result.Free;
+    FContext.FreeEntity<T>(result);
     raise;
   end;
 
