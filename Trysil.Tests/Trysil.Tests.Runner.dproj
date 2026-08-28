@@ -213,6 +213,7 @@
         <DCCReference Include="Trysil.Tests.Config.pas"/>
         <DCCReference Include="Trysil.Tests.Types.pas"/>
         <DCCReference Include="Trysil.Tests.Data.Parameters.pas"/>
+        <DCCReference Include="Trysil.Tests.Data.ConnectionPool.pas"/>
         <DCCReference Include="Trysil.Tests.IdentityMap.pas"/>
         <DCCReference Include="Trysil.Tests.Mapping.pas"/>
         <DCCReference Include="Trysil.Tests.Filter.pas"/>
@@ -236,6 +237,7 @@
         <DCCReference Include="Trysil.Tests.Http.Uri.pas"/>
         <DCCReference Include="Trysil.Tests.Http.Log.pas"/>
         <DCCReference Include="Trysil.Tests.Http.Filter.pas"/>
+        <DCCReference Include="Trysil.Tests.Http.MultiTenant.pas"/>
         <DCCReference Include="Trysil.Tests.Logger.pas"/>
         <DCCReference Include="Abstract\Trysil.Tests.Abstract.JSon.pas"/>
         <DCCReference Include="Abstract\Trysil.Tests.Abstract.AllTypes.pas"/>
