@@ -18,6 +18,7 @@ uses
   Trysil.Data.FireDAC.SqlServer,
   Trysil.JSon.Events,
   Trysil.Http,
+  Trysil.Http.Log.Types,
 
   API.Config,
   API.Context,
@@ -94,7 +95,8 @@ end;
 
 procedure TAPIHttp.RegisterLogWriter;
 begin
-  FServer.RegisterLogWriter<TAPILogWriter>();
+  FServer.RegisterLogWriter<TAPILogWriter>(
+    TTHttpLogParameters.Create(2, 10000, 65536));
 end;
 
 procedure TAPIHttp.RegisterAuthentication;

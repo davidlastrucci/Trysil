@@ -35,6 +35,8 @@ type
     procedure WriteAction(const AAction: TTHttpLogAction); override;
     procedure WriteRequest(const ARequest: TTHttpLogRequest); override;
     procedure WriteResponse(const AResponse: TTHttpLogResponse); override;
+    procedure WriteDiscarded(
+      const ADiscarded: TTHttpLogDiscarded); override;
   end;
 
 implementation
@@ -89,6 +91,20 @@ begin
     FContext.Context.Insert<TLogResponse>(LLogResponse);
   finally
     LLogResponse.Free;
+  end;
+end;
+
+procedure TAPILogWriter.WriteDiscarded(
+  const ADiscarded: TTHttpLogDiscarded);
+var
+  LLogDiscarded: TLogDiscarded;
+begin
+  LLogDiscarded := FContext.Context.CreateEntity<TLogDiscarded>();
+  try
+    LLogDiscarded.SetValues(ADiscarded);
+    FContext.Context.Insert<TLogDiscarded>(LLogDiscarded);
+  finally
+    LLogDiscarded.Free;
   end;
 end;
 

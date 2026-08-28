@@ -367,7 +367,8 @@ begin
     TAPIConfig.Instance.Database.Password,
     TAPIConfig.Instance.Database.DatabaseName);
 
-  FServer.RegisterLogWriter<TAPILogWriter>();
+  FServer.RegisterLogWriter<TAPILogWriter>(
+    TTHttpLogParameters.Create(2, 10000, 65536));
   FServer.RegisterAuthentication<TAPIAuthentication>();
 
   // Register controllers for each entity type
@@ -448,6 +449,8 @@ public
   procedure WriteAction(const AAction: TTHttpLogAction); override;
   procedure WriteRequest(const ARequest: TTHttpLogRequest); override;
   procedure WriteResponse(const AResponse: TTHttpLogResponse); override;
+  procedure WriteDiscarded(
+    const ADiscarded: TTHttpLogDiscarded); override;
 end;
 
 procedure TAPILogWriter.WriteRequest(const ARequest: TTHttpLogRequest);
@@ -464,7 +467,34 @@ begin
 end;
 ```
 
-The log entities (`TLogAction`, `TLogRequest`, `TLogResponse`) are standard Trysil entities mapped to tables in the `log` schema. The SQL scripts in `SQL/Log.SqlServer.sql` create these tables.
+The log entities (`TLogAction`, `TLogRequest`, `TLogResponse`, `TLogDiscarded`) are standard Trysil entities mapped to tables in the `log` schema. The SQL scripts in `SQL/Log.SqlServer.sql` create these tables.
+
+### Bounded queue and capped bodies
+
+The writer is registered with a `TTHttpLogParameters` record: two log threads, a queue capped at 10 000 entries per thread, and request/response bodies captured up to 64 KB.
+
+Both caps are visible in the stored rows rather than silent:
+
+- `TLogRequest` and `TLogResponse` carry `ContentLength` and `ContentOmitted`. When a body is over the cap it is not captured at all -- and it is never parsed nor re-serialized either, so the cost is avoided rather than merely discarded -- but the row still records how big it was.
+- `TLogDiscarded` records entries the queue had to refuse, aggregated per host:
+
+```pascal
+procedure TAPILogWriter.WriteDiscarded(
+  const ADiscarded: TTHttpLogDiscarded);
+var
+  LLogDiscarded: TLogDiscarded;
+begin
+  LLogDiscarded := FContext.Context.CreateEntity<TLogDiscarded>();
+  try
+    LLogDiscarded.SetValues(ADiscarded);
+    FContext.Context.Insert<TLogDiscarded>(LLogDiscarded);
+  finally
+    LLogDiscarded.Free;
+  end;
+end;
+```
+
+Overriding `WriteDiscarded` is optional: it is virtual but not abstract, and its default implementation already reports discards through `WriteAction`. The demo overrides it to give them their own table, which is also what a multi-tenant writer would do to route each host's losses to the right database.
 
 ## System Tray Application
 

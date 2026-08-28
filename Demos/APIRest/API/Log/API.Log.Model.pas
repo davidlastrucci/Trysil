@@ -17,6 +17,7 @@ interface
 uses
   System.Classes,
   System.SysUtils,
+  System.DateUtils,
   Trysil.Types,
   Trysil.Attributes,
   Trysil.Http.Log.Types;
@@ -80,6 +81,12 @@ type
     [TColumn('MethodType')]
     FMethodType: String;
 
+    [TColumn('ContentLength')]
+    FContentLength: Int64;
+
+    [TColumn('ContentOmitted')]
+    FContentOmitted: Boolean;
+
     [TColumn('Content')]
     FContent: String;
 
@@ -101,6 +108,8 @@ type
     property Uri: String read FUri;
     property Params: String read FParams;
     property MethodType: String read FMethodType;
+    property ContentLength: Int64 read FContentLength;
+    property ContentOmitted: Boolean read FContentOmitted;
     property Content: String read FContent;
     property Headers: String read FHeaders;
     property RemoteIP: String read FRemoteIP;
@@ -138,6 +147,12 @@ type
     [TColumn('ContentEncoding')]
     FContentEncoding: String;
 
+    [TColumn('ContentLength')]
+    FContentLength: Int64;
+
+    [TColumn('ContentOmitted')]
+    FContentOmitted: Boolean;
+
     [TColumn('Content')]
     FContent: String;
 
@@ -158,8 +173,42 @@ type
     property StatusCode: Integer read FStatusCode;
     property ContentType: String read FContentType;
     property ContentEncoding: String read FContentEncoding;
+    property ContentLength: Int64 read FContentLength;
+    property ContentOmitted: Boolean read FContentOmitted;
     property Content: String read FContent;
     property BinaryContent: String read FBinaryContent;
+    property VersionID: TTVersion read FVersionID;
+  end;
+
+{ TLogDiscarded }
+
+  [TTable('log.Discarded')]
+  [TSequence('log.DiscardedID')]
+  TLogDiscarded = class
+  strict private
+    [TPrimaryKey]
+    [TColumn('ID')]
+    FID: TTPrimaryKey;
+
+    [TColumn('Date')]
+    FDate: TDateTime;
+
+    [TColumn('Host')]
+    FHost: String;
+
+    [TColumn('Entries')]
+    FEntries: Integer;
+
+    [TVersionColumn]
+    [TColumn('VersionID')]
+    FVersionID: TTVersion;
+  public
+    procedure SetValues(const ADiscarded: TTHttpLogDiscarded);
+
+    property ID: TTPrimaryKey read FID;
+    property Date: TDateTime read FDate;
+    property Host: String read FHost;
+    property Entries: Integer read FEntries;
     property VersionID: TTVersion read FVersionID;
   end;
 
@@ -182,7 +231,9 @@ begin
   FDate := ARequest.DateTime;
   FUri := ARequest.Uri;
   FParams := ARequest.Params.ToString;
-  FMethodType := ARequest.MethodType;;
+  FMethodType := ARequest.MethodType;
+  FContentLength := ARequest.ContentLength;
+  FContentOmitted := ARequest.ContentOmitted;
   FContent := ARequest.Content;
   FHeaders := ARequest.Headers.ToString;
   FRemoteIP := ARequest.RemoteIP;
@@ -199,8 +250,19 @@ begin
   FStatusCode := AResponse.StatusCode;
   FContentType := AResponse.ContentType;
   FContentEncoding := AResponse.ContentEncoding;
+  FContentLength := AResponse.ContentLength;
+  FContentOmitted := AResponse.ContentOmitted;
   FContent := AResponse.Content;
   FBinaryContent := AResponse.BinaryContent;
+end;
+
+{ TLogDiscarded }
+
+procedure TLogDiscarded.SetValues(const ADiscarded: TTHttpLogDiscarded);
+begin
+  FDate := TTimeZone.Local.ToUniversalTime(Now);
+  FHost := ADiscarded.Host;
+  FEntries := ADiscarded.Count;
 end;
 
 end.

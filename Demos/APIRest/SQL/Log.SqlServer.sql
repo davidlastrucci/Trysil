@@ -30,6 +30,8 @@ CREATE TABLE [log].[Requests](
   [Uri] [nvarchar](255) NULL,
   [Params] [nvarchar](max) NULL,
   [MethodType] [nvarchar](255) NULL,
+  [ContentLength] [bigint] NULL,
+  [ContentOmitted] [bit] NULL,
   [Content] [nvarchar](max) NULL,
   [Headers] [nvarchar](max) NULL,
   [RemoteIP] [nvarchar](255) NULL,
@@ -42,6 +44,8 @@ ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_ID] DEFAULT (0) FOR [ID
 ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_TaskID] DEFAULT (N'') FOR [TaskID]
 ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_Uri] DEFAULT (N'') FOR [Uri]
 ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_MethodType] DEFAULT (N'') FOR [MethodType]
+ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_ContentLength] DEFAULT ((0)) FOR [ContentLength]
+ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_ContentOmitted] DEFAULT ((0)) FOR [ContentOmitted]
 ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_RemoteIP] DEFAULT (N'') FOR [RemoteIP]
 ALTER TABLE [log].[Requests] ADD CONSTRAINT [DF_Requests_VersionID] DEFAULT (0) FOR [VersionID]
 GO
@@ -61,6 +65,8 @@ CREATE TABLE [log].[Responses](
   [StatusCode] [smallint] NULL,
   [ContentType] [nvarchar](255) NULL,
   [ContentEncoding] [nvarchar](255) NULL,
+  [ContentLength] [bigint] NULL,
+  [ContentOmitted] [bit] NULL,
   [Content] [nvarchar](max) NULL,
   [BinaryContent] [nvarchar](max) NULL,
   [VersionID] [int] NOT NULL,
@@ -74,10 +80,34 @@ ALTER TABLE [log].[Responses] ADD CONSTRAINT [DF_Responses_Username] DEFAULT (N'
 ALTER TABLE [log].[Responses] ADD CONSTRAINT [DF_Responses_StatusCode] DEFAULT ((0)) FOR [StatusCode]
 ALTER TABLE [log].[Responses] ADD CONSTRAINT [DF_Responses_ContentType] DEFAULT (N'') FOR [ContentType]
 ALTER TABLE [log].[Responses] ADD CONSTRAINT [DF_Responses_ContentEncoding] DEFAULT (N'') FOR [ContentEncoding]
+ALTER TABLE [log].[Responses] ADD CONSTRAINT [DF_Responses_ContentLength] DEFAULT ((0)) FOR [ContentLength]
+ALTER TABLE [log].[Responses] ADD CONSTRAINT [DF_Responses_ContentOmitted] DEFAULT ((0)) FOR [ContentOmitted]
 ALTER TABLE [log].[Responses] ADD CONSTRAINT [DF_Responses_VersionID] DEFAULT (0) FOR [VersionID]
 GO
 
 CREATE SEQUENCE [log].[ResponsesID]
+ AS [int]
+ START WITH 1
+ INCREMENT BY 1
+GO
+
+CREATE TABLE [log].[Discarded](
+  [ID] [int] NOT NULL,
+  [Date] [datetime] NULL,
+  [Host] [nvarchar](255) NULL,
+  [Entries] [int] NULL,
+  [VersionID] [int] NOT NULL,
+  CONSTRAINT [PK_Discarded] PRIMARY KEY CLUSTERED ([ID] ASC)
+)
+GO
+
+ALTER TABLE [log].[Discarded] ADD CONSTRAINT [DF_Discarded_ID] DEFAULT (0) FOR [ID]
+ALTER TABLE [log].[Discarded] ADD CONSTRAINT [DF_Discarded_Host] DEFAULT (N'') FOR [Host]
+ALTER TABLE [log].[Discarded] ADD CONSTRAINT [DF_Discarded_Entries] DEFAULT ((0)) FOR [Entries]
+ALTER TABLE [log].[Discarded] ADD CONSTRAINT [DF_Discarded_VersionID] DEFAULT (0) FOR [VersionID]
+GO
+
+CREATE SEQUENCE [log].[DiscardedID]
  AS [int]
  START WITH 1
  INCREMENT BY 1
