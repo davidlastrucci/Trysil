@@ -60,7 +60,22 @@ LTenant.Config;      // TMyTenantConfig instance
 LTenant.Connection;  // TTTenantConnection instance
 ```
 
-`GetOrAdd` is thread-safe (uses a critical section). If the tenant does not exist, it is created atomically using double-checked locking.
+`GetOrAdd` is thread-safe. If the tenant does not exist, it is created atomically: the configuration is read outside the write lock, and only the thread that wins the race registers the connection.
+
+A failed creation always raises **`ETTenantUnavailable`**, which carries `TenantName` and `OriginalClassName` and keeps the original message. `GetOrAdd` never lets the underlying exception through, so the class a host catches does not depend on timing:
+
+```pascal
+try
+  LTenant := TTMultiTenant<TMyTenantConfig>.Instance.GetOrAdd(LName);
+except
+  on E: ETTenantUnavailable do
+    // E.OriginalClassName says what failed underneath
+end;
+```
+
+The reason it is a class of its own rather than the original exception re-raised: an exception cannot be faithfully reconstructed from a class reference in Delphi, because constructors are not virtual - rebuilding an `ETHttpNotFound` that way would call `Exception.Create` and leave its status code at zero.
+
+Failures are **rate limited**. `GetOrAdd` records the name with a cooldown (`FailureCooldown`, 5000 ms by default, settable, `0` disables it), and calls inside that window fail without touching the disk. Failures are still not memoized permanently -- a tenant repaired by dropping its folder in place must not stay broken until restart -- but the cost of an anonymous caller rotating the `Host` header stops being a function of traffic. The failure table is capped at 128 names: expired entries are swept on every insert, and when it is full the entry closest to expiry is evicted, so a full table never means an unprotected one.
 
 ### Create a Connection
 
@@ -88,13 +103,17 @@ for var LName in LNames do
   WriteLn(LName);
 ```
 
+The order is not guaranteed and is not the order of registration: sort the result if you display it.
+
 ### Remove a Tenant
 
 ```pascal
 TTMultiTenant<TMyTenantConfig>.Instance.Remove('acme');
 ```
 
-Removing a tenant frees its `TTTenant<T>` instance (and its config and connection) via the internal `TObjectList` with `OwnsObjects = True`.
+`Remove` detaches the tenant from the registry -- `TryGet` and `GetAll` stop seeing it -- but does **not** destroy the instance. Tenants handed out by `TryGet` and `GetOrAdd` are borrowed references, and a thread that resolved one an instant earlier may be about to call `Connection.CreateConnection` on it; the write lock protects the structure, not the references already given away. The instance is released with the registry, on finalization.
+
+It does not deregister the FireDAC connection definition either, so re-adding the same name after a `Remove` raises a duplicate key.
 
 ## Integration with HTTP Server
 

@@ -77,7 +77,7 @@ The authentication handler determines which areas the current user has access to
 
 ## No-Auth Endpoints
 
-To create endpoints that do not require authentication, use `[TAuthorizationType]` on the controller class:
+To create endpoints that do not require authentication, use `[TAuthorizationType]`. It is read **on the method as well as on the class**, and the method wins:
 
 ```pascal
 [TUri('/logon')]
@@ -86,8 +86,17 @@ TLogonController = class(TTHttpController<TAPIContext>)
 public
   [TPost]
   procedure Logon;
+
+  [TPost('/reset')]
+  [TAuthorizationType(TTHttpAuthorizationType.Bearer)]
+  procedure ResetPassword;
 end;
 ```
+
+Without the attribute on `ResetPassword` that endpoint would be anonymous, because it inherits the class declaration. A controller opened at class level is almost always an authentication controller, so it is exactly the file where a new method must state its own answer.
+
+!!! warning "Check your annotated methods before upgrading"
+    Until this version the attribute was read **only** on the class: written on a method it was silently ignored. It now applies, in both directions. A `[TAuthorizationType(TTHttpAuthorizationType.None)]` written on a method of an authenticated controller used to do nothing and left the endpoint protected; it now opens it. Nothing reports the change, so grep for the attribute on methods and confirm each one says what you mean today.
 
 ## Request and Response
 

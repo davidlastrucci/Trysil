@@ -14,6 +14,7 @@ Unit: `Trysil.Attributes`
 | `TColumn(name)` | Field | Maps field to database column |
 | `TDetailColumn(fk, name)` | Field | Maps a detail/lookup column |
 | `TVersionColumn` | Field | Enables optimistic locking |
+| `TNotFilterable` | Field | Excludes the column from the HTTP JSON filter |
 | `TRelation(table, fk, cascade)` | Class | Declares child relationship |
 | `TWhereClause(sql)` | Class | Adds fixed WHERE clause to all queries |
 | `TWhereClauseParameter(name, value)` | Class | Parameter for `TWhereClause` |
@@ -95,6 +96,20 @@ FVersionID: TTVersion;
 ```
 
 Enables optimistic locking. The version is incremented on each update. If another transaction has modified the record (version mismatch), `ETConcurrentUpdateException` is raised.
+
+### TNotFilterable
+
+```pascal
+[TColumn('Password')]
+[TNotFilterable]
+FPassword: String;
+```
+
+Excludes the column from the JSON filter of the HTTP module: `where` and `orderBy` naming it answer `400`. Every mapped column is filterable unless annotated.
+
+Put it on the columns a caller must not be able to probe. A column the client cannot read is the case that matters: `LIKE` plus the row count in the response is enough to recover a value one character at a time without it ever being serialized, so excluding a field from the payload is not by itself enough to protect it.
+
+It is a property of the mapping, so it is resolved once per entity and costs nothing per request. See also the ceilings in `TTHttpFilterParameters`, described in [REST API](../examples/rest-api.md).
 
 ### TRelation
 
@@ -358,7 +373,7 @@ end;
 
 | Attribute | Description |
 |---|---|
-| `TAuthorizationType(type)` | Authentication requirement for controller |
+| `TAuthorizationType(type)` | Authentication requirement, on class or method |
 | `TArea(name)` | Required authorization area for method |
 
 ```pascal
@@ -371,6 +386,8 @@ TLogonController = class(TTHttpController<TAPIContext>)
 [TArea('admin')]
 procedure GetSettings;
 ```
+
+`TAuthorizationType` is read on the **class and on the method**, and the method wins. A controller opened at class level is almost always the authentication controller, so a method added to it must state its own answer rather than inherit the file's.
 
 `TTHttpAuthorizationType` values:
 

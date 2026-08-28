@@ -103,8 +103,8 @@ end;
 
 A log writer receives a `TTHttpLogAction`, a `TTHttpLogRequest`, or a `TTHttpLogResponse` and persists it wherever you choose (file, database, external collector).
 
-- `TTHttpLogRequest` carries `Host`, `Uri`, `Params`, `MethodType`, `ContentLength`, `ContentOmitted`, `Content`, `Headers`, `RemoteIP` and `ClientIP` (see [Caller IP address](controllers.md#caller-ip-address)).
-- `TTHttpLogResponse` carries `Host`, `User`, `StatusCode`, `ContentType`, `ContentEncoding`, `ContentLength`, `ContentOmitted` and the content.
+- `TTHttpLogRequest` carries `Host`, `Uri`, `MethodType`, `ContentLength`, `ContentOmitted`, `Content`, `ParamsCount`, `ParamsOmitted`, `Params`, `HeadersCount`, `HeadersOmitted`, `Headers`, `RemoteIP` and `ClientIP` (see [Caller IP address](controllers.md#caller-ip-address)).
+- `TTHttpLogResponse` carries `Host`, `Uri`, `User`, `StatusCode`, `ContentType`, `ContentEncoding`, `ContentLength`, `ContentOmitted` and the content. `Uri` lets a writer decide by route -- redacting the response of an `/auth/*` endpoint by endpoint rather than by scanning every payload for sensitive keys.
 
 Request and response entries are queued to background log threads; action entries are written inline. In both paths an exception raised inside the writer is caught and discarded, so a log destination that is full, locked, or unreachable never breaks the request being served, and never crashes a log thread.
 
@@ -120,8 +120,17 @@ LServer.RegisterLogWriter<TMyLogWriter>(
 | `ThreadPoolSize` | Number of log threads | -- |
 | `QueueCapacity` | Cap on the per-thread queue | negative value |
 | `MaxContentLength` | Cap on the captured body, in bytes | negative value |
+| `MaxItemCount` | Cap on captured parameters and headers, in items | negative value |
 
-The two-argument constructor leaves the body uncapped.
+The registration overloads that do not take the record apply finite defaults: 64 KB of content and 128 items. Unlimited is available, but you have to ask for it with a negative value.
+
+!!! warning "Sensitive headers are redacted"
+    `Authorization`, `Proxy-Authorization`, `Cookie`, `Set-Cookie` and `X-Api-Key` reach the writer with their name intact and `<redacted>` in place of the value. Names matter for diagnosis, values do not, and with Basic authentication the value is the credentials. `OnCanLog` is not an alternative: it is per request and all-or-nothing, so keeping a token out of the log would mean losing the endpoint's log entirely.
+
+!!! warning "MaxContentLength alone does not keep the body out of the log"
+    With `Content-Type: application/x-www-form-urlencoded` Indy reads the **whole body** into `FormParams`, glues it to the query string and decodes it into `Params`. The parameters *are* the body. `Params` is therefore omitted whenever `Content` is: capping the body now caps both, and `ParamsOmitted` declares it the way `ContentOmitted` does.
+
+    `MaxItemCount` is the other half, because a cap in bytes does not bound a count: tens of thousands of short, distinct parameter names fit in a body of about a megabyte. Above the cap `Params` and `Headers` are omitted, with `ParamsCount` and `HeadersCount` still recorded.
 
 #### Deciding before you pay: OnCanLog
 
@@ -157,7 +166,7 @@ The omission is declared rather than silent. `ToJSon` always writes `ContentLeng
 
 Each log thread owns its queue, and the queue has a capacity. When it is full the **newest** entry is rejected and counted, rather than the oldest being dropped: the audit trail keeps a contiguous prefix of history instead of being punched full of holes.
 
-Discards are not left in a counter nobody reads. At the end of every drain the log thread reports them through the writer, aggregated **per host**:
+Discards are not left in a counter nobody reads. The log thread reports them through the writer, aggregated **per host**, on a timer as well as at the end of every drain -- under sustained load the queue never runs dry, so waiting for it to empty would mean never reporting at all:
 
 ```pascal
 procedure TMyLogWriter.WriteDiscarded(
@@ -167,7 +176,24 @@ begin
 end;
 ```
 
-`WriteDiscarded` is virtual but **not abstract**, so existing writers keep compiling. Its default implementation is not empty: it forwards to `WriteAction` with a formatted message, so discards are visible even without an override. Overriding it lets a multi-tenant writer put the row in the right tenant's log database. The empty host is a legitimate bucket -- a request with no `Host` header is reconnaissance, and it is exactly what you want to see.
+`WriteDiscarded` is virtual but **not abstract**, so existing writers keep compiling. Its default implementation is not empty: it forwards to `WriteAction` with a formatted message, so discards are visible even without an override. Overriding it lets a multi-tenant writer put the row in the right tenant's log database.
+
+The `Host` is the client's own text, so it is bounded before it becomes a key: lowercased, truncated to 64 characters, and stripped of anything outside `a-z 0-9 . - : _`. Distinct hosts are capped at 64, and everything past that accumulates under `<other>` -- which is also where a request that sent no `Host` header lands. Without the cap the counters would be a dictionary keyed by a value the caller chooses.
+
+#### Unhandled errors
+
+Every response of status 500 or above -- routed by status code, not by exception class -- has a body of a constant plus the task id. The detail goes to the writer instead, and **only** there: without a registered writer a 5xx leaves no trace at all.
+
+```pascal
+procedure TMyLogWriter.WriteError(const ALogError: TTHttpLogError);
+begin
+  WriteToTenantLog(ALogError.Host, ALogError.ToJSon);
+end;
+```
+
+`TTHttpLogError` carries `TaskID`, `Host`, `Uri`, `ExceptionClassName` and `ExceptionMessage`, plus `NestedExceptionClassName` and `NestedExceptionMessage` when the exception is an `ETException` raised while another one was in flight. Like `WriteDiscarded` it is virtual and not abstract, and its default forwards to `WriteAction`.
+
+The exception is rendered to strings **on the request thread**, before the entry is queued: the object dies when the handler exits, so only strings can be handed to the log thread. `WriteError` is not gated by `OnCanLog` -- an error row is always worth writing.
 
 ## Lifecycle
 

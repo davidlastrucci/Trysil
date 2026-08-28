@@ -285,14 +285,35 @@ begin
 end;
 ```
 
-The payload is `{"where": [{"columnName", "condition", "value"}], "orderBy": [...], "start", "limit", "includeDeleted"}`.
+The payload is `{"where": [{"columnName", "condition", "value"}], "orderBy": [...], "start", "limit"}`.
 
-The column name is checked against the table metadata and the operator against a closed list. The **value** never reaches the SQL text: each condition emits a `:p0`, `:p1` placeholder and the value is bound as a typed parameter, converted from the column's `TFieldType`. Beyond injection, this keeps the plan cache from filling with single-use plans -- one distinct SQL text per distinct value would evict the plans that matter, degrading the whole database and not just the endpoint.
+The column name is checked against the table metadata and the operator against a closed list. The name that reaches the SQL text is the canonical one from the metadata, not the string the client sent. The **value** never reaches the SQL text: each condition emits a `:p0`, `:p1` placeholder and the value is bound as a typed parameter, converted from the column's `TFieldType`. Beyond injection, this keeps the plan cache from filling with single-use plans -- one distinct SQL text per distinct value would evict the plans that matter, degrading the whole database and not just the endpoint.
 
-Anything that does not add up is a **400** at parse time, not a failed query: unknown column, operator outside the closed list, a value that does not match the column type, a non-object item inside `where`, or `LIKE` on a non-string column.
+Anything that does not add up is a **400** at parse time, not a failed query: unknown column, operator outside the closed list, a value that does not match the column type, a non-object item inside `where` or inside `orderBy`, or `LIKE` on a non-string column.
+
+#### Ceilings
+
+The three-argument constructor takes a `TTHttpFilterParameters`; the two-argument one applies `TTHttpFilterParameters.Defaults` -- `MaxLimit` 1000, `MaxWhereConditions` 32, `MaxOrderByColumns` 8, `IncludeDeleted` False.
+
+```pascal
+LHttpFilter := TTHttpFilter<T>.Create(
+  Context,
+  FRequest.JSonContent,
+  TTHttpFilterParameters.Create(200, 16, 4, UserMaySeeDeleted));
+```
+
+`limit` is clamped rather than trusted: absent, zero or negative means `MaxLimit`, and a larger value is capped to it. More `where` conditions or `orderBy` columns than the maximum is a 400. A negative ceiling means unlimited, for an endpoint that genuinely needs it, and a zero ceiling means the default, so a `TTHttpFilterParameters` that was never initialised does not silently remove the cap.
+
+This governs the filter **built from the payload**. An endpoint that builds its own `TTFilter` is not affected: `SelectAll` passes `TTFilter.Empty`, which carries no pagination clause and returns every row by design. Whether that endpoint should paginate is the application's decision, not the framework's.
 
 !!! warning "Behaviour change"
     `LIKE` on a non-string column used to go through, relying on the engine's implicit conversion. It now returns 400. A client filtering that way needs fixing.
+
+!!! warning "Behaviour change"
+    `includeDeleted` is no longer read from the payload. Letting the client turn off the soft-delete filter made row visibility a client decision. It is now `TTHttpFilterParameters.IncludeDeleted`, set server-side after your own authorization check.
+
+!!! warning "Behaviour change"
+    An omitted `limit` used to mean no pagination at all -- the whole table. It now means `MaxLimit`. An endpoint that really returns everything must say so with a negative `MaxLimit`.
 
 ### Read-Write Controller
 
@@ -495,6 +516,8 @@ end;
 ```
 
 Overriding `WriteDiscarded` is optional: it is virtual but not abstract, and its default implementation already reports discards through `WriteAction`. The demo overrides it to give them their own table, which is also what a multi-tenant writer would do to route each host's losses to the right database.
+
+`WriteError` is the other optional override. Since the 500 response carries only a constant and the task id, the exception detail reaches the writer through it instead of the client. The demo does not override it, so unhandled errors land in `TLogAction` through the default implementation, correlated by `TaskID` with the request and response rows.
 
 ## System Tray Application
 

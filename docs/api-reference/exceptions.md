@@ -16,9 +16,11 @@ raise ETException.CreateFmt('Entity %d not found', [LId]);
 | Property | Type | Description |
 |---|---|---|
 | `Message` | `String` | Error message (inherited from `Exception`) |
-| `NestedException` | `Exception` | The exception that was active when this one was raised |
+| `HasNestedException` | `Boolean` | Whether an exception was in flight when this one was raised |
+| `NestedExceptionClassName` | `String` | Class name of the exception that was active |
+| `NestedExceptionMessage` | `String` | Message of the exception that was active |
 
-`NestedException` captures the current exception object (via `AcquireExceptionObject`) at construction time. This enables exception chaining — when a Trysil exception is raised inside an `except` block, the original exception is preserved and accessible.
+At construction time the exception records the **class name and message** of whatever exception is currently being handled, read through `ExceptObject`. It does not take ownership of that object: `AcquireExceptionObject` would detach the exception from its raise frame and free it in this exception's destructor, which breaks a plain `raise;` further up the stack. The chain is diagnostic text, not a live object graph.
 
 ### ETValidationException
 
@@ -80,7 +82,7 @@ Internal server infrastructure exception. Extends `ETException`.
 Base class for HTTP-specific exceptions with a status code.
 
 ```pascal
-raise ETHttpException.Create(409, 'Conflict detected');
+raise ETHttpException.Create(429, 'Too many requests');
 raise ETHttpException.CreateFmt(422, 'Invalid field: %s', ['email']);
 ```
 
@@ -100,20 +102,22 @@ var LJson := LException.ToJSon;
 
 `ETHttpException.ToJSon` emits **only** `status` and `message`. The nested exception chain is deliberately left out: 4xx responses are reachable without authentication, and the chain carries the message of the original exception -- file paths, SQL text, connection details.
 
-The generic 500 path is different. `TExceptionHelper.ToJSon`, used for any exception that is not an `ETHttpException`, does include the chain, recursively:
+The generic 5xx path emits no detail at all. The listener routes by **status code, not by class**: any response of 500 or above -- an `ETHttpException` carrying such a status included -- reaches the client as `TTHttpErrorResponse.ToJSon`, a fixed body carrying only the task identifier:
 
 ```json
 {
   "status": 500,
-  "message": "Wrapper message",
-  "nestedException": {
-    "status": 500,
-    "message": "Original error details"
-  }
+  "message": "Internal server error.",
+  "taskId": "9f2c1ab4e77d4b0e8c1d5f3a6b90c2e4"
 }
 ```
 
-The full detail behind a 4xx belongs in the correlated log entry, keyed by `TaskID`, not in the response body.
+So `raise ETHttpInternalServerError.Create(E.Message)` does **not** put that message on the wire: routing by class would have left the hole open for the most natural thing a host can write.
+
+The exception class, its message and the recorded nested class and message go to the log writer instead, through `WriteError(ALogError: TTHttpLogError)`, rendered to strings on the request thread before the entry is queued. The full detail behind any error belongs in the correlated log entry, keyed by `TaskID`, not in the response body.
+
+!!! warning "A log writer is required to see that detail"
+    `WriteError` is only called when one is registered. An application that never calls `RegisterLogWriter` now has a 5xx with no detail anywhere: not in the response, which is the point, and not in a log, which is the consequence. Before this change the message reached the client, so no writer was needed to diagnose an incident.
 
 ### Convenience Subclasses
 
@@ -124,6 +128,7 @@ The full detail behind a 4xx belongs in the correlated log entry, keyed by `Task
 | `ETHttpForbidden` | 403 | Authenticated but insufficient permissions |
 | `ETHttpNotFound` | 404 | Resource not found |
 | `ETHttpMethodNotAllowed` | 405 | HTTP method not supported for this endpoint |
+| `ETHttpConflict` | 409 | Version conflict or integrity violation |
 | `ETHttpInternalServerError` | 500 | Unexpected server error |
 
 All subclasses have simplified constructors (no status code parameter):
@@ -136,22 +141,23 @@ raise ETHttpNotFound.CreateFmt('Person %d not found', [AID]);
 raise ETHttpBadRequest.Create('Missing required field: name');
 raise ETHttpForbidden.Create('Insufficient permissions');
 raise ETHttpUnauthorized.Create('Invalid token');
+raise ETHttpConflict.Create('The record was modified by another user');
 ```
 
-### TExceptionHelper
+`ETHttpConflict` is the one to raise when an `ETConcurrentUpdateException` or an `ETDataIntegrityException` reaches a controller: the mapping is still yours to write, but the status code has a name.
 
-A class helper on `Exception` that adds `ToJSon` to any exception:
+### TTHttpErrorResponse
+
+The fixed body the listener returns for every response of status 500 or above:
 
 ```pascal
-try
-  // ...
-except
-  on E: Exception do
-    LResponse.Content := E.ToJSon;
-end;
+LResponse.Content := TTHttpErrorResponse.ToJSon(FRequest.TaskID.ToString);
+LResponse.Content := TTHttpErrorResponse.ToJSon(503, FRequest.TaskID.ToString);
 ```
 
-This produces `{"status":500,"message":"..."}` for any exception, with nested exception support for `ETException` descendants.
+It produces `{"status":500,"message":"Internal server error.","taskId":"..."}` and nothing else. The overload keeps the caller's status code, so a 503 stays a 503; the message is the same constant in either case, deliberately, because it is the only thing guaranteed to leak nothing.
+
+It replaces the old `TExceptionHelper` class helper, which serialized the exception message and its chain straight to the client.
 
 ---
 
@@ -170,6 +176,7 @@ Exception
         ├── ETHttpForbidden (403)
         ├── ETHttpNotFound (404)
         ├── ETHttpMethodNotAllowed (405)
+        ├── ETHttpConflict (409)
         └── ETHttpInternalServerError (500)
 ```
 
@@ -179,6 +186,6 @@ Exception
 
 2. **Use HTTP exceptions in controllers** — the HTTP server automatically converts them to the appropriate HTTP response with status code and JSON body
 
-3. **Check NestedException** — when debugging, inspect `NestedException` for the root cause of chained errors
+3. **Check the nested exception** — when debugging, inspect `NestedExceptionClassName` and `NestedExceptionMessage` for the root cause of chained errors
 
 4. **Refresh after concurrent update** — when catching `ETConcurrentUpdateException`, call `Refresh<T>` to reload the entity with the latest database state before retrying
