@@ -34,6 +34,7 @@ uses
   Trysil.Tests.Http.JWT.RS256 in 'Trysil.Tests.Http.JWT.RS256.pas',
   Trysil.Tests.Http.Uri in 'Trysil.Tests.Http.Uri.pas',
   Trysil.Tests.Http.Log in 'Trysil.Tests.Http.Log.pas',
+  Trysil.Tests.Http.Filter in 'Trysil.Tests.Http.Filter.pas',
   Trysil.Tests.Logger in 'Trysil.Tests.Logger.pas',
   Trysil.Tests.Abstract.JSon in 'Abstract\Trysil.Tests.Abstract.JSon.pas',
   Trysil.Tests.Abstract.AllTypes in 'Abstract\Trysil.Tests.Abstract.AllTypes.pas',

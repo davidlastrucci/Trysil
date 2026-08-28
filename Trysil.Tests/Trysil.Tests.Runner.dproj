@@ -235,6 +235,7 @@
         <DCCReference Include="Trysil.Tests.Http.JWT.RS256.pas"/>
         <DCCReference Include="Trysil.Tests.Http.Uri.pas"/>
         <DCCReference Include="Trysil.Tests.Http.Log.pas"/>
+        <DCCReference Include="Trysil.Tests.Http.Filter.pas"/>
         <DCCReference Include="Trysil.Tests.Logger.pas"/>
         <DCCReference Include="Abstract\Trysil.Tests.Abstract.JSon.pas"/>
         <DCCReference Include="Abstract\Trysil.Tests.Abstract.AllTypes.pas"/>
