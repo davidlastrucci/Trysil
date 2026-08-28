@@ -122,25 +122,13 @@ end;
 
 function ETHttpException.ToJSon: String;
 var
-  LResult, LJSon: TJSonObject;
+  LResult: TJSonObject;
 begin
   LResult := TJSonObject.Create;
   try
     LResult.AddPair('status', TJSonNumber.Create(FStatusCode));
     LResult.AddPair('message', Self.Message);
     result := LResult.ToJSon();
-
-    if Assigned(InnerException) then
-    begin
-      LJSon := TJSonObject.Create;
-      try
-        NestedException.ToJSon(LJSon);
-        LResult.AddPair('nestedException', LJSon);
-      except
-        LJSon.Free;
-        raise;
-      end;
-    end;
   finally
     LResult.Free;
   end;
