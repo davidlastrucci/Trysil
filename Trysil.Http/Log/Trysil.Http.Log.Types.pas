@@ -33,13 +33,22 @@ type
   strict private
     FThreadPoolSize: Integer;
     FQueueCapacity: Integer;
+    FMaxContentLength: Integer;
   public
     constructor Create(
       const AThreadPoolSize: Integer;
-      const AQueueCapacity: Integer);
+      const AQueueCapacity: Integer); overload;
+
+    constructor Create(
+      const AThreadPoolSize: Integer;
+      const AQueueCapacity: Integer;
+      const AMaxContentLength: Integer); overload;
+
+    function CanLogContent(const ALength: Int64): Boolean;
 
     property ThreadPoolSize: Integer read FThreadPoolSize;
     property QueueCapacity: Integer read FQueueCapacity;
+    property MaxContentLength: Integer read FMaxContentLength;
   end;
 
 { TTHttpLogAction }
@@ -94,12 +103,16 @@ type
     FUri: String;
     FParams: TTHttpLogNameValues;
     FMethodType: String;
+    FContentLength: Int64;
+    FContentOmitted: Boolean;
     FContent: String;
     FHeaders: TTHttpLogNameValues;
     FRemoteIP: String;
     FClientIP: String;
   public
-    constructor Create(const ARequest: TTHttpRequest);
+    constructor Create(
+      const ARequest: TTHttpRequest;
+      const AParameters: TTHttpLogParameters);
 
     function ToJSon: String;
 
@@ -109,6 +122,8 @@ type
     property Uri: String read FUri;
     property Params: TTHttpLogNameValues read FParams;
     property MethodType: String read FMethodType;
+    property ContentLength: Int64 read FContentLength;
+    property ContentOmitted: Boolean read FContentOmitted;
     property Content: String read FContent;
     property Headers: TTHttpLogNameValues read FHeaders;
     property RemoteIP: String read FRemoteIP;
@@ -154,13 +169,17 @@ type
     FContentType: String;
     FContentEncoding: String;
     FIsBinary: Boolean;
+    FContentLength: Int64;
+    FContentOmitted: Boolean;
     FContent: String;
     FBinaryContent: String;
 
     function GetBinaryContent(const AResponse: TTHttpResponse): String;
   public
     constructor Create(
-      const ARequest: TTHttpRequest; const AResponse: TTHttpResponse);
+      const ARequest: TTHttpRequest;
+      const AResponse: TTHttpResponse;
+      const AParameters: TTHttpLogParameters);
 
     function ToJSon: String;
 
@@ -171,6 +190,8 @@ type
     property StatusCode: Integer read FStatusCode;
     property ContentType: String read FContentType;
     property ContentEncoding: String read FContentEncoding;
+    property ContentLength: Int64 read FContentLength;
+    property ContentOmitted: Boolean read FContentOmitted;
     property Content: String read FContent;
     property BinaryContent: String read FBinaryContent;
   end;
@@ -205,6 +226,23 @@ constructor TTHttpLogParameters.Create(
 begin
   FThreadPoolSize := AThreadPoolSize;
   FQueueCapacity := AQueueCapacity;
+  FMaxContentLength := -1;
+end;
+
+constructor TTHttpLogParameters.Create(
+  const AThreadPoolSize: Integer;
+  const AQueueCapacity: Integer;
+  const AMaxContentLength: Integer);
+begin
+  FThreadPoolSize := AThreadPoolSize;
+  FQueueCapacity := AQueueCapacity;
+  FMaxContentLength := AMaxContentLength;
+end;
+
+function TTHttpLogParameters.CanLogContent(
+  const ALength: Int64): Boolean;
+begin
+  result := (FMaxContentLength < 0) or (ALength <= FMaxContentLength);
 end;
 
 { TTHttpLogAction }
@@ -292,7 +330,9 @@ end;
 
 { TTHttpLogRequest }
 
-constructor TTHttpLogRequest.Create(const ARequest: TTHttpRequest);
+constructor TTHttpLogRequest.Create(
+  const ARequest: TTHttpRequest;
+  const AParameters: TTHttpLogParameters);
 begin
   FTaskID := ARequest.TaskID;
   FHost := ARequest.Host;
@@ -300,7 +340,12 @@ begin
   FUri := ARequest.ControllerID.Uri;
   FParams := TTHttpLogNameValues.Create(ARequest.Parameters);
   FMethodType := ARequest.ControllerID.Method;
-  FContent := ARequest.JSonContent.ToJSon();
+  FContentLength := ARequest.ContentLength;
+  FContentOmitted := not AParameters.CanLogContent(FContentLength);
+  if FContentOmitted then
+    FContent := String.Empty
+  else
+    FContent := ARequest.JSonContent.ToJSon();
 
   FHeaders := TTHttpLogNameValues.Create(ARequest.Headers);
   FRemoteIP := ARequest.RemoteIP;
@@ -319,7 +364,11 @@ begin
     LJSon.AddPair('Params', FParams.ToJSonArray());
     LJSon.AddPair('Headers', FHeaders.ToJSonArray());
     LJSon.AddPair('MethodType', FMethodType);
-    LJSon.AddPair('Content', TJSonObject.ParseJSONValue(FContent));
+    LJSon.AddPair('ContentLength', TJSonNumber.Create(FContentLength));
+    if FContentOmitted then
+      LJSon.AddPair('ContentOmitted', TJSonBool.Create(True))
+    else
+      LJSon.AddPair('Content', TJSonObject.ParseJSONValue(FContent));
     LJSon.AddPair('RemoteIP', FRemoteIP);
     LJSon.AddPair('ClientIP', FClientIP);
 
@@ -390,7 +439,9 @@ end;
 { TTHttpLogResponse }
 
 constructor TTHttpLogResponse.Create(
-  const ARequest: TTHttpRequest; const AResponse: TTHttpResponse);
+  const ARequest: TTHttpRequest;
+  const AResponse: TTHttpResponse;
+  const AParameters: TTHttpLogParameters);
 begin
   FTaskID := AResponse.TaskID;
   FDateTime := TTimeZone.Local.ToUniversalTime(Now);
@@ -400,9 +451,19 @@ begin
   FContentType := AResponse.ContentType;
   FContentEncoding := AResponse.ContentEncoding;
   FIsBinary := AResponse.IsContentStream;
-  FContent := AResponse.Content;
-  if FIsBinary then
-    FBinaryContent := GetBinaryContent(AResponse);
+  FContentLength := AResponse.ContentLength;
+  FContentOmitted := not AParameters.CanLogContent(FContentLength);
+  if FContentOmitted then
+  begin
+    FContent := String.Empty;
+    FBinaryContent := String.Empty;
+  end
+  else
+  begin
+    FContent := AResponse.Content;
+    if FIsBinary then
+      FBinaryContent := GetBinaryContent(AResponse);
+  end;
 end;
 
 function TTHttpLogResponse.GetBinaryContent(
@@ -434,16 +495,17 @@ begin
     LJSon.AddPair('User', FUser.ToJSon());
     LJSon.AddPair('StatusCode', TJSonNumber.Create(FStatusCode));
     LJSon.AddPair('ContentType', FContentType);
-    if FIsBinary then
-      LJSon.AddPair('BinaryContent', TJSonString.Create(FBinaryContent))
-  else
-    begin
+    LJSon.AddPair('ContentLength', TJSonNumber.Create(FContentLength));
+    if not FIsBinary then
       LJSon.AddPair('ContentEncoding', FContentEncoding);
-      if FContentType.Equals(TTHttpContentTypes.JSon) then
-        LJSon.AddPair('Content', TJSonObject.ParseJSONValue(FContent))
-      else
-        LJSon.AddPair('Content', FContent);
-    end;
+    if FContentOmitted then
+      LJSon.AddPair('ContentOmitted', TJSonBool.Create(True))
+    else if FIsBinary then
+      LJSon.AddPair('BinaryContent', TJSonString.Create(FBinaryContent))
+    else if FContentType.Equals(TTHttpContentTypes.JSon) then
+      LJSon.AddPair('Content', TJSonObject.ParseJSONValue(FContent))
+    else
+      LJSon.AddPair('Content', FContent);
 
     result := LJSon.ToJSon();
   finally

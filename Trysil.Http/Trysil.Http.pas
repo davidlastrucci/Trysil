@@ -46,6 +46,7 @@ type
     const DefaultPort = 8022;
     const DefaultLogThreadPoolSize: Integer = 1;
     const DefaultLogQueueCapacity: Integer = 10000;
+    const DefaultMaxLogContentLength: Integer = -1;
   strict private
     FRttiLogWriter: TTHttpRttiLogWriter;
     FRttiAuthentication: TTHttpRttiAuthentication<C>;
@@ -66,6 +67,8 @@ type
     procedure SetBaseUri(const AValue: String);
     procedure SetPort(const AValue: Word);
     function GetCorsConfig: TTHttpCorsConfig;
+    function GetOnCanLog: TFunc<TTHttpRequest, Boolean>;
+    procedure SetOnCanLog(const AValue: TFunc<TTHttpRequest, Boolean>);
 
     procedure OnAfterRttiControllerAddedEvent(
       const AControllerID: TTHttpControllerID;
@@ -108,6 +111,8 @@ type
     property BaseUri: String read FBaseUri write SetBaseUri;
     property Port: Word read FPort write SetPort;
     property CorsConfig: TTHttpCorsConfig read GetCorsConfig;
+    property OnCanLog: TFunc<TTHttpRequest, Boolean>
+      read GetOnCanLog write SetOnCanLog;
   end;
 
 implementation
@@ -181,7 +186,9 @@ procedure TTHttpServer<C>.RegisterLogWriter<W>(
   const ALogThreadPoolSize: Integer);
 begin
   RegisterLogWriter<W>(TTHttpLogParameters.Create(
-    ALogThreadPoolSize, DefaultLogQueueCapacity));
+    ALogThreadPoolSize,
+    DefaultLogQueueCapacity,
+    DefaultMaxLogContentLength));
 end;
 
 procedure TTHttpServer<C>.RegisterLogWriter<W>(
@@ -341,6 +348,17 @@ end;
 function TTHttpServer<C>.GetCorsConfig: TTHttpCorsConfig;
 begin
   result := FCors.Config;
+end;
+
+function TTHttpServer<C>.GetOnCanLog: TFunc<TTHttpRequest, Boolean>;
+begin
+  result := FLog.OnCanLog;
+end;
+
+procedure TTHttpServer<C>.SetOnCanLog(
+  const AValue: TFunc<TTHttpRequest, Boolean>);
+begin
+  FLog.OnCanLog := AValue;
 end;
 
 procedure TTHttpServer<C>.SetContentStream(

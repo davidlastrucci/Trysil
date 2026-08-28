@@ -30,6 +30,10 @@ type
   strict private
     FLogThreads: TTHttpLogThreads;
     FRttiLogWriter: TTHttpRttiLogWriter;
+    FParameters: TTHttpLogParameters;
+    FOnCanLog: TFunc<TTHttpRequest, Boolean>;
+
+    function CanLog(const ARequest: TTHttpRequest): Boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -42,6 +46,9 @@ type
     procedure LogRequest(const ARequest: TTHttpRequest);
     procedure LogResponse(
       const ARequest: TTHttpRequest; const AResponse: TTHttpResponse);
+
+    property OnCanLog: TFunc<TTHttpRequest, Boolean>
+      read FOnCanLog write FOnCanLog;
   end;
 
 implementation
@@ -53,6 +60,8 @@ begin
   inherited Create;
   FLogThreads := TTHttpLogThreads.Create;
   FRttiLogWriter := nil;
+  FParameters := TTHttpLogParameters.Create(0, 0);
+  FOnCanLog := nil;
 end;
 
 destructor TTHttpLog.Destroy;
@@ -68,6 +77,7 @@ var
   LQueueCapacity: Integer;
 begin
   FRttiLogWriter := ALogWriter;
+  FParameters := AParameters;
   if Assigned(FRttiLogWriter) then
   begin
     LQueueCapacity := AParameters.QueueCapacity;
@@ -95,13 +105,23 @@ begin
   end;
 end;
 
+function TTHttpLog.CanLog(const ARequest: TTHttpRequest): Boolean;
+begin
+  result := Assigned(FRttiLogWriter);
+  if result and Assigned(FOnCanLog) then
+    result := FOnCanLog(ARequest);
+end;
+
 procedure TTHttpLog.LogRequest(const ARequest: TTHttpRequest);
 var
   LLogThread: TTHttpLogThread;
 begin
-  LLogThread := FLogThreads.Next;
-  if Assigned(LLogThread) then
-    LLogThread.Add(TTHttpLogRequest.Create(ARequest));
+  if CanLog(ARequest) then
+  begin
+    LLogThread := FLogThreads.Next;
+    if Assigned(LLogThread) then
+      LLogThread.Add(TTHttpLogRequest.Create(ARequest, FParameters));
+  end;
 end;
 
 procedure TTHttpLog.LogResponse(
@@ -109,9 +129,13 @@ procedure TTHttpLog.LogResponse(
 var
   LLogThread: TTHttpLogThread;
 begin
-  LLogThread := FLogThreads.Next;
-  if Assigned(LLogThread) then
-    LLogThread.Add(TTHttpLogResponse.Create(ARequest, AResponse));
+  if CanLog(ARequest) then
+  begin
+    LLogThread := FLogThreads.Next;
+    if Assigned(LLogThread) then
+      LLogThread.Add(
+        TTHttpLogResponse.Create(ARequest, AResponse, FParameters));
+  end;
 end;
 
 end.

@@ -136,6 +136,7 @@ type
     function StripPort(const AValue: String): String;
 
     function GetContentText: String;
+    function GetContentLength: Int64;
   public
     constructor Create(
       const ATaskID: TTHttpTaskID; const ARequestInfo: TIdHttpRequestInfo);
@@ -147,6 +148,7 @@ type
     property UrlParams: String read GetUrlParams;
     property Parameters: TTHttpParameters read GetParameters;
     property JSonContent: TJSonValue read GetJSonContent;
+    property ContentLength: Int64 read GetContentLength;
     property Headers: TTHttpHeaders read GetHeaders;
     property RemoteIP: String read GetRemoteIP;
     property ClientIP: String read GetClientIP;
@@ -172,6 +174,7 @@ type
     procedure SetContentEncoding(const AValue: String);
     procedure SetContent(const AValue: String);
     procedure SetContentStream(const AValue: TMemoryStream);
+    function GetContentLength: Int64;
   public
     constructor Create(
       const ATaskID: TTHttpTaskID; const AResponseInfo: TIdHttpResponseInfo);
@@ -190,6 +193,7 @@ type
       read GetContentEncoding write SetContentEncoding;
     property IsContentStream: Boolean read FIsContentStream;
     property Content: String read FContent write SetContent;
+    property ContentLength: Int64 read GetContentLength;
     property ContentStream: TMemoryStream write SetContentStream;
   end;
 
@@ -491,6 +495,16 @@ begin
     result := FRequestInfo.UnparsedParams;
 end;
 
+function TTHttpRequest.GetContentLength: Int64;
+begin
+  if Assigned(FRequestInfo.PostStream) then
+    result := FRequestInfo.PostStream.Size
+  else if not FRequestInfo.FormParams.IsEmpty then
+    result := FRequestInfo.FormParams.Length
+  else
+    result := FRequestInfo.UnparsedParams.Length;
+end;
+
 { TTHttpResponse }
 
 constructor TTHttpResponse.Create(
@@ -583,6 +597,14 @@ begin
   FIsContentStream := True;
   FContent := String.Empty;
   FContentStream.LoadFromStream(AValue);
+end;
+
+function TTHttpResponse.GetContentLength: Int64;
+begin
+  if FIsContentStream then
+    result := FContentStream.Size
+  else
+    result := FContent.Length;
 end;
 
 end.
