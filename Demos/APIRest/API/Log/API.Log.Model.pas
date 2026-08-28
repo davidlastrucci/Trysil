@@ -232,6 +232,59 @@ type
     property VersionID: TTVersion read FVersionID;
   end;
 
+{ TLogError }
+
+  [TTable('log.Errors')]
+  [TSequence('log.ErrorsID')]
+  TLogError = class
+  strict private
+    [TPrimaryKey]
+    [TColumn('ID')]
+    FID: TTPrimaryKey;
+
+    [TColumn('TaskID')]
+    FTaskID: String;
+
+    [TColumn('Date')]
+    FDate: TDateTime;
+
+    [TColumn('Host')]
+    FHost: String;
+
+    [TColumn('Uri')]
+    FUri: String;
+
+    [TColumn('ExceptionClassName')]
+    FExceptionClassName: String;
+
+    [TColumn('ExceptionMessage')]
+    FExceptionMessage: String;
+
+    [TColumn('NestedExceptionClassName')]
+    FNestedExceptionClassName: String;
+
+    [TColumn('NestedExceptionMessage')]
+    FNestedExceptionMessage: String;
+
+    [TVersionColumn]
+    [TColumn('VersionID')]
+    FVersionID: TTVersion;
+  public
+    procedure SetValues(const AError: TTHttpLogError);
+
+    property ID: TTPrimaryKey read FID;
+    property TaskID: String read FTaskID;
+    property Date: TDateTime read FDate;
+    property Host: String read FHost;
+    property Uri: String read FUri;
+    property ExceptionClassName: String read FExceptionClassName;
+    property ExceptionMessage: String read FExceptionMessage;
+    property NestedExceptionClassName: String
+      read FNestedExceptionClassName;
+    property NestedExceptionMessage: String read FNestedExceptionMessage;
+    property VersionID: TTVersion read FVersionID;
+  end;
+
 implementation
 
 { TLogAction }
@@ -279,6 +332,20 @@ begin
   FContentOmitted := AResponse.ContentOmitted;
   FContent := AResponse.Content;
   FBinaryContent := AResponse.BinaryContent;
+end;
+
+{ TLogError }
+
+procedure TLogError.SetValues(const AError: TTHttpLogError);
+begin
+  FTaskID := AError.TaskID.ToString;
+  FDate := AError.DateTime;
+  FHost := AError.Host;
+  FUri := AError.Uri;
+  FExceptionClassName := AError.ExceptionClassName;
+  FExceptionMessage := AError.ExceptionMessage;
+  FNestedExceptionClassName := AError.NestedExceptionClassName;
+  FNestedExceptionMessage := AError.NestedExceptionMessage;
 end;
 
 { TLogDiscarded }

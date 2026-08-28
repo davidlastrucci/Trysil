@@ -101,6 +101,36 @@ CREATE SEQUENCE [log].[ResponsesID]
  INCREMENT BY 1
 GO
 
+CREATE TABLE [log].[Errors](
+  [ID] [int] NOT NULL,
+  [TaskID] [nvarchar](50) NULL,
+  [Date] [datetime] NULL,
+  [Host] [nvarchar](255) NULL,
+  [Uri] [nvarchar](255) NULL,
+  [ExceptionClassName] [nvarchar](255) NULL,
+  [ExceptionMessage] [nvarchar](max) NULL,
+  [NestedExceptionClassName] [nvarchar](255) NULL,
+  [NestedExceptionMessage] [nvarchar](max) NULL,
+  [VersionID] [int] NOT NULL,
+  CONSTRAINT [PK_Errors] PRIMARY KEY CLUSTERED ([ID] ASC)
+)
+GO
+
+ALTER TABLE [log].[Errors] ADD CONSTRAINT [DF_Errors_ID] DEFAULT (0) FOR [ID]
+ALTER TABLE [log].[Errors] ADD CONSTRAINT [DF_Errors_TaskID] DEFAULT (N'') FOR [TaskID]
+ALTER TABLE [log].[Errors] ADD CONSTRAINT [DF_Errors_Host] DEFAULT (N'') FOR [Host]
+ALTER TABLE [log].[Errors] ADD CONSTRAINT [DF_Errors_Uri] DEFAULT (N'') FOR [Uri]
+ALTER TABLE [log].[Errors] ADD CONSTRAINT [DF_Errors_ExceptionClassName] DEFAULT (N'') FOR [ExceptionClassName]
+ALTER TABLE [log].[Errors] ADD CONSTRAINT [DF_Errors_NestedExceptionClassName] DEFAULT (N'') FOR [NestedExceptionClassName]
+ALTER TABLE [log].[Errors] ADD CONSTRAINT [DF_Errors_VersionID] DEFAULT (0) FOR [VersionID]
+GO
+
+CREATE SEQUENCE [log].[ErrorsID]
+ AS [int]
+ START WITH 1
+ INCREMENT BY 1
+GO
+
 CREATE TABLE [log].[Discarded](
   [ID] [int] NOT NULL,
   [Date] [datetime] NULL,
