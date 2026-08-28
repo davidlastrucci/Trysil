@@ -113,7 +113,9 @@ TTMultiTenant<TMyTenantConfig>.Instance.Remove('acme');
 
 `Remove` detaches the tenant from the registry -- `TryGet` and `GetAll` stop seeing it -- but does **not** destroy the instance. Tenants handed out by `TryGet` and `GetOrAdd` are borrowed references, and a thread that resolved one an instant earlier may be about to call `Connection.CreateConnection` on it; the write lock protects the structure, not the references already given away. The instance is released with the registry, on finalization.
 
-It does not deregister the FireDAC connection definition either, so re-adding the same name after a `Remove` raises a duplicate key.
+`Remove` means "forget the cache", not "revoke the customer": the FireDAC connection definition stays registered, and a `GetOrAdd` on the same name afterwards rebuilds the tenant rather than failing. Registration is idempotent - the connection class is set rather than added, and an existing definition is replaced - so the name never burns.
+
+Revoking a customer for real would mean closing the pool and deregistering the connection, which needs a use count on the borrowed references: that is design, and it is not what `Remove` does today.
 
 ## Integration with HTTP Server
 

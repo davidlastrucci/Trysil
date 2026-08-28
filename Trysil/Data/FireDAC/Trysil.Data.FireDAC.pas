@@ -607,7 +607,7 @@ begin
   LConnectionClass := GetDriverClass(AParameters.Driver);
   FLock.BeginWrite;
   try
-    FConnections.Add(AName.ToLower(), LConnectionClass);
+    FConnections.AddOrSetValue(AName.ToLower(), LConnectionClass);
   finally
     FLock.EndWrite;
   end;

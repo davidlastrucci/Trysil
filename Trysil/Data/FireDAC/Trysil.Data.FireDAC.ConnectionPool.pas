@@ -261,6 +261,8 @@ begin
     LParameters.AddStrings(AParameters);
     AddConnectionPooling(AName, LParameters);
 
+    if Assigned(FManager.ConnectionDefs.FindConnectionDef(AName)) then
+      FManager.DeleteConnectionDef(AName);
     FManager.AddConnectionDef(AName, ADriver, LParameters);
   finally
     LParameters.Free;

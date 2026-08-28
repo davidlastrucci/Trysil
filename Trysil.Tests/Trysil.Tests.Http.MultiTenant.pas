@@ -61,6 +61,9 @@ type
 
     [Test]
     procedure GetAllListsTheCreatedTenants;
+
+    [Test]
+    procedure RemoveThenGetOrAddRecreatesTheTenant;
   end;
 
 implementation
@@ -147,6 +150,23 @@ begin
   Assert.IsFalse(
     TTestMultiTenant.Instance.TryGet('epsilon', LFound),
     'Remove must normalize the name and drop the tenant');
+end;
+
+procedure TTHttpMultiTenantTests.RemoveThenGetOrAddRecreatesTheTenant;
+var
+  LTenant: TTestTenant;
+  LFound: TTestTenant;
+begin
+  TTestMultiTenant.Instance.GetOrAdd('eta');
+  TTestMultiTenant.Instance.Remove('eta');
+
+  LTenant := TTestMultiTenant.Instance.GetOrAdd('eta');
+  Assert.IsTrue(
+    Assigned(LTenant.Connection),
+    'Re-adding a removed tenant must not fail on the connection registry');
+  Assert.IsTrue(
+    TTestMultiTenant.Instance.TryGet('eta', LFound),
+    'The re-added tenant must be visible again');
 end;
 
 procedure TTHttpMultiTenantTests.GetAllListsTheCreatedTenants;
