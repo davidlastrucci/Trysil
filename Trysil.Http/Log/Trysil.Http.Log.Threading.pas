@@ -85,17 +85,16 @@ end;
 procedure TTHttpLogThread.WriteDiscarded(
   const AWriter: TTHttpLogAbstractWriter);
 var
-  LDiscarded: Integer;
+  LDiscarded: TArray<TTHttpLogDiscarded>;
+  LIndex: Integer;
 begin
   LDiscarded := FQueue.TakeDiscarded;
-  if LDiscarded > 0 then
-  begin
+  for LIndex := Low(LDiscarded) to High(LDiscarded) do
     try
-      AWriter.WriteDiscarded(LDiscarded);
+      AWriter.WriteDiscarded(LDiscarded[LIndex]);
     except
       // Thread should not crash in case of exception
     end;
-  end;
 end;
 
 procedure TTHttpLogThread.Add(const ARequest: TTHttpLogRequest);

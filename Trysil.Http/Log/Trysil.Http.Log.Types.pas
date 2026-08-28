@@ -51,6 +51,19 @@ type
     property MaxContentLength: Integer read FMaxContentLength;
   end;
 
+{ TTHttpLogDiscarded }
+
+  TTHttpLogDiscarded = record
+  strict private
+    FHost: String;
+    FCount: Integer;
+  public
+    constructor Create(const AHost: String; const ACount: Integer);
+
+    property Host: String read FHost;
+    property Count: Integer read FCount;
+  end;
+
 { TTHttpLogAction }
 
   TTHttpLogAction = record
@@ -243,6 +256,15 @@ function TTHttpLogParameters.CanLogContent(
   const ALength: Int64): Boolean;
 begin
   result := (FMaxContentLength < 0) or (ALength <= FMaxContentLength);
+end;
+
+{ TTHttpLogDiscarded }
+
+constructor TTHttpLogDiscarded.Create(
+  const AHost: String; const ACount: Integer);
+begin
+  FHost := AHost;
+  FCount := ACount;
 end;
 
 { TTHttpLogAction }

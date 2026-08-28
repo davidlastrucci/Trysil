@@ -31,7 +31,8 @@ type
       const ALogRequest: TTHttpLogRequest); virtual; abstract;
     procedure WriteResponse(
       const ALogResponse: TTHttpLogResponse); virtual; abstract;
-    procedure WriteDiscarded(const ACount: Integer); virtual;
+    procedure WriteDiscarded(
+      const ADiscarded: TTHttpLogDiscarded); virtual;
   end;
 
 implementation
@@ -39,11 +40,12 @@ implementation
 { TTHttpLogAbstractWriter }
 
 procedure TTHttpLogAbstractWriter.WriteDiscarded(
-  const ACount: Integer);
+  const ADiscarded: TTHttpLogDiscarded);
 begin
   WriteAction(TTHttpLogAction.Create(
     String.Empty,
-    Format(TTLanguage.Instance.Translate(SLogQueueDiscarded), [ACount])));
+    Format(TTLanguage.Instance.Translate(SLogQueueDiscarded), [
+      ADiscarded.Count, ADiscarded.Host])));
 end;
 
 end.

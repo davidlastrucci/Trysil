@@ -40,6 +40,9 @@ type
     procedure LogParametersRejectsContentAboveTheCap;
 
     [Test]
+    procedure LogDiscardedCarriesHostAndCount;
+
+    [Test]
     procedure LogQueueIsEmptyAfterCreate;
 
     [Test]
@@ -123,6 +126,15 @@ begin
     'A body above the cap must be omitted');
 end;
 
+procedure TTHttpLogTests.LogDiscardedCarriesHostAndCount;
+var
+  LDiscarded: TTHttpLogDiscarded;
+begin
+  LDiscarded := TTHttpLogDiscarded.Create('tenant-a', 7);
+  Assert.AreEqual('tenant-a', LDiscarded.Host);
+  Assert.AreEqual<Integer>(7, LDiscarded.Count);
+end;
+
 procedure TTHttpLogTests.LogQueueIsEmptyAfterCreate;
 var
   LQueue: TTHttpLogQueue;
@@ -130,7 +142,7 @@ begin
   LQueue := TTHttpLogQueue.Create(10);
   try
     Assert.IsTrue(LQueue.IsEmpty);
-    Assert.AreEqual<Integer>(0, LQueue.TakeDiscarded);
+    Assert.AreEqual<Integer>(0, Length(LQueue.TakeDiscarded));
   finally
     LQueue.Free;
   end;
@@ -148,7 +160,7 @@ begin
     LQueue.Enqueue(LRequest);
     LQueue.Enqueue(LRequest);
     Assert.IsFalse(LQueue.IsEmpty);
-    Assert.AreEqual<Integer>(0, LQueue.TakeDiscarded);
+    Assert.AreEqual<Integer>(0, Length(LQueue.TakeDiscarded));
 
     LValue := LQueue.Dequeue;
     Assert.IsTrue(LValue.QueueType = TTHttpLogQueueType.Request);
@@ -164,6 +176,7 @@ var
   LQueue: TTHttpLogQueue;
   LRequest: TTHttpLogRequest;
   LResponse: TTHttpLogResponse;
+  LDiscarded: TArray<TTHttpLogDiscarded>;
 begin
   LRequest := Default(TTHttpLogRequest);
   LResponse := Default(TTHttpLogResponse);
@@ -173,9 +186,15 @@ begin
     LQueue.Enqueue(LRequest);
     LQueue.Enqueue(LRequest);
     LQueue.Enqueue(LResponse);
+
+    LDiscarded := LQueue.TakeDiscarded;
+    Assert.AreEqual<Integer>(
+      1,
+      Length(LDiscarded),
+      'Discards of the same host must share one entry');
     Assert.AreEqual<Integer>(
       2,
-      LQueue.TakeDiscarded,
+      LDiscarded[0].Count,
       'Entries above the capacity must be discarded and counted');
 
     LQueue.Dequeue;
@@ -198,11 +217,11 @@ begin
   try
     LQueue.Enqueue(LRequest);
     LQueue.Enqueue(LRequest);
-    Assert.AreEqual<Integer>(1, LQueue.TakeDiscarded);
+    Assert.AreEqual<Integer>(1, Length(LQueue.TakeDiscarded));
     Assert.AreEqual<Integer>(
       0,
-      LQueue.TakeDiscarded,
-      'Taking the discarded count must reset it');
+      Length(LQueue.TakeDiscarded),
+      'Taking the discarded counts must reset them');
   finally
     LQueue.Free;
   end;
@@ -221,7 +240,7 @@ begin
       LQueue.Enqueue(LRequest);
     Assert.AreEqual<Integer>(
       0,
-      LQueue.TakeDiscarded,
+      Length(LQueue.TakeDiscarded),
       'A negative capacity must mean no limit');
 
     for LIndex := 1 to 100 do

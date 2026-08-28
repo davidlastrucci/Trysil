@@ -29,9 +29,10 @@ type
     FCriticalSection: TCriticalSection;
     FQueue: TQueue<TTHttpLogQueueValue>;
     FCapacity: Integer;
-    FDiscarded: Integer;
+    FDiscarded: TDictionary<String, Integer>;
 
     function CanEnqueue: Boolean;
+    procedure Discard(const AHost: String);
     function GetIsEmpty: Boolean;
   public
     constructor Create(const ACapacity: Integer);
@@ -41,7 +42,7 @@ type
     procedure Enqueue(const AResponse: TTHttpLogResponse); overload;
 
     function Dequeue: TTHttpLogQueueValue;
-    function TakeDiscarded: Integer;
+    function TakeDiscarded: TArray<TTHttpLogDiscarded>;
 
     property IsEmpty: Boolean read GetIsEmpty;
   end;
@@ -56,11 +57,12 @@ begin
   FCriticalSection := TCriticalSection.Create;
   FQueue := TQueue<TTHttpLogQueueValue>.Create;
   FCapacity := ACapacity;
-  FDiscarded := 0;
+  FDiscarded := TDictionary<String, Integer>.Create;
 end;
 
 destructor TTHttpLogQueue.Destroy;
 begin
+  FDiscarded.Free;
   FQueue.Free;
   FCriticalSection.Free;
   inherited Destroy;
@@ -73,7 +75,7 @@ begin
     if CanEnqueue then
       FQueue.Enqueue(TTHttpLogQueueValue.Create(ARequest))
     else
-      Inc(FDiscarded);
+      Discard(ARequest.Host);
   finally
     FCriticalSection.Leave;
   end;
@@ -86,7 +88,7 @@ begin
     if CanEnqueue then
       FQueue.Enqueue(TTHttpLogQueueValue.Create(AResponse))
     else
-      Inc(FDiscarded);
+      Discard(AResponse.Host);
   finally
     FCriticalSection.Leave;
   end;
@@ -102,15 +104,36 @@ begin
   end;
 end;
 
-function TTHttpLogQueue.TakeDiscarded: Integer;
+function TTHttpLogQueue.TakeDiscarded: TArray<TTHttpLogDiscarded>;
+var
+  LPair: TPair<String, Integer>;
+  LIndex: Integer;
 begin
   FCriticalSection.Enter;
   try
-    result := FDiscarded;
-    FDiscarded := 0;
+    SetLength(result, FDiscarded.Count);
+    LIndex := 0;
+    for LPair in FDiscarded do
+    begin
+      result[LIndex] := TTHttpLogDiscarded.Create(
+        LPair.Key, LPair.Value);
+      Inc(LIndex);
+    end;
+    FDiscarded.Clear;
   finally
     FCriticalSection.Leave;
   end;
+end;
+
+procedure TTHttpLogQueue.Discard(const AHost: String);
+var
+  LKey: String;
+  LCount: Integer;
+begin
+  LKey := AHost.ToLower();
+  if not FDiscarded.TryGetValue(LKey, LCount) then
+    LCount := 0;
+  FDiscarded.AddOrSetValue(LKey, LCount + 1);
 end;
 
 function TTHttpLogQueue.CanEnqueue: Boolean;
