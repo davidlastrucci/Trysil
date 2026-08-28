@@ -109,7 +109,7 @@ Excludes the column from the JSON filter of the HTTP module: `where` and `orderB
 
 Put it on the columns a caller must not be able to probe. A column the client cannot read is the case that matters: `LIKE` plus the row count in the response is enough to recover a value one character at a time without it ever being serialized, so excluding a field from the payload is not by itself enough to protect it.
 
-It is a property of the mapping, so it is resolved once per entity and costs nothing per request. See also the ceilings in `TTHttpFilterParameters`, described in [REST API](../examples/rest-api.md).
+It is a property of the mapping, so it is resolved once per entity and costs nothing per request. `MetadataToJSon<T>` reports it as `"filterable": false`, so a client that builds its filter UI from the metadata can hide the column instead of discovering it through a `400`. See also the ceilings in `TTHttpFilterParameters`, described in [REST API](../examples/rest-api.md).
 
 ### TRelation
 

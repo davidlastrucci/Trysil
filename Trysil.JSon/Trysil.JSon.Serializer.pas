@@ -346,6 +346,8 @@ begin
   if AColumnMetadata.DataSize <> 0 then
     AJSon.AddPair('size', TJSonNumber.Create(
       AColumnMetadata.DataSize));
+  if not AColumnMap.IsFilterable then
+    AJSon.AddPair('filterable', TJSonBool.Create(False));
 end;
 
 procedure TTJSonSerializer.TableMetadataToJSon(

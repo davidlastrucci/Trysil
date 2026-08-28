@@ -66,6 +66,8 @@ var LJson := LContext.MetadataToJSon<TPerson>();
 
 This is useful for building dynamic UIs or generating documentation from entity definitions.
 
+A column carrying [`TNotFilterable`](../api-reference/attributes.md#tnotfilterable) also reports `"filterable": false`. The pair appears **only** when the column is excluded, so an existing payload is unchanged: absence means filterable. A client that builds a filter UI from the metadata should hide those columns, otherwise the first `where` on one comes back as a `400`.
+
 ## Ignoring Fields
 
 Use the `TJSonIgnore` attribute to exclude specific fields from serialization:
