@@ -49,6 +49,7 @@ type
   strict private
     FEntity: T;
 
+    function GetIsLoaded: Boolean;
     function GetEntity: T;
     procedure SetEntity(const AEntity: T);
   strict protected
@@ -58,6 +59,7 @@ type
       const AContext: TTContext; const AColumnName: String); override;
     destructor Destroy; override;
 
+    property IsLoaded: Boolean read GetIsLoaded;
     property Entity: T read GetEntity write SetEntity;
   end;
 
@@ -125,6 +127,11 @@ begin
   if (not FContext.UseIdentityMap) and Assigned(FEntity) then
     FEntity.Free;
   inherited Destroy;
+end;
+
+function TTLazy<T>.GetIsLoaded: Boolean;
+begin
+  result := Assigned(FEntity);
 end;
 
 function TTLazy<T>.GetEntity: T;

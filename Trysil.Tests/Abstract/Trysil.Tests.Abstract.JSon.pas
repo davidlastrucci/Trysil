@@ -66,6 +66,9 @@ type
     procedure EntityToJSonMaxLevelsZeroEmitsOnlyLazyId;
 
     [Test]
+    procedure EntityToJSonMaxLevelsZeroDoesNotLoadLazy;
+
+    [Test]
     procedure EntityToJSonMaxLevelsOneEmitsRelatedEntity;
 
     [Test]
@@ -309,6 +312,44 @@ begin
   end;
 end;
 
+procedure TTAbstractJSonTests.EntityToJSonMaxLevelsZeroDoesNotLoadLazy;
+var
+  LCustomer: TTestCustomer;
+  LOrder: TTestOrder;
+  LConfig: TTJSonSerializerConfig;
+  LLoadedOrder: TTestLazyOrder;
+  LJSon: TJSonObject;
+begin
+  LConfig := TTJSonSerializerConfig.Create(0, False);
+
+  LCustomer := FJSonContext.CreateEntity<TTestCustomer>();
+  FCreatedEntities.Add(LCustomer);
+  LCustomer.Name := 'LevelParent';
+  FJSonContext.Insert<TTestCustomer>(LCustomer);
+
+  LOrder := FJSonContext.CreateEntity<TTestOrder>();
+  FCreatedEntities.Add(LOrder);
+  LOrder.CustomerID := LCustomer.ID;
+  LOrder.Amount := 10.0;
+  FJSonContext.Insert<TTestOrder>(LOrder);
+
+  LLoadedOrder := FJSonContext.Get<TTestLazyOrder>(LOrder.ID);
+  FCreatedEntities.Add(LLoadedOrder);
+  Assert.IsFalse(
+    LLoadedOrder.Customer.IsLoaded,
+    'Precondition: a freshly read entity must not have loaded the lazy');
+
+  LJSon := FJSonContext.EntityToJSonObject<TTestLazyOrder>(
+    LLoadedOrder, LConfig);
+  try
+    Assert.IsFalse(
+      LLoadedOrder.Customer.IsLoaded,
+      'Serializing at level zero must not resolve the lazy reference');
+  finally
+    LJSon.Free;
+  end;
+end;
+
 procedure TTAbstractJSonTests.EntityToJSonMaxLevelsOneEmitsRelatedEntity;
 var
   LCustomer: TTestCustomer;
@@ -347,6 +388,10 @@ begin
       'The related entity must be emitted when MaxLevels is one');
     Assert.AreEqual(
       'LevelParent', TJSonObject(LNested).GetValue<String>('name'));
+
+    Assert.IsTrue(
+      LLoadedOrder.Customer.IsLoaded,
+      'Serializing at level one must resolve the lazy reference');
   finally
     LJSon.Free;
   end;
