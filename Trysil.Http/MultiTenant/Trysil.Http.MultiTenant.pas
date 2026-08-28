@@ -34,6 +34,8 @@ type
     constructor Create(const AName: String);
     destructor Destroy; override;
 
+    procedure RegisterConnection;
+
     property Name: String read FName;
     property Config: T read FConfig;
     property Connection: TTTenantConnection read FConnection;
@@ -59,6 +61,8 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    function TryGet(
+      const AName: String; out ATenant: TTTenant<T>): Boolean;
     function GetOrAdd(const AName: String): TTTenant<T>;
     function GetAll: TArray<string>;
     procedure Remove(const AName: String);
@@ -75,14 +79,20 @@ begin
   inherited Create;
   FName := AName;
   FConfig := T.Create(AName);
-  FConnection := TTTenantConnection.Create(FConfig);
+  FConnection := nil;
 end;
 
 destructor TTTenant<T>.Destroy;
 begin
-  FConnection.Free;
+  if Assigned(FConnection) then
+    FConnection.Free;
   FConfig.Free;
   inherited Destroy;
+end;
+
+procedure TTTenant<T>.RegisterConnection;
+begin
+  FConnection := TTTenantConnection.Create(FConfig);
 end;
 
 { TTMultiTenant<T> }
@@ -125,23 +135,36 @@ begin
 end;
 
 function TTMultiTenant<T>.CreateTenant(const AName: String): TTTenant<T>;
+var
+  LFreeTenant: Boolean;
+  LTenant: TTTenant<T>;
 begin
-  FLock.BeginWrite;
+  LFreeTenant := True;
+  LTenant := TTTenant<T>.Create(AName);
   try
-    if not FTenants.TryGetValue(AName, result) then
-    begin
-      result := TTTenant<T>.Create(AName);
-      try
-        FTenants.Add(AName, result);
-        FOwner.Add(result);
-      except
-        result.Free;
-        raise;
+    FLock.BeginWrite;
+    try
+      if not FTenants.TryGetValue(AName, result) then
+      begin
+        LTenant.RegisterConnection;
+        FTenants.Add(AName, LTenant);
+        FOwner.Add(LTenant);
+        result := LTenant;
+        LFreeTenant := False;
       end;
+    finally
+      FLock.EndWrite;
     end;
   finally
-    FLock.EndWrite;
+    if LFreeTenant then
+      LTenant.Free;
   end;
+end;
+
+function TTMultiTenant<T>.TryGet(
+  const AName: String; out ATenant: TTTenant<T>): Boolean;
+begin
+  result := TryGetTenant(AName.ToLower(), ATenant);
 end;
 
 function TTMultiTenant<T>.GetOrAdd(const AName: String): TTTenant<T>;
@@ -178,8 +201,8 @@ begin
   try
     if FTenants.TryGetValue(LName, LTenant) then
     begin
-        FTenants.Remove(LName);
-        FOwner.Remove(LTenant);
+      FTenants.Remove(LName);
+      FOwner.Remove(LTenant);
     end;
   finally
     FLock.EndWrite;
