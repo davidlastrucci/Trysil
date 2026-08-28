@@ -65,6 +65,30 @@ TTFireDACConnectionPool.Instance.Config.Enabled := False;
 
 When pooling is enabled, calling `Create` on a connection class borrows a connection from the pool instead of opening a new one. The connection is returned to the pool when freed.
 
+### Per-connection pool parameters
+
+`Config` is the **default**, applied to every connection definition that does not declare its own. An application that hosts databases with different load profiles -- an application database fed by N request threads and a log database fed by one -- needs different limits per definition.
+
+Pool parameters therefore travel inside `TTFireDACConnectionParameters`, the record you already build to register a connection:
+
+```pascal
+LParameters := Default(TTFireDACConnectionParameters);
+LParameters.Driver := 'SQLite';
+LParameters.DatabaseName := 'log.db';
+LParameters.PoolParameters := TTFireDACPoolParameters.Create(True, 2);
+
+TTFireDACConnectionFactory.Instance.RegisterConnection('Log', LParameters);
+```
+
+`TTFireDACPoolParameters` is immutable and assigned whole. The two-argument constructor takes the FireDAC defaults for the timeouts; a four-argument overload sets them explicitly.
+
+`IsAssigned` separates "I said nothing, use the global `Config`" from "I decided". `Create(False, 1)` therefore **disables** pooling for that one connection rather than letting it inherit the global setting.
+
+The driver-level `RegisterConnection` overloads that take a `TStrings` do not go through the record and keep using the global `Config`.
+
+!!! warning "Zero the record"
+    A **local** record variable in Delphi only initialises its managed fields: strings yes, integers and booleans no. Without `Default(...)`, `PoolParameters.IsAssigned` can come out `True` by accident and the connection picks up garbage pool settings.
+
 ## Update Mode
 
 `TTUpdateMode` controls the WHERE clause generated for UPDATE and DELETE statements:

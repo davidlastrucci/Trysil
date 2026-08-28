@@ -54,6 +54,19 @@ end;
 - When the `ID` property on the lazy field changes, the cached entity is cleared and will be reloaded on next access.
 - **Soft-deleted parents resolve.** The lazy load uses `Get<T>(ID, True)`, so a parent that has been soft-deleted still resolves through its foreign key — a child referencing a logically deleted master is not left with a dangling `nil` reference.
 
+### IsLoaded
+
+`IsLoaded` reports whether the reference is **already in memory**, without triggering the load:
+
+```pascal
+if LEmployee.Company.IsLoaded then
+  ShowName(LEmployee.Company.Entity.Name);
+```
+
+It is the only way to inspect the state of a lazy field without causing the very query you are trying to avoid — reading `.Entity` to find out whether it is loaded loads it. Use it when deciding whether touching a relation is worth it (a grid that must not trigger N+1 queries), and in tests, where it is the assertion for "no query was issued".
+
+`TTLazyList<T>` does not expose `IsLoaded`.
+
 ## TTLazyList\<T\> (Collection)
 
 Use `TTLazyList<T>` for a one-to-many relationship where a parent entity has multiple children.

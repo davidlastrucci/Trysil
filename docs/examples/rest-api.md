@@ -285,6 +285,15 @@ begin
 end;
 ```
 
+The payload is `{"where": [{"columnName", "condition", "value"}], "orderBy": [...], "start", "limit", "includeDeleted"}`.
+
+The column name is checked against the table metadata and the operator against a closed list. The **value** never reaches the SQL text: each condition emits a `:p0`, `:p1` placeholder and the value is bound as a typed parameter, converted from the column's `TFieldType`. Beyond injection, this keeps the plan cache from filling with single-use plans -- one distinct SQL text per distinct value would evict the plans that matter, degrading the whole database and not just the endpoint.
+
+Anything that does not add up is a **400** at parse time, not a failed query: unknown column, operator outside the closed list, a value that does not match the column type, a non-object item inside `where`, or `LIKE` on a non-string column.
+
+!!! warning "Behaviour change"
+    `LIKE` on a non-string column used to go through, relying on the engine's implicit conversion. It now returns 400. A client filtering that way needs fixing.
+
 ### Read-Write Controller
 
 Extends the read-only controller with Insert, Update, Delete, and CreateNew:

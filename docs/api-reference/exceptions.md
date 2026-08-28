@@ -98,18 +98,22 @@ var LJson := LException.ToJSon;
 // {"status":404,"message":"Person not found"}
 ```
 
-If a `NestedException` exists, it is included:
+`ETHttpException.ToJSon` emits **only** `status` and `message`. The nested exception chain is deliberately left out: 4xx responses are reachable without authentication, and the chain carries the message of the original exception -- file paths, SQL text, connection details.
+
+The generic 500 path is different. `TExceptionHelper.ToJSon`, used for any exception that is not an `ETHttpException`, does include the chain, recursively:
 
 ```json
 {
-  "status": 404,
-  "message": "Person not found",
+  "status": 500,
+  "message": "Wrapper message",
   "nestedException": {
     "status": 500,
     "message": "Original error details"
   }
 }
 ```
+
+The full detail behind a 4xx belongs in the correlated log entry, keyed by `TaskID`, not in the response body.
 
 ### Convenience Subclasses
 

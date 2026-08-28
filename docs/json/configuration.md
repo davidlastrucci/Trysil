@@ -50,6 +50,9 @@ The `MaxLevels` parameter controls how deep the serializer traverses related ent
 | `2` | Current entity + two levels of nesting |
 | `n` | Current entity + `n` levels of nesting |
 
+!!! note "MaxLevels bounds queries, not just payload"
+    When the current level is past `MaxLevels`, the serializer does **not** resolve the lazy reference: it emits the foreign key id and moves on. The contract towards the client is unchanged, because the id is still written. What changes is the cost: on a list endpoint, `Create(0, False)` used to pay `rows x N:1 relations` queries whose results were then discarded. See [Lazy Loading](../guide/lazy-loading.md).
+
 ### Example
 
 Given an entity hierarchy `Company -> Department -> Employee`:
