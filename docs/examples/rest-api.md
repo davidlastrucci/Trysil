@@ -302,7 +302,10 @@ LHttpFilter := TTHttpFilter<T>.Create(
   TTHttpFilterParameters.Create(200, 16, 4, UserMaySeeDeleted));
 ```
 
-`limit` is clamped rather than trusted: absent, zero or negative means `MaxLimit`, and a larger value is capped to it. More `where` conditions or `orderBy` columns than the maximum is a 400. A negative ceiling means unlimited, for an endpoint that genuinely needs it, and a zero ceiling means the default, so a `TTHttpFilterParameters` that was never initialised does not silently remove the cap.
+`limit` is clamped rather than trusted: absent, zero or negative means `MaxLimit`, and a larger value is capped to it. More `where` conditions or `orderBy` columns than the maximum is a 400. A negative ceiling means unlimited, for an endpoint that genuinely needs it, and a zero ceiling means the default, so a `TTHttpFilterParameters` left at its **zero state** - `Default(TTHttpFilterParameters)`, or a field of a class, which the RTL zeroes - does not silently remove the cap.
+
+!!! warning "A local variable is not the zero state"
+    The record has no managed fields, so nothing zeroes it on the stack: a local you declare and never assign holds whatever was there. A garbage `MaxLimit` that happens to be negative is unlimited, and a garbage `IncludeDeleted` byte reads as `True`, which returns the soft-deleted rows. Initialise it with `Default(TTHttpFilterParameters)` or one of the constructors - never rely on the declaration alone.
 
 This governs the filter **built from the payload**. An endpoint that builds its own `TTFilter` is not affected: `SelectAll` passes `TTFilter.Empty`, which carries no pagination clause and returns every row by design. Whether that endpoint should paginate is the application's decision, not the framework's.
 
@@ -517,7 +520,7 @@ end;
 
 Overriding `WriteDiscarded` is optional: it is virtual but not abstract, and its default implementation already reports discards through `WriteAction`. The demo overrides it to give them their own table, which is also what a multi-tenant writer would do to route each host's losses to the right database.
 
-`WriteError` is the other optional override. Since the 500 response carries only a constant and the task id, the exception detail reaches the writer through it instead of the client. The demo does not override it, so unhandled errors land in `TLogAction` through the default implementation, correlated by `TaskID` with the request and response rows.
+`WriteError` is the other override, and the demo gives it its own `log.Errors` table alongside the other three. It matters more than it looks: since the 500 response carries only a constant and the task id, this is the **only** place the exception detail exists. The default implementation forwards the whole payload to `WriteAction`, whose text has no bounded length - an `Action` column sized for short messages rejects the row, the log thread swallows the database error to stay alive, and the trace disappears precisely when someone is looking for it. Either override `WriteError` or size the column for it.
 
 ## System Tray Application
 
