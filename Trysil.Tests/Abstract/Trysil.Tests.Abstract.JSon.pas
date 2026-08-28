@@ -63,6 +63,12 @@ type
     procedure EntityFromJSonRoundTripsLazyReferenceIdWithSqids;
 
     [Test]
+    procedure EntityToJSonMaxLevelsZeroEmitsOnlyLazyId;
+
+    [Test]
+    procedure EntityToJSonMaxLevelsOneEmitsRelatedEntity;
+
+    [Test]
     procedure ListToJSonReturnsValidArray;
 
     [Test]
@@ -262,6 +268,87 @@ begin
       'Lazy reference FK must survive the Sqids encode/decode round-trip');
   finally
     TTJSonSqids.Instance.UseSqids := False;
+  end;
+end;
+
+procedure TTAbstractJSonTests.EntityToJSonMaxLevelsZeroEmitsOnlyLazyId;
+var
+  LCustomer: TTestCustomer;
+  LOrder: TTestOrder;
+  LConfig: TTJSonSerializerConfig;
+  LLoadedOrder: TTestLazyOrder;
+  LJSon: TJSonObject;
+begin
+  LConfig := TTJSonSerializerConfig.Create(0, False);
+
+  LCustomer := FJSonContext.CreateEntity<TTestCustomer>();
+  FCreatedEntities.Add(LCustomer);
+  LCustomer.Name := 'LevelParent';
+  FJSonContext.Insert<TTestCustomer>(LCustomer);
+
+  LOrder := FJSonContext.CreateEntity<TTestOrder>();
+  FCreatedEntities.Add(LOrder);
+  LOrder.CustomerID := LCustomer.ID;
+  LOrder.Amount := 10.0;
+  FJSonContext.Insert<TTestOrder>(LOrder);
+
+  LLoadedOrder := FJSonContext.Get<TTestLazyOrder>(LOrder.ID);
+  FCreatedEntities.Add(LLoadedOrder);
+
+  LJSon := FJSonContext.EntityToJSonObject<TTestLazyOrder>(
+    LLoadedOrder, LConfig);
+  try
+    Assert.IsTrue(
+      LJSon.GetValue('customerID') <> nil,
+      'The foreign key must still be emitted when MaxLevels is zero');
+    Assert.IsTrue(
+      LJSon.GetValue('customer') = nil,
+      'The related entity must not be emitted when MaxLevels is zero');
+  finally
+    LJSon.Free;
+  end;
+end;
+
+procedure TTAbstractJSonTests.EntityToJSonMaxLevelsOneEmitsRelatedEntity;
+var
+  LCustomer: TTestCustomer;
+  LOrder: TTestOrder;
+  LConfig: TTJSonSerializerConfig;
+  LLoadedOrder: TTestLazyOrder;
+  LJSon: TJSonObject;
+  LNested: TJSonValue;
+begin
+  LConfig := TTJSonSerializerConfig.Create(1, False);
+
+  LCustomer := FJSonContext.CreateEntity<TTestCustomer>();
+  FCreatedEntities.Add(LCustomer);
+  LCustomer.Name := 'LevelParent';
+  FJSonContext.Insert<TTestCustomer>(LCustomer);
+
+  LOrder := FJSonContext.CreateEntity<TTestOrder>();
+  FCreatedEntities.Add(LOrder);
+  LOrder.CustomerID := LCustomer.ID;
+  LOrder.Amount := 10.0;
+  FJSonContext.Insert<TTestOrder>(LOrder);
+
+  LLoadedOrder := FJSonContext.Get<TTestLazyOrder>(LOrder.ID);
+  FCreatedEntities.Add(LLoadedOrder);
+
+  LJSon := FJSonContext.EntityToJSonObject<TTestLazyOrder>(
+    LLoadedOrder, LConfig);
+  try
+    Assert.IsTrue(
+      LJSon.GetValue('customerID') <> nil,
+      'The foreign key must be emitted when MaxLevels is one');
+
+    LNested := LJSon.GetValue('customer');
+    Assert.IsTrue(
+      LNested is TJSonObject,
+      'The related entity must be emitted when MaxLevels is one');
+    Assert.AreEqual(
+      'LevelParent', TJSonObject(LNested).GetValue<String>('name'));
+  finally
+    LJSon.Free;
   end;
 end;
 

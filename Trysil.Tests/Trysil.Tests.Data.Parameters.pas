@@ -16,6 +16,7 @@ uses
   System.SysUtils,
   System.DateUtils,
   System.TypInfo,
+  System.Rtti,
   Data.DB,
   DUnitX.TestFramework,
 
