@@ -28,16 +28,20 @@ type
   strict private
     FCriticalSection: TCriticalSection;
     FQueue: TQueue<TTHttpLogQueueValue>;
+    FCapacity: Integer;
+    FDiscarded: Integer;
 
+    function CanEnqueue: Boolean;
     function GetIsEmpty: Boolean;
   public
-    constructor Create;
+    constructor Create(const ACapacity: Integer);
     destructor Destroy; override;
 
     procedure Enqueue(const ARequest: TTHttpLogRequest); overload;
     procedure Enqueue(const AResponse: TTHttpLogResponse); overload;
 
     function Dequeue: TTHttpLogQueueValue;
+    function TakeDiscarded: Integer;
 
     property IsEmpty: Boolean read GetIsEmpty;
   end;
@@ -46,11 +50,13 @@ implementation
 
 { TTHttpLogQueue }
 
-constructor TTHttpLogQueue.Create;
+constructor TTHttpLogQueue.Create(const ACapacity: Integer);
 begin
   inherited Create;
   FCriticalSection := TCriticalSection.Create;
   FQueue := TQueue<TTHttpLogQueueValue>.Create;
+  FCapacity := ACapacity;
+  FDiscarded := 0;
 end;
 
 destructor TTHttpLogQueue.Destroy;
@@ -64,7 +70,10 @@ procedure TTHttpLogQueue.Enqueue(const ARequest: TTHttpLogRequest);
 begin
   FCriticalSection.Enter;
   try
-    FQueue.Enqueue(TTHttpLogQueueValue.Create(ARequest));
+    if CanEnqueue then
+      FQueue.Enqueue(TTHttpLogQueueValue.Create(ARequest))
+    else
+      Inc(FDiscarded);
   finally
     FCriticalSection.Leave;
   end;
@@ -74,7 +83,10 @@ procedure TTHttpLogQueue.Enqueue(const AResponse: TTHttpLogResponse);
 begin
   FCriticalSection.Enter;
   try
-    FQueue.Enqueue(TTHttpLogQueueValue.Create(AResponse));
+    if CanEnqueue then
+      FQueue.Enqueue(TTHttpLogQueueValue.Create(AResponse))
+    else
+      Inc(FDiscarded);
   finally
     FCriticalSection.Leave;
   end;
@@ -90,9 +102,30 @@ begin
   end;
 end;
 
+function TTHttpLogQueue.TakeDiscarded: Integer;
+begin
+  FCriticalSection.Enter;
+  try
+    result := FDiscarded;
+    FDiscarded := 0;
+  finally
+    FCriticalSection.Leave;
+  end;
+end;
+
+function TTHttpLogQueue.CanEnqueue: Boolean;
+begin
+  result := (FCapacity < 0) or (FQueue.Count < FCapacity);
+end;
+
 function TTHttpLogQueue.GetIsEmpty: Boolean;
 begin
-  result := (FQueue.Count = 0);
+  FCriticalSection.Enter;
+  try
+    result := (FQueue.Count = 0);
+  finally
+    FCriticalSection.Leave;
+  end;
 end;
 
 end.

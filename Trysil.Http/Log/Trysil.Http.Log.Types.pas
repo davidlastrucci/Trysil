@@ -27,6 +27,21 @@ type
 
 {$SCOPEDENUMS ON}
 
+{ TTHttpLogParameters }
+
+  TTHttpLogParameters = record
+  strict private
+    FThreadPoolSize: Integer;
+    FQueueCapacity: Integer;
+  public
+    constructor Create(
+      const AThreadPoolSize: Integer;
+      const AQueueCapacity: Integer);
+
+    property ThreadPoolSize: Integer read FThreadPoolSize;
+    property QueueCapacity: Integer read FQueueCapacity;
+  end;
+
 { TTHttpLogAction }
 
   TTHttpLogAction = record
@@ -182,6 +197,16 @@ type
 
 implementation
 
+{ TTHttpLogParameters }
+
+constructor TTHttpLogParameters.Create(
+  const AThreadPoolSize: Integer;
+  const AQueueCapacity: Integer);
+begin
+  FThreadPoolSize := AThreadPoolSize;
+  FQueueCapacity := AQueueCapacity;
+end;
+
 { TTHttpLogAction }
 
 constructor TTHttpLogAction.Create(const ATaskID: String; const AAction: String);
@@ -189,7 +214,6 @@ begin
   FTaskID := ATaskID;
   FDateTime := TTimeZone.Local.ToUniversalTime(Now);
   FAction := AAction;
-  Sleep(10);
 end;
 
 function TTHttpLogAction.ToJSon: String;

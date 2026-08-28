@@ -32,10 +32,14 @@ type
     FRttiLogWriter: TTHttpRttiLogWriter;
     FQueue: TTHttpLogQueue;
     FEvent: TEvent;
+
+    procedure WriteDiscarded(const AWriter: TTHttpLogAbstractWriter);
   strict protected
     procedure Execute; override;
   public
-    constructor Create(const ARttiLogWriter: TTHttpRttiLogWriter);
+    constructor Create(
+      const ARttiLogWriter: TTHttpRttiLogWriter;
+      const AQueueCapacity: Integer);
     destructor Destroy; override;
 
     procedure BeforeDestruction; override;
@@ -52,11 +56,13 @@ implementation
 
 { TTHttpLogThread }
 
-constructor TTHttpLogThread.Create(const ARttiLogWriter: TTHttpRttiLogWriter);
+constructor TTHttpLogThread.Create(
+  const ARttiLogWriter: TTHttpRttiLogWriter;
+  const AQueueCapacity: Integer);
 begin
   inherited Create(False);
   FRttiLogWriter := ARttiLogWriter;
-  FQueue := TTHttpLogQueue.Create;
+  FQueue := TTHttpLogQueue.Create(AQueueCapacity);
   FEvent := TEvent.Create;
   FreeOnTerminate := False;
 end;
@@ -74,6 +80,22 @@ begin
   FEvent.SetEvent;
   WaitFor;
   inherited BeforeDestruction;
+end;
+
+procedure TTHttpLogThread.WriteDiscarded(
+  const AWriter: TTHttpLogAbstractWriter);
+var
+  LDiscarded: Integer;
+begin
+  LDiscarded := FQueue.TakeDiscarded;
+  if LDiscarded > 0 then
+  begin
+    try
+      AWriter.WriteDiscarded(LDiscarded);
+    except
+      // Thread should not crash in case of exception
+    end;
+  end;
 end;
 
 procedure TTHttpLogThread.Add(const ARequest: TTHttpLogRequest);
@@ -110,6 +132,7 @@ begin
           // Thread should not crash in case of exception
         end;
       end;
+      WriteDiscarded(LWriter);
 
       if not Terminated then
         FEvent.WaitFor(20000);

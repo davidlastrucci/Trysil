@@ -36,7 +36,7 @@ type
 
     procedure RegisterWriter(
       const ALogWriter: TTHttpRttiLogWriter;
-      const ALogThreadPoolSize: Integer);
+      const AParameters: TTHttpLogParameters);
 
     procedure LogAction(const ATaskID: String; const AAction: String);
     procedure LogRequest(const ARequest: TTHttpRequest);
@@ -62,16 +62,22 @@ begin
 end;
 
 procedure TTHttpLog.RegisterWriter(
-  const ALogWriter: TTHttpRttiLogWriter; const ALogThreadPoolSize: Integer);
+  const ALogWriter: TTHttpRttiLogWriter;
+  const AParameters: TTHttpLogParameters);
+var
+  LQueueCapacity: Integer;
 begin
   FRttiLogWriter := ALogWriter;
   if Assigned(FRttiLogWriter) then
+  begin
+    LQueueCapacity := AParameters.QueueCapacity;
     FLogThreads.CreateItems(
       function: TTHttpLogThread
       begin
-        result := TTHttpLogThread.Create(ALogWriter);
+        result := TTHttpLogThread.Create(ALogWriter, LQueueCapacity);
       end,
-      ALogThreadPoolSize);
+      AParameters.ThreadPoolSize);
+  end;
 end;
 
 procedure TTHttpLog.LogAction(const ATaskID: String; const AAction: String);

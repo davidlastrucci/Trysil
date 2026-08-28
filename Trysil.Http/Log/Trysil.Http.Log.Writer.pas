@@ -15,7 +15,9 @@ interface
 uses
   System.SysUtils,
   System.Classes,
+  Trysil.Consts,
 
+  Trysil.Http.Log.Consts,
   Trysil.Http.Log.Types;
 
 type
@@ -29,8 +31,19 @@ type
       const ALogRequest: TTHttpLogRequest); virtual; abstract;
     procedure WriteResponse(
       const ALogResponse: TTHttpLogResponse); virtual; abstract;
+    procedure WriteDiscarded(const ACount: Integer); virtual;
   end;
 
 implementation
+
+{ TTHttpLogAbstractWriter }
+
+procedure TTHttpLogAbstractWriter.WriteDiscarded(
+  const ACount: Integer);
+begin
+  WriteAction(TTHttpLogAction.Create(
+    String.Empty,
+    Format(TTLanguage.Instance.Translate(SLogQueueDiscarded), [ACount])));
+end;
 
 end.

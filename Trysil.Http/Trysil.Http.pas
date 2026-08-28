@@ -33,6 +33,7 @@ uses
   Trysil.Http.Listener,
   Trysil.Http.Authentication,
   Trysil.Http.Log.Consts,
+  Trysil.Http.Log.Types,
   Trysil.Http.Log,
   Trysil.Http.Log.Writer;
 
@@ -44,6 +45,7 @@ type
   strict private
     const DefaultPort = 8022;
     const DefaultLogThreadPoolSize: Integer = 1;
+    const DefaultLogQueueCapacity: Integer = 10000;
   strict private
     FRttiLogWriter: TTHttpRttiLogWriter;
     FRttiAuthentication: TTHttpRttiAuthentication<C>;
@@ -92,6 +94,8 @@ type
     procedure RegisterLogWriter<W: TTHttpLogAbstractWriter>(); overload;
     procedure RegisterLogWriter<W: TTHttpLogAbstractWriter>(
       const ALogThreadPoolSize: Integer); overload;
+    procedure RegisterLogWriter<W: TTHttpLogAbstractWriter>(
+      const AParameters: TTHttpLogParameters); overload;
     procedure RegisterAuthentication<H: TTHttpAbstractAuthentication<C>>();
     procedure RegisterController<R: TTHttpController<C>>(); overload;
     procedure RegisterController<R: TTHttpController<C>>(
@@ -175,6 +179,13 @@ end;
 
 procedure TTHttpServer<C>.RegisterLogWriter<W>(
   const ALogThreadPoolSize: Integer);
+begin
+  RegisterLogWriter<W>(TTHttpLogParameters.Create(
+    ALogThreadPoolSize, DefaultLogQueueCapacity));
+end;
+
+procedure TTHttpServer<C>.RegisterLogWriter<W>(
+  const AParameters: TTHttpLogParameters);
 var
   LTypeInfo: PTypeInfo;
 begin
@@ -194,7 +205,7 @@ begin
     raise;
   end;
 
-  FLog.RegisterWriter(FRttiLogWriter, ALogThreadPoolSize);
+  FLog.RegisterWriter(FRttiLogWriter, AParameters);
 end;
 
 procedure TTHttpServer<C>.RegisterAuthentication<H>;

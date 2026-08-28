@@ -19,6 +19,7 @@ resourcestring
   SRegisterAuthError = 'Authentication registration error: %s';
   SRegisterController = 'Registered controller: %s';
   SRegisterControllerError = 'Controller registration error: %s';
+  SLogQueueDiscarded = 'Log queue full: %d entries discarded';
 
 implementation
 
