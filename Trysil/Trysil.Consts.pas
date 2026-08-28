@@ -121,6 +121,8 @@ resourcestring
     'RollbackOnDestroy is not supported inside another transaction.';
   SNotValidConnectionDriver = 'Connection not found for "%s" driver.';
   SNotValidConnection = 'Connection not found "%s".';
+  SConnectionAlreadyRegistered =
+    'Connection "%s" is already registered with other parameters.';
   SJoinEntityReadOnly = 'Join entities are read-only: Insert, Update, and Delete are not supported.';
   SUndeleteNotSupported = 'Undelete is not supported: the entity has no soft-delete column.';
 

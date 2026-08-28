@@ -603,17 +603,29 @@ procedure TTFireDACConnectionFactory.RegisterConnection(
   const AParameters: TTFireDACConnectionParameters);
 var
   LConnectionClass: TTFireDACConnectionClass;
+  LRegisteredClass: TTFireDACConnectionClass;
 begin
   LConnectionClass := GetDriverClass(AParameters.Driver);
+  FLock.BeginRead;
+  try
+    if FConnections.TryGetValue(AName.ToLower(), LRegisteredClass) and
+      (LRegisteredClass <> LConnectionClass) then
+      raise ETException.CreateFmt(
+        TTLanguage.Instance.Translate(SConnectionAlreadyRegistered),
+        [AName]);
+  finally
+    FLock.EndRead;
+  end;
+  TTFireDACConnectionPool.Instance.RegisterConfig(
+    AName, AParameters.PoolParameters);
+  LConnectionClass.InternalRegisterConnection(AName, AParameters);
+
   FLock.BeginWrite;
   try
     FConnections.AddOrSetValue(AName.ToLower(), LConnectionClass);
   finally
     FLock.EndWrite;
   end;
-  TTFireDACConnectionPool.Instance.RegisterConfig(
-    AName, AParameters.PoolParameters);
-  LConnectionClass.InternalRegisterConnection(AName, AParameters);
 end;
 
 function TTFireDACConnectionFactory.CreateConnection(

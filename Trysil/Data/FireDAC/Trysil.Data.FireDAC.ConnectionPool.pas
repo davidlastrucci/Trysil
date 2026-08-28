@@ -20,6 +20,8 @@ uses
   FireDAC.UI.Intf,
   FireDAC.Comp.Client,
 
+  Trysil.Consts,
+  Trysil.Exceptions,
   Trysil.Sync,
   Trysil.Data.FireDAC.Common;
 
@@ -84,11 +86,16 @@ type
     FConfig: TTFireDACConfigConnectionPool;
     FLock: TTMultiReadExclusiveWriteLock;
     FPoolParameters: TDictionary<String, TTFireDACPoolParameters>;
+    FRegistered: TDictionary<String, String>;
+
+    class function ParametersSignature(
+      const AParameters: TStrings): String; static;
 
     function GetPoolParameters(
       const AName: String): TTFireDACPoolParameters;
     procedure AddConnectionPooling(
       const AName: String; const AParameters: TStrings);
+
   public
     constructor Create;
     destructor Destroy; override;
@@ -183,10 +190,12 @@ begin
   FLock := TTMultiReadExclusiveWriteLock.Create;
   FPoolParameters :=
     TDictionary<String, TTFireDACPoolParameters>.Create;
+  FRegistered := TDictionary<String, String>.Create;
 end;
 
 destructor TTFireDACConnectionPool.Destroy;
 begin
+  FRegistered.Free;
   FPoolParameters.Free;
   FLock.Free;
   FConfig.Free;
@@ -248,24 +257,55 @@ begin
   end;
 end;
 
+class function TTFireDACConnectionPool.ParametersSignature(
+  const AParameters: TStrings): String;
+var
+  LValues: TStringList;
+begin
+  LValues := TStringList.Create;
+  try
+    LValues.CaseSensitive := True;
+    LValues.Duplicates := TDuplicates.dupAccept;
+    LValues.AddStrings(AParameters);
+    LValues.Sort;
+    result := LValues.Text;
+  finally
+    LValues.Free;
+  end;
+end;
+
 procedure TTFireDACConnectionPool.RegisterConnection(
   const AName: String;
   const ADriver: String;
   const AParameters: TStrings);
 var
   LParameters: TStrings;
+  LSignature: String;
+  LRegistered: String;
 begin
-  LParameters := TStringList.Create;
+  FLock.BeginWrite;
   try
-    LParameters.Add(Format('DriverID=%s', [ADriver]));
-    LParameters.AddStrings(AParameters);
-    AddConnectionPooling(AName, LParameters);
+    LParameters := TStringList.Create;
+    try
+      LParameters.Add(Format('DriverID=%s', [ADriver]));
+      LParameters.AddStrings(AParameters);
+      LSignature := ParametersSignature(LParameters);
+      AddConnectionPooling(AName, LParameters);
 
-    if Assigned(FManager.ConnectionDefs.FindConnectionDef(AName)) then
-      FManager.DeleteConnectionDef(AName);
-    FManager.AddConnectionDef(AName, ADriver, LParameters);
+      if not FRegistered.TryGetValue(AName.ToLower(), LRegistered) then
+      begin
+        FManager.AddConnectionDef(AName, ADriver, LParameters);
+        FRegistered.Add(AName.ToLower(), LSignature);
+      end
+      else if not LRegistered.Equals(LSignature) then
+        raise ETException.CreateFmt(
+          TTLanguage.Instance.Translate(SConnectionAlreadyRegistered),
+          [AName]);
+    finally
+      LParameters.Free;
+    end;
   finally
-    LParameters.Free;
+    FLock.EndWrite;
   end;
 end;
 
@@ -273,11 +313,13 @@ procedure TTFireDACConnectionPool.UnregisterConnection(const AName: String);
 begin
   FLock.BeginWrite;
   try
+    FManager.CloseConnectionDef(AName);
+    FManager.DeleteConnectionDef(AName);
     FPoolParameters.Remove(AName.ToLower());
+    FRegistered.Remove(AName.ToLower());
   finally
     FLock.EndWrite;
   end;
-  FManager.DeleteConnectionDef(AName);
 end;
 
 end.
