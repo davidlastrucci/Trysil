@@ -19,6 +19,7 @@ uses
   Trysil.Data.FireDAC.ConnectionPool,
   Trysil.Data.FireDAC.SqlServer,
 
+  Trysil.Tests.VendorLibrary,
   Trysil.Tests.Config;
 
 type
@@ -74,6 +75,8 @@ const
     ' ID INT NOT NULL,' +
     ' Title NVARCHAR(100),' +
     ' VersionID INT NOT NULL,' +
+    ' UpdatedAt DATETIME NULL,' +
+    ' UpdatedBy NVARCHAR(100),' +
     ' DeletedAt DATETIME NULL,' +
     ' DeletedBy NVARCHAR(100),' +
     ' PRIMARY KEY(ID))';
@@ -126,6 +129,7 @@ const
     ' UniqueID UNIQUEIDENTIFIER NOT NULL,' +
     ' Payload VARBINARY(MAX) NOT NULL,' +
     ' Price decimal(19,4) NOT NULL,' +
+    ' Notes nvarchar(max) NULL,' +
     ' OptLargeNumber BIGINT NULL,' +
     ' OptIsActive BIT NULL,' +
     ' OptBirthDate DATETIME NULL,' +
@@ -144,6 +148,15 @@ const
     ' VersionID INT NOT NULL,' +
     ' PRIMARY KEY(ID))';
 
+  DDL_SCHEMA_REPORT = 'CREATE SCHEMA Report';
+
+  DDL_REPORT_INVOICES =
+    'CREATE TABLE Report.Invoices (' +
+    ' ID INT NOT NULL,' +
+    ' Description NVARCHAR(100),' +
+    ' VersionID INT NOT NULL,' +
+    ' PRIMARY KEY(ID))';
+
 { TTSqlServerTestConnection }
 
 class procedure TTSqlServerTestConnection.DropTables;
@@ -158,6 +171,8 @@ begin
   FConnection.Execute('DROP TABLE IF EXISTS SimpleItems');
   FConnection.Execute('DROP TABLE IF EXISTS AllTypes');
   FConnection.Execute('DROP TABLE IF EXISTS NullablePrimitives');
+  FConnection.Execute('DROP TABLE IF EXISTS Report.Invoices');
+  FConnection.Execute('DROP SCHEMA IF EXISTS Report');
 end;
 
 class procedure TTSqlServerTestConnection.DropSequences;
@@ -172,6 +187,7 @@ begin
   FConnection.Execute('DROP SEQUENCE IF EXISTS SimpleItemsID');
   FConnection.Execute('DROP SEQUENCE IF EXISTS AllTypesID');
   FConnection.Execute('DROP SEQUENCE IF EXISTS NullablePrimitivesID');
+  FConnection.Execute('DROP SEQUENCE IF EXISTS InvoicesID');
 end;
 
 class procedure TTSqlServerTestConnection.CreateSequences;
@@ -196,6 +212,8 @@ begin
     'CREATE SEQUENCE AllTypesID AS int START WITH 1 INCREMENT BY 1');
   FConnection.Execute(
     'CREATE SEQUENCE NullablePrimitivesID AS int START WITH 1 INCREMENT BY 1');
+  FConnection.Execute(
+    'CREATE SEQUENCE InvoicesID AS int START WITH 1 INCREMENT BY 1');
 end;
 
 class procedure TTSqlServerTestConnection.CreateTables;
@@ -210,11 +228,15 @@ begin
   FConnection.Execute(DDL_SIMPLE_ITEMS);
   FConnection.Execute(DDL_ALL_TYPES);
   FConnection.Execute(DDL_NULLABLE_PRIMITIVES);
+  FConnection.Execute(DDL_SCHEMA_REPORT);
+  FConnection.Execute(DDL_REPORT_INVOICES);
 end;
 
 class procedure TTSqlServerTestConnection.Initialize;
 begin
   TTFireDACConnectionPool.Instance.Config.Enabled := False;
+  TTTestVendorLibrary.Apply('SqlServer', TTSqlServerConnection.Driver);
+  TTSqlServerParams.Instance.Encrypt := TTSqlServerEncrypt.No;
   TTSqlServerConnection.RegisterConnection(
     'TrysilSqlServerTests',
     TTTestConfig.GetDatabaseParam('SqlServer', 'host'),

@@ -15,6 +15,10 @@ interface
 uses
   System.Classes,
   System.SysUtils,
+{$IFDEF MSWINDOWS}
+  Winapi.Windows,
+{$ENDIF}
+  System.SyncObjs,
   System.Generics.Collections,
   FireDAC.Stan.Consts,
   FireDAC.UI.Intf,
@@ -76,7 +80,8 @@ type
   TTFireDACConnectionPool = class
   strict private
     class var FInstance: TTFireDACConnectionPool;
-    class var FInstanceLock: TObject;
+    class var FInstanceLock: TSpinLock;
+    class var FDestroyed: Boolean;
 
     class constructor ClassCreate;
     class destructor ClassDestroy;
@@ -90,6 +95,13 @@ type
 
     class function ParametersSignature(
       const AParameters: TStrings): String; static;
+    class function SameParameters(
+      const ALeft: TTFireDACPoolParameters;
+      const ARight: TTFireDACPoolParameters): Boolean; static;
+
+    function IsPoolParametersChange(
+      const AKey: String;
+      const AParameters: TTFireDACPoolParameters): Boolean;
 
     function GetPoolParameters(
       const AName: String): TTFireDACPoolParameters;
@@ -148,7 +160,7 @@ end;
 constructor TTFireDACConfigConnectionPool.Create;
 begin
   inherited Create;
-  FEnabled := False;
+  FEnabled := True;
   FMaximumItems := C_FD_PoolMaximumItems;
   FCleanupTimeout := C_FD_PoolCleanupTimeout;
   FExpireTimeout := C_FD_PoolExpireTimeout;
@@ -159,26 +171,37 @@ end;
 class constructor TTFireDACConnectionPool.ClassCreate;
 begin
   FInstance := nil;
-  FInstanceLock := TObject.Create;
+  FDestroyed := False;
+  FInstanceLock := TSpinLock.Create(False);
 end;
 
 class destructor TTFireDACConnectionPool.ClassDestroy;
 begin
-  if Assigned(FInstance) then
-    FInstance.Free;
-  FInstanceLock.Free;
+  FInstanceLock.Enter;
+  try
+    FDestroyed := True;
+    if Assigned(FInstance) then
+      FInstance.Free;
+    FInstance := nil;
+  finally
+    FInstanceLock.Exit;
+  end;
 end;
 
 class function TTFireDACConnectionPool.GetInstance:
   TTFireDACConnectionPool;
 begin
-  TMonitor.Enter(FInstanceLock);
+  FInstanceLock.Enter;
   try
+    if FDestroyed then
+      raise ETException.CreateFmt(
+        TTLanguage.Instance.Translate(SInstanceDestroyed), [ClassName]);
+
     if not Assigned(FInstance) then
       FInstance := TTFireDACConnectionPool.Create;
     result := FInstance;
   finally
-    TMonitor.Exit(FInstanceLock);
+    FInstanceLock.Exit;
   end;
 end;
 
@@ -216,7 +239,7 @@ function TTFireDACConnectionPool.GetPoolParameters(
 begin
   FLock.BeginRead;
   try
-    if not FPoolParameters.TryGetValue(AName.ToLower(), result) then
+    if not FPoolParameters.TryGetValue(AName.ToLowerInvariant, result) then
       result := TTFireDACPoolParameters.Create(
         FConfig.Enabled,
         FConfig.MaximumItems,
@@ -243,14 +266,44 @@ begin
   end;
 end;
 
+class function TTFireDACConnectionPool.SameParameters(
+  const ALeft: TTFireDACPoolParameters;
+  const ARight: TTFireDACPoolParameters): Boolean;
+begin
+  result :=
+    (ALeft.Enabled = ARight.Enabled) and
+    (ALeft.MaximumItems = ARight.MaximumItems) and
+    (ALeft.CleanupTimeout = ARight.CleanupTimeout) and
+    (ALeft.ExpireTimeout = ARight.ExpireTimeout);
+end;
+
+function TTFireDACConnectionPool.IsPoolParametersChange(
+  const AKey: String;
+  const AParameters: TTFireDACPoolParameters): Boolean;
+var
+  LCurrent: TTFireDACPoolParameters;
+begin
+  result := not (
+    FPoolParameters.TryGetValue(AKey, LCurrent) and
+    SameParameters(LCurrent, AParameters));
+end;
+
 procedure TTFireDACConnectionPool.RegisterConfig(
   const AName: String; const AParameters: TTFireDACPoolParameters);
+var
+  LKey: String;
 begin
   if AParameters.IsAssigned then
   begin
+    LKey := AName.ToLowerInvariant;
     FLock.BeginWrite;
     try
-      FPoolParameters.AddOrSetValue(AName.ToLower(), AParameters);
+      if FRegistered.ContainsKey(LKey) and
+        IsPoolParametersChange(LKey, AParameters) then
+        raise ETException.CreateFmt(
+          TTLanguage.Instance.Translate(SPoolConfigConnectionRegistered), [
+            AName]);
+      FPoolParameters.AddOrSetValue(LKey, AParameters);
     finally
       FLock.EndWrite;
     end;
@@ -292,15 +345,14 @@ begin
       LSignature := ParametersSignature(LParameters);
       AddConnectionPooling(AName, LParameters);
 
-      if not FRegistered.TryGetValue(AName.ToLower(), LRegistered) then
+      if not FRegistered.TryGetValue(AName.ToLowerInvariant, LRegistered) then
       begin
         FManager.AddConnectionDef(AName, ADriver, LParameters);
-        FRegistered.Add(AName.ToLower(), LSignature);
+        FRegistered.Add(AName.ToLowerInvariant, LSignature);
       end
       else if not LRegistered.Equals(LSignature) then
         raise ETException.CreateFmt(
-          TTLanguage.Instance.Translate(SConnectionAlreadyRegistered),
-          [AName]);
+          TTLanguage.Instance.Translate(SConnectionAlreadyRegistered), [AName]);
     finally
       LParameters.Free;
     end;
@@ -315,8 +367,8 @@ begin
   try
     FManager.CloseConnectionDef(AName);
     FManager.DeleteConnectionDef(AName);
-    FPoolParameters.Remove(AName.ToLower());
-    FRegistered.Remove(AName.ToLower());
+    FPoolParameters.Remove(AName.ToLowerInvariant);
+    FRegistered.Remove(AName.ToLowerInvariant);
   finally
     FLock.EndWrite;
   end;

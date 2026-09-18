@@ -42,7 +42,7 @@ Since `TTJSonContext` extends `TTContext`, you can use all standard ORM methods 
 |---|---|
 | `Trysil.JSon.Context` | `TTJSonContext` -- main API class |
 | `Trysil.JSon.Types` | `TTJSonSerializerConfig` and type definitions |
-| `Trysil.JSon.Attributes` | `TJSonIgnore` attribute |
+| `Trysil.JSon.Attributes` | `TJSonIgnore`, `TJSonIgnoreSerialize`, `TJSonIgnoreDeserialize` attributes |
 | `Trysil.JSon.Events` | Custom serialization/deserialization hooks |
 | `Trysil.JSon.Serializer` | Internal serializer implementation |
 | `Trysil.JSon.Deserializer` | Internal deserializer implementation |
@@ -65,7 +65,7 @@ begin
     LConfig := TTJSonSerializerConfig.Create(-1, False);
 
     // Load all persons
-    LPersons := TTList<TPerson>.Create;
+    LPersons := LContext.CreateEntityList<TPerson>();
     try
       LContext.SelectAll<TPerson>(LPersons);
 

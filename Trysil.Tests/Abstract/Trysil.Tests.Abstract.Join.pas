@@ -21,6 +21,7 @@ uses
   Trysil.Generics.Collections,
   Trysil.Filter,
   Trysil.Context,
+  Trysil.Lazy,
 
   Trysil.Tests.Abstract.Base,
   Trysil.Tests.Model;
@@ -53,6 +54,9 @@ type
     procedure JoinIdentityMapIsSkipped;
 
     [Test]
+    procedure JoinGetByKeyQualifiesTheKey;
+
+    [Test]
     procedure LeftJoinReturnsRowWithNullJoinedFields;
 
     [Test]
@@ -78,6 +82,15 @@ type
 
     [Test]
     procedure RawSelectWithSubqueryReturnsResults;
+
+    [Test]
+    procedure AJoinListOwnsWhatTheIdentityMapDoesNot;
+
+    [Test]
+    procedure AJoinEntityCreatedByHandIsFreedOnce;
+
+    [Test]
+    procedure ALazyOnAJoinEntityKeepsACloneOfItsOwn;
   end;
 
 implementation
@@ -609,6 +622,136 @@ begin
     Assert.AreEqual('Alpha', LList[0].CustomerName);
   finally
     LList.Free;
+  end;
+end;
+
+procedure TTAbstractJoinTests.JoinGetByKeyQualifiesTheKey;
+var
+  LCustomer: TTestCustomer;
+  LOrder: TTestOrder;
+  LReport: TTestOrderReport;
+begin
+  LCustomer := FContext.CreateEntity<TTestCustomer>();
+  LCustomer.Name := 'Ambiguous';
+  LCustomer.Email := 'ambiguous@example.com';
+  FContext.Insert<TTestCustomer>(LCustomer);
+
+  LOrder := FContext.CreateEntity<TTestOrder>();
+  LOrder.CustomerID := LCustomer.ID;
+  LOrder.Amount := 12.5;
+  FContext.Insert<TTestOrder>(LOrder);
+
+  LReport := FContext.Get<TTestOrderReport>(LOrder.ID);
+  try
+    Assert.IsNotNull(
+      LReport,
+      'Both joined tables have an ID, so a WHERE that names the key without ' +
+      'its table is ambiguous on every engine. Writes on a join entity are ' +
+      'refused by CheckReadWrite, reads by key were not');
+    Assert.AreEqual('Ambiguous', LReport.CustomerName);
+  finally
+    FContext.FreeEntity<TTestOrderReport>(LReport);
+  end;
+end;
+
+procedure TTAbstractJoinTests.AJoinListOwnsWhatTheIdentityMapDoesNot;
+var
+  LCustomer: TTestCustomer;
+  LOrder: TTestOrder;
+  LList: TTList<TTestOwnedOrderReport>;
+  LCount: Integer;
+begin
+  Assert.IsTrue(
+    FContext.UseIdentityMap,
+    'Precondition: the identity map is on, which is what TTContext.Create ' +
+    'gives you when you do not ask');
+
+  LCustomer := FContext.CreateEntity<TTestCustomer>();
+  LCustomer.Name := 'OwnedByTheList';
+  FContext.Insert<TTestCustomer>(LCustomer);
+
+  LOrder := FContext.CreateEntity<TTestOrder>();
+  LOrder.CustomerID := LCustomer.ID;
+  LOrder.Amount := 7.0;
+  FContext.Insert<TTestOrder>(LOrder);
+
+  LList := FContext.CreateEntityList<TTestOwnedOrderReport>();
+  try
+    FContext.SelectAll<TTestOwnedOrderReport>(LList);
+    LCount := LList.Count;
+    Assert.AreEqual<Integer>(1, LCount, 'Precondition: the join returns a row');
+    TTestOwnedOrderReport.ResetDestroyedCount;
+  finally
+    LList.Free;
+  end;
+
+  Assert.AreEqual<Integer>(
+    LCount,
+    TTestOwnedOrderReport.DestroyedCount,
+    'The identity map never registers a join entity, so the list that ' +
+    'carries it has to own it: with the map on nobody was freeing these');
+end;
+
+procedure TTAbstractJoinTests.AJoinEntityCreatedByHandIsFreedOnce;
+var
+  LContext: TTContext;
+  LReport: TTestOwnedOrderReport;
+begin
+  LContext := TTContext.Create(Connection);
+  try
+    Assert.IsTrue(
+      LContext.UseIdentityMap,
+      'Precondition: the identity map is on, which is the default');
+
+    LReport := LContext.CreateEntity<TTestOwnedOrderReport>();
+    TTestOwnedOrderReport.ResetDestroyedCount;
+    LContext.FreeEntity<TTestOwnedOrderReport>(LReport);
+
+    Assert.AreEqual<Integer>(
+      1,
+      TTestOwnedOrderReport.DestroyedCount,
+      'FreeEntity owns a join entity, because the map never registers one');
+  finally
+    LContext.Free;
+  end;
+
+  Assert.AreEqual<Integer>(
+    1,
+    TTestOwnedOrderReport.DestroyedCount,
+    'and the context must not release it a second time: CreateEntity was ' +
+    'the one registration that did not ask about joins, so the map held ' +
+    'what the caller had already been told to free');
+end;
+
+procedure TTAbstractJoinTests.ALazyOnAJoinEntityKeepsACloneOfItsOwn;
+var
+  LContext: TTContext;
+  LReport: TTestOwnedOrderReport;
+  LLazy: TTLazy<TTestOwnedOrderReport>;
+  LSame: Boolean;
+begin
+  LContext := TTContext.Create(Connection);
+  try
+    LReport := LContext.CreateEntity<TTestOwnedOrderReport>();
+    LLazy := TTLazy<TTestOwnedOrderReport>.Create(LContext, 'ID');
+    try
+      LLazy.Entity := LReport;
+      LSame := LLazy.Entity = LReport;
+    finally
+      LLazy.Free;
+    end;
+
+    if not LSame then
+      LContext.FreeEntity<TTestOwnedOrderReport>(LReport);
+
+    Assert.IsFalse(
+      LSame,
+      'A lazy reference keeps the instance it was given only when the ' +
+      'identity map owns it, and the map never registers a join entity: ' +
+      'keeping it meant the lazy released, on its own destruction, an ' +
+      'object the caller had made and still held');
+  finally
+    LContext.Free;
   end;
 end;
 

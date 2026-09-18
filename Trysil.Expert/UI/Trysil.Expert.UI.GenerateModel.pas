@@ -1,7 +1,7 @@
 ﻿(*
 
   Trysil
-  Copyright � David Lastrucci
+  Copyright © David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)

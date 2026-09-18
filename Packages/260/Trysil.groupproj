@@ -7,31 +7,31 @@
             <Dependencies/>
         </Projects>
         <Projects Include="Trysil.FirebirdSQL260.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil260.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.PostgreSQL260.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil260.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.SQLite260.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil260.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.SqlServer260.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil260.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.InterBase260.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil260.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.MariaDB260.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil260.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.Oracle260.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil260.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.JSon260.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil260.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.Http260.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil260.dproj;Trysil.JSon260.dproj</Dependencies>
         </Projects>
     </ItemGroup>
     <ProjectExtensions>
@@ -142,8 +142,14 @@
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='All target and configuration'">
-        <BuildGroupProject Include="Trysil.Http260.dproj">
-            <ProjectGuid>{2D74EAA0-2535-47FF-9D69-FA7224FD6BBC}</ProjectGuid>
+        <BuildGroupProject Include="Trysil260.dproj">
+            <ProjectGuid>{B6FD39E4-C126-42E8-8EA7-DEB202BBB75B}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.FirebirdSQL260.dproj">
+            <ProjectGuid>{62BF20DF-01B4-465D-8ACE-A0C10D86E553}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
@@ -154,8 +160,14 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Trysil260.dproj">
-            <ProjectGuid>{B6FD39E4-C126-42E8-8EA7-DEB202BBB75B}</ProjectGuid>
+        <BuildGroupProject Include="Trysil.SQLite260.dproj">
+            <ProjectGuid>{7F2FFCEA-58A0-439B-8F1F-9DEF45BE58AF}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.SqlServer260.dproj">
+            <ProjectGuid>{076A0DC6-D4F0-4287-901D-68DF90E12475}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
@@ -184,20 +196,8 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Trysil.SqlServer260.dproj">
-            <ProjectGuid>{076A0DC6-D4F0-4287-901D-68DF90E12475}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Trysil.SQLite260.dproj">
-            <ProjectGuid>{7F2FFCEA-58A0-439B-8F1F-9DEF45BE58AF}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Trysil.FirebirdSQL260.dproj">
-            <ProjectGuid>{62BF20DF-01B4-465D-8ACE-A0C10D86E553}</ProjectGuid>
+        <BuildGroupProject Include="Trysil.Http260.dproj">
+            <ProjectGuid>{2D74EAA0-2535-47FF-9D69-FA7224FD6BBC}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>

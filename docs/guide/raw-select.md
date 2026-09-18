@@ -63,9 +63,9 @@ end;
 
 | Aspect | Behavior |
 |---|---|
-| **Read-only** | Results cannot be inserted, updated, or deleted |
+| **Read-only** | Results must not be written - inserted, updated, deleted or undeleted: nothing stops a row whose class carries a key and a version column, or only a key under `KeyOnly` (and a `[TDeletedAt]` column for an undelete), see [the context](context.md#rawselect) |
 | **Identity map** | Not used |
-| **Lazy loading** | Not available |
+| **Lazy loading** | Lazy members are mapped as on any read: a row that carries one goes in a `TTList<T>` that owns nothing and is freed with `FreeClone<T>` (see [who frees what](context.md#who-frees-what)) |
 | **Validation** | Not executed |
 | **Events** | Not fired |
 | **Mapping** | Based on `[TColumn]` -- SQL column name must match exactly |

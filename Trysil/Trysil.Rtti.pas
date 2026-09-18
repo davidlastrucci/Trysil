@@ -20,6 +20,7 @@ uses
   System.Rtti,
 
   Trysil.Consts,
+  Trysil.Classes,
   Trysil.Types,
   Trysil.Exceptions,
   Trysil.Sync,
@@ -90,6 +91,7 @@ type
     function ExecuteGetValueOrDefault(const AMethod: TRttiMethod): String;
   public
     function NullableValueToString: String;
+    function NullableValue: TValue;
 
     property IsNull: Boolean read GetIsNull;
     property IsNullable: Boolean read GetIsNullable;
@@ -145,6 +147,7 @@ type
     FName: String;
     FTypeInfo: PTypeInfo;
     FIsClass: Boolean;
+    FIsNullable: Boolean;
     FRttiType: TRttiType;
 
     function InternalCreateObject(
@@ -175,6 +178,7 @@ type
     procedure CloneLazyID(const AClone: TObject; const AOriginal: TObject);
 
     function GetAttribute<T: TCustomAttribute>: T;
+    function AttributeNames: TArray<String>;
 
     property Name: String read FName;
     property RttiType: TRttiType read FRttiType;
@@ -221,6 +225,7 @@ type
 
     FType: TRttiType;
     FID: TRttiField;
+    FIDProperty: TRttiProperty;
     FProperty: TRttiProperty;
 
     procedure SearchType;
@@ -284,11 +289,17 @@ type
   strict private
     FContext: TRttiContext;
     FType: TRttiType;
+    FDefaultConstructor: TRttiMethod;
+    FContextConstructor: TRttiMethod;
+    FResolvedContext: TObject;
+    FContextResolved: Boolean;
 
     function SearchConstructor: TRttiMethod; overload;
+    function GetDefaultConstructor: TRttiMethod;
     function InternalCreateEntity(): T; overload;
 
     function SearchConstructor(const AContext: TObject): TRttiMethod; overload;
+    function GetContextConstructor(const AContext: TObject): TRttiMethod;
     function InternalCreateEntity(const AContext: TObject): T; overload;
   public
     constructor Create;
@@ -382,6 +393,7 @@ end;
 class destructor TTIsNullCache.ClassDestroy;
 begin
   FInstance.Free;
+  FInstance := nil;
 end;
 
 function TTIsNullCache.GetMethodName: String;
@@ -404,6 +416,7 @@ end;
 class destructor TTValueOrDefaultCache.ClassDestroy;
 begin
   FInstance.Free;
+  FInstance := nil;
 end;
 
 function TTValueOrDefaultCache.GetMethodName: String;
@@ -457,6 +470,14 @@ var
 begin
   LMethod := TTValueOrDefaultCache.Instance.GetValueOrDefault(Self.TypeInfo);
   result := ExecuteGetValueOrDefault(LMethod);
+end;
+
+function TTValueHelper.NullableValue: TValue;
+var
+  LMethod: TRttiMethod;
+begin
+  LMethod := TTValueOrDefaultCache.Instance.GetValueOrDefault(Self.TypeInfo);
+  result := LMethod.Invoke(Self, []);
 end;
 
 {$IF CompilerVersion < 35} // Delphi 11 Alexandria
@@ -551,8 +572,8 @@ class function TTRtti.IsSameType(
 begin
   // RTTI, Package & Generics
   if FHasPackages then
-    result := String.Compare(
-      AClass.QualifiedClassName, AType.QualifiedName, True) = 0
+    result := TTIdentifier.Same(
+      AClass.QualifiedClassName, AType.QualifiedName)
   else
     result := AClass.ClassInfo = AType.Handle;
 end;
@@ -562,7 +583,7 @@ class function TTRtti.IsSameType(
 begin
   // RTTI, Package & Generics
   if FHasPackages then
-    result := String.Compare(String(ATypeInfo.Name), AType.Name, True) = 0
+    result := TTIdentifier.Same(String(ATypeInfo.Name), AType.Name)
   else
     result := ATypeInfo = AType.Handle;
 end;
@@ -741,7 +762,31 @@ end;
 
 function TTRttiMember.GetIsNullable: Boolean;
 begin
-  result := String(FTypeInfo.Name).StartsWith('TTNullable<');
+  result := FIsNullable;
+end;
+
+function TTRttiMember.AttributeNames: TArray<String>;
+var
+  LAttribute: TCustomAttribute;
+  LClass: TClass;
+  LNames: TList<String>;
+begin
+  LNames := TList<String>.Create;
+  try
+    for LAttribute in GetAttributes do
+    begin
+      LClass := LAttribute.ClassType;
+      while Assigned(LClass) and LClass.InheritsFrom(TCustomAttribute) do
+      begin
+        if not LNames.Contains(LClass.QualifiedClassName) then
+          LNames.Add(LClass.QualifiedClassName);
+        LClass := LClass.ClassParent;
+      end;
+    end;
+    result := LNames.ToArray;
+  finally
+    LNames.Free;
+  end;
 end;
 
 function TTRttiMember.GetAttribute<T>: T;
@@ -766,6 +811,7 @@ begin
   FRttiField := ARttiField;
   FRttiType := FRttiField.FieldType;
   FIsClass := (FRttiType.TypeKind = TTypeKind.tkClass);
+  FIsNullable := String(FTypeInfo.Name).StartsWith('TTNullable<');
 end;
 
 function TTRttiField.GetValue(const AInstance: TObject): TTValue;
@@ -799,6 +845,7 @@ begin
   FRttiProperty := ARttiProperty;
   FRttiType := FRttiProperty.PropertyType;
   FIsClass := (FRttiType.TypeKind = TTypeKind.tkClass);
+  FIsNullable := String(FTypeInfo.Name).StartsWith('TTNullable<');
 end;
 
 function TTRttiProperty.GetValue(const AInstance: TObject): TTValue;
@@ -836,6 +883,7 @@ begin
   FType := nil;
   FProperty := nil;
   FID := nil;
+  FIDProperty := nil;
 end;
 
 destructor TTRttiLazy.Destroy;
@@ -885,6 +933,7 @@ end;
 procedure TTRttiLazy.SearchID;
 begin
   FID := FType.GetField('FID');
+  FIDProperty := FType.GetProperty('ID');
 end;
 
 function TTRttiLazy.GetObjectValue: TObject;
@@ -915,8 +964,11 @@ end;
 
 procedure TTRttiLazy.SetID(const AValue: TTPrimaryKey);
 begin
-  if Assigned(FObject) and Assigned(FID) then
-    FID.SetValue(FObject, AValue);
+  if Assigned(FObject) then
+    if Assigned(FIDProperty) then
+      FIDProperty.SetValue(FObject, TValue.From<TTPrimaryKey>(AValue))
+    else if Assigned(FID) then
+      FID.SetValue(FObject, AValue);
 end;
 
 class function TTRttiLazy.IsLazy(const AObject: TObject): Boolean;
@@ -925,14 +977,15 @@ var
   LType: TRttiType;
 begin
   result := False;
-  if not Assigned(AObject) then
-    Exit;
-  LContext := TRttiContext.Create;
-  try
-    LType := LContext.GetType(AObject.ClassInfo);
-    result := IsLazyType(LType);
-  finally
-    LContext.Free;
+  if Assigned(AObject) then
+  begin
+    LContext := TRttiContext.Create;
+    try
+      LType := LContext.GetType(AObject.ClassInfo);
+      result := IsLazyType(LType);
+    finally
+      LContext.Free;
+    end;
   end;
 end;
 
@@ -1087,6 +1140,10 @@ begin
   inherited Create;
   FContext := TRttiContext.Create;
   FType := FContext.GetType(TTFactory.Instance.GetType<T>());
+  FDefaultConstructor := nil;
+  FContextConstructor := nil;
+  FResolvedContext := nil;
+  FContextResolved := False;
 end;
 
 destructor TTRttiEntity<T>.Destroy;
@@ -1117,13 +1174,20 @@ begin
       TTLanguage.Instance.Translate(STypeHasNotValidConstructor), [FType.Name]);
 end;
 
+function TTRttiEntity<T>.GetDefaultConstructor: TRttiMethod;
+begin
+  if not Assigned(FDefaultConstructor) then
+    FDefaultConstructor := SearchConstructor;
+  result := FDefaultConstructor;
+end;
+
 function TTRttiEntity<T>.InternalCreateEntity: T;
 var
   LConstructor: TRttiMethod;
   LValue: TTValue;
 begin
   result := nil;
-  LConstructor := SearchConstructor;
+  LConstructor := GetDefaultConstructor;
   LValue := LConstructor.Invoke(FType.AsInstance.MetaclassType, []);
   if LValue.IsType<T>() then
     result := LValue.AsType<T>();
@@ -1149,13 +1213,25 @@ begin
     end;
 end;
 
+function TTRttiEntity<T>.GetContextConstructor(
+  const AContext: TObject): TRttiMethod;
+begin
+  if (not FContextResolved) or (FResolvedContext <> AContext) then
+  begin
+    FContextConstructor := SearchConstructor(AContext);
+    FResolvedContext := AContext;
+    FContextResolved := True;
+  end;
+  result := FContextConstructor;
+end;
+
 function TTRttiEntity<T>.InternalCreateEntity(const AContext: TObject): T;
 var
   LConstructor: TRttiMethod;
   LValue: TTValue;
 begin
   result := nil;
-  LConstructor := SearchConstructor(AContext);
+  LConstructor := GetContextConstructor(AContext);
   if Assigned(LConstructor) then
   begin
     LValue := LConstructor.Invoke(FType.AsInstance.MetaclassType, [AContext]);

@@ -81,7 +81,7 @@ constructor TMainForm.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   TTSqlServerConnection.RegisterConnection(
-    'Test', '(local)\Test', 'sa', 'Sviluppo.2022', 'Test');
+    'Test', '(local)\Test', 'sa', 'PASSWORD', 'Test');
 
   FConnection := TTSqlServerConnection.Create('Test');
   FContext := TTContext.Create(FConnection);

@@ -22,6 +22,8 @@ uses
   Trysil.Resolver,
   Trysil.JSon.Context,
 
+  Trysil.Http.Consts,
+  Trysil.Http.Exceptions,
   Trysil.Http.Resolver;
 
 type
@@ -30,6 +32,7 @@ type
 
   TTHttpContext = class(TTJSonContext)
   strict protected
+    procedure CheckSave; override;
     function CreateResolver: TTResolver; override;
   public
     function GetID<T: class>(const AEntity: T): TTPrimaryKey;
@@ -42,6 +45,12 @@ type
 implementation
 
 { TTHttpContext }
+
+procedure TTHttpContext.CheckSave;
+begin
+  raise ETHttpServerException.Create(
+    TTLanguage.Instance.Translate(SNoSaveOnHttpContext));
+end;
 
 function TTHttpContext.CreateResolver: TTResolver;
 begin
@@ -67,13 +76,14 @@ begin
   LTableMap := TTMapper.Instance.Load<T>();
   LEntity := Get<T>(AID);
   if not Assigned(LEntity) then
-    raise ETConcurrentUpdateException.Create(TTLanguage.Instance.Translate(SRecordChanged));
+    raise ETHttpNotFound.CreateFmt(
+      TTLanguage.Instance.Translate(SEntityNotFound), [AID]);
   try
     if Assigned(LTableMap.VersionColumn) then
       LTableMap.VersionColumn.Member.SetValue(LEntity, AVersionID);
     Delete<T>(LEntity);
   finally
-    LEntity.Free;
+    FreeEntity<T>(LEntity);
   end;
 end;
 

@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright ï¿½ David Lastrucci
+  Copyright © David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -59,7 +59,8 @@ implementation
 function TTFirebirdSQLSequenceSyntax.GetSequenceSyntax: String;
 begin
   result := Format(
-    'SELECT GEN_ID(%s, 1) ID FROM RDB$DATABASE', [FTableMap.SequenceName]);
+    'SELECT GEN_ID(%s, 1) ID FROM RDB$DATABASE', [
+      FConnection.GetDatabaseObjectName(FTableMap.SequenceName)]);
 end;
 
 { TTFirebirdSQLSelectSyntax }
@@ -73,7 +74,7 @@ begin
   try
     LResult.Append('SELECT ');
     if not FFilter.Paging.IsEmpty then
-      LResult.AppendFormat(' %s', [GetFilterPagingSyntax()]);
+      LResult.AppendFormat('%s ', [GetFilterPagingSyntax()]);
     LResult.Append(GetColumns());
     LResult.AppendFormat(' FROM %s', [
       FConnection.GetDatabaseObjectName(FTableMap.Name)]);

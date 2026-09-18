@@ -1,7 +1,7 @@
 ﻿(*
 
   Trysil
-  Copyright � David Lastrucci
+  Copyright © David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -15,9 +15,12 @@ interface
 uses
   System.Classes,
   System.SysUtils,
+  System.TypInfo,
+  System.Generics.Collections,
   Data.DB,
 
   Trysil.Consts,
+  Trysil.Classes,
   Trysil.Types,
   Trysil.Exceptions,
   Trysil.Logger,
@@ -46,6 +49,23 @@ type
     function GetColumnMap(
       const ATableMap: TTTableMap; const AColumnName: String): TTColumnMap;
 
+    function GetConnectionID: String; override;
+    procedure ProbeFailed(
+      const ATableMap: TTTableMap;
+      const AException: Exception);
+    function GetSqlReference(
+      const AColumnMap: TTColumnMap;
+      const AColumnName: String): String;
+    procedure ReadMetadata(
+      const ATableMap: TTTableMap;
+      const ATableMetadata: TTTableMetadata;
+      const ADataset: TDataset);
+    procedure CheckParameterNames(
+      const ATableMetadata: TTTableMetadata);
+    procedure InternalGetMetadata(
+      const ATableMap: TTTableMap;
+      const ATableMetadata: TTTableMetadata;
+      const ASyntax: TTMetadataSyntax);
     function GetDatabaseVersion: String; override;
 
     function CheckExists(
@@ -53,6 +73,12 @@ type
       const ATableName: String;
       const AColumnName: String;
       const AEntity: TObject): Boolean; override;
+
+    procedure InternalStartTransaction; virtual; abstract;
+    procedure InternalCommitTransaction; virtual; abstract;
+    procedure InternalRollbackTransaction; virtual; abstract;
+
+    procedure RollbackFailedCommit;
   public
     constructor Create;
     destructor Destroy; override;
@@ -63,7 +89,7 @@ type
 
     function SelectCount(
       const ATableMap: TTTableMap;
-      const AFilter: TTFilter): Integer; override;
+      const AFilter: TTFilter): Int64; override;
 
     function CreateReader(
       const ATableMap: TTTableMap;
@@ -82,6 +108,10 @@ type
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata): TTAbstractCommand; override;
 
+    function CreateUndeleteCommand(
+      const ATableMap: TTTableMap;
+      const ATableMetadata: TTTableMetadata): TTAbstractCommand; override;
+
     function CreateDeleteCommand(
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata): TTAbstractCommand; override;
@@ -92,7 +122,6 @@ type
 
     function GetSequenceID(const ATableMap: TTTableMap): TTPrimaryKey; override;
 
-    property ConnectionID: String read FConnectionID;
     property SyntaxClasses: TTSyntaxClasses read FSyntaxClasses;
   end;
 
@@ -157,9 +186,18 @@ type
 { TTGenericUpdateCommand }
 
   TTGenericUpdateCommand = class(TTGenericCommand)
+  strict protected
+    function GetSyntaxClass: TTCommandSyntaxClass; virtual;
   public
     procedure Execute(
       const AEntity: TObject; const AEvent: TTEvent); override;
+  end;
+
+{ TTGenericUndeleteCommand }
+
+  TTGenericUndeleteCommand = class(TTGenericUpdateCommand)
+  strict protected
+    function GetSyntaxClass: TTCommandSyntaxClass; override;
   end;
 
 { TTGenericSoftDeleteCommand }
@@ -206,7 +244,24 @@ begin
     raise ETException.CreateFmt(
       TTLanguage.Instance.Translate(SInTransaction), ['StartTransaction']);
   TTLogger.Instance.LogStartTransaction(FConnectionID);
+  InternalStartTransaction;
   inherited StartTransaction;
+end;
+
+procedure TTGenericConnection.RollbackFailedCommit;
+begin
+  TTLogger.Instance.LogRollback(FConnectionID);
+  try
+    try
+      if InTransaction then
+        InternalRollbackTransaction;
+    except
+      on E: Exception do
+        TTLogger.Instance.LogError(FConnectionID, E.Message);
+    end;
+  finally
+    inherited RollbackTransaction;
+  end;
 end;
 
 procedure TTGenericConnection.CommitTransaction;
@@ -215,6 +270,12 @@ begin
     raise ETException.CreateFmt(
       TTLanguage.Instance.Translate(SNotInTransaction), ['CommitTransaction']);
   TTLogger.Instance.LogCommit(FConnectionID);
+  try
+    InternalCommitTransaction;
+  except
+    RollbackFailedCommit;
+    raise;
+  end;
   inherited CommitTransaction;
 end;
 
@@ -224,11 +285,15 @@ begin
     raise ETException.CreateFmt(
       TTLanguage.Instance.Translate(SNotInTransaction), ['RollbackTransaction']);
   TTLogger.Instance.LogRollback(FConnectionID);
-  inherited RollbackTransaction;
+  try
+    InternalRollbackTransaction;
+  finally
+    inherited RollbackTransaction;
+  end;
 end;
 
 function TTGenericConnection.SelectCount(
-  const ATableMap: TTTableMap; const AFilter: TTFilter): Integer;
+  const ATableMap: TTTableMap; const AFilter: TTFilter): Int64;
 var
   LSyntax: TTSelectCountSyntax;
   LSql: String;
@@ -239,7 +304,7 @@ begin
     LSql := LSyntax.SQL;
     LDataset := CreateDataSet(LSql, LSyntax.Filter);
     try
-      result := LDataset.Fields[0].AsInteger;
+      result := LDataset.Fields[0].AsLargeInt;
     finally
       LDataset.Free;
     end;
@@ -273,6 +338,14 @@ begin
     Self, ATableMap, ATableMetadata, FUpdateMode);
 end;
 
+function TTGenericConnection.CreateUndeleteCommand(
+  const ATableMap: TTTableMap;
+  const ATableMetadata: TTTableMetadata): TTAbstractCommand;
+begin
+  result := TTGenericUndeleteCommand.Create(
+    Self, ATableMap, ATableMetadata, FUpdateMode);
+end;
+
 function TTGenericConnection.CreateSoftDeleteCommand(
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata): TTAbstractCommand;
@@ -291,16 +364,8 @@ end;
 
 function TTGenericConnection.FindColumnMap(
   const ATableMap: TTTableMap; const AColumnName: String): TTColumnMap;
-var
-  LColumn: TTColumnMap;
 begin
-  result := nil;
-  for LColumn in ATableMap.Columns do
-    if String.Compare(LColumn.LookupName, AColumnName, True) = 0 then
-    begin
-      result := LColumn;
-      Break;
-    end;
+  result := ATableMap.Columns.Find(AColumnName);
 end;
 
 function TTGenericConnection.GetColumnMap(
@@ -310,6 +375,11 @@ begin
   if not Assigned(result) then
     raise ETException.CreateFmt(
       TTLanguage.Instance.Translate(SColumnNotFound), [AColumnName]);
+end;
+
+function TTGenericConnection.GetConnectionID: String;
+begin
+  result := FConnectionID;
 end;
 
 function TTGenericConnection.GetDatabaseVersion: String;
@@ -333,31 +403,103 @@ begin
   end;
 end;
 
+procedure TTGenericConnection.ProbeFailed(
+  const ATableMap: TTTableMap; const AException: Exception);
+begin
+  raise ETException.CreateFmt(
+    TTLanguage.Instance.Translate(SMetadataProbeFailed), [
+      String(ATableMap.EntityTypeInfo^.Name),
+      ATableMap.Name,
+      AException.Message]);
+end;
+
+function TTGenericConnection.GetSqlReference(
+  const AColumnMap: TTColumnMap; const AColumnName: String): String;
+begin
+  if Assigned(AColumnMap) then
+    result := GetDatabaseObjectName(AColumnMap.SqlReference)
+  else
+    result := GetDatabaseObjectName(AColumnName);
+end;
+
+procedure TTGenericConnection.ReadMetadata(
+  const ATableMap: TTTableMap;
+  const ATableMetadata: TTTableMetadata;
+  const ADataset: TDataset);
+var
+  LIndex: Integer;
+  LColumnMap: TTColumnMap;
+begin
+  for LIndex := 0 to ADataset.FieldDefs.Count - 1 do
+  begin
+    LColumnMap := FindColumnMap(ATableMap, ADataset.FieldDefs[LIndex].Name);
+    ATableMetadata.Columns.Add(
+      ADataset.FieldDefs[LIndex].Name,
+      GetSqlReference(LColumnMap, ADataset.FieldDefs[LIndex].Name),
+      TTColumnType.Create(
+        ADataset.FieldDefs[LIndex].DataType,
+        ADataset.FieldDefs[LIndex].Size,
+        ADataset.FieldDefs[LIndex].Precision),
+      LColumnMap);
+  end;
+end;
+
+procedure TTGenericConnection.CheckParameterNames(
+  const ATableMetadata: TTTableMetadata);
+var
+  LColumn: TTColumnMetadata;
+  LName: String;
+  LNames: TDictionary<String, String>;
+begin
+  LNames := TDictionary<String, String>.Create(TTIdentifier.Comparer);
+  try
+    for LColumn in ATableMetadata.Columns do
+    begin
+      LName := GetParameterName(LColumn.ColumnName);
+      if LNames.ContainsKey(LName) then
+        raise ETException.CreateFmt(
+          TTLanguage.Instance.Translate(SDuplicateParameterName), [
+            LNames[LName],
+            LColumn.ColumnName,
+            LName]);
+      LNames.Add(LName, LColumn.ColumnName);
+    end;
+  finally
+    LNames.Free;
+  end;
+end;
+
+procedure TTGenericConnection.InternalGetMetadata(
+  const ATableMap: TTTableMap;
+  const ATableMetadata: TTTableMetadata;
+  const ASyntax: TTMetadataSyntax);
+var
+  LDataset: TDataset;
+begin
+  LDataset := CreateDataSet(ASyntax.SQL, ASyntax.Filter);
+  try
+    ReadMetadata(ATableMap, ATableMetadata, LDataset);
+    CheckParameterNames(ATableMetadata);
+  finally
+    LDataset.Free;
+  end;
+end;
+
 procedure TTGenericConnection.GetMetadata(
   const ATableMap: TTTableMap;
   const ATableMetadata: TTTableMetadata);
 var
   LSyntax: TTMetadataSyntax;
-  LDataset: TDataset;
-  LIndex: Integer;
-  LColumnMap: TTColumnMap;
 begin
   LSyntax := FSyntaxClasses.Metadata.Create(Self, ATableMap);
   try
-    LDataset := CreateDataSet(LSyntax.SQL, TTFilter.Empty);
     try
-      for LIndex := 0 to LDataset.FieldDefs.Count - 1 do
-      begin
-        LColumnMap := FindColumnMap(
-          ATableMap, LDataset.FieldDefs[LIndex].Name);
-        ATableMetadata.Columns.Add(
-          LDataset.FieldDefs[LIndex].Name,
-          LDataset.FieldDefs[LIndex].DataType,
-          LDataset.FieldDefs[LIndex].Size,
-          LColumnMap);
-      end;
-    finally
-      LDataset.Free;
+      InternalGetMetadata(ATableMap, ATableMetadata, LSyntax);
+    except
+      on E: ETException do
+        raise;
+      on E: Exception do
+        ProbeFailed(ATableMap, E);
     end;
   finally
     LSyntax.Free;
@@ -369,13 +511,20 @@ function TTGenericConnection.GetSequenceID(
 var
   LSyntax: TTSequenceSyntax;
   LDataset: TDataset;
+  LValue: Int64;
 begin
   LSyntax := FSyntaxClasses.Sequence.Create(Self, ATableMap);
   try
     LDataset := CreateDataSet(LSyntax.SQL, TTFilter.Empty);
     try
       TTLogger.Instance.LogSyntax(FConnectionID, LSyntax.SQL);
-      result := LDataset.Fields[0].AsInteger;
+      LValue := LDataset.Fields[0].AsLargeInt;
+      if (LValue < Low(TTPrimaryKey)) or (LValue > High(TTPrimaryKey)) then
+        raise ETException.CreateFmt(
+          TTLanguage.Instance.Translate(SSequenceOutOfRange), [
+            ATableMap.Name,
+            LValue]);
+      result := TTPrimaryKey(LValue);
     finally
       LDataset.Free;
     end;
@@ -476,7 +625,10 @@ procedure TTGenericCommand.AfterExecute(
   const AEventMethodType: TTEventMethodType);
 begin
   if Assigned(AEvent) then
+  begin
+    AEvent.CommandExecuted;
     AEvent.DoAfter;
+  end;
   InvokeEvents(AEntity, AEventMethodType);
 end;
 
@@ -534,12 +686,17 @@ end;
 
 { TTGenericUpdateCommand }
 
+function TTGenericUpdateCommand.GetSyntaxClass: TTCommandSyntaxClass;
+begin
+  result := FConnection.SyntaxClasses.Update;
+end;
+
 procedure TTGenericUpdateCommand.Execute(
   const AEntity: TObject; const AEvent: TTEvent);
 var
   LSyntax: TTCommandSyntax;
 begin
-  LSyntax := FConnection.SyntaxClasses.Update.Create(FConnection, FTableMap);
+  LSyntax := GetSyntaxClass.Create(FConnection, FTableMap);
   try
     ExecuteCommand(
       LSyntax.GetSqlSyntax(GetWhereColumns),
@@ -550,6 +707,13 @@ begin
   finally
     LSyntax.Free;
   end;
+end;
+
+{ TTGenericUndeleteCommand }
+
+function TTGenericUndeleteCommand.GetSyntaxClass: TTCommandSyntaxClass;
+begin
+  result := FConnection.SyntaxClasses.Undelete;
 end;
 
 { TTGenericSoftDeleteCommand }

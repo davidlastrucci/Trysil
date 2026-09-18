@@ -29,7 +29,7 @@ type
 
   TTAbstractNullablePrimitivesTests = class(TTAbstractBaseTests)
   strict protected
-    procedure ClearTables; override;
+    procedure DeleteTables; override;
   public
     [Setup]
     procedure Setup; override;
@@ -60,7 +60,7 @@ implementation
 
 { TTAbstractNullablePrimitivesTests }
 
-procedure TTAbstractNullablePrimitivesTests.ClearTables;
+procedure TTAbstractNullablePrimitivesTests.DeleteTables;
 begin
   inherited;
   Connection.Execute('DELETE FROM NullablePrimitives');

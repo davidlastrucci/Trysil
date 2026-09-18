@@ -35,18 +35,18 @@ LServer.CorsConfig.AllowHeaders := 'X-Tenant, X-Request-ID';
 
 The `TTHttpCors` module handles CORS transparently:
 
-1. **Preflight requests:** When a browser sends an `OPTIONS` request to check CORS policy, Trysil responds automatically with `Access-Control-Allow-Headers` and `Access-Control-Allow-Methods` built from the registered controller for that URI. You do not need to define `OPTIONS` endpoints in your controllers.
+1. **Preflight requests:** When a browser sends an `OPTIONS` request to check CORS policy, Trysil answers automatically with `Access-Control-Allow-Headers`, `Access-Control-Allow-Methods` and `Access-Control-Max-Age`. The answer is **the same for every URI**, whether or not a controller is registered for it: `Content-Type` and `Authorization` among the headers, and every method of `TTHttpMethodType` among the verbs. It is deliberately not accurate - a preflight that described the route would tell an anonymous caller which routes exist and which verbs they answer, and the browser needs none of that: it sends the preflight and then the real request, and it is there that the router decides `405` and authentication decides `401`. You do not need to define `OPTIONS` endpoints in your controllers, and you cannot: no attribute produces one.
 
 2. **Regular requests:** Only `Access-Control-Allow-Origin` is added, since the other CORS headers are meaningful on preflight responses alone.
 
-3. **Controller registration:** When you register your controllers, `TTHttpCors` internally registers matching CORS controllers for their URI patterns. Each one collects the HTTP methods of the endpoint plus the request headers it accepts. This ensures that preflight requests are handled for every endpoint you define.
+3. **Controller registration:** Registering a controller also registers it with `TTHttpCors`. Since 2.0.0 the preflight answer does not depend on that registry - it is the same for every URI - so nothing about it varies with what you register.
 
 ## Typical Setup
 
 ```pascal
 var LServer := TTHttpServer<TAPIContext>.Create;
 try
-  LServer.BaseUri := 'http://localhost';
+  LServer.BaseUri := '/api';
   LServer.Port := 8080;
 
   // Allow requests from any origin during development

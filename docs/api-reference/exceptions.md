@@ -41,6 +41,8 @@ Validation errors are collected in `TTValidationErrors` before being raised as t
 
 Raised when an optimistic locking conflict is detected — the record's version in the database does not match the version in the entity (another transaction modified it).
 
+It is also what an `Update`, or a second `Delete`, on a **soft-deleted** row raises. The `WHERE` clause carries `DeletedAt IS NULL` - for the entity that declares the pair; the guard comes from the mapping, not from the table - so a deleted row is unreachable: zero rows affected therefore means the version moved **or** the row is no longer available, and the two are not distinguishable from the exception. `Undelete` is the way back, and it is the one operation the guard does not apply to.
+
 ```pascal
 try
   LContext.Update<TPerson>(LPerson);
@@ -56,16 +58,25 @@ end;
 
 ### ETDataIntegrityException
 
-Raised when a referential integrity constraint is violated — typically when deleting an entity that has dependent child records (with `TRelation` cascade set to `False`).
+Raised when a write reports **more than one affected row**. Every `UPDATE` and
+`DELETE` Trysil issues is addressed by the primary key, so a second row means
+the key does not identify a row on its own - a duplicate, or a mapping pointing
+at the wrong table. Zero rows is the other case and raises
+`ETConcurrentUpdateException` instead.
 
 ```pascal
 try
-  LContext.Delete<TCompany>(LCompany);
+  LContext.Update<TPerson>(LPerson);
 except
   on E: ETDataIntegrityException do
-    ShowMessage('Cannot delete: company has employees.');
+    ShowMessage('The primary key matched more than one row.');
 end;
 ```
+
+!!! warning "A blocked cascade delete does not raise this"
+    Deleting an entity whose `[TRelation]` has cascade `False` while children
+    exist raises a plain **`ETException`**, not this one. Catch `ETException`
+    for that case, or check the relation yourself before deleting.
 
 ---
 
@@ -129,6 +140,7 @@ The exception class, its message and the recorded nested class and message go to
 | `ETHttpNotFound` | 404 | Resource not found |
 | `ETHttpMethodNotAllowed` | 405 | HTTP method not supported for this endpoint |
 | `ETHttpConflict` | 409 | Version conflict or integrity violation |
+| `ETHttpUnprocessableContent` | 422 | The body parses but the entity refuses it |
 | `ETHttpInternalServerError` | 500 | Unexpected server error |
 
 All subclasses have simplified constructors (no status code parameter):
@@ -144,7 +156,12 @@ raise ETHttpUnauthorized.Create('Invalid token');
 raise ETHttpConflict.Create('The record was modified by another user');
 ```
 
-`ETHttpConflict` is the one to raise when an `ETConcurrentUpdateException` or an `ETDataIntegrityException` reaches a controller: the mapping is still yours to write, but the status code has a name.
+Two of them the listener raises for you. An `ETConcurrentUpdateException` that escapes a controller becomes **409**, and an `ETValidationException` becomes **422**, both carrying the original message in the usual `status` / `message` body. Neither used to be an `ETHttpException`, so both came out as a `500` with no detail - and a `500` tells a client to retry the same request, which is exactly wrong for both. A controller that wants a different status still raises `ETHttpConflict` or `ETHttpBadRequest` itself; an `ETDataIntegrityException` is not mapped, because whether a foreign key violation is the caller's fault or the schema's is not something the library can decide. Both are logged with `LogAction`, not `LogError`: they are the caller's problem, not a server fault, but a 409 or a 422 that nobody can find afterwards is not much use either.
+
+!!! warning "The 422 body carries your column names"
+    The message of an `ETValidationException` is the list of failures, one per line, each naming the column that failed. That name is `[TDisplayName]` when the field declares one and **the database column name** when it does not, so on a route that anyone can call - a sign-up form, a contact request - the reply enumerates your schema, and validators like `[TMaxLength]` add the bound as well. That is also the point of a 422: the client has to know which field to fix. Declare `[TDisplayName]` on the fields whose column names you would rather not publish.
+
+    What never reaches the client is an exception raised **inside** a validator. Those used to be caught and added to the error list, which put a FireDAC message - constraint, table, statement - into the same body. They now propagate, and a validator that fails is a `500`.
 
 ### TTHttpErrorResponse
 
@@ -165,20 +182,33 @@ It replaces the old `TExceptionHelper` class helper, which serialized the except
 
 ```
 Exception
-└── ETException
-    ├── ETValidationException
-    ├── ETConcurrentUpdateException
-    ├── ETDataIntegrityException
-    └── ETHttpServerException
-    └── ETHttpException
-        ├── ETHttpBadRequest (400)
-        ├── ETHttpUnauthorized (401)
-        ├── ETHttpForbidden (403)
-        ├── ETHttpNotFound (404)
-        ├── ETHttpMethodNotAllowed (405)
-        ├── ETHttpConflict (409)
-        └── ETHttpInternalServerError (500)
++-- ETException
+|   +-- ETValidationException
+|   +-- ETConcurrentUpdateException
+|   +-- ETDataIntegrityException
+|   +-- ETJSonException
+|   |   +-- ETJSonServerException
+|   +-- ETTenantUnavailable
+|   |   +-- ETTenantNameNotValid
+|   +-- ETHttpServerException
+|   +-- ETHttpException
+|       +-- ETHttpBadRequest (400)
+|       +-- ETHttpUnauthorized (401)
+|       +-- ETHttpForbidden (403)
+|       +-- ETHttpNotFound (404)
+|       +-- ETHttpMethodNotAllowed (405)
+|       +-- ETHttpConflict (409)
+|       +-- ETHttpContentTooLarge (413)
+|       +-- ETHttpUnprocessableContent (422)
+|       +-- ETHttpInternalServerError (500)
++-- ETHttpJWTException
 ```
+
+!!! warning "`ETHttpJWTException` is not an `ETException`"
+    It descends straight from `Exception`, so `on E: ETException` does **not**
+    catch it. Name it explicitly, or catch `Exception`, wherever you build or
+    verify a token by hand. Inside a controller the listener turns it into a
+    `500`, like any other unmapped exception.
 
 ## Best Practices
 

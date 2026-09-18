@@ -16,8 +16,11 @@ uses
   System.SysUtils,
   System.Classes,
 
+  Trysil.Consts,
   Trysil.Types,
+  Trysil.Exceptions,
   Trysil.Filter,
+  Trysil.Metadata,
   Trysil.Rtti,
   Trysil.Context,
   Trysil.Mapping,
@@ -49,6 +52,10 @@ type
   strict private
     FEntity: T;
 
+    function EntityID(
+      const ATableMap: TTTableMap; const AEntity: T): TTPrimaryKey;
+    function AdoptOrClone(
+      const ATableMap: TTTableMap; const AEntity: T): T;
     function GetIsLoaded: Boolean;
     function GetEntity: T;
     procedure SetEntity(const AEntity: T);
@@ -69,9 +76,12 @@ type
   METHODS([vcProtected, vcPrivate])}
   TTLazyList<T: class> = class(TTAbstractLazy<T>)
   strict private
-    FList: TTObjectLazyList<T>;
+    FList: TTObjectList<T>;
+
+    function InternalCreateList: TTObjectList<T>;
 
     procedure PrepareList;
+    function SqlReference: String;
     function GetList: TTList<T>;
   strict protected
     function AddEntity: T;
@@ -116,16 +126,19 @@ begin
 end;
 
 procedure TTLazy<T>.NotifyChangedID;
+var
+  LOldEntity: T;
 begin
-  if (not FContext.UseIdentityMap) and Assigned(FEntity) then
-    FEntity.Free;
+  LOldEntity := FEntity;
   FEntity := nil;
+  if Assigned(LOldEntity) then
+    FContext.FreeEntity<T>(LOldEntity);
 end;
 
 destructor TTLazy<T>.Destroy;
 begin
-  if (not FContext.UseIdentityMap) and Assigned(FEntity) then
-    FEntity.Free;
+  if Assigned(FEntity) then
+    FContext.FreeEntity<T>(FEntity);
   inherited Destroy;
 end;
 
@@ -136,37 +149,50 @@ end;
 
 function TTLazy<T>.GetEntity: T;
 begin
-  if not Assigned(FEntity) then
+  if (not Assigned(FEntity)) and (FID <> 0) then
     FEntity := FContext.Get<T>(FID, True);
   result := FEntity;
+end;
+
+function TTLazy<T>.EntityID(
+  const ATableMap: TTTableMap; const AEntity: T): TTPrimaryKey;
+var
+  LValue: TTValue;
+begin
+  result := FID;
+  if not Assigned(AEntity) then
+    result := 0
+  else if Assigned(ATableMap.PrimaryKey) then
+  begin
+    LValue := ATableMap.PrimaryKey.Member.GetValue(AEntity);
+    result := LValue.AsType<TTPrimaryKey>();
+  end;
+end;
+
+function TTLazy<T>.AdoptOrClone(
+  const ATableMap: TTTableMap; const AEntity: T): T;
+begin
+  result := AEntity;
+  if Assigned(AEntity) and (not FContext.IdentityMapOwns(ATableMap)) then
+    result := FContext.CloneEntity<T>(AEntity);
 end;
 
 procedure TTLazy<T>.SetEntity(const AEntity: T);
 var
   LTableMap: TTTableMap;
-  LValue: TTValue;
+  LID: TTPrimaryKey;
+  LOldEntity: T;
 begin
-  if FEntity <> AEntity then
+  if (FEntity <> AEntity) or (not Assigned(AEntity)) then
   begin
-    if (not FContext.UseIdentityMap) and Assigned(FEntity) then
-      FEntity.Free;
-    FEntity := nil;
+    LTableMap := TTMapper.Instance.Load<T>();
+    LID := EntityID(LTableMap, AEntity);
+    LOldEntity := FEntity;
+    FEntity := AdoptOrClone(LTableMap, AEntity);
+    FID := LID;
 
-    if not Assigned(AEntity) then
-      FID := 0
-    else
-    begin
-      if FContext.UseIdentityMap then
-        FEntity := AEntity
-      else
-        FEntity := FContext.CloneEntity<T>(AEntity);
-      LTableMap := TTMapper.Instance.Load<T>();
-      if Assigned(LTableMap.PrimaryKey) then
-      begin
-        LValue := LTableMap.PrimaryKey.Member.GetValue(FEntity);
-        FID := LValue.AsType<TTPrimaryKey>();
-      end;
-    end;
+    if Assigned(LOldEntity) then
+      FContext.FreeEntity<T>(LOldEntity);
   end;
 end;
 
@@ -176,13 +202,30 @@ constructor TTLazyList<T>.Create(
   const AContext: TTContext; const AColumnName: String);
 begin
   inherited Create(AContext, AColumnName);
-  FList := TTObjectLazyList<T>.Create(not FContext.UseIdentityMap);
+  FList := InternalCreateList;
 end;
 
 destructor TTLazyList<T>.Destroy;
 begin
   FList.Free;
   inherited Destroy;
+end;
+
+function TTLazyList<T>.InternalCreateList: TTObjectList<T>;
+var
+  LList: TTList<T>;
+  LClassName: String;
+begin
+  LList := FContext.CreateEntityList<T>();
+  if LList is TTObjectList<T> then
+    result := TTObjectList<T>(LList)
+  else
+  begin
+    LClassName := LList.ClassName;
+    LList.Free;
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SNotValidEntityList), [LClassName]);
+  end;
 end;
 
 procedure TTLazyList<T>.PrepareList;
@@ -209,6 +252,25 @@ begin
   FList.IsValid := False;
 end;
 
+function TTLazyList<T>.SqlReference: String;
+var
+  LTableMap: TTTableMap;
+  LColumnMetadata: TTColumnMetadata;
+begin
+  LTableMap := TTMapper.Instance.Load<T>();
+  if LTableMap.HasJoins then
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SDetailColumnOnJoinEntity), [
+        FColumnName,
+        LTableMap.Name]);
+
+  LColumnMetadata := FContext.GetMetadata<T>().Columns.Find(FColumnName);
+  if Assigned(LColumnMetadata) then
+    result := LColumnMetadata.SqlReference
+  else
+    result := FContext.GetDatabaseObjectName(FColumnName);
+end;
+
 function TTLazyList<T>.GetList: TTList<T>;
 var
   LFilter: TTFilter;
@@ -216,7 +278,7 @@ begin
   if not FList.IsValid then
   begin
     LFilter := TTFilter.Create(
-      Format('%s = %s', [FColumnName, TTPrimaryKeyHelper.SqlValue(FID)]));
+      Format('%s = %s', [SqlReference, TTPrimaryKeyHelper.SqlValue(FID)]));
     FContext.Select<T>(FList, LFilter);
     FList.IsValid := True;
   end;

@@ -1,7 +1,7 @@
 ﻿(*
 
   Trysil
-  Copyright � David Lastrucci
+  Copyright © David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -16,8 +16,11 @@ uses
   System.SysUtils,
   System.Classes,
   System.Generics.Collections,
+  Trysil.Consts,
   Trysil.Exceptions,
   Trysil.Sync,
+
+  Trysil.Http.Consts,
 
   Trysil.Http.MultiTenant.Config,
   Trysil.Http.MultiTenant.Connection;
@@ -56,6 +59,25 @@ type
 
     property TenantName: String read FTenantName;
     property OriginalClassName: String read FOriginalClassName;
+  end;
+
+{ ETTenantNameNotValid }
+
+  ETTenantNameNotValid = class(ETTenantUnavailable)
+  public
+    constructor Create(const ATenantName: String);
+  end;
+
+{ TTTenantName }
+
+  TTTenantName = class
+  strict private
+    const MaxLength: Integer = 63;
+
+    class function IsValidChar(const AValue: Char): Boolean; static;
+  public
+    class function IsValid(const AName: String): Boolean; static;
+    class procedure Check(const AName: String); static;
   end;
 
 { TTTenantFailure }
@@ -105,6 +127,7 @@ type
     procedure RemoveOldestFailure;
     function GetFailureCooldown: Cardinal;
     procedure SetFailureCooldown(const AValue: Cardinal);
+    function GetFailureCount: Integer;
   public
     constructor Create;
     destructor Destroy; override;
@@ -117,6 +140,7 @@ type
 
     property FailureCooldown: Cardinal
       read GetFailureCooldown write SetFailureCooldown;
+    property FailureCount: Integer read GetFailureCount;
 
     class property Instance: TTMultiTenant<T> read FInstance;
   end;
@@ -158,6 +182,43 @@ begin
   FOriginalClassName := AOriginalClassName;
 end;
 
+{ ETTenantNameNotValid }
+
+constructor ETTenantNameNotValid.Create(const ATenantName: String);
+begin
+  inherited Create(
+    ATenantName,
+    ETTenantNameNotValid.ClassName,
+    Format(TTLanguage.Instance.Translate(SNotValidTenantName), [
+      ATenantName]));
+end;
+
+{ TTTenantName }
+
+class function TTTenantName.IsValidChar(const AValue: Char): Boolean;
+begin
+  result := CharInSet(
+    AValue, ['a'..'z', 'A'..'Z', '0'..'9', '_', '-', '.']);
+end;
+
+class function TTTenantName.IsValid(const AName: String): Boolean;
+var
+  LIndex: Integer;
+begin
+  result := (not AName.IsEmpty) and (AName.Length <= MaxLength) and
+    CharInSet(AName.Chars[0], ['a'..'z', 'A'..'Z', '0'..'9']);
+  if result then
+    for LIndex := 0 to AName.Length - 1 do
+      if not IsValidChar(AName.Chars[LIndex]) then
+        result := False;
+end;
+
+class procedure TTTenantName.Check(const AName: String);
+begin
+  if not IsValid(AName) then
+    raise ETTenantNameNotValid.Create(AName);
+end;
+
 { TTTenantFailure }
 
 constructor TTTenantFailure.Create(
@@ -183,6 +244,7 @@ end;
 class destructor TTMultiTenant<T>.ClassDestroy;
 begin
   FInstance.Free;
+  FInstance := nil;
 end;
 
 constructor TTMultiTenant<T>.Create;
@@ -223,11 +285,11 @@ begin
   LFreeTenant := True;
   LTenant := TTTenant<T>.Create(AName);
   try
+    LTenant.RegisterConnection;
     FLock.BeginWrite;
     try
       if not FTenants.TryGetValue(AName, result) then
       begin
-        LTenant.RegisterConnection;
         FOwner.Add(LTenant);
         LFreeTenant := False;
         FTenants.Add(AName, LTenant);
@@ -245,7 +307,7 @@ end;
 function TTMultiTenant<T>.TryGet(
   const AName: String; out ATenant: TTTenant<T>): Boolean;
 begin
-  result := TryGetTenant(AName.ToLower(), ATenant);
+  result := TryGetTenant(AName.ToLowerInvariant, ATenant);
 end;
 
 function TTMultiTenant<T>.CreateTenantOrFail(
@@ -300,6 +362,16 @@ begin
   FLock.BeginRead;
   try
     result := FFailureCooldown;
+  finally
+    FLock.EndRead;
+  end;
+end;
+
+function TTMultiTenant<T>.GetFailureCount: Integer;
+begin
+  FLock.BeginRead;
+  try
+    result := FFailures.Count;
   finally
     FLock.EndRead;
   end;
@@ -369,9 +441,10 @@ function TTMultiTenant<T>.GetOrAdd(const AName: String): TTTenant<T>;
 var
   LName: String;
 begin
-  LName := AName.ToLower();
+  LName := AName.ToLowerInvariant;
   if not TryGetTenant(LName, result) then
   begin
+    TTTenantName.Check(LName);
     CheckFailure(LName);
     result := CreateTenantOrFail(LName);
   end;
@@ -400,7 +473,7 @@ procedure TTMultiTenant<T>.Remove(const AName: String);
 var
   LName: String;
 begin
-  LName := AName.ToLower();
+  LName := AName.ToLowerInvariant;
   FLock.BeginWrite;
   try
     FTenants.Remove(LName);

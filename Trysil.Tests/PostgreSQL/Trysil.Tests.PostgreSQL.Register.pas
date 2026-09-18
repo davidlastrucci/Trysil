@@ -81,10 +81,4 @@ begin
     TTPostgreSQLTestConnection.Finalize;
 end;
 
-initialization
-  TTPostgreSQLTestRegister.Register;
-
-finalization
-  TTPostgreSQLTestRegister.Unregister;
-
 end.

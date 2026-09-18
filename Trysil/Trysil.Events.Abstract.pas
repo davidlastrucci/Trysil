@@ -22,6 +22,8 @@ type
 
   TTEvent = class abstract
   public
+    procedure CommandExecuted; virtual;
+
     procedure DoBefore; virtual;
     procedure DoAfter; virtual;
   end;
@@ -33,6 +35,11 @@ type
 implementation
 
 { TTEvent }
+
+procedure TTEvent.CommandExecuted;
+begin
+  // Do nothing
+end;
 
 procedure TTEvent.DoBefore;
 begin

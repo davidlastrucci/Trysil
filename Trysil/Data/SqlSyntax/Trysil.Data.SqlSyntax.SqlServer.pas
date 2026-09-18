@@ -34,6 +34,13 @@ type
     function GetFilterPagingSyntax: String; override;
   end;
 
+{ TTSqlServerSelectCountSyntax }
+
+  TTSqlServerSelectCountSyntax = class(TTSelectCountSyntax)
+  strict protected
+    function GetCountSyntax: String; override;
+  end;
+
 { TTSqlServerVersionSyntax }
 
   TTSqlServerVersionSyntax = class(TTVersionSyntax)
@@ -47,6 +54,7 @@ type
   public
     function Sequence: TTSequenceSyntaxClass; override;
     function Select: TTSelectSyntaxClass; override;
+    function SelectCount: TTSelectCountSyntaxClass; override;
     function Version: TTVersionSyntaxClass; override;
   end;
 
@@ -57,7 +65,8 @@ implementation
 function TTSqlServerSequenceSyntax.GetSequenceSyntax: String;
 begin
   result := Format(
-    'SELECT NEXT VALUE FOR %s AS ID', [FTableMap.SequenceName]);
+    'SELECT NEXT VALUE FOR %s AS ID', [
+      FConnection.GetDatabaseObjectName(FTableMap.SequenceName)]);
 end;
 
 { TTSqlServerSelectSyntax }
@@ -66,6 +75,15 @@ function TTSqlServerSelectSyntax.GetFilterPagingSyntax: String;
 begin
   result := Format('OFFSET %d ROWS FETCH FIRST %d ROWS ONLY', [
     FFilter.Paging.Start, FFilter.Paging.Limit]);
+  if GetOrderBy().IsEmpty then
+    result := Format('ORDER BY (SELECT NULL) %s', [result]);
+end;
+
+{ TTSqlServerSelectCountSyntax }
+
+function TTSqlServerSelectCountSyntax.GetCountSyntax: String;
+begin
+  result := 'COUNT_BIG(*)';
 end;
 
 { TTSqlServerVersionSyntax }
@@ -85,6 +103,11 @@ end;
 function TTSqlServerSyntaxClasses.Select: TTSelectSyntaxClass;
 begin
   result := TTSqlServerSelectSyntax;
+end;
+
+function TTSqlServerSyntaxClasses.SelectCount: TTSelectCountSyntaxClass;
+begin
+  result := TTSqlServerSelectCountSyntax;
 end;
 
 function TTSqlServerSyntaxClasses.Version: TTVersionSyntaxClass;

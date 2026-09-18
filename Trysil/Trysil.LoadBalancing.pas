@@ -93,17 +93,20 @@ end;
 function TTRoundRobin<T>.GetNext: T;
 begin
   result := nil;
-  FCriticalSection.Acquire;
-  try
-    if FItems.Count > 0 then
-    begin
-      Inc(FIndex);
-      if FIndex >= FItems.Count then
-        FIndex := 0;
-      result := FItems[FIndex];
+  if FItems.Count > 0 then
+  begin
+    FCriticalSection.Acquire;
+    try
+      if FItems.Count > 0 then
+      begin
+        Inc(FIndex);
+        if FIndex >= FItems.Count then
+          FIndex := 0;
+        result := FItems[FIndex];
+      end;
+    finally
+      FCriticalSection.Release;
     end;
-  finally
-    FCriticalSection.Release;
   end;
 end;
 

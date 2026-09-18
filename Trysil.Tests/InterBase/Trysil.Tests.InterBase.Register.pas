@@ -81,10 +81,4 @@ begin
     TTInterBaseTestConnection.Finalize;
 end;
 
-initialization
-  TTInterBaseTestRegister.Register;
-
-finalization
-  TTInterBaseTestRegister.Unregister;
-
 end.

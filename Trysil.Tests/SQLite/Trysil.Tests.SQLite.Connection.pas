@@ -69,6 +69,8 @@ const
     ' ID INT NOT NULL,' +
     ' Title NVARCHAR(100),' +
     ' VersionID INT NOT NULL,' +
+    ' UpdatedAt DATETIME NULL,' +
+    ' UpdatedBy NVARCHAR(100),' +
     ' DeletedAt DATETIME NULL,' +
     ' DeletedBy NVARCHAR(100),' +
     ' PRIMARY KEY(ID))';
@@ -112,6 +114,12 @@ const
     ' Name NVARCHAR(100),' +
     ' PRIMARY KEY(ID))';
 
+  DDL_SEQUENCE_CEILING =
+    'CREATE TABLE IF NOT EXISTS SequenceCeiling (' +
+    ' ID INT NOT NULL,' +
+    ' Name NVARCHAR(100),' +
+    ' PRIMARY KEY(ID))';
+
   DDL_ALL_TYPES =
     'CREATE TABLE IF NOT EXISTS AllTypes (' +
     ' ID INT NOT NULL,' +
@@ -121,12 +129,21 @@ const
     ' UniqueID GUID NOT NULL,' +
     ' Payload BLOB NOT NULL,' +
     ' Price DECIMAL(19,4) NOT NULL,' +
+    ' Notes TEXT NULL,' +
     ' OptLargeNumber BIGINT NULL,' +
     ' OptIsActive BOOLEAN NULL,' +
     ' OptBirthDate DATETIME NULL,' +
     ' OptUniqueID GUID NULL,' +
     ' OptPayload BLOB NULL,' +
     ' OptPrice DECIMAL(19,4) NULL,' +
+    ' VersionID INT NOT NULL,' +
+    ' PRIMARY KEY(ID))';
+
+  DDL_PARAM_COLLISION =
+    'CREATE TABLE IF NOT EXISTS ParamCollision (' +
+    ' ID INT NOT NULL,' +
+    ' [Ragione Sociale] NVARCHAR(100),' +
+    ' Ragione_Sociale NVARCHAR(100),' +
     ' VersionID INT NOT NULL,' +
     ' PRIMARY KEY(ID))';
 
@@ -159,8 +176,10 @@ begin
   FConnection.Execute(DDL_VALIDATED_ITEMS);
   FConnection.Execute(DDL_FULL_VALIDATION);
   FConnection.Execute(DDL_SIMPLE_ITEMS);
+  FConnection.Execute(DDL_SEQUENCE_CEILING);
   FConnection.Execute(DDL_ALL_TYPES);
   FConnection.Execute(DDL_NULLABLE_PRIMITIVES);
+  FConnection.Execute(DDL_PARAM_COLLISION);
 end;
 
 class procedure TTSQLiteTestConnection.Finalize;

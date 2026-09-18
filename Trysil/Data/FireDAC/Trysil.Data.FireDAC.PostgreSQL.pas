@@ -17,7 +17,11 @@ uses
   System.SysUtils,
   FireDAC.Phys,
   FireDAC.Phys.PG,
+  FireDAC.Stan.Intf,
+  FireDAC.Stan.Option,
+  FireDAC.Comp.Client,
 
+  Trysil.Data,
   Trysil.Data.FireDAC.ConnectionPool,
   Trysil.Data.FireDAC,
   Trysil.Data.SqlSyntax,
@@ -48,8 +52,10 @@ type
     class destructor ClassDestroy;
   strict protected
     function CreateSyntaxClasses: TTSyntaxClasses; override;
+    procedure ConfigureMapRules(const AConnection: TFDConnection); override;
 
     class function GetDriver: String; override;
+    class function GetDriverAliases: TArray<String>; override;
     class procedure InternalRegisterConnection(
       const AName: String;
       const AParameters: TTFireDACConnectionParameters); override;
@@ -72,6 +78,9 @@ type
     class procedure RegisterConnection(
       const AName: String;
       const AParameters: TStrings); overload;
+
+    function GetDatabaseObjectName(
+      const ADatabaseObjectName: String): String; override;
 
     class property Driver: TTPostgreSQLDriver read FDriver;
   end;
@@ -107,6 +116,7 @@ end;
 class destructor TTPostgreSQLConnection.ClassDestroy;
 begin
   FDriver.Free;
+  FDriver := nil;
 end;
 
 function TTPostgreSQLConnection.CreateSyntaxClasses: TTSyntaxClasses;
@@ -114,9 +124,23 @@ begin
   result := TTPostgreSQLSyntaxClasses.Create;
 end;
 
+procedure TTPostgreSQLConnection.ConfigureMapRules(
+  const AConnection: TFDConnection);
+begin
+  inherited ConfigureMapRules(AConnection);
+
+  AConnection.FormatOptions.OwnMapRules := True;
+  AConnection.FormatOptions.MapRules.Add(dtBCD, dtCurrency);
+end;
+
 class function TTPostgreSQLConnection.GetDriver: String;
 begin
   result := FDriver.DriverLink.DriverID;
+end;
+
+class function TTPostgreSQLConnection.GetDriverAliases: TArray<String>;
+begin
+  result := ['PostgreSQL'];
 end;
 
 class procedure TTPostgreSQLConnection.InternalRegisterConnection(
@@ -179,6 +203,13 @@ class procedure TTPostgreSQLConnection.RegisterConnection(
 begin
   TTFireDACConnectionPool.Instance.RegisterConnection(
     AName, FDriver.DriverLink.DriverID, AParameters);
+end;
+
+function TTPostgreSQLConnection.GetDatabaseObjectName(
+  const ADatabaseObjectName: String): String;
+begin
+  result := TTDatabaseObjectName.Quoted(
+    ADatabaseObjectName, '"', '"', TTNameCase.Lower);
 end;
 
 initialization

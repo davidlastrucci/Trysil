@@ -502,7 +502,7 @@ begin
     dtCurrency:
       result := 'NUMBER(19,4)';
     dtBoolean:
-      result := 'BOOLEAN';
+      result := 'NUMBER(1)';
     dtDateTime:
       result := 'TIMESTAMP';
     dtGuid:

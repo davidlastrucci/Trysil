@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright Â© David Lastrucci
+  Copyright © David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -48,7 +48,8 @@ implementation
 
 function TTMariaDBSequenceSyntax.GetSequenceSyntax: String;
 begin
-  result := Format('SELECT NEXTVAL(%s) AS ID', [FTableMap.SequenceName]);
+  result := Format('SELECT NEXTVAL(%s) AS ID', [
+    FConnection.GetDatabaseObjectName(FTableMap.SequenceName)]);
 end;
 
 { TTMariaDBVersionSyntax }

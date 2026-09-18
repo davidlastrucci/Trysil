@@ -7,31 +7,31 @@
             <Dependencies/>
         </Projects>
         <Projects Include="Trysil.FirebirdSQL370.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil370.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.PostgreSQL370.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil370.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.SQLite370.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil370.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.SqlServer370.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil370.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.InterBase370.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil370.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.MariaDB370.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil370.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.Oracle370.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil370.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.JSon370.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil370.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.Http370.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil370.dproj;Trysil.JSon370.dproj</Dependencies>
         </Projects>
     </ItemGroup>
     <ProjectExtensions>
@@ -148,20 +148,14 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Trysil.SqlServer370.dproj">
-            <ProjectGuid>{1C602679-6DF3-4A78-8C7F-E2BD6A298C3D}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Trysil.Http370.dproj">
-            <ProjectGuid>{982EA5B6-75D0-4C2E-9309-4A59BD6B8292}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="Trysil.FirebirdSQL370.dproj">
             <ProjectGuid>{D385093F-4CFE-4546-9F77-FDCEBC98D7BD}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.PostgreSQL370.dproj">
+            <ProjectGuid>{79A50B37-BA72-4827-9391-771B955E44D7}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
@@ -172,8 +166,8 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Trysil.PostgreSQL370.dproj">
-            <ProjectGuid>{79A50B37-BA72-4827-9391-771B955E44D7}</ProjectGuid>
+        <BuildGroupProject Include="Trysil.SqlServer370.dproj">
+            <ProjectGuid>{1C602679-6DF3-4A78-8C7F-E2BD6A298C3D}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
@@ -202,66 +196,10 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-    </ItemGroup>
-    <ItemGroup Condition="'$(BuildGroup)'=='Linux64'">
-        <BuildGroupProject Include="Trysil370.dproj">
-            <ProjectGuid>{1748AC5D-443B-416C-84CF-6B793F11DA16}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Linux64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Trysil.SqlServer370.dproj">
-            <ProjectGuid>{1C602679-6DF3-4A78-8C7F-E2BD6A298C3D}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Linux64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Trysil.SQLite370.dproj">
-            <ProjectGuid>{4BF9B66B-2C88-472F-B121-3A76DC0D832A}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Linux64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Trysil.FirebirdSQL370.dproj">
-            <ProjectGuid>{D385093F-4CFE-4546-9F77-FDCEBC98D7BD}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Linux64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="Trysil.Http370.dproj">
             <ProjectGuid>{982EA5B6-75D0-4C2E-9309-4A59BD6B8292}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
-            <Platforms>Linux64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Trysil.PostgreSQL370.dproj">
-            <ProjectGuid>{79A50B37-BA72-4827-9391-771B955E44D7}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Linux64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Trysil.InterBase370.dproj">
-            <ProjectGuid>{056F5EF4-D35C-457E-8E77-4F9A02ECA4CD}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Linux64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Trysil.MariaDB370.dproj">
-            <ProjectGuid>{955CDB58-E1E4-460C-8676-4D997B611D42}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Linux64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Trysil.Oracle370.dproj">
-            <ProjectGuid>{76B1FFAE-DCFE-4B6D-A0BD-432731C97273}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Linux64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Trysil.JSon370.dproj">
-            <ProjectGuid>{EC0DB951-39B5-4B47-9D5F-E6C6CC6EED87}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Linux64</Platforms>
+            <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
     </ItemGroup>

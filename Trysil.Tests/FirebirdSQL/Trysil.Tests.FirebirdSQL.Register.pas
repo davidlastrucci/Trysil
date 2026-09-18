@@ -81,10 +81,4 @@ begin
     TTFirebirdSQLTestConnection.Finalize;
 end;
 
-initialization
-  TTFirebirdSQLTestRegister.Register;
-
-finalization
-  TTFirebirdSQLTestRegister.Unregister;
-
 end.

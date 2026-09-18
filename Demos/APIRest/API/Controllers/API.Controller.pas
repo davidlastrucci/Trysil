@@ -133,20 +133,20 @@ begin
   try
     FResponse.Content := Context.EntityToJSon<T>(LEntity, AConfig);
   finally
-    LEntity.Free;
+    Context.FreeEntity<T>(LEntity);
   end;
 end;
 
 procedure TAPIReadOnlyController<T>.InternalSelect(const AFilter: TTFilter);
 var
   LJSon: TJSonObject;
-  LList: TTObjectList<T>;
+  LList: TTList<T>;
   LJSonData: TJSonArray;
 begin
   LJSon := TJSonObject.Create;
   try
     LJSon.AddPair('count', TJSonNumber.Create(Context.SelectCount<T>(AFilter)));
-    LList := TTObjectList<T>.Create(True);
+    LList := Context.CreateEntityList<T>();
     try
       Context.Select<T>(LList, AFilter);
       LJSonData := Context.ListToJSonArray<T>(LList, ConfigSelect);
@@ -207,7 +207,7 @@ begin
     Context.Insert<T>(LEntity);
     FResponse.Content := Context.EntityToJSon<T>(LEntity, ConfigGet);
   finally
-    LEntity.Free;
+    Context.FreeEntity<T>(LEntity);
   end;
 end;
 
@@ -218,9 +218,10 @@ begin
   LEntity := Context.EntityFromJSonObject<T>(FRequest.JSonContent);
   try
     Context.Update<T>(LEntity);
+    Context.Refresh<T>(LEntity);
     FResponse.Content := Context.EntityToJSon<T>(LEntity, ConfigGet);
   finally
-    LEntity.Free;
+    Context.FreeEntity<T>(LEntity);
   end;
 end;
 
@@ -238,7 +239,7 @@ begin
   try
     FResponse.Content := Context.EntityToJSon<T>(LEntity, ConfigFind);
   finally
-    LEntity.Free;
+    Context.FreeEntity<T>(LEntity);
   end;
 end;
 

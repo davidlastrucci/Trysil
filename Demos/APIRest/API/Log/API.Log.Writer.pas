@@ -65,7 +65,7 @@ begin
     LLogAction.SetValues(AAction);
     FContext.Context.Insert<TLogAction>(LLogAction);
   finally
-    LLogAction.Free;
+    FContext.Context.FreeEntity<TLogAction>(LLogAction);
   end;
 end;
 
@@ -78,7 +78,7 @@ begin
     LLogRequest.SetValues(ARequest);
     FContext.Context.Insert<TLogRequest>(LLogRequest);
   finally
-    LLogRequest.Free;
+    FContext.Context.FreeEntity<TLogRequest>(LLogRequest);
   end;
 end;
 
@@ -91,7 +91,7 @@ begin
     LLogResponse.SetValues(AResponse);
     FContext.Context.Insert<TLogResponse>(LLogResponse);
   finally
-    LLogResponse.Free;
+    FContext.Context.FreeEntity<TLogResponse>(LLogResponse);
   end;
 end;
 
@@ -105,7 +105,7 @@ begin
     LLogDiscarded.SetValues(ADiscarded);
     FContext.Context.Insert<TLogDiscarded>(LLogDiscarded);
   finally
-    LLogDiscarded.Free;
+    FContext.Context.FreeEntity<TLogDiscarded>(LLogDiscarded);
   end;
 end;
 
@@ -118,7 +118,7 @@ begin
     LLogError.SetValues(ALogError);
     FContext.Context.Insert<TLogError>(LLogError);
   finally
-    LLogError.Free;
+    FContext.Context.FreeEntity<TLogError>(LLogError);
   end;
 end;
 

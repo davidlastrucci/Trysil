@@ -19,6 +19,7 @@ uses
   Trysil.Data.FireDAC.ConnectionPool,
   Trysil.Data.FireDAC.FirebirdSQL,
 
+  Trysil.Tests.VendorLibrary,
   Trysil.Tests.Config;
 
 type
@@ -75,6 +76,8 @@ const
     ' ID INTEGER NOT NULL,' +
     ' Title VARCHAR(100),' +
     ' VersionID INTEGER NOT NULL,' +
+    ' UpdatedAt TIMESTAMP,' +
+    ' UpdatedBy VARCHAR(100),' +
     ' DeletedAt TIMESTAMP,' +
     ' DeletedBy VARCHAR(100),' +
     ' PRIMARY KEY(ID))';
@@ -127,6 +130,7 @@ const
     ' UniqueID CHAR(16) CHARACTER SET OCTETS NOT NULL,' +
     ' Payload BLOB SUB_TYPE 0 NOT NULL,' +
     ' Price DECIMAL(18,4) NOT NULL,' +
+    ' Notes BLOB SUB_TYPE TEXT,' +
     ' OptLargeNumber BIGINT,' +
     ' OptIsActive BOOLEAN,' +
     ' OptBirthDate TIMESTAMP,' +
@@ -216,12 +220,14 @@ end;
 class procedure TTFirebirdSQLTestConnection.Initialize;
 begin
   TTFireDACConnectionPool.Instance.Config.Enabled := False;
+  TTTestVendorLibrary.Apply('FirebirdSQL', TTFirebirdSQLConnection.Driver);
   TTFirebirdSQLConnection.RegisterConnection(
     'TrysilFirebirdSQLTests',
     TTTestConfig.GetDatabaseParam('FirebirdSQL', 'host'),
     TTTestConfig.GetDatabaseParam('FirebirdSQL', 'username'),
     TTTestConfig.GetDatabaseParam('FirebirdSQL', 'password'),
-    TTTestConfig.GetDatabaseParam('FirebirdSQL', 'database'));
+    TTTestConfig.GetDatabaseParam('FirebirdSQL', 'database'),
+    TTTestConfig.GetDatabaseParam('FirebirdSQL', 'characterSet'));
   FConnection := TTFirebirdSQLConnection.Create('TrysilFirebirdSQLTests');
 
   DropTables;

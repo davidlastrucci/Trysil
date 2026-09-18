@@ -1,7 +1,7 @@
 ﻿(*
 
   Trysil
-  Copyright � David Lastrucci
+  Copyright © David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -40,6 +40,7 @@ type
     FParam: TTParam;
     FColumnMap: TTColumnMap;
 
+    function LogEnabled: Boolean;
     procedure LogParameter(const AName: String; const AValue: String);
   public
     constructor Create(
@@ -64,7 +65,9 @@ type
 
   TTStringParameter = class(TTParameter)
   strict private
-    procedure SetParameterValue(const AEntity: TObject; const AValue: String);
+    function ColumnDisplayName: String;
+    function IsTextLob: Boolean;
+    procedure SetParameterValue(const AValue: String);
   public
     procedure SetValue(const AEntity: TObject); overload; override;
     procedure SetValue(const AValue: TTValue); overload; override;
@@ -107,7 +110,10 @@ type
 
   TTDoubleParameter = class(TTParameter)
   strict private
+    procedure SetLargeIntEntityValue(const AValue: TTValue);
+    procedure SetDoubleEntityValue(const AValue: TTValue);
     procedure SetCurrencyValue(const AValue: TTValue);
+    procedure SetLargeIntValue(const AValue: TTValue);
     procedure SetDoubleValue(const AValue: TTValue);
   public
     procedure SetValue(const AEntity: TObject); overload; override;
@@ -148,6 +154,8 @@ type
 { TTDateTimeParameter }
 
   TTDateTimeParameter = class(TTParameter)
+  strict private
+    class function HasTimeZone(const AValue: String): Boolean; static;
   public
     procedure SetValue(const AEntity: TObject); overload; override;
     procedure SetValue(const AValue: TTValue); overload; override;
@@ -274,6 +282,11 @@ begin
   FColumnMap := AColumnMap;
 end;
 
+function TTParameter.LogEnabled: Boolean;
+begin
+  result := TTLogger.Instance.Enabled;
+end;
+
 procedure TTParameter.LogParameter(const AName: String; const AValue: String);
 begin
   TTLogger.Instance.LogParameter(FConnectionID, AName, AValue);
@@ -290,17 +303,31 @@ end;
 
 { TTStringParameter }
 
-procedure TTStringParameter.SetParameterValue(
-  const AEntity: TObject; const AValue: String);
-var
-  LValue: String;
+function TTStringParameter.ColumnDisplayName: String;
 begin
-  LValue := AValue;
-  if FParam.Size > 0 then
-    LValue := LValue.Substring(0, FParam.Size);
-  FParam.AsString := LValue;
-  if Assigned(AEntity) and (not LValue.Equals(AValue)) then
-    FColumnMap.Member.SetValue(AEntity, LValue);
+  if Assigned(FColumnMap) then
+    result := FColumnMap.ValidationColumnName
+  else
+    result := FParam.Name;
+end;
+
+procedure TTStringParameter.SetParameterValue(const AValue: String);
+begin
+  if (FParam.Size > 0) and (AValue.Length > FParam.Size) then
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SStringTooLong), [
+        ColumnDisplayName, FParam.Size, AValue.Length]);
+
+  if IsTextLob then
+    FParam.AsText := AValue
+  else
+    FParam.AsString := AValue;
+end;
+
+function TTStringParameter.IsTextLob: Boolean;
+begin
+  result := FParam.DataType in [
+    TFieldType.ftMemo, TFieldType.ftWideMemo, TFieldType.ftOraClob];
 end;
 
 procedure TTStringParameter.SetValue(const AEntity: TObject);
@@ -316,16 +343,17 @@ begin
     if LNullable.IsNull then
       FParam.Clear()
     else
-      SetParameterValue(AEntity, LNullable);
+      SetParameterValue(LNullable);
     LParamValue := LNullable.GetValueOrDefault;
   end
   else
   begin
     LParamValue := LValue.AsType<String>();
-    SetParameterValue(AEntity, LParamValue);
+    SetParameterValue(LParamValue);
   end;
 
-  LogParameter(FColumnMap.Name, LParamValue);
+  if LogEnabled then
+    LogParameter(FColumnMap.Name, LParamValue);
 end;
 
 procedure TTStringParameter.SetValue(const AValue: TTValue);
@@ -333,8 +361,9 @@ var
   LParamValue: String;
 begin
   LParamValue := AValue.AsType<String>();
-  SetParameterValue(nil, LParamValue);
-  LogParameter(FParam.Name, LParamValue);
+  SetParameterValue(LParamValue);
+  if LogEnabled then
+    LogParameter(FParam.Name, LParamValue);
 end;
 
 class function TTStringParameter.TryValueFromString(
@@ -378,7 +407,8 @@ begin
   end;
 
   if not LIsClass then
-    LogParameter(FColumnMap.Name, LParamValue.ToString);
+    if LogEnabled then
+      LogParameter(FColumnMap.Name, LParamValue.ToString);
 end;
 
 procedure TTIntegerParameter.SetValue(const AValue: TTValue);
@@ -387,7 +417,8 @@ var
 begin
   LParamValue := AValue.AsType<Integer>();
   FParam.AsInteger := LParamValue;
-  LogParameter(FParam.Name, LParamValue.ToString);
+  if LogEnabled then
+    LogParameter(FParam.Name, LParamValue.ToString);
 end;
 
 procedure TTIntegerParameter.SetValueFromObject(const AObject: TObject);
@@ -412,7 +443,8 @@ begin
   LParamValue := LValue.AsType<Integer>();
   FParam.AsInteger := LParamValue;
 
-  LogParameter(FColumnMap.Name, LParamValue.ToString);
+  if LogEnabled then
+    LogParameter(FColumnMap.Name, LParamValue.ToString);
 end;
 
 class function TTIntegerParameter.TryValueFromString(
@@ -452,7 +484,8 @@ begin
     FParam.AsLargeInt := LParamValue;
   end;
 
-  LogParameter(FColumnMap.Name, LParamValue.ToString);
+  if LogEnabled then
+    LogParameter(FColumnMap.Name, LParamValue.ToString);
 end;
 
 procedure TTLargeIntegerParameter.SetValue(const AValue: TTValue);
@@ -461,7 +494,8 @@ var
 begin
   LParamValue := AValue.AsType<Int64>();
   FParam.AsLargeInt := LParamValue;
-  LogParameter(FParam.Name, LParamValue.ToString);
+  if LogEnabled then
+    LogParameter(FParam.Name, LParamValue.ToString);
 end;
 
 class function TTLargeIntegerParameter.TryValueFromString(
@@ -482,13 +516,46 @@ end;
 procedure TTDoubleParameter.SetValue(const AEntity: TObject);
 var
   LValue: TTValue;
+begin
+  LValue := FColumnMap.Member.GetValue(AEntity);
+  if FColumnMap.IsInt64 then
+    SetLargeIntEntityValue(LValue)
+  else
+    SetDoubleEntityValue(LValue);
+end;
+
+procedure TTDoubleParameter.SetLargeIntEntityValue(const AValue: TTValue);
+var
+  LNullable: TTNullable<Int64>;
+  LParamValue: Int64;
+begin
+  if FColumnMap.Member.IsNullable then
+  begin
+    LNullable := AValue.AsType<TTNullable<Int64>>();
+    if LNullable.IsNull then
+      FParam.Clear()
+    else
+      FParam.AsLargeInt := LNullable;
+    LParamValue := LNullable.GetValueOrDefault;
+  end
+  else
+  begin
+    LParamValue := AValue.AsInt64;
+    FParam.AsLargeInt := LParamValue;
+  end;
+
+  if LogEnabled then
+    LogParameter(FColumnMap.Name, LParamValue.ToString);
+end;
+
+procedure TTDoubleParameter.SetDoubleEntityValue(const AValue: TTValue);
+var
   LNullable: TTNullable<Double>;
   LParamValue: Double;
 begin
-  LValue := FColumnMap.Member.GetValue(AEntity);
   if FColumnMap.Member.IsNullable then
   begin
-    LNullable := LValue.AsType<TTNullable<Double>>();
+    LNullable := AValue.AsType<TTNullable<Double>>();
     if LNullable.IsNull then
       FParam.Clear()
     else
@@ -497,11 +564,12 @@ begin
   end
   else
   begin
-    LParamValue := LValue.AsType<Double>();
+    LParamValue := AValue.AsType<Double>();
     FParam.AsDouble := LParamValue;
   end;
 
-  LogParameter(FColumnMap.Name, LParamValue.ToString);
+  if LogEnabled then
+    LogParameter(FColumnMap.Name, LParamValue.ToString);
 end;
 
 procedure TTDoubleParameter.SetCurrencyValue(const AValue: TTValue);
@@ -510,7 +578,8 @@ var
 begin
   LParamValue := AValue.AsType<Currency>();
   FParam.AsCurrency := LParamValue;
-  LogParameter(FParam.Name, CurrToStr(LParamValue));
+  if LogEnabled then
+    LogParameter(FParam.Name, CurrToStr(LParamValue));
 end;
 
 procedure TTDoubleParameter.SetDoubleValue(const AValue: TTValue);
@@ -519,13 +588,26 @@ var
 begin
   LParamValue := AValue.AsType<Double>();
   FParam.AsDouble := LParamValue;
-  LogParameter(FParam.Name, LParamValue.ToString);
+  if LogEnabled then
+    LogParameter(FParam.Name, LParamValue.ToString);
+end;
+
+procedure TTDoubleParameter.SetLargeIntValue(const AValue: TTValue);
+var
+  LParamValue: Int64;
+begin
+  LParamValue := AValue.AsInt64;
+  FParam.AsLargeInt := LParamValue;
+  if LogEnabled then
+    LogParameter(FParam.Name, LParamValue.ToString);
 end;
 
 procedure TTDoubleParameter.SetValue(const AValue: TTValue);
 begin
   if AValue.TypeInfo = TypeInfo(Currency) then
     SetCurrencyValue(AValue)
+  else if AValue.Kind = tkInt64 then
+    SetLargeIntValue(AValue)
   else
     SetDoubleValue(AValue);
 end;
@@ -577,7 +659,8 @@ begin
     FParam.AsCurrency := LParamValue;
   end;
 
-  LogParameter(FColumnMap.Name, CurrToStr(LParamValue));
+  if LogEnabled then
+    LogParameter(FColumnMap.Name, CurrToStr(LParamValue));
 end;
 
 procedure TTCurrencyParameter.SetValue(const AValue: TTValue);
@@ -586,7 +669,8 @@ var
 begin
   LParamValue := AValue.AsType<Currency>();
   FParam.AsCurrency := LParamValue;
-  LogParameter(FParam.Name, CurrToStr(LParamValue));
+  if LogEnabled then
+    LogParameter(FParam.Name, CurrToStr(LParamValue));
 end;
 
 class function TTCurrencyParameter.TryValueFromString(
@@ -626,7 +710,8 @@ begin
     FParam.AsBoolean := LParamValue;
   end;
 
-  LogParameter(FColumnMap.Name, LParamValue.ToString);
+  if LogEnabled then
+    LogParameter(FColumnMap.Name, LParamValue.ToString);
 end;
 
 procedure TTBooleanParameter.SetValue(const AValue: TTValue);
@@ -635,7 +720,8 @@ var
 begin
   LParamValue := AValue.AsType<Boolean>();
   FParam.AsBoolean := LParamValue;
-  LogParameter(FParam.Name, LParamValue.ToString);
+  if LogEnabled then
+    LogParameter(FParam.Name, LParamValue.ToString);
 end;
 
 class function TTBooleanParameter.TryValueFromString(
@@ -680,7 +766,8 @@ begin
     FParam.AsDateTime := LParamValue;
   end;
 
-  LogParameter(FColumnMap.Name, DateTimeToStr(LParamValue));
+  if LogEnabled then
+    LogParameter(FColumnMap.Name, DateTimeToStr(LParamValue));
 end;
 
 procedure TTDateTimeParameter.SetValue(const AValue: TTValue);
@@ -689,7 +776,18 @@ var
 begin
   LParamValue := AValue.AsType<TDateTime>();
   FParam.AsDateTime := LParamValue;
-  LogParameter(FParam.Name, DateTimeToStr(LParamValue));
+  if LogEnabled then
+    LogParameter(FParam.Name, DateTimeToStr(LParamValue));
+end;
+
+class function TTDateTimeParameter.HasTimeZone(
+  const AValue: String): Boolean;
+var
+  LTime: Integer;
+begin
+  LTime := AValue.IndexOfAny(['T', 't', ' ']);
+  result := (LTime >= 0) and
+    (AValue.Substring(LTime).IndexOfAny(['Z', 'z', '+', '-']) >= 0);
 end;
 
 class function TTDateTimeParameter.TryValueFromString(
@@ -702,7 +800,11 @@ begin
   AResult := TTValue.Empty;
   result := TryISO8601ToDate(AValue, LValue, True);
   if result then
-    AResult := TTValue.From<TDateTime>(TTimeZone.Local.ToLocalTime(LValue));
+  begin
+    if HasTimeZone(AValue) then
+      LValue := TTimeZone.Local.ToLocalTime(LValue);
+    AResult := TTValue.From<TDateTime>(LValue);
+  end;
 end;
 
 { TTGuidParameter }
@@ -743,7 +845,8 @@ begin
     WriteGuid(LParamValue);
   end;
 
-  LogParameter(FColumnMap.Name, LParamValue.ToString);
+  if LogEnabled then
+    LogParameter(FColumnMap.Name, LParamValue.ToString);
 end;
 
 procedure TTGuidParameter.SetValue(const AValue: TTValue);
@@ -752,7 +855,8 @@ var
 begin
   LParamValue := AValue.AsType<TGuid>();
   WriteGuid(LParamValue);
-  LogParameter(FParam.Name, LParamValue.ToString);
+  if LogEnabled then
+    LogParameter(FParam.Name, LParamValue.ToString);
 end;
 
 class function TTGuidParameter.TryValueFromString(
@@ -811,6 +915,7 @@ end;
 class destructor TTParameterFactory.ClassDestroy;
 begin
   FInstance.Free;
+  FInstance := nil;
 end;
 
 constructor TTParameterFactory.Create;
@@ -933,6 +1038,7 @@ begin
   AInstance.RegisterParameterClass<TTStringParameter>(TFieldType.ftFixedWideChar);
   AInstance.RegisterParameterClass<TTStringParameter>(TFieldType.ftMemo);
   AInstance.RegisterParameterClass<TTStringParameter>(TFieldType.ftWideMemo);
+  AInstance.RegisterParameterClass<TTStringParameter>(TFieldType.ftOraClob);
 end;
 
 class procedure TTParameterRegister.RegisterIntegerParameterClasses(
@@ -941,9 +1047,14 @@ begin
   // TTIntegerParameter
   AInstance.RegisterParameterClass<TTIntegerParameter>(TFieldType.ftSmallint);
   AInstance.RegisterParameterClass<TTIntegerParameter>(TFieldType.ftInteger);
+  AInstance.RegisterParameterClass<TTIntegerParameter>(TFieldType.ftByte);
+  AInstance.RegisterParameterClass<TTIntegerParameter>(TFieldType.ftShortint);
+  AInstance.RegisterParameterClass<TTIntegerParameter>(TFieldType.ftWord);
 
   // TTLargeIntegerParameter
   AInstance.RegisterParameterClass<TTLargeIntegerParameter>(TFieldType.ftLargeint);
+  AInstance.RegisterParameterClass<TTLargeIntegerParameter>(
+    TFieldType.ftLongWord);
 end;
 
 class procedure TTParameterRegister.RegisterDoubleParameterClasses(
@@ -964,6 +1075,7 @@ begin
   AInstance.RegisterParameterClass<TTDateTimeParameter>(TFieldType.ftDate);
   AInstance.RegisterParameterClass<TTDateTimeParameter>(TFieldType.ftDateTime);
   AInstance.RegisterParameterClass<TTDateTimeParameter>(TFieldType.ftTimeStamp);
+  AInstance.RegisterParameterClass<TTDateTimeParameter>(TFieldType.ftTime);
 end;
 
 class procedure TTParameterRegister.RegisterOtherParameterClasses(
@@ -978,6 +1090,9 @@ begin
   // TTBlobParameter
   AInstance.RegisterParameterClass<TTBlobParameter>(TFieldType.ftBlob);
   AInstance.RegisterParameterClass<TTBlobParameter>(TFieldType.ftOraBlob);
+  AInstance.RegisterParameterClass<TTBlobParameter>(TFieldType.ftBytes);
+  AInstance.RegisterParameterClass<TTBlobParameter>(TFieldType.ftVarBytes);
+  AInstance.RegisterParameterClass<TTBlobParameter>(TFieldType.ftGraphic);
 end;
 
 class procedure TTParameterRegister.RegisterParameterClasses;

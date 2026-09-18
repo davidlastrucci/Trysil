@@ -16,11 +16,16 @@ uses
   System.SysUtils,
   System.Classes,
   System.DateUtils,
+  System.SyncObjs,
+  System.Generics.Collections,
   System.JSon,
   System.NetEncoding,
+  Trysil.Consts,
+  Trysil.Classes,
   Trysil.Exceptions,
 
   Trysil.Http.Consts,
+  Trysil.Http.Exceptions,
   Trysil.Http.Types,
   Trysil.Http.Classes;
 
@@ -31,11 +36,20 @@ type
 { TTHttpLogParameters }
 
   TTHttpLogParameters = record
+  public
+    const DefaultThreadPoolSize: Integer = 1;
+    const DefaultQueueCapacity: Integer = 10000;
+    const DefaultMaxContentLength: Integer = 0;
+    const DefaultMaxItemCount: Integer = 128;
   strict private
     FThreadPoolSize: Integer;
     FQueueCapacity: Integer;
     FMaxContentLength: Integer;
     FMaxItemCount: Integer;
+
+    function GetThreadPoolSize: Integer;
+    function GetQueueCapacity: Integer;
+    function GetMaxItemCount: Integer;
   public
     constructor Create(
       const AThreadPoolSize: Integer;
@@ -55,10 +69,10 @@ type
     function CanLogContent(const ALength: Int64): Boolean;
     function CanLogItems(const ACount: Integer): Boolean;
 
-    property ThreadPoolSize: Integer read FThreadPoolSize;
-    property QueueCapacity: Integer read FQueueCapacity;
+    property ThreadPoolSize: Integer read GetThreadPoolSize;
+    property QueueCapacity: Integer read GetQueueCapacity;
     property MaxContentLength: Integer read FMaxContentLength;
-    property MaxItemCount: Integer read FMaxItemCount;
+    property MaxItemCount: Integer read GetMaxItemCount;
   end;
 
 { TTHttpLogDiscarded }
@@ -106,26 +120,62 @@ type
     property Value: String read FValue;
   end;
 
+{ TTHttpLogRedactedNames }
+
+  TTHttpLogRedactedNames = class
+  strict private
+    class var FInstance: TTHttpLogRedactedNames;
+
+    class constructor ClassCreate;
+    class destructor ClassDestroy;
+  strict private
+    const DefaultNames: array[0..12] of String = (
+      'Authorization',
+      'Proxy-Authorization',
+      'Cookie',
+      'Set-Cookie',
+      'X-Api-Key',
+      'token',
+      'access_token',
+      'refresh_token',
+      'id_token',
+      'api_key',
+      'key',
+      'password',
+      'signature');
+  strict private
+    FServing: Integer;
+    FNames: TList<String>;
+
+    function IndexOf(const AName: String): Integer;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure AfterConstruction; override;
+
+    procedure BeginServing;
+    procedure EndServing;
+
+    procedure Add(const AName: String);
+    function Contains(const AName: String): Boolean;
+
+    class property Instance: TTHttpLogRedactedNames read FInstance;
+  end;
+
 { TTHttpLogNameValues }
 
   TTHttpLogNameValues = record
   strict private
     const RedactedValue = '<redacted>';
-    const RedactedNames: array[0..4] of String = (
-      'Authorization',
-      'Proxy-Authorization',
-      'Cookie',
-      'Set-Cookie',
-      'X-Api-Key');
   strict private
     FValues: TArray<TTHttpLogNameValue>;
 
     class function IsRedacted(const AName: String): Boolean; static;
   public
-    constructor Create(const ANameValues: TTHttpNameValues); overload;
     constructor Create(
       const ANameValues: TTHttpNameValues;
-      const ARedact: Boolean); overload;
+      const ARedact: Boolean);
 
     function ToJSonArray(): TJSonArray;
     function ToString: String;
@@ -151,10 +201,19 @@ type
     FHeaders: TTHttpLogNameValues;
     FRemoteIP: String;
     FClientIP: String;
+
+    procedure SetContent(
+      const ARequest: TTHttpRequest;
+      const AParameters: TTHttpLogParameters;
+      const AOnRedactContent: TFunc<TTHttpRequest, String, String>);
+    procedure SetReadableContent(
+      const ARequest: TTHttpRequest;
+      const AOnRedactContent: TFunc<TTHttpRequest, String, String>);
   public
     constructor Create(
       const ARequest: TTHttpRequest;
-      const AParameters: TTHttpLogParameters);
+      const AParameters: TTHttpLogParameters;
+      const AOnRedactContent: TFunc<TTHttpRequest, String, String>);
 
     function ToJSon: String;
 
@@ -193,6 +252,7 @@ type
   TTHttpLogUser = record
   strict private
     FUsername: String;
+    FTenant: String;
     FAreas: TTHttpLogUserAreas;
   public
     constructor Create(const AUser: TTHttpUser);
@@ -200,6 +260,7 @@ type
     function ToJSon: TJSonObject;
 
     property Username: String read FUsername;
+    property Tenant: String read FTenant;
     property Areas: TTHttpLogUserAreas read FAreas;
   end;
 
@@ -222,11 +283,17 @@ type
     FBinaryContent: String;
 
     function GetBinaryContent(const AResponse: TTHttpResponse): String;
+    procedure SetContent(
+      const ARequest: TTHttpRequest;
+      const AResponse: TTHttpResponse;
+      const AParameters: TTHttpLogParameters;
+      const AOnRedactContent: TFunc<TTHttpRequest, String, String>);
   public
     constructor Create(
       const ARequest: TTHttpRequest;
       const AResponse: TTHttpResponse;
-      const AParameters: TTHttpLogParameters);
+      const AParameters: TTHttpLogParameters;
+      const AOnRedactContent: TFunc<TTHttpRequest, String, String>);
 
     function ToJSon: String;
 
@@ -300,13 +367,36 @@ type
 
 implementation
 
+type
+
+{ TTHttpLogContent }
+
+  TTHttpLogContent = record
+  public
+    class function ToJSonValue(const AContent: String): TJSonValue; static;
+  end;
+
+{ TTHttpLogContent }
+
+class function TTHttpLogContent.ToJSonValue(
+  const AContent: String): TJSonValue;
+begin
+  result := TJSonObject.ParseJSONValue(AContent);
+  if not Assigned(result) then
+    result := TJSonString.Create(AContent);
+end;
+
 { TTHttpLogParameters }
 
 constructor TTHttpLogParameters.Create(
   const AThreadPoolSize: Integer;
   const AQueueCapacity: Integer);
 begin
-  Create(AThreadPoolSize, AQueueCapacity, -1, -1);
+  Create(
+    AThreadPoolSize,
+    AQueueCapacity,
+    DefaultMaxContentLength,
+    DefaultMaxItemCount);
 end;
 
 constructor TTHttpLogParameters.Create(
@@ -314,7 +404,8 @@ constructor TTHttpLogParameters.Create(
   const AQueueCapacity: Integer;
   const AMaxContentLength: Integer);
 begin
-  Create(AThreadPoolSize, AQueueCapacity, AMaxContentLength, -1);
+  Create(
+    AThreadPoolSize, AQueueCapacity, AMaxContentLength, DefaultMaxItemCount);
 end;
 
 constructor TTHttpLogParameters.Create(
@@ -329,6 +420,30 @@ begin
   FMaxItemCount := AMaxItemCount;
 end;
 
+function TTHttpLogParameters.GetThreadPoolSize: Integer;
+begin
+  if FThreadPoolSize > 0 then
+    result := FThreadPoolSize
+  else
+    result := DefaultThreadPoolSize;
+end;
+
+function TTHttpLogParameters.GetQueueCapacity: Integer;
+begin
+  if FQueueCapacity = 0 then
+    result := DefaultQueueCapacity
+  else
+    result := FQueueCapacity;
+end;
+
+function TTHttpLogParameters.GetMaxItemCount: Integer;
+begin
+  if FMaxItemCount = 0 then
+    result := DefaultMaxItemCount
+  else
+    result := FMaxItemCount;
+end;
+
 function TTHttpLogParameters.CanLogContent(
   const ALength: Int64): Boolean;
 begin
@@ -337,7 +452,7 @@ end;
 
 function TTHttpLogParameters.CanLogItems(const ACount: Integer): Boolean;
 begin
-  result := (FMaxItemCount < 0) or (ACount <= FMaxItemCount);
+  result := (MaxItemCount < 0) or (ACount <= MaxItemCount);
 end;
 
 { TTHttpLogDiscarded }
@@ -390,11 +505,6 @@ end;
 
 { TTHttpLogNameValues }
 
-constructor TTHttpLogNameValues.Create(const ANameValues: TTHttpNameValues);
-begin
-  Create(ANameValues, False);
-end;
-
 constructor TTHttpLogNameValues.Create(
   const ANameValues: TTHttpNameValues;
   const ARedact: Boolean);
@@ -416,16 +526,8 @@ begin
 end;
 
 class function TTHttpLogNameValues.IsRedacted(const AName: String): Boolean;
-var
-  LIndex: Integer;
 begin
-  result := False;
-  for LIndex := Low(RedactedNames) to High(RedactedNames) do
-    if String.Compare(RedactedNames[LIndex], AName, True) = 0 then
-    begin
-      result := True;
-      Break;
-    end;
+  result := TTHttpLogRedactedNames.Instance.Contains(AName);
 end;
 
 function TTHttpLogNameValues.ToJSonArray: TJSonArray;
@@ -465,29 +567,124 @@ begin
   end;
 end;
 
+{ TTHttpLogRedactedNames }
+
+class constructor TTHttpLogRedactedNames.ClassCreate;
+begin
+  FInstance := TTHttpLogRedactedNames.Create;
+end;
+
+class destructor TTHttpLogRedactedNames.ClassDestroy;
+begin
+  FInstance.Free;
+  FInstance := nil;
+end;
+
+constructor TTHttpLogRedactedNames.Create;
+begin
+  inherited Create;
+  FServing := 0;
+  FNames := TList<String>.Create;
+end;
+
+destructor TTHttpLogRedactedNames.Destroy;
+begin
+  FNames.Free;
+  inherited Destroy;
+end;
+
+procedure TTHttpLogRedactedNames.BeginServing;
+begin
+  TInterlocked.Increment(FServing);
+end;
+
+procedure TTHttpLogRedactedNames.EndServing;
+begin
+  TInterlocked.Decrement(FServing);
+end;
+
+procedure TTHttpLogRedactedNames.AfterConstruction;
+var
+  LIndex: Integer;
+begin
+  inherited AfterConstruction;
+  for LIndex := Low(DefaultNames) to High(DefaultNames) do
+    FNames.Add(DefaultNames[LIndex]);
+end;
+
+function TTHttpLogRedactedNames.IndexOf(const AName: String): Integer;
+var
+  LIndex: Integer;
+begin
+  result := -1;
+  for LIndex := 0 to FNames.Count - 1 do
+    if TTIdentifier.Same(FNames[LIndex], AName) then
+    begin
+      result := LIndex;
+      Break;
+    end;
+end;
+
+procedure TTHttpLogRedactedNames.Add(const AName: String);
+begin
+  if FServing > 0 then
+    raise ETHttpServerException.Create(
+      TTLanguage.Instance.Translate(SRedactedNamesWhileServing));
+
+  if IndexOf(AName) < 0 then
+    FNames.Add(AName);
+end;
+
+function TTHttpLogRedactedNames.Contains(const AName: String): Boolean;
+begin
+  result := IndexOf(AName) >= 0;
+end;
+
 { TTHttpLogRequest }
+
+procedure TTHttpLogRequest.SetContent(
+  const ARequest: TTHttpRequest;
+  const AParameters: TTHttpLogParameters;
+  const AOnRedactContent: TFunc<TTHttpRequest, String, String>);
+begin
+  FContentLength := ARequest.ContentLength;
+  FContentOmitted := not AParameters.CanLogContent(FContentLength);
+  FContent := String.Empty;
+  if not FContentOmitted then
+    SetReadableContent(ARequest, AOnRedactContent);
+end;
+
+procedure TTHttpLogRequest.SetReadableContent(
+  const ARequest: TTHttpRequest;
+  const AOnRedactContent: TFunc<TTHttpRequest, String, String>);
+begin
+  try
+    FContent := ARequest.JSonContent.ToJSon();
+    if Assigned(AOnRedactContent) then
+      FContent := AOnRedactContent(ARequest, FContent);
+  except
+    FContent := String.Empty;
+    FContentOmitted := True;
+  end;
+end;
 
 constructor TTHttpLogRequest.Create(
   const ARequest: TTHttpRequest;
-  const AParameters: TTHttpLogParameters);
+  const AParameters: TTHttpLogParameters;
+  const AOnRedactContent: TFunc<TTHttpRequest, String, String>);
 begin
   FTaskID := ARequest.TaskID;
   FHost := ARequest.Host;
   FDateTime := TTimeZone.Local.ToUniversalTime(Now);
   FUri := ARequest.ControllerID.Uri;
   FMethodType := ARequest.ControllerID.Method;
-  FContentLength := ARequest.ContentLength;
-  FContentOmitted := not AParameters.CanLogContent(FContentLength);
-  if FContentOmitted then
-    FContent := String.Empty
-  else
-    FContent := ARequest.JSonContent.ToJSon();
+  SetContent(ARequest, AParameters, AOnRedactContent);
 
   FParamsCount := ARequest.Parameters.Count;
   FParamsOmitted := FContentOmitted or
     (not AParameters.CanLogItems(FParamsCount));
   if not FParamsOmitted then
-    FParams := TTHttpLogNameValues.Create(ARequest.Parameters);
+    FParams := TTHttpLogNameValues.Create(ARequest.Parameters, True);
 
   FHeadersCount := ARequest.Headers.Count;
   FHeadersOmitted := not AParameters.CanLogItems(FHeadersCount);
@@ -522,7 +719,7 @@ begin
     if FContentOmitted then
       LJSon.AddPair('ContentOmitted', TJSonBool.Create(True))
     else
-      LJSon.AddPair('Content', TJSonObject.ParseJSONValue(FContent));
+      LJSon.AddPair('Content', TTHttpLogContent.ToJSonValue(FContent));
     LJSon.AddPair('RemoteIP', FRemoteIP);
     LJSon.AddPair('ClientIP', FClientIP);
 
@@ -575,6 +772,7 @@ end;
 constructor TTHttpLogUser.Create(const AUser: TTHttpUser);
 begin
   FUsername := AUser.Username;
+  FTenant := AUser.Tenant;
   FAreas := TTHttpLogUserAreas.Create(AUser.Areas);
 end;
 
@@ -583,6 +781,7 @@ begin
   result := TJSonObject.Create;
   try
     result.AddPair('Username', FUsername);
+    result.AddPair('Tenant', FTenant);
     result.AddPair('Areas', FAreas.ToJSonArray());
   except
     result.Free;
@@ -592,20 +791,12 @@ end;
 
 { TTHttpLogResponse }
 
-constructor TTHttpLogResponse.Create(
+procedure TTHttpLogResponse.SetContent(
   const ARequest: TTHttpRequest;
   const AResponse: TTHttpResponse;
-  const AParameters: TTHttpLogParameters);
+  const AParameters: TTHttpLogParameters;
+  const AOnRedactContent: TFunc<TTHttpRequest, String, String>);
 begin
-  FTaskID := AResponse.TaskID;
-  FDateTime := TTimeZone.Local.ToUniversalTime(Now);
-  FHost := ARequest.Host;
-  FUri := ARequest.ControllerID.Uri;
-  FUser := TTHttpLogUser.Create(ARequest.User);
-  FStatusCode := AResponse.StatusCode;
-  FContentType := AResponse.ContentType;
-  FContentEncoding := AResponse.ContentEncoding;
-  FIsBinary := AResponse.IsContentStream;
   FContentLength := AResponse.ContentLength;
   FContentOmitted := not AParameters.CanLogContent(FContentLength);
   if FContentOmitted then
@@ -616,9 +807,29 @@ begin
   else
   begin
     FContent := AResponse.Content;
+    if Assigned(AOnRedactContent) then
+      FContent := AOnRedactContent(ARequest, FContent);
     if FIsBinary then
       FBinaryContent := GetBinaryContent(AResponse);
   end;
+end;
+
+constructor TTHttpLogResponse.Create(
+  const ARequest: TTHttpRequest;
+  const AResponse: TTHttpResponse;
+  const AParameters: TTHttpLogParameters;
+  const AOnRedactContent: TFunc<TTHttpRequest, String, String>);
+begin
+  FTaskID := AResponse.TaskID;
+  FDateTime := TTimeZone.Local.ToUniversalTime(Now);
+  FHost := ARequest.Host;
+  FUri := ARequest.ControllerID.Uri;
+  FUser := TTHttpLogUser.Create(ARequest.User);
+  FStatusCode := AResponse.StatusCode;
+  FContentType := AResponse.ContentType;
+  FContentEncoding := AResponse.ContentEncoding;
+  FIsBinary := AResponse.IsContentStream;
+  SetContent(ARequest, AResponse, AParameters, AOnRedactContent);
 end;
 
 function TTHttpLogResponse.GetBinaryContent(
@@ -659,7 +870,7 @@ begin
     else if FIsBinary then
       LJSon.AddPair('BinaryContent', TJSonString.Create(FBinaryContent))
     else if FContentType.Equals(TTHttpContentTypes.JSon) then
-      LJSon.AddPair('Content', TJSonObject.ParseJSONValue(FContent))
+      LJSon.AddPair('Content', TTHttpLogContent.ToJSonValue(FContent))
     else
       LJSon.AddPair('Content', FContent);
 

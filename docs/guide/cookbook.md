@@ -55,7 +55,7 @@ end;
 ```
 
 !!! note
-    Conditions are combined in declaration order. The builder does not support explicit grouping with parentheses. For complex grouping, use `TTFilter.Create` with a raw WHERE clause.
+    Conditions are combined in declaration order, and SQL binds `AND` tighter than `OR`. For grouping such as `(A or B) and C`, use the [expression API](filtering.md#expression-filters-grouping).
 
 ## Raw WHERE with Parameters
 
@@ -83,7 +83,7 @@ try
 
   Writeln(Format('New ID: %d', [LPerson.ID]));  // ID is populated after insert
 finally
-  LPerson.Free;
+  LContext.FreeEntity<TPerson>(LPerson);
 end;
 ```
 
@@ -102,7 +102,7 @@ try
   LPerson.Lastname := 'Smith';
   LContext.Save<TPerson>(LPerson);    // UPDATE (already persisted)
 finally
-  LPerson.Free;
+  LContext.FreeEntity<TPerson>(LPerson);
 end;
 ```
 
@@ -317,13 +317,15 @@ type
   end;
 ```
 
-Validation runs automatically on `Insert` and `Update`. To validate manually:
+Validation runs automatically on `Insert`, `Update` and `Undelete`. To validate manually:
 
 ```pascal
-var LErrors := LContext.Validate<TProduct>(LProduct);
-if LErrors.Count > 0 then
-  for LError in LErrors do
-    Writeln(LError);
+try
+  LContext.Validate<TProduct>(LProduct);
+except
+  on E: ETValidationException do
+    Writeln(E.Message);
+end;
 ```
 
 ## Custom Validation with Event Methods
@@ -380,7 +382,7 @@ type
 ```
 
 ```pascal
-LOrders := TTObjectList<TOrderReport>.Create;
+LOrders := LContext.CreateEntityList<TOrderReport>();
 try
   LContext.SelectAll<TOrderReport>(LOrders);
   for LOrder in LOrders do
@@ -521,33 +523,72 @@ This is the recommended approach for integration tests -- fast, isolated, no cle
 
 Register a custom logger to capture SQL activity:
 
+A logger is a **thread**: extend `TTLoggerThread` and override its seven
+abstract methods, one per event. The framework calls them on the logger's own
+thread, so the writing never sits on the path of the query. What is still queued
+when the logger is freed is written by the thread that frees it, once the
+logger's own thread has stopped.
+
 ```pascal
 type
-  TMyLogger = class(TTAbstractLogger)
-  public
-    procedure LogEvent(const AEvent: TTLoggerEvent;
-      const AItem: TTLoggerItem); override;
+  TConsoleLoggerThread = class(TTLoggerThread)
+  strict protected
+    procedure LogStartTransaction(const AID: TTLoggerItemID); override;
+    procedure LogCommit(const AID: TTLoggerItemID); override;
+    procedure LogRollback(const AID: TTLoggerItemID); override;
+    procedure LogParameter(
+      const AID: TTLoggerItemID;
+      const AName: String;
+      const AValue: String); override;
+    procedure LogSyntax(
+      const AID: TTLoggerItemID; const ASyntax: String); override;
+    procedure LogCommand(
+      const AID: TTLoggerItemID; const ASyntax: String); override;
+    procedure LogError(
+      const AID: TTLoggerItemID; const AMessage: String); override;
   end;
 
-procedure TMyLogger.LogEvent(const AEvent: TTLoggerEvent;
-  const AItem: TTLoggerItem);
+procedure TConsoleLoggerThread.LogSyntax(
+  const AID: TTLoggerItemID; const ASyntax: String);
 begin
-  case AEvent of
-    TTLoggerEvent.Syntax:
-      Writeln(Format('[SQL] %s', [AItem.Text]));
-    TTLoggerEvent.Parameter:
-      Writeln(Format('[PARAM] %s = %s', [AItem.Name, AItem.Text]));
-    TTLoggerEvent.Error:
-      Writeln(Format('[ERR] %s', [AItem.Text]));
-  end;
+  Writeln(Format('[SQL] %s', [ASyntax]));
+end;
+
+procedure TConsoleLoggerThread.LogParameter(
+  const AID: TTLoggerItemID;
+  const AName: String;
+  const AValue: String);
+begin
+  Writeln(Format('[PARAM] %s = %s', [AName, AValue]));
+end;
+
+procedure TConsoleLoggerThread.LogError(
+  const AID: TTLoggerItemID; const AMessage: String);
+begin
+  Writeln(Format('[ERR] %s', [AMessage]));
 end;
 ```
 
+The other four - `LogStartTransaction`, `LogCommit`, `LogRollback` and
+`LogCommand` - have the same shape and must be overridden too, because they
+are abstract.
+
+Register the **class**, not an instance: the framework constructs the thread.
+
 ```pascal
-TTLogger.Instance.RegisterLogger(TMyLogger.Create);
+TTLogger.Instance.RegisterLogger<TConsoleLoggerThread>();
 ```
 
-Log items carry a `TTLoggerItemID` (connection ID + thread ID) for multi-threaded correlation.
+The overload with a pool size distributes the events over several threads,
+round-robin:
+
+```pascal
+TTLogger.Instance.RegisterLogger<TConsoleLoggerThread>(4);
+```
+
+Every method receives a `TTLoggerItemID` (connection ID + thread ID), which is
+what lets you correlate all the SQL of one connection across threads. See
+[Logging](logging.md) for the full contract.
 
 ## Optimistic Locking
 

@@ -20,42 +20,69 @@ uses
   System.Generics.Defaults,
   Data.DB,
 
+  Trysil.Consts,
+  Trysil.Exceptions,
   Trysil.Classes,
   Trysil.Cache,
+  Trysil.Rtti,
   Trysil.Mapping,
   Trysil.Factory,
   Trysil.Generics.Collections;
 
 type
 
+{ TTColumnType }
+
+  TTColumnType = record
+  strict private
+    FDataType: TFieldType;
+    FDataSize: Integer;
+    FPrecision: Integer;
+  public
+    constructor Create(
+      const ADataType: TFieldType;
+      const ADataSize: Integer;
+      const APrecision: Integer);
+
+    property DataType: TFieldType read FDataType;
+    property DataSize: Integer read FDataSize;
+    property Precision: Integer read FPrecision;
+  end;
+
 { TTColumnMetadata }
 
   TTColumnMetadata = class
   strict private
     FColumnName: String;
-    FDataType: TFieldType;
-    FDataSize: Integer;
+    FSqlReference: String;
+    FColumnType: TTColumnType;
     FIsGuid: Boolean;
     FIsCurrency: Boolean;
     FIsFilterable: Boolean;
+    FJSonName: String;
+    FAttributes: TArray<String>;
+
+    function GetDataType: TFieldType;
+    function GetDataSize: Integer;
+    function GetPrecision: Integer;
   public
     constructor Create(
       const AColumnName: String;
-      const ADataType: TFieldType;
-      const ADataSize: Integer); overload;
+      const ASqlReference: String;
+      const AColumnType: TTColumnType;
+      const AColumnMap: TTColumnMap);
 
-    constructor Create(
-      const AColumnName: String;
-      const ADataType: TFieldType;
-      const ADataSize: Integer;
-      const AColumnMap: TTColumnMap); overload;
+    function HasAttribute(const AAttribute: TClass): Boolean;
 
     property ColumnName: String read FColumnName;
-    property DataType: TFieldType read FDataType;
-    property DataSize: Integer read FDataSize;
+    property SqlReference: String read FSqlReference;
+    property DataType: TFieldType read GetDataType;
+    property DataSize: Integer read GetDataSize;
+    property Precision: Integer read GetPrecision;
     property IsGuid: Boolean read FIsGuid;
     property IsCurrency: Boolean read FIsCurrency;
     property IsFilterable: Boolean read FIsFilterable;
+    property JSonName: String read FJSonName;
   end;
 
 { TTColumnsMetadata }
@@ -71,14 +98,9 @@ type
 
     procedure Add(
       const AColumnName: String;
-      const ADataType: TFieldType;
-      const ADataSize: Integer); overload;
-
-    procedure Add(
-      const AColumnName: String;
-      const ADataType: TFieldType;
-      const ADataSize: Integer;
-      const AColumnMap: TTColumnMap); overload;
+      const ASqlReference: String;
+      const AColumnType: TTColumnType;
+      const AColumnMap: TTColumnMap);
 
     function Find(const AColumnName: String): TTColumnMetadata;
 
@@ -94,6 +116,8 @@ type
     FTableName: String;
     FPrimaryKey: String;
     FColumns: TTColumnsMetadata;
+
+    class procedure CheckTableMap(const ATableMap: TTTableMap); static;
   public
     constructor Create(const ATableMap: TTTableMap);
     destructor Destroy; override;
@@ -175,29 +199,68 @@ type
 
 implementation
 
+{ TTColumnType }
+
+constructor TTColumnType.Create(
+  const ADataType: TFieldType;
+  const ADataSize: Integer;
+  const APrecision: Integer);
+begin
+  FDataType := ADataType;
+  FDataSize := ADataSize;
+  FPrecision := APrecision;
+end;
+
 { TTColumnMetadata }
 
 constructor TTColumnMetadata.Create(
   const AColumnName: String;
-  const ADataType: TFieldType;
-  const ADataSize: Integer);
-begin
-  Create(AColumnName, ADataType, ADataSize, nil);
-end;
-
-constructor TTColumnMetadata.Create(
-  const AColumnName: String;
-  const ADataType: TFieldType;
-  const ADataSize: Integer;
+  const ASqlReference: String;
+  const AColumnType: TTColumnType;
   const AColumnMap: TTColumnMap);
 begin
   inherited Create;
   FColumnName := AColumnName;
-  FDataType := ADataType;
-  FDataSize := ADataSize;
+  FSqlReference := ASqlReference;
+  FColumnType := AColumnType;
   FIsGuid := Assigned(AColumnMap) and AColumnMap.IsGuid;
   FIsCurrency := Assigned(AColumnMap) and AColumnMap.IsCurrency;
-  FIsFilterable := (not Assigned(AColumnMap)) or AColumnMap.IsFilterable;
+  FIsFilterable := Assigned(AColumnMap) and AColumnMap.IsFilterable;
+  if Assigned(AColumnMap) and Assigned(AColumnMap.Member) then
+  begin
+    FAttributes := AColumnMap.Member.AttributeNames;
+    FJSonName := TTIdentifier.PublishedName(AColumnMap.Member.Name);
+    if TTRttiLazy.IsLazyType(AColumnMap.Member.RttiType) then
+      FJSonName := Format('%sID', [FJSonName]);
+  end;
+end;
+
+function TTColumnMetadata.HasAttribute(const AAttribute: TClass): Boolean;
+var
+  LName: String;
+begin
+  result := False;
+  for LName in FAttributes do
+    if LName = AAttribute.QualifiedClassName then
+    begin
+      result := True;
+      Break;
+    end;
+end;
+
+function TTColumnMetadata.GetDataType: TFieldType;
+begin
+  result := FColumnType.DataType;
+end;
+
+function TTColumnMetadata.GetDataSize: Integer;
+begin
+  result := FColumnType.DataSize;
+end;
+
+function TTColumnMetadata.GetPrecision: Integer;
+begin
+  result := FColumnType.Precision;
 end;
 
 { TTColumnsMetadata }
@@ -216,22 +279,14 @@ end;
 
 procedure TTColumnsMetadata.Add(
   const AColumnName: String;
-  const ADataType: TFieldType;
-  const ADataSize: Integer);
-begin
-  Add(AColumnName, ADataType, ADataSize, nil);
-end;
-
-procedure TTColumnsMetadata.Add(
-  const AColumnName: String;
-  const ADataType: TFieldType;
-  const ADataSize: Integer;
+  const ASqlReference: String;
+  const AColumnType: TTColumnType;
   const AColumnMap: TTColumnMap);
 var
   LColumnMetadata: TTColumnMetadata;
 begin
   LColumnMetadata := TTColumnMetadata.Create(
-    AColumnName, ADataType, ADataSize, AColumnMap);
+    AColumnName, ASqlReference, AColumnType, AColumnMap);
   try
     FColumns.Add(LColumnMetadata);
   except
@@ -246,7 +301,7 @@ var
 begin
   result := nil;
   for LColumnMetadata in FColumns do
-    if String.Compare(LColumnMetadata.ColumnName, AColumnName, True) = 0 then
+    if TTIdentifier.Same(LColumnMetadata.ColumnName, AColumnName) then
     begin
       result := LColumnMetadata;
       Break;
@@ -265,9 +320,30 @@ end;
 
 { TTTableMetadata }
 
+class procedure TTTableMetadata.CheckTableMap(const ATableMap: TTTableMap);
+var
+  LEntityName: String;
+begin
+  LEntityName := String(ATableMap.EntityTypeInfo^.Name);
+  if ATableMap.Name.IsEmpty then
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SNotValidTableName), [
+        LEntityName]);
+
+  if ATableMap.Columns.Empty then
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SNoMappedColumns), [
+        LEntityName]);
+
+  if not Assigned(ATableMap.PrimaryKey) then
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(SNotDefinedPrimaryKey));
+end;
+
 constructor TTTableMetadata.Create(const ATableMap: TTTableMap);
 begin
   inherited Create;
+  CheckTableMap(ATableMap);
   FTableName := ATableMap.Name;
   FPrimaryKey := ATableMap.PrimaryKey.Name;
   FColumns := TTColumnsMetadata.Create;
@@ -294,13 +370,14 @@ function TTMetadataKeyComparer.Equals(
   const ALeft: TTMetadataKey; const ARight: TTMetadataKey): Boolean;
 begin
   result := (ALeft.TypeInfo = ARight.TypeInfo) and
-    (String.Compare(ALeft.ConnectionName, ARight.ConnectionName, True) = 0);
+    TTIdentifier.Same(ALeft.ConnectionName, ARight.ConnectionName);
 end;
 
 function TTMetadataKeyComparer.GetHashCode(
   const AValue: TTMetadataKey): Integer;
 begin
-  result := THashBobJenkins.GetHashValue(AValue.ConnectionName.ToLower) xor
+  result := THashBobJenkins.GetHashValue(
+    AValue.ConnectionName.ToUpperInvariant) xor
     Integer(NativeInt(AValue.TypeInfo));
 end;
 
@@ -314,6 +391,7 @@ end;
 class destructor TTMetadataCache.ClassDestroy;
 begin
   FInstance.Free;
+  FInstance := nil;
 end;
 
 function TTMetadataCache.CreateObject(

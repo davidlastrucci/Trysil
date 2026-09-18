@@ -49,6 +49,13 @@ URL parameters use the `?` placeholder. Parameters are mapped to method argument
 | `[TGet('/?')]` | `GET /api/persons/123` | `AID = 123` |
 | `[TDelete('/?/?')]` | `DELETE /api/persons/123/1` | `AID = 123, AVersionID = 1` |
 
+A placeholder stands for the last segments of the route, never for one in the middle. `[TGet('/?/detail')]` is refused when the controller is registered: a placeholder matches any value, so a fixed segment written after one turns the route into a pattern that overlaps addresses it was never meant to serve.
+
+The router resolves a request by trying the exact address first, then the parametrized routes, then the catch-all, and at every step it looks for a route that answers the request method. The exact address wins when it answers the method and steps aside when it does not, and among the parametrized routes the search keeps going until one carries the method. So `[TGet('/2024/?')]` on one controller and `[TDelete('/?/?')]` on another can share a base URI and both stay reachable, and a literal `[TGet('/2024')]` does not turn `DELETE /reports/2024` into a `405` while `[TDelete('/?')]` is there to serve it. A `405` means no route that matches the address answers the method, and its `Allow` header lists what the address does answer.
+
+!!! warning "Two patterns of the same shape are resolved in an order you do not control"
+    What the router cannot decide for you is which of two routes that both match *and* both answer the method should win. `[TGet('/2024/?')]` and `[TGet('/?/?')]` under the same base URI both match `GET /reports/2024/7`, and which one runs is not defined. The framework does not refuse the pair, because a literal segment beside a placeholder is a legitimate way to write a special case. Keep the routes that answer the same method distinguishable by their shape, or fold the special case into the general method and branch on the value.
+
 ## Registering Controllers
 
 ```pascal
@@ -73,7 +80,14 @@ procedure GetAll;
 procedure Insert;
 ```
 
-The authentication handler determines which areas the current user has access to. See [Authentication](authentication.md) for details.
+Your authentication class fills `Request.User.Areas`; the listener is what compares them against `[TArea]` and answers `403`. See [Authentication](authentication.md) for details.
+
+An `[TArea]` declared on a method your controller overrides is inherited by the override. Overloads are independent: two methods with the same name but different parameters do not share their areas.
+
+`Start` refuses to run in two cases, because in both the attribute would be a lie:
+
+- `[TArea]` anywhere and no authentication class registered - there is no user, so nothing restricts anything, and the route would be served to everyone.
+- `[TArea]` on a route that also carries `[TAuthorizationType(TTHttpAuthorizationType.None)]` - authentication does not run there, so the user carries no area and the route answers `403` to everyone, forever.
 
 ## No-Auth Endpoints
 
@@ -88,7 +102,7 @@ public
   procedure Logon;
 
   [TPost('/reset')]
-  [TAuthorizationType(TTHttpAuthorizationType.Bearer)]
+  [TAuthorizationType(TTHttpAuthorizationType.Authentication)]
   procedure ResetPassword;
 end;
 ```
@@ -115,7 +129,7 @@ var
   LConfig: TTJSonSerializerConfig;
 begin
   LConfig := TTJSonSerializerConfig.Create(-1, False);
-  LPersons := TTList<TPerson>.Create;
+  LPersons := FContext.Context.CreateEntityList<TPerson>();
   try
     FContext.Context.SelectAll<TPerson>(LPersons);
     FResponse.Content := FContext.Context.ListToJSon<TPerson>(LPersons, LConfig);
@@ -134,7 +148,7 @@ begin
   try
     FResponse.Content := FContext.Context.EntityToJSon<TPerson>(LPerson, LConfig);
   finally
-    LPerson.Free;
+    FContext.Context.FreeEntity<TPerson>(LPerson);
   end;
 end;
 ```

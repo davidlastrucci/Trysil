@@ -29,6 +29,7 @@ uses
 
   Trysil.Tests.Config,
   Trysil.Tests.Oracle.Connection,
+  Trysil.Tests.Oracle.SqlSyntax,
   Trysil.Tests.Oracle.Crud,
   Trysil.Tests.Oracle.ChangeTracking,
   Trysil.Tests.Oracle.IdentityMap,
@@ -58,6 +59,7 @@ begin
     TDUnitX.RegisterTestFixture(TTOracleCrudTests);
     TDUnitX.RegisterTestFixture(TTOracleChangeTrackingTests);
     TDUnitX.RegisterTestFixture(TTOracleIdentityMapTests);
+    TDUnitX.RegisterTestFixture(TTOracleSqlSyntaxTests);
     TDUnitX.RegisterTestFixture(TTOracleValidationTests);
     TDUnitX.RegisterTestFixture(TTOracleJoinTests);
     TDUnitX.RegisterTestFixture(TTOracleSessionTests);
@@ -80,11 +82,5 @@ begin
   if TTTestConfig.IsDatabaseEnabled('Oracle') then
     TTOracleTestConnection.Finalize;
 end;
-
-initialization
-  TTOracleTestRegister.Register;
-
-finalization
-  TTOracleTestRegister.Unregister;
 
 end.

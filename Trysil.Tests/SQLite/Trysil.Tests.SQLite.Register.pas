@@ -45,7 +45,12 @@ uses
   Trysil.Tests.SQLite.AllTypes,
   Trysil.Tests.SQLite.AllTypesJSon,
   Trysil.Tests.SQLite.NullablePrimitives,
-  Trysil.Tests.SQLite.NullablePrimitivesJSon;
+  Trysil.Tests.SQLite.NullablePrimitivesJSon,
+  Trysil.Tests.SQLite.CommitFailure,
+  Trysil.Tests.SQLite.SequenceCeiling,
+  Trysil.Tests.SQLite.HttpFilter,
+  Trysil.Tests.SQLite.JSonReentrance,
+  Trysil.Tests.SQLite.SqlSyntax;
 
 { TTSQLiteTestRegister }
 
@@ -55,6 +60,7 @@ begin
   begin
     TTSQLiteTestConnection.Initialize;
 
+    TDUnitX.RegisterTestFixture(TTSQLiteSqlSyntaxTests);
     TDUnitX.RegisterTestFixture(TTSQLiteCrudTests);
     TDUnitX.RegisterTestFixture(TTSQLiteChangeTrackingTests);
     TDUnitX.RegisterTestFixture(TTSQLiteIdentityMapTests);
@@ -62,6 +68,10 @@ begin
     TDUnitX.RegisterTestFixture(TTSQLiteJoinTests);
     TDUnitX.RegisterTestFixture(TTSQLiteSessionTests);
     TDUnitX.RegisterTestFixture(TTSQLiteTransactionTests);
+    TDUnitX.RegisterTestFixture(TTSQLiteCommitFailureTests);
+    TDUnitX.RegisterTestFixture(TTSQLiteSequenceCeilingTests);
+    TDUnitX.RegisterTestFixture(TTSQLiteHttpFilterTests);
+    TDUnitX.RegisterTestFixture(TTSQLiteJSonReentranceTests);
     TDUnitX.RegisterTestFixture(TTSQLiteLazyTests);
     TDUnitX.RegisterTestFixture(TTSQLiteEventsTests);
     TDUnitX.RegisterTestFixture(TTSQLiteRelationTests);
@@ -80,11 +90,5 @@ begin
   if TTTestConfig.IsDatabaseEnabled('SQLite') then
     TTSQLiteTestConnection.Finalize;
 end;
-
-initialization
-  TTSQLiteTestRegister.Register;
-
-finalization
-  TTSQLiteTestRegister.Unregister;
 
 end.

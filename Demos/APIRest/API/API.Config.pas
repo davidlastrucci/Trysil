@@ -46,6 +46,17 @@ type
     property AllowOrigin: String read FAllowOrigin;
   end;
 
+{ TAPIAuthenticationConfig }
+
+  TAPIAuthenticationConfig = record
+  strict private
+    FSecret: String;
+  private // internal
+    procedure Load(const AJSon: TJSonValue);
+  public
+    property Secret: String read FSecret;
+  end;
+
 { TAPIDatabaseConfig }
 
   TAPIDatabaseConfig = record
@@ -70,6 +81,7 @@ type
   TAPIConfig = class
   strict private
     class var FInstance: TAPIConfig;
+    class var FLock: TObject;
 
     class constructor ClassCreate;
     class destructor ClassDestroy;
@@ -78,6 +90,7 @@ type
   strict private
     FServer: TAPIServerConfig;
     FCors: TAPICorsConfig;
+    FAuthentication: TAPIAuthenticationConfig;
     FDatabase: TAPIDatabaseConfig;
 
     function GetJSonConfig: TJSonValue;
@@ -85,6 +98,7 @@ type
   public
     property Server: TAPIServerConfig read FServer;
     property Cors: TAPICorsConfig read FCors;
+    property Authentication: TAPIAuthenticationConfig read FAuthentication;
     property Database: TAPIDatabaseConfig read FDatabase;
 
     class property Instance: TAPIConfig read GetInstance;
@@ -118,6 +132,14 @@ begin
   end;
 end;
 
+{ TAPIAuthenticationConfig }
+
+procedure TAPIAuthenticationConfig.Load(const AJSon: TJSonValue);
+begin
+  if Assigned(AJSon) then
+    FSecret := AJSon.GetValue<String>('secret', '');
+end;
+
 { TAPIDatabaseConfig }
 
 procedure TAPIDatabaseConfig.Load(const AJSon: TJSonValue);
@@ -137,29 +159,38 @@ end;
 class constructor TAPIConfig.ClassCreate;
 begin
   FInstance := nil;
+  FLock := TObject.Create;
 end;
 
 class destructor TAPIConfig.ClassDestroy;
 begin
   if Assigned(FInstance) then
     FInstance.Free;
+  FLock.Free;
 end;
 
 class function TAPIConfig.GetInstance: TAPIConfig;
+var
+  LInstance: TAPIConfig;
 begin
-  if not Assigned(FInstance) then
-  begin
-    FInstance := TAPIConfig.Create;
-    try
-      FInstance.LoadFromFile;
-    except
-      FInstance.Free;
-      FInstance := nil;
-      raise;
+  TMonitor.Enter(FLock);
+  try
+    if not Assigned(FInstance) then
+    begin
+      LInstance := TAPIConfig.Create;
+      try
+        LInstance.LoadFromFile;
+      except
+        LInstance.Free;
+        raise;
+      end;
+      FInstance := LInstance;
     end;
-  end;
 
-  result := FInstance;
+    result := FInstance;
+  finally
+    TMonitor.Exit(FLock);
+  end;
 end;
 
 function TAPIConfig.GetJSonConfig: TJSonValue;
@@ -183,6 +214,8 @@ begin
   try
     FServer.Load(LJSon.GetValue<TJSonValue>('server', nil));
     FCors.Load(LJSon.GetValue<TJSonValue>('cors', nil));
+    FAuthentication.Load(
+      LJSon.GetValue<TJSonValue>('authentication', nil));
     FDatabase.Load(LJSon.GetValue<TJSonValue>('database', nil));
   finally
     LJSon.Free;

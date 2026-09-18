@@ -20,6 +20,7 @@ uses
   Data.DB,
 
   Trysil.Consts,
+  Trysil.Classes,
   Trysil.Types,
   Trysil.Exceptions,
   Trysil.Filter,
@@ -33,6 +34,8 @@ uses
 
 type
 
+  TTNewEntityCache = class;
+
 { TTProvider }
 
   TTProvider = class
@@ -41,16 +44,24 @@ type
     FContext: TObject;
     FMetadata: TTMetadata;
     FIdentityMap: TTIdentityMap;
+    FNewEntityCache: TTNewEntityCache;
 
     FInLoading: Boolean;
 
-    FLazyOwner: TObjectList<TObject>;
+    FLazyOwner: TObjectDictionary<Pointer, TObjectList<TObject>>;
+
+    procedure AddLazyOwner(
+      const AEntity: TObject; const ALazy: TObject);
 
     function GetUseIdentityMap: Boolean;
+    function GetLazyOwnerCount: Integer;
     function LoadAndCheckTableMap<T: class>(): TTTableMap;
+    procedure CheckRawFilter(const AFilter: TTFilter);
 
     function InternalCreateEntity<T: class>(
-      const ATableMap: TTTAbleMap; const AReader: TTReader): T;
+      const ATableMap: TTTAbleMap;
+      const AReader: TTReader;
+      const ARttiEntity: TTRttiEntity<T>): T;
 
     function SetPrimaryKey<T: class>(
       const ATablemap: TTTableMap; const AEntity: T): TTPrimaryKey;
@@ -90,8 +101,13 @@ type
 
     function GetPrimaryKey(
       const ATablemap: TTTableMap; const AReader: TTReader): TTPrimaryKey;
+    function FindColumnByName(
+      const ATablemap: TTTableMap;
+      const AColumnName: String): TTColumnMap;
     function GetWhere(
-      const AColumnName: String; const AID: TTPrimaryKey): String; overload;
+      const ATablemap: TTTableMap;
+      const AColumnName: String;
+      const AID: TTPrimaryKey): String; overload;
     function GetWhere(
       const ATablemap: TTTableMap; const AID: TTPrimaryKey): String; overload;
   public
@@ -102,7 +118,11 @@ type
       const AUseIdentityMap: Boolean);
     destructor Destroy; override;
 
-    function CreateDataset(const ASQL: String): TDataset;
+    function CreateDataset(const ASQL: String): TDataset; overload;
+    function CreateDataset(
+      const ASQL: String; const AFilter: TTFilter): TDataset; overload;
+
+    procedure DisposedEntity(const AEntity: TObject);
 
     function CreateEntity<T: class>(const AInLoading: Boolean): T;
     function GetID<T: class>(const AEntity: T): TTPrimaryKey;
@@ -110,8 +130,9 @@ type
     function CloneEntity<T: class>(const AEntity: T): T;
 
     function GetMetadata<T: class>(): TTTableMetadata;
+    function IdentityMapOwns(const ATableMap: TTTableMap): Boolean;
 
-    function SelectCount<T: class>(const AFilter: TTFilter): Integer;
+    function SelectCount<T: class>(const AFilter: TTFilter): Int64;
 
     procedure Select<T: class>(
       const AResult: TTList<T>; const AFilter: TTFilter);
@@ -119,47 +140,41 @@ type
     function Get<T: class>(
       const AID: TTPrimaryKey; const AIncludeDeleted: Boolean): T;
 
+    function TryRefresh<T: class>(const AEntity: T): Boolean;
     procedure Refresh<T: class>(const AEntity: T);
 
     procedure RawSelect<T: class>(
-      const ASQL: String; const AResult: TTList<T>);
+      const ASQL: String; const AResult: TTList<T>); overload;
+    procedure RawSelect<T: class>(
+      const ASQL: String;
+      const AFilter: TTFilter;
+      const AResult: TTList<T>); overload;
 
     property UseIdentityMap: Boolean read GetUseIdentityMap;
+    property LazyOwnerCount: Integer read GetLazyOwnerCount;
+    property NewEntityCache: TTNewEntityCache read FNewEntityCache;
   end;
 
 { TTNewEntityCache }
 
   TTNewEntityCache = class(TTTransactionObserver)
   strict private
-    FProvider: TTProvider;
-
-    FCache: TObjectDictionary<PTypeInfo, TTHashList<TTPrimaryKey>>;
-    FTransactionCache: TObjectDictionary<PTypeInfo, TTHashList<TTPrimaryKey>>;
+    FCache: TTHashList<Pointer>;
+    FTransactionCache: TTHashList<Pointer>;
 
     procedure ClearTransaction;
-    procedure InternalAdd(
-      const ACache: TObjectDictionary<PTypeInfo, TTHashList<TTPrimaryKey>>;
-      const ATypeInfo: PTypeInfo;
-      const AID: TTPrimaryKey);
-    function InternalContains(
-      const ACache: TObjectDictionary<PTypeInfo, TTHashList<TTPrimaryKey>>;
-      const ATypeInfo: PTypeInfo;
-      const AID: TTPrimaryKey): Boolean;
-    procedure InternalRemove(
-      const ACache: TObjectDictionary<PTypeInfo, TTHashList<TTPrimaryKey>>;
-      const ATypeInfo: PTypeInfo;
-      const AID: TTPrimaryKey);
   strict protected
     procedure TransactionStarted; override;
     procedure TransactionCommitted; override;
     procedure TransactionRolledback; override;
   public
-    constructor Create(const AProvider: TTProvider);
+    constructor Create;
     destructor Destroy; override;
 
-    procedure Add<T: class>(const AEntity: T);
-    function Contains<T: class>(const AEntity: T): Boolean;
-    procedure Remove<T: class>(const AEntity: T);
+    procedure Add(const AEntity: TObject);
+    function Contains(const AEntity: TObject): Boolean;
+    procedure Remove(const AEntity: TObject);
+    procedure Disposed(const AEntity: TObject);
   end;
 
 implementation
@@ -183,20 +198,96 @@ begin
 
   FInLoading := False;
 
-  FLazyOwner := TObjectList<TObject>.Create(True);
+  FLazyOwner := TObjectDictionary<
+    Pointer, TObjectList<TObject>>.Create([doOwnsValues]);
+  FNewEntityCache := TTNewEntityCache.Create;
 end;
 
 destructor TTProvider.Destroy;
+var
+  LLazyOwner: TObjectDictionary<Pointer, TObjectList<TObject>>;
+  LIdentityMap: TTIdentityMap;
+  LNewEntityCache: TTNewEntityCache;
 begin
-  if Assigned(FIdentityMap) then
-    FIdentityMap.Free;
-  FLazyOwner.Free;
+  LLazyOwner := FLazyOwner;
+  FLazyOwner := nil;
+  LLazyOwner.Free;
+
+  LIdentityMap := FIdentityMap;
+  FIdentityMap := nil;
+  if Assigned(LIdentityMap) then
+    LIdentityMap.Free;
+
+  LNewEntityCache := FNewEntityCache;
+  FNewEntityCache := nil;
+  LNewEntityCache.Free;
   inherited Destroy;
+end;
+
+procedure TTProvider.AddLazyOwner(
+  const AEntity: TObject; const ALazy: TObject);
+var
+  LLazies: TObjectList<TObject>;
+begin
+  if not FLazyOwner.TryGetValue(Pointer(AEntity), LLazies) then
+  begin
+    LLazies := TObjectList<TObject>.Create(True);
+    try
+      FLazyOwner.Add(Pointer(AEntity), LLazies);
+    except
+      LLazies.Free;
+      raise;
+    end;
+  end;
+  LLazies.Add(ALazy);
+end;
+
+function TTProvider.IdentityMapOwns(const ATableMap: TTTableMap): Boolean;
+begin
+  result := Assigned(FIdentityMap) and
+    (not ATableMap.HasJoins) and
+    Assigned(ATableMap.PrimaryKey);
+end;
+
+procedure TTProvider.DisposedEntity(const AEntity: TObject);
+var
+  LPair: TPair<Pointer, TObjectList<TObject>>;
+begin
+  if Assigned(FNewEntityCache) then
+    FNewEntityCache.Disposed(AEntity);
+
+  if Assigned(FLazyOwner) then
+  begin
+    LPair := FLazyOwner.ExtractPair(Pointer(AEntity));
+    if Assigned(LPair.Value) then
+      LPair.Value.Free;
+  end;
+end;
+
+procedure TTProvider.CheckRawFilter(const AFilter: TTFilter);
+begin
+  if (not AFilter.Where.IsEmpty) or (not AFilter.Paging.IsEmpty) then
+    raise ETException.Create(
+      TTLanguage.Instance.Translate(SRawFilterOnlyParameters));
 end;
 
 function TTProvider.CreateDataset(const ASQL: String): TDataset;
 begin
   result := FConnection.CreateDataSet(ASQL, TTFilter.Empty);
+end;
+
+function TTProvider.CreateDataset(
+  const ASQL: String; const AFilter: TTFilter): TDataset;
+begin
+  CheckRawFilter(AFilter);
+  result := FConnection.CreateDataSet(ASQL, AFilter);
+end;
+
+function TTProvider.GetLazyOwnerCount: Integer;
+begin
+  result := 0;
+  if Assigned(FLazyOwner) then
+    result := FLazyOwner.Count;
 end;
 
 function TTProvider.GetUseIdentityMap: Boolean;
@@ -256,9 +347,11 @@ begin
         if not FInLoading then
           LPrimaryKey := SetPrimaryKey<T>(LTableMap, result);
         MapEntity(LTableMap, nil, result);
-        if not (FInLoading) and Assigned(FIdentityMap) then
+        if not (FInLoading) and Assigned(FIdentityMap) and
+          (not LTableMap.HasJoins) then
           FIdentityMap.AddEntity<T>(LPrimaryKey, result);
       except
+        DisposedEntity(result);
         result.Free;
         raise;
       end;
@@ -271,10 +364,11 @@ begin
 end;
 
 function TTProvider.InternalCreateEntity<T>(
-  const ATableMap: TTTAbleMap; const AReader: TTReader): T;
+  const ATableMap: TTTAbleMap;
+  const AReader: TTReader;
+  const ARttiEntity: TTRttiEntity<T>): T;
 var
   LPrimaryKey: TTPrimaryKey;
-  LRttiEntity: TTRttiEntity<T>;
 begin
   LPrimaryKey := GetPrimaryKey(ATableMap, AReader);
   result := nil;
@@ -283,17 +377,27 @@ begin
 
   if not Assigned(result) then
   begin
-    LRttiEntity := TTRttiEntity<T>.Create;
+    result := ARttiEntity.CreateEntity(FContext);
     try
-      result := LRttiEntity.CreateEntity(FContext);
       if Assigned(FIdentityMap) and (not ATableMap.HasJoins) then
         FIdentityMap.AddEntity<T>(LPrimaryKey, result);
-    finally
-      LRttiEntity.Free;
+    except
+      DisposedEntity(result);
+      result.Free;
+      raise;
     end;
   end;
 
-  MapEntity(ATableMap, AReader, result);
+  try
+    MapEntity(ATableMap, AReader, result);
+  except
+    if not (Assigned(FIdentityMap) and (not ATableMap.HasJoins)) then
+    begin
+      DisposedEntity(result);
+      result.Free;
+    end;
+    raise;
+  end;
 end;
 
 function TTProvider.CloneEntity<T>(const AEntity: T): T;
@@ -319,6 +423,7 @@ begin
       for LDetailColumnMap in LTableMap.DetailColumns do
         LDetailColumnMap.Member.CloneLazyID(result, AEntity);
     except
+      DisposedEntity(result);
       result.Free;
       raise;
     end;
@@ -377,7 +482,7 @@ begin
   if Assigned(LResult) then
   begin
     if TTRttiLazy.IsLazy(LResult) then
-      FLazyOwner.Add(LResult)
+      AddLazyOwner(AEntity, LResult)
     else if AIsDetail then
       SelectAndMapList(
         LResult, ADetailColumnName, LValue.AsType<TTPrimaryKey>())
@@ -449,7 +554,7 @@ begin
   try
     LTableMap := TTMapper.Instance.Load(LGenericList.GenericTypeInfo);
     LTableMetadata := FMetadata.Load(LGenericList.GenericTypeInfo);
-    LFilter := TTFilter.Create(GetWhere(AColumnName, AID));
+    LFilter := TTFilter.Create(GetWhere(LTableMap, AColumnName, AID));
     LReader := FConnection.CreateReader(LTableMap, LTableMetadata, LFilter);
     try
       LGenericList.Clear;
@@ -460,6 +565,7 @@ begin
           MapEntity(LTableMap, LReader, LObject);
           LGenericList.Add(LObject);
         except
+          DisposedEntity(LObject);
           LObject.Free;
           raise;
         end;
@@ -515,10 +621,40 @@ begin
   result := LResult.AsType<TTPrimaryKey>();
 end;
 
-function TTProvider.GetWhere(
-  const AColumnName: String; const AID: TTPrimaryKey): String;
+function TTProvider.FindColumnByName(
+  const ATablemap: TTTableMap;
+  const AColumnName: String): TTColumnMap;
+var
+  LColumnMap: TTColumnMap;
 begin
-  result := Format('%s = %s', [AColumnName, TTPrimaryKeyHelper.SqlValue(AID)]);
+  result := nil;
+  for LColumnMap in ATablemap.Columns do
+    if TTIdentifier.Same(LColumnMap.Name, AColumnName) then
+    begin
+      result := LColumnMap;
+      Break;
+    end;
+end;
+
+function TTProvider.GetWhere(
+  const ATablemap: TTTableMap;
+  const AColumnName: String;
+  const AID: TTPrimaryKey): String;
+var
+  LColumnMap: TTColumnMap;
+  LReference: String;
+begin
+  LColumnMap := FindColumnByName(ATablemap, AColumnName);
+  if Assigned(LColumnMap) then
+    LReference := LColumnMap.SqlReference
+  else if ATablemap.HasJoins then
+    LReference := Format('%s.%s', [ATablemap.Name, AColumnName])
+  else
+    LReference := AColumnName;
+
+  result := Format('%s = %s', [
+    FConnection.GetDatabaseObjectName(LReference),
+    TTPrimaryKeyHelper.SqlValue(AID)]);
 end;
 
 function TTProvider.GetWhere(
@@ -527,10 +663,13 @@ begin
   if not Assigned(ATablemap.PrimaryKey) then
     raise ETException.Create(
       TTLanguage.Instance.Translate(SNotDefinedPrimaryKey));
-  result := GetWhere(ATablemap.PrimaryKey.Name, AID);
+
+  result := Format('%s = %s', [
+    FConnection.GetDatabaseObjectName(ATablemap.PrimaryKey.SqlReference),
+    TTPrimaryKeyHelper.SqlValue(AID)]);
 end;
 
-function TTProvider.SelectCount<T>(const AFilter: TTFilter): Integer;
+function TTProvider.SelectCount<T>(const AFilter: TTFilter): Int64;
 var
   LTableMap: TTTableMap;
 begin
@@ -544,16 +683,23 @@ var
   LTableMap: TTTableMap;
   LTableMetadata: TTTableMetadata;
   LReader: TTReader;
+  LRttiEntity: TTRttiEntity<T>;
 begin
   LTableMap := TTMapper.Instance.Load<T>();
   LTableMetadata := FMetadata.Load<T>();
   LReader := FConnection.CreateReader(LTableMap, LTableMetadata, AFilter);
   try
-    AResult.Clear;
-    while not LReader.Eof do
-    begin
-      AResult.Add(InternalCreateEntity<T>(LTableMap, LReader));
-      LReader.Next;
+    LRttiEntity := TTRttiEntity<T>.Create;
+    try
+      AResult.Clear;
+      while not LReader.Eof do
+      begin
+        AResult.Add(
+          InternalCreateEntity<T>(LTableMap, LReader, LRttiEntity));
+        LReader.Next;
+      end;
+    finally
+      LRttiEntity.Free;
     end;
   finally
     LReader.Free;
@@ -567,6 +713,7 @@ var
   LTableMetadata: TTTableMetadata;
   LFilter: TTFilter;
   LReader: TTReader;
+  LRttiEntity: TTRttiEntity<T>;
 begin
   result := default(T);
   LTableMap := TTMapper.Instance.Load<T>();
@@ -576,13 +723,20 @@ begin
   LReader := FConnection.CreateReader(LTableMap, LTableMetadata, LFilter);
   try
     if not LReader.IsEmpty then
-      result := InternalCreateEntity<T>(LTableMap, LReader);
+    begin
+      LRttiEntity := TTRttiEntity<T>.Create;
+      try
+        result := InternalCreateEntity<T>(LTableMap, LReader, LRttiEntity);
+      finally
+        LRttiEntity.Free;
+      end;
+    end;
   finally
     LReader.Free;
   end;
 end;
 
-procedure TTProvider.Refresh<T>(const AEntity: T);
+function TTProvider.TryRefresh<T>(const AEntity: T): Boolean;
 var
   LTableMap: TTTableMap;
   LTableMetadata: TTTableMetadata;
@@ -596,15 +750,31 @@ begin
     LTablemap.PrimaryKey.Member.GetValue(AEntity).AsType<TTPrimaryKey>()));
   LReader := FConnection.CreateReader(LTableMap, LTableMetadata, LFilter);
   try
-    if not LReader.IsEmpty then
+    result := not LReader.IsEmpty;
+    if result then
       MapEntity(LTableMap, LReader, AEntity);
   finally
     LReader.Free;
   end;
 end;
 
+procedure TTProvider.Refresh<T>(const AEntity: T);
+begin
+  if not TryRefresh<T>(AEntity) then
+    raise ETConcurrentUpdateException.Create(
+      TTLanguage.Instance.Translate(SRecordChanged));
+end;
+
 procedure TTProvider.RawSelect<T>(
   const ASQL: String; const AResult: TTList<T>);
+begin
+  RawSelect<T>(ASQL, TTFilter.Empty, AResult);
+end;
+
+procedure TTProvider.RawSelect<T>(
+  const ASQL: String;
+  const AFilter: TTFilter;
+  const AResult: TTList<T>);
 var
   LTableMap: TTTableMap;
   LDataSet: TDataSet;
@@ -612,27 +782,29 @@ var
   LRttiEntity: TTRttiEntity<T>;
   LEntity: T;
 begin
+  CheckRawFilter(AFilter);
   LTableMap := TTMapper.Instance.Load<T>();
-  LDataSet := FConnection.CreateDataSet(ASQL, TTFilter.Empty);
+  LDataSet := FConnection.CreateDataSet(ASQL, AFilter);
   LReader := TTRawReader.Create(LTableMap, LDataSet);
   try
     AResult.Clear;
-    while not LReader.Eof do
-    begin
-      LRttiEntity := TTRttiEntity<T>.Create;
-      try
+    LRttiEntity := TTRttiEntity<T>.Create;
+    try
+      while not LReader.Eof do
+      begin
         LEntity := LRttiEntity.CreateEntity(FContext);
         try
           MapEntity(LTableMap, LReader, LEntity);
           AResult.Add(LEntity);
         except
+          DisposedEntity(LEntity);
           LEntity.Free;
           raise;
         end;
-      finally
-        LRttiEntity.Free;
+        LReader.Next;
       end;
-      LReader.Next;
+    finally
+      LRttiEntity.Free;
     end;
   finally
     LReader.Free;
@@ -641,14 +813,10 @@ end;
 
 { TTNewEntityCache }
 
-constructor TTNewEntityCache.Create(const AProvider: TTProvider);
+constructor TTNewEntityCache.Create;
 begin
   inherited Create;
-  FProvider := AProvider;
-
-  FCache := TObjectDictionary<
-    PTypeInfo, TTHashList<TTPrimaryKey>>.Create([doOwnsValues]);
-
+  FCache := TTHashList<Pointer>.Create;
   FTransactionCache := nil;
 end;
 
@@ -662,107 +830,54 @@ end;
 
 procedure TTNewEntityCache.ClearTransaction;
 begin
-  FTransactionCache.Free;
+  if Assigned(FTransactionCache) then
+    FTransactionCache.Free;
   FTransactionCache := nil;
 end;
 
 procedure TTNewEntityCache.TransactionStarted;
 begin
-  if not Assigned(FTransactionCache) then
-    FTransactionCache := TObjectDictionary<
-      PTypeInfo, TTHashList<TTPrimaryKey>>.Create([doOwnsValues]);
+  ClearTransaction;
+  FTransactionCache := TTHashList<Pointer>.Create;
 end;
 
 procedure TTNewEntityCache.TransactionCommitted;
 begin
-  if Assigned(FTransactionCache) then
-    ClearTransaction;
+  ClearTransaction;
 end;
 
 procedure TTNewEntityCache.TransactionRolledback;
 var
-  LPair: TPair<PTypeInfo, TTHashList<TTPrimaryKey>>;
-  LID: TTPrimaryKey;
+  LEntity: Pointer;
 begin
   if Assigned(FTransactionCache) then
-    for LPair in FTransactionCache do
-      for LID in LPair.Value do
-        InternalAdd(FCache, LPair.Key, LID);
+    for LEntity in FTransactionCache do
+      FCache.Add(LEntity);
   ClearTransaction;
 end;
 
-procedure TTNewEntityCache.InternalAdd(
-  const ACache: TObjectDictionary<PTypeInfo, TTHashList<TTPrimaryKey>>;
-  const ATypeInfo: PTypeInfo;
-  const AID: TTPrimaryKey);
-var
-  LHashList: TTHashList<TTPrimaryKey>;
+procedure TTNewEntityCache.Add(const AEntity: TObject);
 begin
-  if not ACache.TryGetValue(ATypeInfo, LHashList) then
-  begin
-    LHashList := TTHashList<TTPrimaryKey>.Create;
-    try
-      ACache.Add(ATypeInfo, LHashList);
-    except
-      LHashList.Free;
-      raise;
-    end;
-  end;
-
-  if not LHashList.Contains(AID) then
-    LHashList.Add(AID);
+  FCache.Add(Pointer(AEntity));
 end;
 
-function TTNewEntityCache.InternalContains(
-  const ACache: TObjectDictionary<PTypeInfo, TTHashList<TTPrimaryKey>>;
-  const ATypeInfo: PTypeInfo;
-  const AID: TTPrimaryKey): Boolean;
-var
-  LHashList: TTHashList<TTPrimaryKey>;
+function TTNewEntityCache.Contains(const AEntity: TObject): Boolean;
 begin
-  result := ACache.TryGetValue(ATypeInfo, LHashList);
-  if result then
-    result := LHashList.Contains(AID);
+  result := FCache.Contains(Pointer(AEntity));
 end;
 
-procedure TTNewEntityCache.InternalRemove(
-  const ACache: TObjectDictionary<PTypeInfo, TTHashList<TTPrimaryKey>>;
-  const ATypeInfo: PTypeInfo;
-  const AID: TTPrimaryKey);
-var
-  LHashList: TTHashList<TTPrimaryKey>;
+procedure TTNewEntityCache.Remove(const AEntity: TObject);
 begin
-  if ACache.TryGetValue(ATypeInfo, LHashList) then
-    LHashList.Remove(AID);
-end;
-
-procedure TTNewEntityCache.Add<T>(const AEntity: T);
-begin
-  InternalAdd(FCache, TypeInfo(T), FProvider.GetID<T>(AEntity));
-end;
-
-function TTNewEntityCache.Contains<T>(const AEntity: T): Boolean;
-var
-  LTypeInfo: PTypeInfo;
-  LID: TTPrimaryKey;
-begin
-  LTypeInfo := TypeInfo(T);
-  LID := FProvider.GetID<T>(AEntity);
-  result := InternalContains(FCache, LTypeInfo, LID);
-  if (not result) and Assigned(FTransactionCache) then
-    result := InternalContains(FTransactionCache, LTypeInfo, LID);
-end;
-
-procedure TTNewEntityCache.Remove<T>(const AEntity: T);
-var
-  LTypeInfo: PTypeInfo;
-  LID: TTPrimaryKey;
-begin
-  LTypeInfo := TypeInfo(T);
-  LID := FProvider.GetID<T>(AEntity);
   if Assigned(FTransactionCache) then
-    InternalAdd(FTransactionCache, LTypeInfo, LID);
-  InternalRemove(FCache, LTypeInfo, LID);
+    FTransactionCache.Add(Pointer(AEntity));
+  FCache.Remove(Pointer(AEntity));
+end;
+
+procedure TTNewEntityCache.Disposed(const AEntity: TObject);
+begin
+  FCache.Remove(Pointer(AEntity));
+  if Assigned(FTransactionCache) then
+    FTransactionCache.Remove(Pointer(AEntity));
 end;
 
 end.

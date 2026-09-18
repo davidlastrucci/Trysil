@@ -1,7 +1,7 @@
 ﻿(*
 
   Trysil
-  Copyright � David Lastrucci
+  Copyright © David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -21,6 +21,7 @@ uses
   Trysil.Exceptions,
   Trysil.Generics.Collections,
   Trysil.Rtti,
+  Trysil.Mapping,
   Trysil.Data,
   Trysil.Provider,
   Trysil.Resolver,
@@ -35,13 +36,17 @@ type
   TTClonedEntities<T: class> = class
   strict private
     FProvider: TTProvider;
-    FEntities: TObjectDictionary<T, T>;
+    FResolver: TTResolver;
+    FEntities: TDictionary<T, T>;
+
+    procedure DisposeClone(const AClone: T);
   private // internal
     function CloneEntity(const AEntity: T): T;
     procedure FreeClone(const AClone: T);
     function GetOriginalEntity(const AClone: T): T;
   public
-    constructor Create(const AProvider: TTProvider);
+    constructor Create(
+      const AProvider: TTProvider; const AResolver: TTResolver);
     destructor Destroy; override;
   end;
 
@@ -60,13 +65,15 @@ type
 
     FApplied: Boolean;
     FCloned: TTClonedEntities<T>;
-    FClonedEntities: TList<T>;
+    FClonedEntities: TDictionary<T, Boolean>;
     FAllEntities: TList<T>;
     FEntities: TTList<T>;
-    FInsertedEntities: TObjectList<T>;
+    FInsertedEntities: TList<T>;
     FEntityStates: TDictionary<T, TTSessionState>;
 
     procedure CloneEntities;
+    procedure DisposeEntity(const AEntity: T);
+    procedure DisposeEntities;
     function GetEntityState(const AClone: T): TTSessionState;
     procedure TryInvalidateList;
     procedure InternalApplyChanges;
@@ -96,11 +103,20 @@ implementation
 
 { TTClonedEntities<T> }
 
-constructor TTClonedEntities<T>.Create(const AProvider: TTProvider);
+constructor TTClonedEntities<T>.Create(
+  const AProvider: TTProvider; const AResolver: TTResolver);
 begin
   inherited Create;
   FProvider := AProvider;
-  FEntities := TObjectDictionary<T, T>.Create([doOwnsKeys]);
+  FResolver := AResolver;
+  FEntities := TDictionary<T, T>.Create(TTEntityComparer<T>.Identity);
+end;
+
+procedure TTClonedEntities<T>.DisposeClone(const AClone: T);
+begin
+  FResolver.DisposedEntity(AClone);
+  FProvider.DisposedEntity(AClone);
+  AClone.Free;
 end;
 
 destructor TTClonedEntities<T>.Destroy;
@@ -115,7 +131,7 @@ begin
   try
     FEntities.Add(result, AEntity);
   except
-    result.Free;
+    DisposeClone(result);
     raise;
   end;
 end;
@@ -123,7 +139,10 @@ end;
 procedure TTClonedEntities<T>.FreeClone(const AClone: T);
 begin
   if FEntities.ContainsKey(AClone) then
+  begin
     FEntities.Remove(AClone);
+    DisposeClone(AClone);
+  end;
 end;
 
 function TTClonedEntities<T>.GetOriginalEntity(const AClone: T): T;
@@ -147,16 +166,19 @@ begin
   FOriginalEntities := AList;
 
   FApplied := False;
-  FCloned := TTClonedEntities<T>.Create(FProvider);
-  FClonedEntities := TList<T>.Create;
+  FCloned := TTClonedEntities<T>.Create(FProvider, FResolver);
+  FClonedEntities := TDictionary<T, Boolean>.Create(
+    TTEntityComparer<T>.Identity);
   FAllEntities := TList<T>.Create;
   FEntities := TTList<T>.Create;
-  FInsertedEntities := TObjectList<T>.Create(not FProvider.UseIdentityMap);
-  FEntityStates := TDictionary<T, TTSessionState>.Create;
+  FInsertedEntities := TList<T>.Create;
+  FEntityStates := TDictionary<T, TTSessionState>.Create(
+    TTEntityComparer<T>.Identity);
 end;
 
 destructor TTSession<T>.Destroy;
 begin
+  DisposeEntities;
   FEntityStates.Free;
   FInsertedEntities.Free;
   FEntities.Free;
@@ -184,12 +206,33 @@ begin
         FEntities.Add(LClone);
         FAllEntities.Add(LClone);
         FEntityStates.Add(LClone, TTSessionState.Original);
-        FClonedEntities.Add(LClone);
+        FClonedEntities.AddOrSetValue(LClone, True);
       except
         FCloned.FreeClone(LClone);
         raise;
       end;
     end;
+end;
+
+procedure TTSession<T>.DisposeEntity(const AEntity: T);
+begin
+  FResolver.DisposedEntity(AEntity);
+  FProvider.DisposedEntity(AEntity);
+  AEntity.Free;
+end;
+
+procedure TTSession<T>.DisposeEntities;
+var
+  LEntity: T;
+begin
+  if Assigned(FInsertedEntities) and
+    (not FProvider.IdentityMapOwns(TTMapper.Instance.Load<T>())) then
+    for LEntity in FInsertedEntities do
+      DisposeEntity(LEntity);
+
+  if Assigned(FClonedEntities) then
+    for LEntity in FClonedEntities.Keys do
+      DisposeEntity(LEntity);
 end;
 
 function TTSession<T>.GetEntityState(const AClone: T): TTSessionState;
@@ -206,7 +249,7 @@ end;
 
 procedure TTSession<T>.Save(const AEntity: T);
 begin
-  if FClonedEntities.Contains(AEntity) then
+  if FClonedEntities.ContainsKey(AEntity) then
     Update(AEntity)
   else
     Insert(AEntity);
@@ -214,7 +257,7 @@ end;
 
 procedure TTSession<T>.Insert(const AEntity: T);
 begin
-  if FClonedEntities.Contains(AEntity) then
+  if FClonedEntities.ContainsKey(AEntity) then
     raise ETException.CreateFmt(
       TTLanguage.Instance.Translate(SClonedEntity), [AEntity.ToString()]);
   FResolver.Validate<T>(AEntity);
@@ -254,8 +297,8 @@ end;
 
 procedure TTSession<T>.TryInvalidateList;
 begin
-  if TTRtti.InheritsFrom(FOriginalEntities, TTObjectLazyList<T>) then
-    TTObjectLazyList<T>(FOriginalEntities).IsValid := False;
+  if TTRtti.InheritsFrom(FOriginalEntities, TTObjectList<T>) then
+    TTObjectList<T>(FOriginalEntities).IsValid := False;
 end;
 
 procedure TTSession<T>.InternalApplyChanges;
@@ -268,7 +311,10 @@ begin
     LState := GetEntityState(LEntity);
     case LState of
       TTSessionState.Inserted:
+      begin
         FResolver.Insert<T>(LEntity);
+        FProvider.NewEntityCache.Remove(LEntity);
+      end;
 
       TTSessionState.Updated:
         FResolver.Update<T>(LEntity);

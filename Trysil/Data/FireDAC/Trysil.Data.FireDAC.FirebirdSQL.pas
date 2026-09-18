@@ -18,6 +18,7 @@ uses
   FireDAC.Phys,
   FireDAC.Phys.FB,
 
+  Trysil.Data,
   Trysil.Data.FireDAC.ConnectionPool,
   Trysil.Data.FireDAC,
   Trysil.Data.SqlSyntax,
@@ -49,6 +50,7 @@ type
     function GetDatabaseVersion: String; override;
 
     class function GetDriver: String; override;
+    class function GetDriverAliases: TArray<String>; override;
     class procedure InternalRegisterConnection(
       const AName: String;
       const AParameters: TTFireDACConnectionParameters); override;
@@ -67,7 +69,18 @@ type
 
     class procedure RegisterConnection(
       const AName: String;
+      const AServer: String;
+      const AUsername: String;
+      const APassword: String;
+      const ADatabaseName: String;
+      const ACharacterSet: String); overload;
+
+    class procedure RegisterConnection(
+      const AName: String;
       const AParameters: TStrings); overload;
+
+    function GetDatabaseObjectName(
+      const ADatabaseObjectName: String): String; override;
 
     class property Driver: TTFirebirdSQLDriver read FDriver;
   end;
@@ -103,6 +116,7 @@ end;
 class destructor TTFirebirdSQLConnection.ClassDestroy;
 begin
   FDriver.Free;
+  FDriver := nil;
 end;
 
 function TTFirebirdSQLConnection.CreateSyntaxClasses: TTSyntaxClasses;
@@ -120,6 +134,11 @@ begin
   result := FDriver.DriverLink.DriverID;
 end;
 
+class function TTFirebirdSQLConnection.GetDriverAliases: TArray<String>;
+begin
+  result := ['FirebirdSQL', 'Firebird'];
+end;
+
 class procedure TTFirebirdSQLConnection.InternalRegisterConnection(
   const AName: String;
   const AParameters: TTFireDACConnectionParameters);
@@ -129,7 +148,8 @@ begin
     AParameters.Server,
     AParameters.Username,
     AParameters.Password,
-    AParameters.DatabaseName);
+    AParameters.DatabaseName,
+    AParameters.CharacterSet);
 end;
 
 class procedure TTFirebirdSQLConnection.RegisterConnection(
@@ -147,6 +167,18 @@ class procedure TTFirebirdSQLConnection.RegisterConnection(
   const AUsername: String;
   const APassword: String;
   const ADatabaseName: String);
+begin
+  RegisterConnection(
+    AName, AServer, AUsername, APassword, ADatabaseName, String.Empty);
+end;
+
+class procedure TTFirebirdSQLConnection.RegisterConnection(
+  const AName: String;
+  const AServer: String;
+  const AUsername: String;
+  const APassword: String;
+  const ADatabaseName: String;
+  const ACharacterSet: String);
 var
   LParameters: TStrings;
 begin
@@ -161,6 +193,8 @@ begin
       LParameters.Add(Format('User_Name=%s', [AUserName]));
       LParameters.Add(Format('Password=%s', [APassword]));
     end;
+    if not ACharacterSet.IsEmpty then
+      LParameters.Add(Format('CharacterSet=%s', [ACharacterSet]));
 
     RegisterConnection(AName, LParameters);
   finally
@@ -173,6 +207,13 @@ class procedure TTFirebirdSQLConnection.RegisterConnection(
 begin
   TTFireDACConnectionPool.Instance.RegisterConnection(
     AName, FDriver.DriverLink.DriverID, AParameters);
+end;
+
+function TTFirebirdSQLConnection.GetDatabaseObjectName(
+  const ADatabaseObjectName: String): String;
+begin
+  result := TTDatabaseObjectName.Quoted(
+    ADatabaseObjectName, '"', '"', TTNameCase.Upper);
 end;
 
 initialization

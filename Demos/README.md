@@ -18,7 +18,7 @@
 
 The demos link against the **pre-built** Trysil packages via the `$(Trysil)` search path. Before opening any demo:
 
-1. Build the Trysil packages for the platform/config you want to run (see the [Setup guide](../docs/Setup.md)).
+1. Build the Trysil packages for the platform/config you want to run (see the [Installation guide](../docs/getting-started/installation.md)).
 2. Define the `$(Trysil)` environment variable pointing to `Lib\<version>` (Tools > Options > Environment Variables).
 3. Make sure the demo's active **Platform/Config matches** a Trysil platform/config you actually built - a mismatch causes `unit not found` (F1026/F2613) errors.
 

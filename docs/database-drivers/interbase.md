@@ -4,7 +4,7 @@ title: InterBase
 
 # InterBase
 
-InterBase is Embarcadero's lightweight, embeddable SQL database. Trysil's InterBase driver is close to Firebird, but uses InterBase-specific SQL: **generators** (`CREATE GENERATOR` / `GEN_ID`) for sequences and `ROWS` pagination.
+InterBase is Embarcadero's lightweight, embeddable SQL database. Trysil's InterBase driver is close to Firebird, but uses InterBase-specific SQL: **generators** (`CREATE GENERATOR` / `GEN_ID`) for sequences and `ROWS` pagination. That last one dates the driver: `ROWS m TO n` arrived in **InterBase 2007**, which is the minimum a paged query needs.
 
 **Unit:** `Trysil.Data.FireDAC.InterBase`
 **Delphi Edition:** Community
@@ -23,6 +23,19 @@ InterBase databases used with Trysil must be created with **SQL Dialect 3**. Dia
 - **GUID** (`TGUID`): `CHAR(16) CHARACTER SET OCTETS` (16-byte binary).
 - **Boolean**: native `BOOLEAN` (Dialect 3 only).
 - **Money** (`Currency`): `DECIMAL(18,4)`. InterBase caps numeric precision at 18 digits, so the `DECIMAL(19,4)` used on most other engines is rejected. 18 digits still cover any realistic amount.
+
+## Character set
+
+A database created with a Unicode default character set - `UTF8`, or `UNICODE_FSS` on older files - must be told to the connection:
+
+```pascal
+TTInterBaseConnection.RegisterConnection(
+  'Main', 'localhost', 'SYSDBA', 'masterkey', 'C:\data\database.ib', 'UTF8');
+```
+
+Without it the connection opens with no character set, and the server stops transliterating. Two things follow, and both are quiet. Text travels as raw bytes in each direction, so anything outside ASCII comes back changed. And the server stops counting **characters** in a `VARCHAR(n)`, counting the bytes behind it instead: a column declared for 100 characters accepts 300 ASCII ones on a UTF8 database, and the column metadata Trysil reads reports that width too, so the guard that refuses a string longer than its column has nothing to refuse.
+
+The parameter is optional and defaults to the previous behaviour, so an application that has been storing raw bytes keeps reading them back the same way. Declare it on a new database, or after checking what is really stored in an old one - `SELECT RDB$CHARACTER_SET_NAME FROM RDB$DATABASE` says what the database was created with.
 
 ## Setup
 

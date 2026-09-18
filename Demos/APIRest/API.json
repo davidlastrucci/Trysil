@@ -7,6 +7,9 @@
     "allowHeaders": "",
     "allowOrigin": "*"
   },
+  "authentication": {
+    "secret": ""
+  },
   "database": {
     "connectionName": "",
     "server": "",

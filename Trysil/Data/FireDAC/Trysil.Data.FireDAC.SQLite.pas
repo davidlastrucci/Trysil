@@ -15,9 +15,19 @@ interface
 uses
   System.Classes,
   System.SysUtils,
+  System.SyncObjs,
+  System.Generics.Collections,
+ {$IFDEF MSWINDOWS}
+  Winapi.Windows,
+ {$ENDIF}
   FireDAC.Phys,
   FireDAC.Phys.SQLite,
 
+  Trysil.Types,
+  Trysil.Consts,
+  Trysil.Exceptions,
+  Trysil.Mapping,
+  Trysil.Data,
   Trysil.Data.FireDAC.ConnectionPool,
   Trysil.Data.FireDAC,
   Trysil.Data.SqlSyntax,
@@ -47,17 +57,24 @@ type
   TTSQLiteConnection = class(TTFireDACConnection)
   strict private
     class var FDriver: TTSQLiteDriver;
+    class var FSequences: TDictionary<String, TTPrimaryKey>;
+    class var FSequencesLock: TSpinLock;
     class constructor ClassCreate;
     class destructor ClassDestroy;
+
+    function SequenceKey(const ATableMap: TTTableMap): String;
   strict protected
     function CreateSyntaxClasses: TTSyntaxClasses; override;
     function GetDatabaseVersion: String; override;
 
     class function GetDriver: String; override;
+    class function GetDriverAliases: TArray<String>; override;
     class procedure InternalRegisterConnection(
       const AName: String;
       const AParameters: TTFireDACConnectionParameters); override;
   public
+    function GetSequenceID(const ATableMap: TTTableMap): TTPrimaryKey; override;
+
     class procedure RegisterConnection(
       const AName: String; const ADatabaseName: String); overload;
 
@@ -69,6 +86,9 @@ type
 
     class procedure RegisterConnection(
       const AName: String; const AParameters: TStrings); overload;
+
+    function GetDatabaseObjectName(
+      const ADatabaseObjectName: String): String; override;
 
     class property Driver: TTSQLiteDriver read FDriver;
   end;
@@ -115,11 +135,58 @@ end;
 class constructor TTSQLiteConnection.ClassCreate;
 begin
   FDriver := TTSQLiteDriver.Create;
+  FSequences := TDictionary<String, TTPrimaryKey>.Create;
+  FSequencesLock := TSpinLock.Create(False);
 end;
 
 class destructor TTSQLiteConnection.ClassDestroy;
 begin
+  FSequencesLock.Enter;
+  try
+    FSequences.Free;
+    FSequences := nil;
+  finally
+    FSequencesLock.Exit;
+  end;
   FDriver.Free;
+  FDriver := nil;
+end;
+
+function TTSQLiteConnection.SequenceKey(
+  const ATableMap: TTTableMap): String;
+begin
+  result := Format(
+    '%s.%s', [ConnectionName, ATableMap.Name]).ToLowerInvariant;
+end;
+
+function TTSQLiteConnection.GetSequenceID(
+  const ATableMap: TTTableMap): TTPrimaryKey;
+var
+  LKey: String;
+  LFromDatabase: TTPrimaryKey;
+  LLast: TTPrimaryKey;
+  LNext: Int64;
+begin
+  LKey := SequenceKey(ATableMap);
+  LFromDatabase := inherited GetSequenceID(ATableMap);
+
+  FSequencesLock.Enter;
+  try
+    LNext := LFromDatabase;
+    if FSequences.TryGetValue(LKey, LLast) and (LLast >= LFromDatabase) then
+      LNext := Int64(LLast) + 1;
+
+    if LNext > High(TTPrimaryKey) then
+      raise ETException.CreateFmt(
+        TTLanguage.Instance.Translate(SSequenceOutOfRange), [
+          ATableMap.Name,
+          LNext]);
+
+    result := TTPrimaryKey(LNext);
+    FSequences.AddOrSetValue(LKey, result);
+  finally
+    FSequencesLock.Exit;
+  end;
 end;
 
 function TTSQLiteConnection.CreateSyntaxClasses: TTSyntaxClasses;
@@ -135,6 +202,11 @@ end;
 class function TTSQLiteConnection.GetDriver: String;
 begin
   result := FDriver.DriverLink.DriverID;
+end;
+
+class function TTSQLiteConnection.GetDriverAliases: TArray<String>;
+begin
+  result := ['SQLite'];
 end;
 
 class procedure TTSQLiteConnection.InternalRegisterConnection(
@@ -182,6 +254,20 @@ class procedure TTSQLiteConnection.RegisterConnection(
 begin
   TTFireDACConnectionPool.Instance.RegisterConnection(
     AName, FDriver.DriverLink.DriverID, AParameters);
+end;
+
+function TTSQLiteConnection.GetDatabaseObjectName(
+  const ADatabaseObjectName: String): String;
+begin
+  if ADatabaseObjectName.Contains(']') then
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SNotEscapableObjectName), [
+        ADatabaseObjectName,
+        ']',
+        'SQLite']);
+
+  result := TTDatabaseObjectName.Quoted(
+    ADatabaseObjectName, '[', ']', TTNameCase.AsIs);
 end;
 
 initialization

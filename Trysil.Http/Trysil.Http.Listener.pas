@@ -17,6 +17,9 @@ uses
   System.Classes,
   System.Generics.Collections,
   Trysil.Consts,
+  Trysil.Exceptions,
+
+  Trysil.JSon.Exceptions,
 
   Trysil.Http.Consts,
   Trysil.Http.Exceptions,
@@ -36,17 +39,23 @@ type
   strict private
     FCors: TTHttpCors;
     FRttiControllers: TTHttpRttiControllers<C>;
-    FFreeControllerIDs: TList<TTHttpControllerID>;
     FLog: TTHttpLog;
     FRttiAuthentication: TTHttpRttiAuthentication<C>;
+    FAllowMethodOverride: Boolean;
 
-    function InternalIsFreeController(
-      const AControllerID: TTHttpControllerID): Boolean;
+    procedure CheckMethodOverride(const ARequest: TTHttpRequest);
+
+    function ResolveControllerMethod(
+      const AContext: C;
+      const ARequest: TTHttpRequest;
+      const AResponse: TTHttpResponse;
+      const AParams: TList<Integer>): TTHttpRttiControllerMethod<C>;
 
     procedure InternalCheckAuthentication(
       const AContext: C;
       const ARequest: TTHttpRequest;
-      const AResponse: TTHttpResponse);
+      const AResponse: TTHttpResponse;
+      const ARttiControllerMethod: TTHttpRttiControllerMethod<C>);
 
     procedure CheckAuthentication(
       const AContext: C;
@@ -67,6 +76,24 @@ type
       const AStatusCode: Integer;
       const AContent: String);
 
+    procedure MakeHttpExceptionResponse(
+      const ARequest: TTHttpRequest;
+      const AResponse: TTHttpResponse;
+      const AException: ETHttpException);
+
+    procedure AddAllowHeader(
+      const AResponse: TTHttpResponse;
+      const AException: ETHttpMethodNotAllowed);
+
+    class function ActionText(
+      const AStatusCode: Integer;
+      const AException: Exception): String; static;
+    procedure MakeOrmResponse(
+      const ARequest: TTHttpRequest;
+      const AResponse: TTHttpResponse;
+      const AStatusCode: Integer;
+      const AException: Exception);
+
     procedure MakeInternalServerErrorResponse(
       const ARequest: TTHttpRequest;
       const AResponse: TTHttpResponse;
@@ -76,7 +103,6 @@ type
     constructor Create(
       const ACors: TTHttpCors;
       const ARttiControllers: TTHttpRttiControllers<C>;
-      const AFreeControllerIDs: TList<TTHttpControllerID>;
       const ALog: TTHttpLog);
 
     procedure SetRttiAuthentication(
@@ -84,6 +110,9 @@ type
 
     procedure HandleRequest(
       const ARequest: TTHttpRequest; const AResponse: TTHttpResponse);
+
+    property AllowMethodOverride: Boolean
+      read FAllowMethodOverride write FAllowMethodOverride;
   end;
 
 implementation
@@ -93,15 +122,23 @@ implementation
 constructor TTHttpListener<C>.Create(
   const ACors: TTHttpCors;
   const ARttiControllers: TTHttpRttiControllers<C>;
-  const AFreeControllerIDs: TList<TTHttpControllerID>;
   const ALog: TTHttpLog);
 begin
   inherited Create;
   FCors := ACors;
   FRttiControllers := ARttiControllers;
-  FFreeControllerIDs := AFreeControllerIDs;
   FLog := ALog;
   FRttiAuthentication := nil;
+  FAllowMethodOverride := False;
+end;
+
+procedure TTHttpListener<C>.CheckMethodOverride(
+  const ARequest: TTHttpRequest);
+begin
+  if (not FAllowMethodOverride) and ARequest.IsMethodOverridden then
+    raise ETHttpBadRequest.CreateFmt(
+      TTLanguage.Instance.Translate(SMethodOverrideRefused), [
+        ARequest.Method, ARequest.SentMethod]);
 end;
 
 procedure TTHttpListener<C>.SetRttiAuthentication(
@@ -115,23 +152,28 @@ procedure TTHttpListener<C>.HandleRequest(
 begin
   try
     InitializeResponse(AResponse);
+    CheckMethodOverride(ARequest);
     if ARequest.ControllerID.MethodType = TTHttpMethodType.OPTIONS then
       FCors.AddCorsHeaders(ARequest.ControllerID.Uri, AResponse)
     else
       InternalHandleRequest(ARequest, AResponse);
   except
     on E: ETHttpException do
-      if E.StatusCode >= TTHttpStatusCodeTypes.InternalServerError then
-        MakeInternalServerErrorResponse(
-          ARequest, AResponse, E.StatusCode, E)
-      else
-        MakeResponse(AResponse, E.StatusCode, E.ToJSon());
+      MakeHttpExceptionResponse(ARequest, AResponse, E);
+    on E: ETConcurrentUpdateException do
+      MakeOrmResponse(ARequest, AResponse, TTHttpStatusCodeTypes.Conflict, E);
+    on E: ETValidationException do
+      MakeOrmResponse(
+        ARequest, AResponse, TTHttpStatusCodeTypes.UnprocessableContent, E);
+    on E: ETJSonServerException do
+      MakeInternalServerErrorResponse(
+        ARequest, AResponse, TTHttpStatusCodeTypes.InternalServerError, E);
+    on E: ETJSonException do
+      MakeOrmResponse(
+        ARequest, AResponse, TTHttpStatusCodeTypes.BadRequest, E);
     on E: Exception do
       MakeInternalServerErrorResponse(
-        ARequest,
-        AResponse,
-        TTHttpStatusCodeTypes.InternalServerError,
-        E);
+        ARequest, AResponse, TTHttpStatusCodeTypes.InternalServerError, E);
   end;
 end;
 
@@ -147,14 +189,16 @@ begin
   try
     LParams := TList<Integer>.Create;
     try
-      InternalCheckAuthentication(LContext, ARequest, AResponse);
-      LRttiControllerMethod := FRttiControllers.Get(
-        ARequest.ControllerID, LParams);
+      LRttiControllerMethod := ResolveControllerMethod(
+        LContext, ARequest, AResponse, LParams);
+      InternalCheckAuthentication(
+        LContext, ARequest, AResponse, LRttiControllerMethod);
       CheckAreas(ARequest, LRttiControllerMethod);
       LController := LRttiControllerMethod.Controller.CreateController(
         LContext, ARequest, AResponse);
       if Assigned(LController) then
         try
+          AResponse.MarkHeaders;
           LRttiControllerMethod.Method.Execute(LController, LParams.ToArray);
         finally
           LController.Free;
@@ -167,30 +211,37 @@ begin
   end;
 end;
 
-function TTHttpListener<C>.InternalIsFreeController(
-  const AControllerID: TTHttpControllerID): Boolean;
-var
-  LControllerID: TTHttpControllerID;
+function TTHttpListener<C>.ResolveControllerMethod(
+  const AContext: C;
+  const ARequest: TTHttpRequest;
+  const AResponse: TTHttpResponse;
+  const AParams: TList<Integer>): TTHttpRttiControllerMethod<C>;
 begin
-  result := False;
-  for LControllerID in FFreeControllerIDs do
-    if LControllerID.Equals(AControllerID) then
+  try
+    result := FRttiControllers.Get(ARequest.ControllerID, AParams);
+  except
+    on ETHttpException do
     begin
-      result := True;
-      Break;
+      if Assigned(FRttiAuthentication) then
+        CheckAuthentication(AContext, ARequest, AResponse);
+      raise;
     end;
+  end;
 end;
 
 procedure TTHttpListener<C>.InternalCheckAuthentication(
   const AContext: C;
   const ARequest: TTHttpRequest;
-  const AResponse: TTHttpResponse);
+  const AResponse: TTHttpResponse;
+  const ARttiControllerMethod: TTHttpRttiControllerMethod<C>);
 var
   LNeedAuthentication: Boolean;
 begin
   LNeedAuthentication := Assigned(FRttiAuthentication);
   if LNeedAuthentication then
-    LNeedAuthentication := not InternalIsFreeController(ARequest.ControllerID);
+    LNeedAuthentication := (
+      ARttiControllerMethod.Method.AuthorizationType <>
+      TTHttpAuthorizationType.None);
   if LNeedAuthentication then
     CheckAuthentication(AContext, ARequest, AResponse);
 end;
@@ -216,12 +267,18 @@ procedure TTHttpListener<C>.CheckAreas(
 var
   LArea: String;
 begin
-  if Assigned(FRttiAuthentication) then
-    for LArea in ARttiControllerMethod.Method.Areas do
-      if not ARequest.User.Areas.Contains(LArea) then
-        raise ETHttpForbidden.CreateFmt(
-          TTLanguage.Instance.Translate(SForbiddenArea), [
-            ARequest.ControllerID.Uri, LArea])
+  for LArea in ARttiControllerMethod.Method.Areas do
+    if not ARequest.User.Areas.Contains(LArea) then
+    begin
+      FLog.LogAction(
+        ARequest.TaskID.ToString,
+        Format(
+          TTLanguage.Instance.Translate(SForbiddenAreaLog), [
+            ARequest.ControllerID.Uri, LArea]));
+      raise ETHttpForbidden.CreateFmt(
+        TTLanguage.Instance.Translate(SForbidden), [
+          ARequest.ControllerID.Uri]);
+    end;
 end;
 
 procedure TTHttpListener<C>.InitializeResponse(const AResponse: TTHttpResponse);
@@ -237,8 +294,61 @@ procedure TTHttpListener<C>.MakeResponse(
   const AStatusCode: Integer;
   const AContent: String);
 begin
+  AResponse.ResetToMark;
   AResponse.StatusCode := AStatusCode;
   AResponse.Content := AContent;
+end;
+
+procedure TTHttpListener<C>.MakeHttpExceptionResponse(
+  const ARequest: TTHttpRequest;
+  const AResponse: TTHttpResponse;
+  const AException: ETHttpException);
+begin
+  if AException.StatusCode >= TTHttpStatusCodeTypes.InternalServerError then
+    MakeInternalServerErrorResponse(
+      ARequest, AResponse, AException.StatusCode, AException)
+  else
+  begin
+    MakeResponse(AResponse, AException.StatusCode, AException.ToJSon());
+    if AException is ETHttpMethodNotAllowed then
+      AddAllowHeader(AResponse, ETHttpMethodNotAllowed(AException));
+  end;
+end;
+
+procedure TTHttpListener<C>.AddAllowHeader(
+  const AResponse: TTHttpResponse;
+  const AException: ETHttpMethodNotAllowed);
+begin
+  if not AException.AllowedMethods.IsEmpty then
+    AResponse.AddHeader('Allow', AException.AllowedMethods);
+end;
+
+class function TTHttpListener<C>.ActionText(
+  const AStatusCode: Integer;
+  const AException: Exception): String;
+begin
+  result := Format('%d %s', [AStatusCode, AException.Message]);
+  if Assigned(AException.InnerException) then
+    result := Format(
+      '%s (%s)', [result, AException.InnerException.ClassName]);
+end;
+
+procedure TTHttpListener<C>.MakeOrmResponse(
+  const ARequest: TTHttpRequest;
+  const AResponse: TTHttpResponse;
+  const AStatusCode: Integer;
+  const AException: Exception);
+var
+  LException: ETHttpException;
+begin
+  FLog.LogAction(
+    ARequest.TaskID.ToString, ActionText(AStatusCode, AException));
+  LException := ETHttpException.Create(AStatusCode, AException.Message);
+  try
+    MakeResponse(AResponse, AStatusCode, LException.ToJSon());
+  finally
+    LException.Free;
+  end;
 end;
 
 procedure TTHttpListener<C>.MakeInternalServerErrorResponse(

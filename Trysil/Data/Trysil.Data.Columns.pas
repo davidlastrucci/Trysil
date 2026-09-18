@@ -135,6 +135,8 @@ type
 
     procedure RegisterColumnClass<T: TField; C: TTColumn>();
 
+    function FindColumnClass(const AFieldClass: TClass): TClass;
+
     function CreateColumn(
       const AField: TField; const AColumnMap: TTColumnMap): TTColumn;
 
@@ -356,6 +358,7 @@ end;
 class destructor TTColumnFactory.ClassDestroy;
 begin
   FInstance.Free;
+  FInstance := nil;
 end;
 
 constructor TTColumnFactory.Create;
@@ -375,6 +378,19 @@ begin
   FColumnTypes.Add(T, C);
 end;
 
+function TTColumnFactory.FindColumnClass(const AFieldClass: TClass): TClass;
+var
+  LFieldClass: TClass;
+begin
+  result := nil;
+  LFieldClass := AFieldClass;
+  while Assigned(LFieldClass) and (not Assigned(result)) do
+  begin
+    if not FColumnTypes.TryGetValue(LFieldClass, result) then
+      LFieldClass := LFieldClass.ClassParent;
+  end;
+end;
+
 function TTColumnFactory.CreateColumn(
   const AField: TField; const AColumnMap: TTColumnMap): TTColumn;
 var
@@ -390,7 +406,8 @@ begin
     result := TTCurrencyColumn.Create(AField, AColumnMap)
   else
   begin
-    if not FColumnTypes.TryGetValue(AField.ClassType, LClass) then
+    LClass := FindColumnClass(AField.ClassType);
+    if not Assigned(LClass) then
       raise ETException.CreateFmt(
         TTLanguage.Instance.Translate(SColumnTypeError), [AField.ClassName]);
     result := TTColumnClass(LClass).Create(AField, AColumnMap);
@@ -414,9 +431,13 @@ begin
   // TTIntegerColumn
   LInstance.RegisterColumnClass<TSmallintField, TTIntegerColumn>();
   LInstance.RegisterColumnClass<TIntegerField, TTIntegerColumn>();
+  LInstance.RegisterColumnClass<TByteField, TTIntegerColumn>();
+  LInstance.RegisterColumnClass<TShortintField, TTIntegerColumn>();
+  LInstance.RegisterColumnClass<TWordField, TTIntegerColumn>();
 
   // TTLargeIntegerColumn
   LInstance.RegisterColumnClass<TLargeintField, TTLargeIntegerColumn>();
+  LInstance.RegisterColumnClass<TLongWordField, TTLargeIntegerColumn>();
 
   // TTDoubleColumn
   LInstance.RegisterColumnClass<TFMTBCDField, TTDoubleColumn>();
@@ -432,12 +453,15 @@ begin
   LInstance.RegisterColumnClass<TDateField, TTDateTimeColumn>();
   LInstance.RegisterColumnClass<TDateTimeField, TTDateTimeColumn>();
   LInstance.RegisterColumnClass<TSQLTimeStampField, TTDateTimeColumn>();
+  LInstance.RegisterColumnClass<TTimeField, TTDateTimeColumn>();
 
   // TTGuidColumn
   LInstance.RegisterColumnClass<TGuidField, TTGuidColumn>();
 
   // TTBlobColumn
   LInstance.RegisterColumnClass<TBlobField, TTBlobColumn>();
+  LInstance.RegisterColumnClass<TBytesField, TTBlobColumn>();
+  LInstance.RegisterColumnClass<TVarBytesField, TTBlobColumn>();
 end;
 
 end.

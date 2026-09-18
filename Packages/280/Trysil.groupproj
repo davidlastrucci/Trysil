@@ -7,31 +7,31 @@
             <Dependencies/>
         </Projects>
         <Projects Include="Trysil.FirebirdSQL280.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil280.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.PostgreSQL280.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil280.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.SQLite280.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil280.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.SqlServer280.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil280.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.InterBase280.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil280.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.MariaDB280.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil280.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.Oracle280.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil280.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.JSon280.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil280.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.Http280.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil280.dproj;Trysil.JSon280.dproj</Dependencies>
         </Projects>
     </ItemGroup>
     <ProjectExtensions>
@@ -148,8 +148,8 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Trysil.Http280.dproj">
-            <ProjectGuid>{982EA5B6-75D0-4C2E-9309-4A59BD6B8292}</ProjectGuid>
+        <BuildGroupProject Include="Trysil.FirebirdSQL280.dproj">
+            <ProjectGuid>{1336BAC2-51D7-4FAA-8A01-024D8D4A591D}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
@@ -196,8 +196,8 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Trysil.FirebirdSQL280.dproj">
-            <ProjectGuid>{1336BAC2-51D7-4FAA-8A01-024D8D4A591D}</ProjectGuid>
+        <BuildGroupProject Include="Trysil.Http280.dproj">
+            <ProjectGuid>{982EA5B6-75D0-4C2E-9309-4A59BD6B8292}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>

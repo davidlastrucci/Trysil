@@ -40,6 +40,9 @@ type
     procedure KeyOnlyUpdateSucceeds;
 
     [Test]
+    procedure KeyOnlyUpdateWithUnchangedValuesDoesNotRaise;
+
+    [Test]
     procedure KeyOnlyDeleteSucceeds;
 
     [Test]
@@ -104,6 +107,38 @@ begin
   end;
 end;
 
+procedure
+  TTAbstractUpdateModeTests.KeyOnlyUpdateWithUnchangedValuesDoesNotRaise;
+var
+  LSavedMode: TTUpdateMode;
+  LItem: TTestSimpleItem;
+  LRaised: Boolean;
+begin
+  LSavedMode := Connection.UpdateMode;
+  Connection.UpdateMode := TTUpdateMode.KeyOnly;
+  try
+    LItem := FContext.CreateEntity<TTestSimpleItem>();
+    LItem.Name := 'Unchanged';
+    FContext.Insert<TTestSimpleItem>(LItem);
+
+    LRaised := False;
+    try
+      FContext.Update<TTestSimpleItem>(LItem);
+    except
+      on E: ETConcurrentUpdateException do
+        LRaised := True;
+    end;
+
+    Assert.IsFalse(LRaised,
+      'An update that writes the same values must not read as a conflict: ' +
+      'the row matched, it simply did not change. Optimistic locking rests ' +
+      'entirely on RowsAffected = 0, and one engine counts changed rows ' +
+      'rather than matched ones');
+  finally
+    Connection.UpdateMode := LSavedMode;
+  end;
+end;
+
 procedure TTAbstractUpdateModeTests.KeyOnlyDeleteSucceeds;
 var
   LSavedMode: TTUpdateMode;
@@ -128,18 +163,21 @@ end;
 procedure TTAbstractUpdateModeTests.DefaultModeRaisesWithoutVersionColumn;
 var
   LItem: TTestSimpleItem;
-  LRaised: Boolean;
+  LMessage: String;
 begin
   LItem := FContext.CreateEntity<TTestSimpleItem>();
-  LRaised := False;
+  LMessage := String.Empty;
   try
     FContext.Insert<TTestSimpleItem>(LItem);
   except
     on E: ETException do
-      LRaised := True;
+      LMessage := E.Message;
   end;
-  Assert.IsTrue(LRaised,
-    'Insert must raise when VersionColumn is missing in default mode');
+  Assert.IsTrue(
+    LMessage.Contains('Version Column'),
+    'Insert must raise when the version column is missing in default ' +
+    'mode, and say so: ETException is the root of every failure in the ' +
+    'framework, so catching it alone would pass on a table name typo too');
 end;
 
 end.

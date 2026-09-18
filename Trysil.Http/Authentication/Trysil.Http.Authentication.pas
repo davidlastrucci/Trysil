@@ -16,6 +16,7 @@ uses
   System.SysUtils,
   System.Classes,
   Trysil.Consts,
+  Trysil.Classes,
 
   Trysil.Http.Consts,
   Trysil.Http.Exceptions,
@@ -71,7 +72,9 @@ begin
     ResponseUnauthorizedError(ARequest, AResponse);
 
   LAuthenticationType := Format('%s ', [GetName]);
-  if not LAuthorization.StartsWith(LAuthenticationType, True) then
+  if not TTIdentifier.Same(
+    LAuthorization.Substring(0, LAuthenticationType.Length),
+    LAuthenticationType) then
     ResponseUnauthorizedError(ARequest, AResponse);
 
   result := LAuthorization.Substring(LAuthenticationType.Length).Trim;

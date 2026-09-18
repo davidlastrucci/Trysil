@@ -88,6 +88,20 @@ type
     function ToJSon(const AValue: TTValue): TJSonValue; override;
   end;
 
+{ TTJSonDateSerializer }
+
+  TTJSonDateSerializer = class(TTJSonAbstractSerializer)
+  public
+    function ToJSon(const AValue: TTValue): TJSonValue; override;
+  end;
+
+{ TTJSonTimeSerializer }
+
+  TTJSonTimeSerializer = class(TTJSonAbstractSerializer)
+  public
+    function ToJSon(const AValue: TTValue): TJSonValue; override;
+  end;
+
 { TTJSonGuidSerializer }
 
   TTJSonGuidSerializer = class(TTJSonAbstractSerializer)
@@ -110,7 +124,7 @@ type
     class constructor ClassCreate;
     class destructor ClassDestroy;
   strict private
-    FSerializers: TDictionary<PTypeInfo, TTJSonSerializerClass>;
+    FInstances: TObjectDictionary<PTypeInfo, TTJSonAbstractSerializer>;
 
     procedure RegisterBaseTypes;
   public
@@ -119,7 +133,8 @@ type
 
     procedure AfterConstruction; override;
 
-    function Get(const ATypeInfo: PTypeInfo): TTJSonSerializerClass;
+    function GetInstance(
+      const ATypeInfo: PTypeInfo): TTJSonAbstractSerializer;
     procedure Register<T>(const AClass: TTJSonSerializerClass);
 
     class property Instance: TTJSonSerializers read FInstance;
@@ -182,6 +197,23 @@ begin
       TTimeZone.Local.ToUniversalTime(AValue.AsType<TDateTime>()), True));
 end;
 
+{ TTJSonDateSerializer }
+
+function TTJSonDateSerializer.ToJSon(const AValue: TTValue): TJSonValue;
+begin
+  result := TJSonString.Create(
+    FormatDateTime('yyyy-mm-dd', AValue.AsType<TDate>()));
+end;
+
+{ TTJSonTimeSerializer }
+
+function TTJSonTimeSerializer.ToJSon(const AValue: TTValue): TJSonValue;
+begin
+  result := TJSonString.Create(
+    FormatDateTime(
+      'hh:nn:ss', AValue.AsType<TTime>(), TFormatSettings.Invariant));
+end;
+
 { TTJSonGuidSerializer }
 
 function TTJSonGuidSerializer.ToJSon(const AValue: TTValue): TJSonValue;
@@ -207,17 +239,19 @@ end;
 class destructor TTJSonSerializers.ClassDestroy;
 begin
   FInstance.Free;
+  FInstance := nil;
 end;
 
 constructor TTJSonSerializers.Create;
 begin
   inherited Create;
-  FSerializers := TDictionary<PTypeInfo, TTJSonSerializerClass>.Create;
+  FInstances := TObjectDictionary<PTypeInfo, TTJSonAbstractSerializer>.Create([
+    doOwnsValues]);
 end;
 
 destructor TTJSonSerializers.Destroy;
 begin
-  FSerializers.Free;
+  FInstances.Free;
   inherited Destroy;
 end;
 
@@ -227,18 +261,26 @@ begin
   RegisterBaseTypes;
 end;
 
-function TTJSonSerializers.Get(
-  const ATypeInfo: PTypeInfo): TTJSonSerializerClass;
+procedure TTJSonSerializers.Register<T>(const AClass: TTJSonSerializerClass);
+var
+  LInstance: TTJSonAbstractSerializer;
 begin
-  if not FSerializers.TryGetValue(ATypeInfo, result) then
-    raise ETJSonException.CreateFmt(
-      TTLanguage.Instance.Translate(SSerializerNotFound), [
-        String(ATypeInfo.Name)]);
+  LInstance := AClass.Create;
+  try
+    FInstances.Add(TypeInfo(T), LInstance);
+  except
+    LInstance.Free;
+    raise;
+  end;
 end;
 
-procedure TTJSonSerializers.Register<T>(const AClass: TTJSonSerializerClass);
+function TTJSonSerializers.GetInstance(
+  const ATypeInfo: PTypeInfo): TTJSonAbstractSerializer;
 begin
-  FSerializers.Add(TypeInfo(T), AClass);
+  if not FInstances.TryGetValue(ATypeInfo, result) then
+    raise ETJSonServerException.CreateFmt(
+      TTLanguage.Instance.Translate(SSerializerNotFound), [
+        String(ATypeInfo.Name)]);
 end;
 
 procedure TTJSonSerializers.RegisterBaseTypes;
@@ -256,8 +298,8 @@ begin
   Self.Register<Boolean>(TTJSonBooleanSerializer);
 
   Self.Register<TDateTime>(TTJSonDateTimeSerializer);
-  Self.Register<TDate>(TTJSonDateTimeSerializer);
-  Self.Register<TTime>(TTJSonDateTimeSerializer);
+  Self.Register<TDate>(TTJSonDateSerializer);
+  Self.Register<TTime>(TTJSonTimeSerializer);
 
   Self.Register<TGuid>(TTJSonGuidSerializer);
 

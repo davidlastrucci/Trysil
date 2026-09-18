@@ -36,6 +36,8 @@ type
 
     procedure LoadKey;
   strict protected
+    class function WarmUpInput: TBytes; static;
+
     function IsPrivateKey: Boolean; virtual; abstract;
     procedure WarmUp; virtual;
 
@@ -73,7 +75,10 @@ type
 
 implementation
 
-{ OpenSSL libcrypto, resolved at first use }
+{ TTHttpJWTLibCrypto }
+
+const
+  EVP_PKEY_RSA = 6;
 
 type
   TLibHandle = NativeUInt;
@@ -89,44 +94,110 @@ type
     ABio, AKey, ACallback, AUserData: Pointer): Pointer; cdecl;
   TEVP_PKEY_free = procedure(
     AKey: Pointer); cdecl;
+  TEVP_PKEY_base_id = function(
+    AKey: Pointer): Integer; cdecl;
 
   TEVP_MD_CTX_new = function: Pointer; cdecl;
   TEVP_MD_CTX_free = procedure(ACtx: Pointer); cdecl;
   TEVP_sha256 = function: Pointer; cdecl;
 
   TEVP_DigestSignInit = function(
-    ACtx, APKeyCtx, AType, AEngine, AKey: Pointer): Integer; cdecl;
+    ACtx, APCtx, AType, AEngine, AKey: Pointer): Integer; cdecl;
   TEVP_DigestVerifyInit = function(
-    ACtx, APKeyCtx, AType, AEngine, AKey: Pointer): Integer; cdecl;
+    ACtx, APCtx, AType, AEngine, AKey: Pointer): Integer; cdecl;
   TEVP_DigestUpdate = function(
-    ACtx, AData: Pointer; ACount: NativeUInt): Integer; cdecl;
+    ACtx: Pointer; AData: Pointer; ALen: NativeUInt): Integer; cdecl;
   TEVP_DigestSignFinal = function(
-    ACtx, ASignature: Pointer; var ASignatureLen: NativeUInt): Integer; cdecl;
+    ACtx: Pointer; ASig: Pointer; var ASigLen: NativeUInt): Integer; cdecl;
   TEVP_DigestVerifyFinal = function(
-    ACtx, ASignature: Pointer; ASignatureLen: NativeUInt): Integer; cdecl;
+    ACtx: Pointer; ASig: Pointer; ASigLen: NativeUInt): Integer; cdecl;
 
-var
-  GLock: TTCriticalSection = nil;
-  GLibCrypto: TLibHandle = 0;
-  GResolved: Boolean = False;
+  TTHttpJWTLibCrypto = class
+  strict private
+    class var FInstance: TTHttpJWTLibCrypto;
 
-  BIO_new_mem_buf: TBIO_new_mem_buf = nil;
-  BIO_free: TBIO_free = nil;
-  PEM_read_bio_PrivateKey: TPEM_read_bio_PrivateKey = nil;
-  PEM_read_bio_PUBKEY: TPEM_read_bio_PUBKEY = nil;
-  EVP_PKEY_free: TEVP_PKEY_free = nil;
-  EVP_MD_CTX_new: TEVP_MD_CTX_new = nil;
-  EVP_MD_CTX_free: TEVP_MD_CTX_free = nil;
-  EVP_sha256: TEVP_sha256 = nil;
-  EVP_DigestSignInit: TEVP_DigestSignInit = nil;
-  EVP_DigestVerifyInit: TEVP_DigestVerifyInit = nil;
-  EVP_DigestUpdate: TEVP_DigestUpdate = nil;
-  EVP_DigestSignFinal: TEVP_DigestSignFinal = nil;
-  EVP_DigestVerifyFinal: TEVP_DigestVerifyFinal = nil;
+    class constructor ClassCreate;
+    class destructor ClassDestroy;
+  strict private
+    FLock: TTCriticalSection;
+    FHandle: TLibHandle;
+    FResolved: Boolean;
 
-{ Dynamic loading }
+    FBIO_new_mem_buf: TBIO_new_mem_buf;
+    FBIO_free: TBIO_free;
+    FPEM_read_bio_PrivateKey: TPEM_read_bio_PrivateKey;
+    FPEM_read_bio_PUBKEY: TPEM_read_bio_PUBKEY;
+    FEVP_PKEY_free: TEVP_PKEY_free;
+    FEVP_PKEY_base_id: TEVP_PKEY_base_id;
+    FEVP_MD_CTX_new: TEVP_MD_CTX_new;
+    FEVP_MD_CTX_free: TEVP_MD_CTX_free;
+    FEVP_sha256: TEVP_sha256;
+    FEVP_DigestSignInit: TEVP_DigestSignInit;
+    FEVP_DigestVerifyInit: TEVP_DigestVerifyInit;
+    FEVP_DigestUpdate: TEVP_DigestUpdate;
+    FEVP_DigestSignFinal: TEVP_DigestSignFinal;
+    FEVP_DigestVerifyFinal: TEVP_DigestVerifyFinal;
 
-function LibCryptoNames: TArray<String>;
+    class function LibraryNames: TArray<String>; static;
+    class function OpenLibrary(const AName: String): TLibHandle; static;
+
+    procedure CloseLibrary;
+    function TryGetSymbol(const AName: String): Pointer;
+    function GetSymbol(const AName: String): Pointer;
+    function GetAnySymbol(
+      const AName: String;
+      const AAlternateName: String): Pointer;
+    procedure CheckIsRsaKey(const AKey: Pointer);
+    procedure ResolveSymbols;
+    procedure LoadLibrary;
+    function NewDigestContext: Pointer;
+    function ReadPem(const ABio: Pointer; const APrivate: Boolean): Pointer;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure Initialize;
+
+    function LoadPemKey(
+      const APem: String; const APrivate: Boolean): Pointer;
+    procedure FreeKey(const AKey: Pointer);
+
+    function Sign(const AKey: Pointer; const AInput: TBytes): TBytes;
+    function Verify(
+      const AKey: Pointer;
+      const AInput: TBytes;
+      const ASignature: TBytes): Boolean;
+
+    class property Instance: TTHttpJWTLibCrypto read FInstance;
+  end;
+
+class constructor TTHttpJWTLibCrypto.ClassCreate;
+begin
+  FInstance := TTHttpJWTLibCrypto.Create;
+end;
+
+class destructor TTHttpJWTLibCrypto.ClassDestroy;
+begin
+  FInstance.Free;
+  FInstance := nil;
+end;
+
+constructor TTHttpJWTLibCrypto.Create;
+begin
+  inherited Create;
+  FLock := TTCriticalSection.Create;
+  FHandle := 0;
+  FResolved := False;
+end;
+
+destructor TTHttpJWTLibCrypto.Destroy;
+begin
+  // libcrypto is left loaded on purpose
+  FLock.Free;
+  inherited Destroy;
+end;
+
+class function TTHttpJWTLibCrypto.LibraryNames: TArray<String>;
 begin
 {$IF Defined(MSWINDOWS) and Defined(WIN64)}
   result := [
@@ -147,14 +218,15 @@ begin
 {$ENDIF}
 end;
 
-function OpenLibCrypto(const AName: String): TLibHandle;
+class function TTHttpJWTLibCrypto.OpenLibrary(
+  const AName: String): TLibHandle;
 {$IFDEF POSIX}
 var
   LName: UTF8String;
 {$ENDIF}
 begin
 {$IFDEF MSWINDOWS}
-  result := LoadLibrary(PChar(AName));
+  result := Winapi.Windows.LoadLibrary(PChar(AName));
 {$ENDIF}
 {$IFDEF POSIX}
   LName := UTF8String(AName);
@@ -162,103 +234,136 @@ begin
 {$ENDIF}
 end;
 
-procedure CloseLibCrypto;
+procedure TTHttpJWTLibCrypto.CloseLibrary;
 begin
-  if GLibCrypto <> 0 then
+  if FHandle <> 0 then
   begin
 {$IFDEF MSWINDOWS}
-    FreeLibrary(HMODULE(GLibCrypto));
+    FreeLibrary(HMODULE(FHandle));
 {$ENDIF}
 {$IFDEF POSIX}
-    dlclose(GLibCrypto);
+    dlclose(FHandle);
 {$ENDIF}
-    GLibCrypto := 0;
+    FHandle := 0;
   end;
 end;
 
-function GetSymbol(const AName: String): Pointer;
+function TTHttpJWTLibCrypto.TryGetSymbol(const AName: String): Pointer;
 {$IFDEF POSIX}
 var
   LName: UTF8String;
 {$ENDIF}
 begin
 {$IFDEF MSWINDOWS}
-  result := GetProcAddress(HMODULE(GLibCrypto), PChar(AName));
+  result := GetProcAddress(HMODULE(FHandle), PChar(AName));
 {$ENDIF}
 {$IFDEF POSIX}
   LName := UTF8String(AName);
-  result := dlsym(GLibCrypto, MarshaledAString(LName));
+  result := dlsym(FHandle, MarshaledAString(LName));
 {$ENDIF}
+end;
+
+function TTHttpJWTLibCrypto.GetSymbol(const AName: String): Pointer;
+begin
+  result := TryGetSymbol(AName);
   if result = nil then
     raise ETHttpJWTException.CreateFmt(
       'OpenSSL: symbol "%s" not found in libcrypto.', [AName]);
 end;
 
-procedure ResolveSymbols;
+function TTHttpJWTLibCrypto.GetAnySymbol(
+  const AName: String;
+  const AAlternateName: String): Pointer;
 begin
-  BIO_new_mem_buf := TBIO_new_mem_buf(GetSymbol('BIO_new_mem_buf'));
-  BIO_free := TBIO_free(GetSymbol('BIO_free'));
-  PEM_read_bio_PrivateKey := TPEM_read_bio_PrivateKey(
+  result := TryGetSymbol(AName);
+  if result = nil then
+    result := TryGetSymbol(AAlternateName);
+
+  if result = nil then
+    raise ETHttpJWTException.CreateFmt(
+      'OpenSSL: neither "%0:s" nor "%1:s" found in libcrypto.', [
+        AName, AAlternateName]);
+end;
+
+procedure TTHttpJWTLibCrypto.ResolveSymbols;
+begin
+  FBIO_new_mem_buf := TBIO_new_mem_buf(GetSymbol('BIO_new_mem_buf'));
+  FBIO_free := TBIO_free(GetSymbol('BIO_free'));
+  FPEM_read_bio_PrivateKey := TPEM_read_bio_PrivateKey(
     GetSymbol('PEM_read_bio_PrivateKey'));
-  PEM_read_bio_PUBKEY := TPEM_read_bio_PUBKEY(
+  FPEM_read_bio_PUBKEY := TPEM_read_bio_PUBKEY(
     GetSymbol('PEM_read_bio_PUBKEY'));
-  EVP_PKEY_free := TEVP_PKEY_free(GetSymbol('EVP_PKEY_free'));
-  EVP_MD_CTX_new := TEVP_MD_CTX_new(GetSymbol('EVP_MD_CTX_new'));
-  EVP_MD_CTX_free := TEVP_MD_CTX_free(GetSymbol('EVP_MD_CTX_free'));
-  EVP_sha256 := TEVP_sha256(GetSymbol('EVP_sha256'));
-  EVP_DigestSignInit := TEVP_DigestSignInit(
+  FEVP_PKEY_free := TEVP_PKEY_free(GetSymbol('EVP_PKEY_free'));
+  FEVP_PKEY_base_id := TEVP_PKEY_base_id(
+    GetAnySymbol('EVP_PKEY_base_id', 'EVP_PKEY_get_base_id'));
+  FEVP_MD_CTX_new := TEVP_MD_CTX_new(GetSymbol('EVP_MD_CTX_new'));
+  FEVP_MD_CTX_free := TEVP_MD_CTX_free(GetSymbol('EVP_MD_CTX_free'));
+  FEVP_sha256 := TEVP_sha256(GetSymbol('EVP_sha256'));
+  FEVP_DigestSignInit := TEVP_DigestSignInit(
     GetSymbol('EVP_DigestSignInit'));
-  EVP_DigestVerifyInit := TEVP_DigestVerifyInit(
+  FEVP_DigestVerifyInit := TEVP_DigestVerifyInit(
     GetSymbol('EVP_DigestVerifyInit'));
-  EVP_DigestUpdate := TEVP_DigestUpdate(GetSymbol('EVP_DigestUpdate'));
-  EVP_DigestSignFinal := TEVP_DigestSignFinal(
+  FEVP_DigestUpdate := TEVP_DigestUpdate(GetSymbol('EVP_DigestUpdate'));
+  FEVP_DigestSignFinal := TEVP_DigestSignFinal(
     GetSymbol('EVP_DigestSignFinal'));
-  EVP_DigestVerifyFinal := TEVP_DigestVerifyFinal(
+  FEVP_DigestVerifyFinal := TEVP_DigestVerifyFinal(
     GetSymbol('EVP_DigestVerifyFinal'));
 end;
 
-procedure InitLibCrypto;
+procedure TTHttpJWTLibCrypto.LoadLibrary;
 var
   LNames: TArray<String>;
   LIndex: Integer;
 begin
-  GLock.Acquire;
+  LNames := LibraryNames;
+  if Length(LNames) = 0 then
+    raise ETHttpJWTException.Create(
+      'RS256: OpenSSL libcrypto is not available on this platform.');
+
+  LIndex := Low(LNames);
+  while (FHandle = 0) and (LIndex <= High(LNames)) do
+  begin
+    FHandle := OpenLibrary(LNames[LIndex]);
+    Inc(LIndex);
+  end;
+
+  if FHandle = 0 then
+    raise ETHttpJWTException.CreateFmt(
+      'OpenSSL: unable to load libcrypto (tried %s).', [
+        String.Join(', ', LNames)]);
+end;
+
+procedure TTHttpJWTLibCrypto.Initialize;
+begin
+  FLock.Acquire;
   try
-    if not GResolved then
+    if not FResolved then
     begin
-      LNames := LibCryptoNames;
-      if Length(LNames) = 0 then
-        raise ETHttpJWTException.Create(
-          'RS256: OpenSSL libcrypto is not available on this platform.');
-
-      LIndex := Low(LNames);
-      while (GLibCrypto = 0) and (LIndex <= High(LNames)) do
-      begin
-        GLibCrypto := OpenLibCrypto(LNames[LIndex]);
-        Inc(LIndex);
-      end;
-
-      if GLibCrypto = 0 then
-        raise ETHttpJWTException.CreateFmt(
-          'OpenSSL: unable to load libcrypto (tried %s).', [
-            String.Join(', ', LNames)]);
-
+      LoadLibrary;
       try
         ResolveSymbols;
-        GResolved := True;
+        FResolved := True;
       except
-        CloseLibCrypto;
+        CloseLibrary;
         raise;
       end;
     end;
   finally
-    GLock.Release;
+    FLock.Release;
   end;
 end;
 
-{ Helpers }
+function TTHttpJWTLibCrypto.ReadPem(
+  const ABio: Pointer; const APrivate: Boolean): Pointer;
+begin
+  if APrivate then
+    result := FPEM_read_bio_PrivateKey(ABio, nil, nil, nil)
+  else
+    result := FPEM_read_bio_PUBKEY(ABio, nil, nil, nil);
+end;
 
-function LoadPemKey(const APem: String; const APrivate: Boolean): Pointer;
+function TTHttpJWTLibCrypto.LoadPemKey(
+  const APem: String; const APrivate: Boolean): Pointer;
 var
   LBytes: TBytes;
   LBio: Pointer;
@@ -267,52 +372,78 @@ begin
   if Length(LBytes) = 0 then
     raise ETHttpJWTException.Create('RS256: empty key.');
 
-  LBio := BIO_new_mem_buf(@LBytes[0], Length(LBytes));
+  LBio := FBIO_new_mem_buf(@LBytes[0], Length(LBytes));
   if LBio = nil then
     raise ETHttpJWTException.Create('OpenSSL: BIO_new_mem_buf failed.');
   try
-    if APrivate then
-      result := PEM_read_bio_PrivateKey(LBio, nil, nil, nil)
-    else
-      result := PEM_read_bio_PUBKEY(LBio, nil, nil, nil);
+    result := ReadPem(LBio, APrivate);
   finally
-    BIO_free(LBio);
+    FBIO_free(LBio);
   end;
 
   if result = nil then
     raise ETHttpJWTException.Create('OpenSSL: cannot load RSA key from PEM.');
+
+  CheckIsRsaKey(result);
 end;
 
-function InternalSign(const AKey: Pointer; const AInput: TBytes): TBytes;
+procedure TTHttpJWTLibCrypto.CheckIsRsaKey(const AKey: Pointer);
+begin
+  if FEVP_PKEY_base_id(AKey) <> EVP_PKEY_RSA then
+  begin
+    FreeKey(AKey);
+    raise ETHttpJWTException.Create(
+      'RS256: the PEM carries a key that is not RSA. EVP_DigestVerify ' +
+      'signs and verifies with whatever algorithm the key names, so an ' +
+      'EC key here would have verified ECDSA signatures while the token ' +
+      'header said RS256.');
+  end;
+end;
+
+procedure TTHttpJWTLibCrypto.FreeKey(const AKey: Pointer);
+begin
+  if Assigned(AKey) and Assigned(FEVP_PKEY_free) then
+    FEVP_PKEY_free(AKey);
+end;
+
+function TTHttpJWTLibCrypto.NewDigestContext: Pointer;
+begin
+  result := FEVP_MD_CTX_new();
+  if result = nil then
+    raise ETHttpJWTException.Create('OpenSSL: EVP_MD_CTX_new failed.');
+end;
+
+function TTHttpJWTLibCrypto.Sign(
+  const AKey: Pointer; const AInput: TBytes): TBytes;
 var
   LCtx: Pointer;
   LLen: NativeUInt;
 begin
-  LCtx := EVP_MD_CTX_new();
-  if LCtx = nil then
-    raise ETHttpJWTException.Create('OpenSSL: EVP_MD_CTX_new failed.');
+  LCtx := NewDigestContext;
   try
-    if EVP_DigestSignInit(LCtx, nil, EVP_sha256(), nil, AKey) <> 1 then
+    if FEVP_DigestSignInit(LCtx, nil, FEVP_sha256(), nil, AKey) <> 1 then
       raise ETHttpJWTException.Create('OpenSSL: EVP_DigestSignInit failed.');
-    if EVP_DigestUpdate(LCtx, @AInput[0], Length(AInput)) <> 1 then
+    if FEVP_DigestUpdate(LCtx, @AInput[0], Length(AInput)) <> 1 then
       raise ETHttpJWTException.Create('OpenSSL: EVP_DigestUpdate failed.');
 
     LLen := 0;
-    if EVP_DigestSignFinal(LCtx, nil, LLen) <> 1 then
+    if FEVP_DigestSignFinal(LCtx, nil, LLen) <> 1 then
       raise ETHttpJWTException.Create(
         'OpenSSL: EVP_DigestSignFinal (len) failed.');
 
     SetLength(result, LLen);
-    if EVP_DigestSignFinal(LCtx, @result[0], LLen) <> 1 then
+    if FEVP_DigestSignFinal(LCtx, @result[0], LLen) <> 1 then
       raise ETHttpJWTException.Create('OpenSSL: EVP_DigestSignFinal failed.');
     SetLength(result, LLen);
   finally
-    EVP_MD_CTX_free(LCtx);
+    FEVP_MD_CTX_free(LCtx);
   end;
 end;
 
-function InternalVerify(
-  const AKey: Pointer; const AInput, ASignature: TBytes): Boolean;
+function TTHttpJWTLibCrypto.Verify(
+  const AKey: Pointer;
+  const AInput: TBytes;
+  const ASignature: TBytes): Boolean;
 var
   LCtx: Pointer;
 begin
@@ -320,31 +451,29 @@ begin
     result := False
   else
   begin
-    LCtx := EVP_MD_CTX_new();
-    if LCtx = nil then
-      raise ETHttpJWTException.Create('OpenSSL: EVP_MD_CTX_new failed.');
+    LCtx := NewDigestContext;
     try
-      if EVP_DigestVerifyInit(LCtx, nil, EVP_sha256(), nil, AKey) <> 1 then
+      if FEVP_DigestVerifyInit(LCtx, nil, FEVP_sha256(), nil, AKey) <> 1 then
         raise ETHttpJWTException.Create(
           'OpenSSL: EVP_DigestVerifyInit failed.');
-      if EVP_DigestUpdate(LCtx, @AInput[0], Length(AInput)) <> 1 then
+      if FEVP_DigestUpdate(LCtx, @AInput[0], Length(AInput)) <> 1 then
         raise ETHttpJWTException.Create('OpenSSL: EVP_DigestUpdate failed.');
 
       // 1 = Valid; 0 = Not valid; <0 = Error
-      result := EVP_DigestVerifyFinal(
+      result := FEVP_DigestVerifyFinal(
         LCtx, @ASignature[0], Length(ASignature)) = 1;
     finally
-      EVP_MD_CTX_free(LCtx);
+      FEVP_MD_CTX_free(LCtx);
     end;
   end;
 end;
 
-function WarmUpInput: TBytes;
+{ TTHttpJWTRSAAbstractKey }
+
+class function TTHttpJWTRSAAbstractKey.WarmUpInput: TBytes;
 begin
   result := TEncoding.UTF8.GetBytes('Trysil');
 end;
-
-{ TTHttpJWTRSAAbstractKey }
 
 constructor TTHttpJWTRSAAbstractKey.Create(const APem: String);
 begin
@@ -362,8 +491,8 @@ end;
 
 destructor TTHttpJWTRSAAbstractKey.Destroy;
 begin
-  if Assigned(FKey) and Assigned(EVP_PKEY_free) then
-    EVP_PKEY_free(FKey);
+  if Assigned(TTHttpJWTLibCrypto.Instance) then
+    TTHttpJWTLibCrypto.Instance.FreeKey(FKey);
   inherited Destroy;
 end;
 
@@ -376,8 +505,8 @@ end;
 
 procedure TTHttpJWTRSAAbstractKey.LoadKey;
 begin
-  InitLibCrypto;
-  FKey := LoadPemKey(FPem, IsPrivateKey);
+  TTHttpJWTLibCrypto.Instance.Initialize;
+  FKey := TTHttpJWTLibCrypto.Instance.LoadPemKey(FPem, IsPrivateKey);
   FPem := String.Empty;
 end;
 
@@ -386,13 +515,14 @@ var
   LSignature: TBytes;
 begin
   SetLength(LSignature, 256);
-  InternalVerify(FKey, WarmUpInput, LSignature);
+  TTHttpJWTLibCrypto.Instance.Verify(FKey, WarmUpInput, LSignature);
 end;
 
 function TTHttpJWTRSAAbstractKey.Verify(
   const ASigningInput: TBytes; const ASignature: TBytes): Boolean;
 begin
-  result := InternalVerify(FKey, ASigningInput, ASignature);
+  result := TTHttpJWTLibCrypto.Instance.Verify(
+    FKey, ASigningInput, ASignature);
 end;
 
 { TTHttpJWTRSAPublicKey }
@@ -412,19 +542,12 @@ end;
 procedure TTHttpJWTRSAPrivateKey.WarmUp;
 begin
   inherited WarmUp;
-  InternalSign(Key, WarmUpInput);
+  TTHttpJWTLibCrypto.Instance.Sign(Key, WarmUpInput);
 end;
 
 function TTHttpJWTRSAPrivateKey.Sign(const ASigningInput: TBytes): TBytes;
 begin
-  result := InternalSign(Key, ASigningInput);
+  result := TTHttpJWTLibCrypto.Instance.Sign(Key, ASigningInput);
 end;
-
-initialization
-  GLock := TTCriticalSection.Create;
-
-finalization
-  // libcrypto is left loaded on purpose
-  GLock.Free;
 
 end.

@@ -19,7 +19,10 @@ uses
   DUnitX.TestFramework,
 
   Trysil.Exceptions,
-  Trysil.Data.FireDAC.ConnectionPool;
+  Trysil.Data.FireDAC,
+  Trysil.Data.FireDAC.ConnectionPool,
+  Trysil.Data.FireDAC.MariaDB,
+  Trysil.Data.FireDAC.PostgreSQL;
 
 type
 
@@ -38,6 +41,9 @@ type
     function CreateParameters(const ADatabase: String): TStrings;
     procedure RegisterTestConnection(const ADatabase: String);
     function TryRegisterTestConnection(const ADatabase: String): Boolean;
+    function TryRegisterDriver(
+      const AName: String;
+      const ADriver: String): Boolean;
     procedure RestoreConfig;
   public
     [Setup]
@@ -59,6 +65,15 @@ type
     procedure DisabledPoolParametersAreStillAssigned;
 
     [Test]
+    procedure TheFactoryAnswersToTheNameOfTheEngine;
+
+    [Test]
+    procedure TheFactoryStillAnswersToTheFireDACName;
+
+    [Test]
+    procedure TheFactoryRefusesADriverThatIsNotThere;
+
+    [Test]
     procedure RegisteringTheSameConnectionTwiceIsANoOp;
 
     [Test]
@@ -72,6 +87,15 @@ type
 
     [Test]
     procedure ARejectedRegistrationDoesNotBurnTheName;
+
+    [Test]
+    procedure PoolConfigBeforeRegistrationIsAccepted;
+
+    [Test]
+    procedure PoolConfigAfterRegistrationRaises;
+
+    [Test]
+    procedure UnchangedPoolConfigAfterRegistrationIsAccepted;
   end;
 
 implementation
@@ -243,11 +267,112 @@ begin
     TryRegisterTestConnection('other-pool-test.db'),
     'A different definition under a name in use must be rejected');
 
+  Assert.IsTrue(
+    TryRegisterTestConnection('pool-test.db'),
+    'A rejected attempt must not stop the original from resolving');
+end;
+
+procedure TTConnectionPoolTests.PoolConfigBeforeRegistrationIsAccepted;
+begin
   TTFireDACConnectionPool.Instance.RegisterConfig(
     TestConnectionName, TTFireDACPoolParameters.Create(True, 7));
   Assert.IsTrue(
     TryRegisterTestConnection('pool-test.db'),
-    'A rejected attempt must not stop the original from resolving');
+    'Pool parameters set before the registration must be accepted');
+end;
+
+procedure TTConnectionPoolTests.PoolConfigAfterRegistrationRaises;
+var
+  LRaised: Boolean;
+begin
+  RegisterTestConnection('pool-test.db');
+
+  LRaised := False;
+  try
+    TTFireDACConnectionPool.Instance.RegisterConfig(
+      TestConnectionName, TTFireDACPoolParameters.Create(True, 7));
+  except
+    on E: ETException do
+      LRaised := True;
+  end;
+
+  Assert.IsTrue(
+    LRaised,
+    'Pool parameters set after the registration would be silently ignored');
+end;
+
+procedure TTConnectionPoolTests.UnchangedPoolConfigAfterRegistrationIsAccepted;
+var
+  LRaised: Boolean;
+begin
+  TTFireDACConnectionPool.Instance.RegisterConfig(
+    TestConnectionName, TTFireDACPoolParameters.Create(True, 7));
+  RegisterTestConnection('pool-test.db');
+
+  LRaised := False;
+  try
+    TTFireDACConnectionPool.Instance.RegisterConfig(
+      TestConnectionName, TTFireDACPoolParameters.Create(True, 7));
+  except
+    on E: ETException do
+      LRaised := True;
+  end;
+
+  Assert.IsFalse(
+    LRaised,
+    'Registering the same pool parameters again changes nothing');
+end;
+
+function TTConnectionPoolTests.TryRegisterDriver(
+  const AName: String; const ADriver: String): Boolean;
+var
+  LParameters: TTFireDACConnectionParameters;
+begin
+  LParameters := Default(TTFireDACConnectionParameters);
+  LParameters.Driver := ADriver;
+  LParameters.Server := 'localhost';
+  LParameters.DatabaseName := 'trysil_alias_test';
+
+  result := True;
+  try
+    TTFireDACConnectionFactory.Instance.RegisterConnection(
+      AName, LParameters);
+  except
+    on E: ETException do
+      result := False;
+  end;
+end;
+
+procedure TTConnectionPoolTests.TheFactoryAnswersToTheNameOfTheEngine;
+begin
+  Assert.IsTrue(
+    TryRegisterDriver('TrysilAliasMariaDB', 'MariaDB'),
+    'MariaDB registered itself under "mariadb" while the lookup builds ' +
+    '"Trysil_" plus the name it is given, so the factory could never ' +
+    'reach it - and multi tenant registration and per connection ' +
+    'pooling both go through the factory');
+  Assert.IsTrue(
+    TryRegisterDriver('TrysilAliasPostgreSQL', 'PostgreSQL'),
+    'And the documented name of the engine has to work on the others ' +
+    'too: the factory used to answer only to the FireDAC base id, which ' +
+    'is "PG" here and is written nowhere');
+end;
+
+procedure TTConnectionPoolTests.TheFactoryStillAnswersToTheFireDACName;
+begin
+  Assert.IsTrue(
+    TryRegisterDriver('TrysilAliasPG', 'PG'),
+    'The old name keeps working: the aliases are added, nothing is ' +
+    'taken away, so an application that passes the FireDAC base id today ' +
+    'does not have to change');
+end;
+
+procedure TTConnectionPoolTests.TheFactoryRefusesADriverThatIsNotThere;
+begin
+  Assert.IsFalse(
+    TryRegisterDriver('TrysilAliasNothing', 'NoSuchEngine'),
+    'And a name nobody registered is still refused, rather than ' +
+    'resolving to whichever driver happens to be first');
 end;
 
 initialization

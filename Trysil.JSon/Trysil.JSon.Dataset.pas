@@ -21,6 +21,7 @@ uses
   System.DateUtils,
   System.Rtti,
   Data.DB,
+  Data.FmtBcd,
   Trysil.Consts,
 
   Trysil.JSon.Consts,
@@ -33,7 +34,8 @@ type
   TTJSonValue = record
   strict private
     type TTJSonValueType = (
-      jvtString, jvtInteger, jvtDouble, jvtBoolean, jvtDateTime);
+      jvtString, jvtInteger, jvtLargeInt, jvtDouble, jvtExactNumber,
+      jvtBoolean, jvtDateTime, jvtDate, jvtTime);
   strict private
     FType: TTJSonValueType;
     FValue: TValue;
@@ -68,8 +70,10 @@ type
 
   TTJSonDatasetHelper = class helper for TDataset
   strict private
+    function FieldNames: TArray<String>;
     procedure DatasetToJSonArray(const AArray: TJSonArray);
-    procedure RecordToJSonObject(const AObject: TJSonObject);
+    procedure RecordToJSonObject(
+      const AObject: TJSonObject; const ANames: TArray<String>);
     function FieldToJSonValue(const AField: TField): TJSonValue;
     function BlobFieldToJSonValue(const AField: TBlobField): TJSonValue;
   public
@@ -117,13 +121,32 @@ begin
   case AField.DataType of
     ftString,
     ftWideString,
+    ftFixedChar,
+    ftFixedWideChar,
     ftMemo,
-    ftWideMemo:
+    ftWideMemo,
+    ftOraClob:
     begin
       FType := TTJSonValueType.jvtString;
       FValue := AField.AsString;
     end;
 
+    ftGuid:
+    begin
+      FType := TTJSonValueType.jvtString;
+      FValue := AField.AsString;
+    end;
+
+    ftBytes,
+    ftVarBytes:
+    begin
+      FType := TTJSonValueType.jvtString;
+      FValue := TNetEncoding.Base64.EncodeBytesToString(
+        AField.AsBytes);
+    end;
+
+    ftShortint,
+    ftByte,
     ftSmallint,
     ftInteger,
     ftWord:
@@ -132,12 +155,33 @@ begin
       FValue := AField.AsInteger;
     end;
 
+    ftLargeint,
+    ftLongWord,
+    ftAutoInc:
+    begin
+      FType := TTJSonValueType.jvtLargeInt;
+      FValue := AField.AsLargeInt;
+    end;
+
     ftFloat,
-    ftCurrency,
-    ftBCD:
+    ftSingle,
+    ftExtended:
     begin
       FType := TTJSonValueType.jvtDouble;
       FValue := AField.AsFloat;
+    end;
+
+    ftCurrency:
+    begin
+      FType := TTJSonValueType.jvtExactNumber;
+      FValue := CurrToStr(AField.AsCurrency, TFormatSettings.Invariant);
+    end;
+
+    ftBCD,
+    ftFMTBcd:
+    begin
+      FType := TTJSonValueType.jvtExactNumber;
+      FValue := BcdToStr(AField.AsBCD, TFormatSettings.Invariant);
     end;
 
     ftBoolean:
@@ -146,8 +190,18 @@ begin
       FValue := AField.AsBoolean;
     end;
 
-    ftDate,
-    ftTime,
+    ftDate:
+    begin
+      FType := TTJSonValueType.jvtDate;
+      FValue := AField.AsDateTime;
+    end;
+
+    ftTime:
+    begin
+      FType := TTJSonValueType.jvtTime;
+      FValue := AField.AsDateTime;
+    end;
+
     ftDateTime,
     ftTimeStamp:
     begin
@@ -156,7 +210,7 @@ begin
     end;
 
     else
-      raise ETJSonException.Create(
+      raise ETJSonServerException.Create(
         TTLanguage.Instance.Translate(SNotValidType));
   end;
 end;
@@ -165,7 +219,8 @@ class procedure TTJSonValue.CheckValueType(
   const AValueType: TTJSonValueType; const AType: TTJSonValueType);
 begin
   if AValueType <> AType then
-    raise ETJSonException.Create(TTLanguage.Instance.Translate(SNotValidType));
+    raise ETJSonServerException.Create(
+      TTLanguage.Instance.Translate(SNotValidType));
 end;
 
 class operator TTJSonValue.Implicit(const AValue: String): TTJSonValue;
@@ -175,7 +230,8 @@ end;
 
 class operator TTJSonValue.Implicit(const AValue: TTJSonValue): String;
 begin
-  CheckValueType(AValue.FType, TTJSonValueType.jvtString);
+  if AValue.FType <> TTJSonValueType.jvtExactNumber then
+    CheckValueType(AValue.FType, TTJSonValueType.jvtString);
   result := AValue.FValue.AsType<String>();
 end;
 
@@ -197,8 +253,14 @@ end;
 
 class operator TTJSonValue.Implicit(const AValue: TTJSonValue): Double;
 begin
-  CheckValueType(AValue.FType, TTJSonValueType.jvtDouble);
-  result := AValue.FValue.AsType<Double>;
+  if AValue.FType = TTJSonValueType.jvtExactNumber then
+    result := StrToFloat(
+      AValue.FValue.AsType<String>(), TFormatSettings.Invariant)
+  else
+  begin
+    CheckValueType(AValue.FType, TTJSonValueType.jvtDouble);
+    result := AValue.FValue.AsType<Double>;
+  end;
 end;
 
 class operator TTJSonValue.Implicit(const AValue: Boolean): TTJSonValue;
@@ -219,7 +281,11 @@ end;
 
 class operator TTJSonValue.Implicit(const AValue: TTJSonValue): TDateTime;
 begin
-  CheckValueType(AValue.FType, TTJSonValueType.jvtDateTime);
+  if not (AValue.FType in [
+    TTJSonValueType.jvtDateTime,
+    TTJSonValueType.jvtDate,
+    TTJSonValueType.jvtTime]) then
+    CheckValueType(AValue.FType, TTJSonValueType.jvtDateTime);
   result := AValue.FValue.AsType<TDateTime>;
 end;
 
@@ -232,14 +298,19 @@ function TTJSonValue.ToJSonValue: TJSonValue;
 begin
   case FType of
     TTJSonValueType.jvtString:
-      result := TJSonString.Create(
-        TNetEncoding.HTML.Encode(FValue.AsType<String>()));
+      result := TJSonString.Create(FValue.AsType<String>());
 
     TTJSonValueType.jvtInteger:
       result := TJSonNumber.Create(FValue.AsType<Integer>());
 
+    TTJSonValueType.jvtLargeInt:
+      result := TJSonNumber.Create(FValue.AsType<Int64>());
+
     TTJSonValueType.jvtDouble:
       result := TJSonNumber.Create(FValue.AsType<Double>());
+
+    TTJSonValueType.jvtExactNumber:
+      result := TJSonNumber.Create(FValue.AsType<String>());
 
     TTJSonValueType.jvtBoolean:
       result := TJSonBool.Create(FValue.AsType<Boolean>());
@@ -248,8 +319,23 @@ begin
       result := TJSonString.Create(
         DateToISO8601(
           TTimeZone.Local.ToUniversalTime(FValue.AsType<TDateTime>()), True));
+
+    TTJSonValueType.jvtDate:
+      result := TJSonString.Create(
+        FormatDateTime(
+          'yyyy-mm-dd',
+          FValue.AsType<TDateTime>(),
+          TFormatSettings.Invariant));
+
+    TTJSonValueType.jvtTime:
+      result := TJSonString.Create(
+        FormatDateTime(
+          'hh:nn:ss',
+          FValue.AsType<TDateTime>(),
+          TFormatSettings.Invariant));
   else
-    raise ETJSonException.Create(TTLanguage.Instance.Translate(SNotValidType));
+    raise ETJSonServerException.Create(
+      TTLanguage.Instance.Translate(SNotValidType));
   end;
 end;
 
@@ -285,19 +371,30 @@ end;
 
 procedure TTJSonDatasetHelper.RecordToJSon(const AObject: TJSonObject);
 begin
-  RecordToJSonObject(AObject);
+  RecordToJSonObject(AObject, FieldNames);
+end;
+
+function TTJSonDatasetHelper.FieldNames: TArray<String>;
+var
+  LIndex: Integer;
+begin
+  SetLength(result, Self.Fields.Count);
+  for LIndex := 0 to Self.Fields.Count - 1 do
+    result[LIndex] := Self.Fields[LIndex].FieldName.ToLowerInvariant;
 end;
 
 procedure TTJSonDatasetHelper.DatasetToJSonArray(const AArray: TJSonArray);
 var
   LObject: TJSonObject;
+  LNames: TArray<String>;
 begin
+  LNames := FieldNames;
   Self.First;
   while not Self.Eof do
   begin
     LObject := TJSonObject.Create;
     try
-      RecordToJsonObject(LObject);
+      RecordToJsonObject(LObject, LNames);
       AArray.AddElement(LObject);
     except
       LObject.Free;
@@ -307,16 +404,26 @@ begin
   end;
 end;
 
-procedure TTJSonDatasetHelper.RecordToJSonObject(const AObject: TJSonObject);
+procedure TTJSonDatasetHelper.RecordToJSonObject(
+  const AObject: TJSonObject; const ANames: TArray<String>);
 var
   LIndex: Integer;
   LField: TField;
+  LValue: TJSonValue;
 begin
   for LIndex := 0 to Self.Fields.Count - 1 do
   begin
     LField := Self.Fields[LIndex];
     if LField.Visible then
-      AObject.AddPair(LField.FieldName.ToLower(), FieldToJSonValue(LField));
+    begin
+      LValue := FieldToJSonValue(LField);
+      try
+        AObject.AddPair(ANames[LIndex], LValue);
+      except
+        LValue.Free;
+        raise;
+      end;
+    end;
   end;
 end;
 

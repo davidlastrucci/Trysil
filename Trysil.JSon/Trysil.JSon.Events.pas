@@ -127,6 +127,7 @@ end;
 class destructor TTJSonEventFactory.ClassDestroy;
 begin
   FInstance.Free;
+  FInstance := nil;
 end;
 
 constructor TTJSonEventFactory.Create;

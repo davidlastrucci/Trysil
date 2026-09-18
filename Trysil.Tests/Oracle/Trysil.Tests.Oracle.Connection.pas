@@ -19,6 +19,7 @@ uses
   Trysil.Data.FireDAC.ConnectionPool,
   Trysil.Data.FireDAC.Oracle,
 
+  Trysil.Tests.VendorLibrary,
   Trysil.Tests.Config;
 
 type
@@ -75,6 +76,8 @@ const
     ' ID NUMBER(9) NOT NULL,' +
     ' Title VARCHAR2(100),' +
     ' VersionID NUMBER(9) NOT NULL,' +
+    ' UpdatedAt TIMESTAMP NULL,' +
+    ' UpdatedBy VARCHAR2(100),' +
     ' DeletedAt TIMESTAMP NULL,' +
     ' DeletedBy VARCHAR2(100),' +
     ' PRIMARY KEY(ID))';
@@ -122,13 +125,14 @@ const
     'CREATE TABLE AllTypes (' +
     ' ID NUMBER(9) NOT NULL,' +
     ' LargeNumber NUMBER(19) NOT NULL,' +
-    ' IsActive BOOLEAN NOT NULL,' +
+    ' IsActive NUMBER(1) NOT NULL,' +
     ' BirthDate TIMESTAMP NOT NULL,' +
     ' UniqueID RAW(16) NOT NULL,' +
     ' Payload BLOB NOT NULL,' +
     ' Price NUMBER(19,4) NOT NULL,' +
+    ' Notes CLOB NULL,' +
     ' OptLargeNumber NUMBER(19) NULL,' +
-    ' OptIsActive BOOLEAN NULL,' +
+    ' OptIsActive NUMBER(1) NULL,' +
     ' OptBirthDate TIMESTAMP NULL,' +
     ' OptUniqueID RAW(16) NULL,' +
     ' OptPayload BLOB NULL,' +
@@ -187,16 +191,26 @@ end;
 
 class procedure TTOracleTestConnection.CreateSequences;
 begin
-  FConnection.Execute('CREATE SEQUENCE CustomersID START WITH 1');
-  FConnection.Execute('CREATE SEQUENCE CountriesID START WITH 1');
-  FConnection.Execute('CREATE SEQUENCE OrdersID START WITH 1');
-  FConnection.Execute('CREATE SEQUENCE TasksID START WITH 1');
-  FConnection.Execute('CREATE SEQUENCE TrackedUsersID START WITH 1');
-  FConnection.Execute('CREATE SEQUENCE ValidatedItemsID START WITH 1');
-  FConnection.Execute('CREATE SEQUENCE FullValidationID START WITH 1');
-  FConnection.Execute('CREATE SEQUENCE SimpleItemsID START WITH 1');
-  FConnection.Execute('CREATE SEQUENCE AllTypesID START WITH 1');
-  FConnection.Execute('CREATE SEQUENCE NullablePrimitivesID START WITH 1');
+  FConnection.Execute(
+    'CREATE SEQUENCE CustomersID START WITH 1 MAXVALUE 2147483647');
+  FConnection.Execute(
+    'CREATE SEQUENCE CountriesID START WITH 1 MAXVALUE 2147483647');
+  FConnection.Execute(
+    'CREATE SEQUENCE OrdersID START WITH 1 MAXVALUE 2147483647');
+  FConnection.Execute(
+    'CREATE SEQUENCE TasksID START WITH 1 MAXVALUE 2147483647');
+  FConnection.Execute(
+    'CREATE SEQUENCE TrackedUsersID START WITH 1 MAXVALUE 2147483647');
+  FConnection.Execute(
+    'CREATE SEQUENCE ValidatedItemsID START WITH 1 MAXVALUE 2147483647');
+  FConnection.Execute(
+    'CREATE SEQUENCE FullValidationID START WITH 1 MAXVALUE 2147483647');
+  FConnection.Execute(
+    'CREATE SEQUENCE SimpleItemsID START WITH 1 MAXVALUE 2147483647');
+  FConnection.Execute(
+    'CREATE SEQUENCE AllTypesID START WITH 1 MAXVALUE 2147483647');
+  FConnection.Execute(
+    'CREATE SEQUENCE NullablePrimitivesID START WITH 1 MAXVALUE 2147483647');
 end;
 
 class procedure TTOracleTestConnection.CreateTables;
@@ -218,6 +232,7 @@ var
   LPort: Integer;
 begin
   TTFireDACConnectionPool.Instance.Config.Enabled := False;
+  TTTestVendorLibrary.Apply('Oracle', TTOracleConnection.Driver);
   LPort := StrToIntDef(
     TTTestConfig.GetDatabaseParam('Oracle', 'port'), 1521);
   TTOracleConnection.RegisterConnection(

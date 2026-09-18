@@ -74,6 +74,14 @@ type
 
   [TestFixture]
   TTHttpJWTRS256Tests = class
+  strict private
+    const Base64Url =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+  strict private
+    function NewToken(const APrivateKey: TTHttpJWTRSAPrivateKey): String;
+    function CanLoad(
+      const AToken: String;
+      const APublicKey: TTHttpJWTRSAAbstractKey): Boolean;
   public
     [Test]
     procedure TokenRoundTrip;
@@ -92,6 +100,12 @@ type
 
     [Test]
     procedure SharedKeysAcrossThreads;
+
+    [Test]
+    procedure ASignatureWithSlackBitsReturnsFalse;
+
+    [Test]
+    procedure AKeyThatIsNotRSAIsRefused;
   end;
 
 implementation
@@ -156,6 +170,15 @@ begin
     'vfzN8LW9iWIaO3pYyGz8fjYxShn3cgZzYYlHPEZjkkmJ2omsSvey/DaE556nFgk7',
     'KgIMflbrd0BZuTOeezR74BMZRbwPP1Dy4t/4PjauWwIqR/ert3TOcquXBtGqTxhG',
     '0wIDAQAB',
+    '-----END PUBLIC KEY-----']);
+end;
+
+function EcPublicKeyPem: String;
+begin
+  result := String.Join(sLineBreak, [
+    '-----BEGIN PUBLIC KEY-----',
+    'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEvF/QNLCV1HByR4inqaMumribnOOG',
+    'lwKOEyl/1dYRoYNpTiWA6u60kwr51ZNairchDIobvzkeZMwV1SGPTQjbWQ==',
     '-----END PUBLIC KEY-----']);
 end;
 
@@ -237,6 +260,87 @@ begin
 end;
 
 { TTHttpJWTRS256Tests }
+
+function TTHttpJWTRS256Tests.NewToken(
+  const APrivateKey: TTHttpJWTRSAPrivateKey): String;
+var
+  LPayload: TTestRS256Payload;
+  LJWT: TTHttpJWT<TTestRS256Payload>;
+begin
+  LPayload := TTestRS256Payload.Create;
+  try
+    LPayload.SigningKey := APrivateKey;
+    LPayload.Username := 'john';
+    LJWT := TTHttpJWT<TTestRS256Payload>.Create(LPayload);
+    try
+      result := LJWT.ToToken;
+    finally
+      LJWT.Free;
+    end;
+  finally
+    LPayload.Free;
+  end;
+end;
+
+function TTHttpJWTRS256Tests.CanLoad(
+  const AToken: String;
+  const APublicKey: TTHttpJWTRSAAbstractKey): Boolean;
+var
+  LPayload: TTestRS256Payload;
+  LJWT: TTHttpJWT<TTestRS256Payload>;
+begin
+  LPayload := TTestRS256Payload.Create;
+  try
+    LPayload.VerificationKey := APublicKey;
+    LJWT := TTHttpJWT<TTestRS256Payload>.Create(LPayload);
+    try
+      result := LJWT.LoadFromToken(AToken);
+    finally
+      LJWT.Free;
+    end;
+  finally
+    LPayload.Free;
+  end;
+end;
+
+procedure TTHttpJWTRS256Tests.ASignatureWithSlackBitsReturnsFalse;
+var
+  LPrivateKey: TTHttpJWTRSAPrivateKey;
+  LPublicKey: TTHttpJWTRSAPublicKey;
+  LToken: String;
+  LLast: Integer;
+  LOffset: Integer;
+  LVariant: String;
+begin
+  LPrivateKey := TTHttpJWTRSAPrivateKey.Create(TestPrivateKeyPem);
+  try
+    LPublicKey := TTHttpJWTRSAPublicKey.Create(TestPublicKeyPem);
+    try
+      LToken := NewToken(LPrivateKey);
+      Assert.AreEqual<Integer>(2, LToken.Split(['.'])[2].Length mod 4,
+        'Precondition: the signature leaves four unused bits');
+
+      LLast := Base64Url.IndexOf(LToken.Chars[LToken.Length - 1]);
+      for LOffset := 0 to 15 do
+      begin
+        LVariant := LToken.Substring(0, LToken.Length - 1) +
+          Base64Url.Chars[(LLast and not 15) + LOffset];
+        if (LLast and not 15) + LOffset = LLast then
+          Assert.IsTrue(CanLoad(LVariant, LPublicKey),
+            'Precondition: the token is valid')
+        else
+          Assert.IsFalse(
+            CanLoad(LVariant, LPublicKey),
+            'The unused bits of the last character used to give sixteen ' +
+            'token strings that verify as the same token');
+      end;
+    finally
+      LPublicKey.Free;
+    end;
+  finally
+    LPrivateKey.Free;
+  end;
+end;
 
 procedure TTHttpJWTRS256Tests.TokenRoundTrip;
 var
@@ -512,6 +616,30 @@ begin
 
   Assert.IsTrue(LAllSucceeded,
     'One key instance must sign and verify from several threads at once');
+end;
+
+procedure TTHttpJWTRS256Tests.AKeyThatIsNotRSAIsRefused;
+var
+  LKey: TTHttpJWTRSAPublicKey;
+  LRefused: Boolean;
+begin
+  LRefused := False;
+  LKey := nil;
+  try
+    LKey := TTHttpJWTRSAPublicKey.Create(EcPublicKeyPem);
+  except
+    on E: ETHttpJWTException do
+      LRefused := True;
+  end;
+  if Assigned(LKey) then
+    LKey.Free;
+
+  Assert.IsTrue(
+    LRefused,
+    'PEM_read_bio_PUBKEY reads any public key, and EVP_DigestVerify ' +
+    'then verifies with the algorithm the key names: a host that ' +
+    'configured an EC key by mistake was verifying ECDSA signatures ' +
+    'while the token header said RS256, and nothing said so');
 end;
 
 initialization

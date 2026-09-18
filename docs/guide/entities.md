@@ -11,7 +11,28 @@ TPerson = class
 ```
 
 - **TTable** maps the class to a database table. The string parameter is the table name.
-- **TSequence** specifies the database sequence (or auto-increment source) used for generating primary key values on insert.
+- **TSequence** specifies the database sequence used for generating primary key values, read by `CreateEntity<T>` (SQLite, which has no sequences, reads the highest key instead).
+
+### Names and reserved words
+
+Every identifier Trysil puts in a statement - table, column, join alias, output alias, sequence - is **quoted** with the form the engine expects: `"` on PostgreSQL, Firebird, InterBase and Oracle, `[ ]` on SQL Server and SQLite, backticks on MariaDB. So a column named `Value`, `Level` or `Order` is safe, and the fact that every engine reserves a different set of words stops being something you have to know.
+
+The name is folded to the engine's own default case before being quoted - lower on PostgreSQL, upper on Oracle, Firebird and InterBase - because that is what the engine already did with the unquoted name. `[TTable('Customers')]` reaches PostgreSQL as `"customers"`, which is the same object `CREATE TABLE Customers` created.
+
+A **qualified** name is quoted one part at a time, so writing the schema in the attribute is the normal way to reach an object that is not in the default one:
+
+```pascal
+[TTable('dbo.Invoices')]     // SQL Server: [dbo].[Invoices]
+[TTable('reporting.Sales')]  // PostgreSQL: "reporting"."sales"
+```
+
+The one place a name is not quoted is the **expression API**: `TTProperty` builds its own `WHERE` text and `Trysil.Filter.Expression` is an upstream unit with no connection to ask, so `(TCustomerProperties.Level > 3)` reaches the engine with `Level` bare. The fluent form of the same builder - `Where('Level')` - resolves the name in the metadata and is quoted like everything else, and so is an `ORDER BY` written either way.
+
+**Do not put the quotes of the engine in the attribute.** Before 2.0.0 that was the only way to reach a reserved word or a mixed-case object, and it now backfires: the framework quotes what you wrote and doubles the closing quote inside it, so `[TTable('"Clienti"')]` becomes `"""clienti"""`, which names nothing. On SQLite a name carrying a `]` is refused outright, because that engine has no escape for one inside `[ ]`, and on Oracle a name carrying a `"` is refused for the same reason - Oracle states that no identifier, quoted or not, may contain one. Write the bare name and let the framework quote it.
+
+A **column** name has one restriction beyond that, and it holds on every engine, because it comes from the driver and not from the database: the name of a bind parameter is derived from it, and the parameter scanner reads only `0-9`, `a-z`, `A-Z`, `#`, `$`, `_` and Unicode letters. A space is turned into an underscore for you; anything else outside that set - a `]`, a `"`, a backtick, a hyphen, a dot - is refused when the statement is built, because the scanner would end the parameter name there and the value would never be bound. An accented name is fine.
+
+The consequence is worth stating plainly: **write the DDL without quotes**, as almost everyone does, and the name in the attribute can be written in any case. If instead you created the table as `CREATE TABLE "Customers"` on PostgreSQL, that object is not the one Trysil resolves - and it was not before this either.
 
 ## Field Mapping
 
@@ -40,7 +61,7 @@ Trysil supports the following field types for column mapping:
 
 | Type | Description |
 |---|---|
-| `String` | Text values |
+| `String` | Text values, including a text LOB |
 | `Integer` | 32-bit integer |
 | `Int64` | 64-bit integer |
 | `Double` | Floating-point number |
@@ -52,6 +73,8 @@ Trysil supports the following field types for column mapping:
 | `TTNullable<T>` | Nullable wrapper for any supported type |
 | `TTLazy<T>` | Lazy-loaded single related entity |
 | `TTLazyList<T>` | Lazy-loaded collection of related entities |
+
+The **column** on the database side does not have to be one of these exactly: `TIME`, the unsigned integers, `VARBINARY` and `RAW` are read and written through the member type that holds them without loss - a time through `TDateTime`, an unsigned 32-bit through `Int64`, binary through `TBytes`. A **text LOB** is a `String` too: `CLOB` on Oracle, `text` on PostgreSQL, `TEXT` on SQLite, `LONGTEXT` on MariaDB, `nvarchar(max)` on SQL Server and `BLOB SUB_TYPE TEXT` on Firebird and InterBase all map to a plain `String` member and are bound as LOBs, not as ordinary strings. The length ceiling described below does not apply to them, because such a column declares no length: `[TMaxLength]` is the way to bound one. What has no member type that can hold it is refused rather than truncated: a `DATETIMEOFFSET` carries an offset from UTC that `TDateTime` does not keep, so it is not mapped, and the refusal says so.
 
 For nullable columns, see [Nullable Types](nullable.md). For lazy loading, see [Lazy Loading](lazy-loading.md).
 
@@ -68,6 +91,12 @@ Two exceptions: Firebird and InterBase cap precision at 18 digits, so use
 `DECIMAL(18,4)` there, and Oracle spells the same type `NUMBER(19,4)`. SQLite has
 no decimal type at all - the column keeps NUMERIC affinity, but the value is
 stored as a float, so exactness there is bounded by what a double can hold.
+
+On PostgreSQL the driver has to work around FireDAC, which sends a currency
+parameter as `money` - a type that keeps only the fraction digits of the
+server's `lc_monetary`, two in the common case. There is nothing to do about it
+in application code: `TTPostgreSQLConnection` configures the connection so the
+parameter travels as `numeric`. See [PostgreSQL](../database-drivers/postgresql.md).
 
 ```pascal
 [TRequired]
@@ -104,16 +133,28 @@ A class can have multiple `TRelation` attributes if it is referenced by several 
 ## Detail Columns
 
 ```pascal
-[TDetailColumn('CompanyID', 'CompanyName')]
-FCompanyName: String;
+[TDetailColumn('ID', 'OrderID')]
+FDetails: TTLazyList<TOrderDetail>;
 ```
 
-`TDetailColumn` maps a read-only field that is resolved from a related table:
+`TDetailColumn` maps a **detail collection**, not a scalar: the field is a
+`TTLazyList<T>` of the child entity, loaded on first access.
 
-- First parameter: the **foreign key column** linking to the related table
-- Second parameter: the **column name** to read from the related table
+- First parameter: the column **on this entity** the children are matched
+  against, normally the primary key
+- Second parameter: the column **in the child table** that points back to it
 
-Detail columns are populated during SELECT operations but are not included in INSERT or UPDATE commands.
+So `[TDetailColumn('ID', 'OrderID')]` reads "my `ID` matches `OrderID` over
+there". The collection is loaded by the lazy list, not by the SELECT that loads
+the master, and it is never part of an INSERT or an UPDATE.
+
+The child entity does **not** have to map that column: `TOrderDetail` above carries
+no `OrderID` field, and the collection still loads - the name is quoted from the
+attribute when the metadata do not carry it. The one shape that is refused is a
+detail entity that maps a `[TJoin]`: its metadata are keyed on the output alias
+of each column, so the name in the attribute matches nothing and the reference
+would reach the engine unqualified. Load that through a filter on a single-table
+entity instead.
 
 ## Where Clause (Static Filters)
 
@@ -214,16 +255,32 @@ end;
 
 - The resolver automatically populates `*At` fields with `Now` and `*By` fields with the value returned by `TTContext.OnGetCurrentUser` (empty string if not assigned).
 - `[TCreatedAt]` / `[TCreatedBy]` are set during `Insert`.
-- `[TUpdatedAt]` / `[TUpdatedBy]` are set during `Update`.
-- `[TDeletedAt]` / `[TDeletedBy]` are set during `Delete`.
+- `[TUpdatedAt]` / `[TUpdatedBy]` are set during `Update`, and during `Undelete`.
+- `[TDeletedAt]` / `[TDeletedBy]` are set during `Delete`. `[TDeletedBy]` cannot be declared without `[TDeletedAt]`: the mapper refuses the pair, because no path would ever write it.
+
+!!! warning "These columns are the framework's, not the client's"
+    Two rules protect them, both added in 2.0.0. `Update<T>` writes only
+    `[TUpdatedAt]` and `[TUpdatedBy]`: the creation pair is set once, on
+    `Insert`, and the delete pair only by `Delete` and `Undelete`, so setting
+    any of the four by hand on an existing entity has no effect - an import or
+    a migration that needs to backdate a row has to go through raw SQL. And no
+    deserialization entry point reads any of the six from JSON, so a value for
+    them in a body never reaches the entity. A soft-deleted row is unreachable by `Update<T>`
+    through the entity that declares `[TDeletedAt]` - the guard is built from
+    the mapping, not from the table, so a second class on the same table
+    without the attribute still reaches it: the `WHERE` clause carries
+    `DeletedAt IS NULL`, so it cannot be
+    edited or resurrected. `Undelete` is the way back, and it writes only
+    `DeletedAt = NULL`, `DeletedBy = ''`, the update audit pair and the version
+    increment.
 
 ### Soft Delete
 
 When an entity has a `[TDeletedAt]` column, calling `Delete<T>` does **not** execute a SQL `DELETE`. Instead, it executes an `UPDATE` that sets the `DeletedAt` (and optionally `DeletedBy`) column and increments `[TVersionColumn]` if present. Relation checks (`TRelation`) are skipped for soft deletes.
 
-All SELECT queries automatically add `DeletedAt IS NULL` to the WHERE clause, so soft-deleted records are excluded by default. To include them, use `TTFilter.IncludeDeleted` or `TTFilterBuilder<T>.IncludeDeleted` — see [Filtering](filtering.md#including-soft-deleted-records). To load a single soft-deleted record by primary key, use the `Get<T>(AID, True)` / `TryGet<T>(AID, out AEntity, True)` overloads.
+All SELECT queries automatically add `DeletedAt IS NULL` to the WHERE clause, so soft-deleted records are excluded by default. To include them, use `TTFilter.IncludeDeleted` or `TTFilterBuilder<T>.IncludeDeleted` — see [Filtering](filtering.md#including-soft-deleted-records). To load a single soft-deleted record by primary key, use the `Get<T>(AID, True)` / `TryGet<T>(AID, True, out AEntity)` overloads.
 
-To reverse a soft delete, call `Undelete<T>` (or `UndeleteAll<T>` for a list): it clears the `DeletedAt` / `DeletedBy` columns and issues an `UPDATE`. Calling it on an entity without a `[TDeletedAt]` column raises `ETException`.
+To reverse a soft delete, call `Undelete<T>` (or `UndeleteAll<T>` for a list): it clears the `DeletedAt` / `DeletedBy` columns, stamps `[TUpdatedAt]` / `[TUpdatedBy]` and issues an `UPDATE`. Calling it on an entity without a `[TDeletedAt]` column raises `ETException`.
 
 ```pascal
 LArticle := LContext.Get<TArticle>(LID, True);  // load the soft-deleted row
@@ -335,7 +392,7 @@ end.
 
 Key points in this example:
 
-- `TRequired` ensures `Firstname`, `Lastname`, and the `Company` relation are not empty on insert/update.
+- `TRequired` ensures `Firstname`, `Lastname`, and the `Company` relation are not empty on insert/update. For the relation it asks the database too: a `CompanyID` that points at a row which is not there fails with a message of its own. A row that was **soft-deleted is still a row**, so it passes - see [Lazy Loading](lazy-loading.md) - and refusing it, if your domain wants that, is what a `[TValidator]` is for.
 - `TMaxLength` limits string length and is validated before the SQL command is executed.
 - `TEmail` validates that the email address matches a standard email pattern.
 - `TDisplayName` provides a human-readable field name used in validation error messages.

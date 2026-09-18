@@ -74,8 +74,12 @@
         <DCC_BplOutput>..\..\Lib\270\$(Platform)\$(Config)</DCC_BplOutput>
         <DCC_UnitSearchPath>..\..\Lib\270\$(Platform)\$(Config);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <VerInfo_Locale>1040</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=David Lastrucci;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=$(MSBuildProjectName);LegalCopyright=David Lastrucci;LegalTrademarks=David Lastrucci;OriginalFilename=$(MSBuildProjectName);ProgramID=net.Lastrucci.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=David Lastrucci;FileDescription=$(MSBuildProjectName);FileVersion=2.0.0.0;InternalName=$(MSBuildProjectName);LegalCopyright=David Lastrucci;LegalTrademarks=David Lastrucci;OriginalFilename=$(MSBuildProjectName);ProgramID=net.Lastrucci.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_MajorVer>2</VerInfo_MajorVer>
+        <VerInfo_MinorVer>0</VerInfo_MinorVer>
+        <VerInfo_Release>0</VerInfo_Release>
+        <VerInfo_Build>0</VerInfo_Build>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android)'!=''">
         <DCC_CBuilderOutput>None</DCC_CBuilderOutput>

@@ -86,21 +86,27 @@ end;
 function TTCache<K, V>.CreateValue(
   const AKey: K;
   const AAfterCreate: TTAfterCreateObjectMethod<V>): V;
+var
+  LWinner: V;
 begin
+  result := CreateObject(AKey);
+  try
+    if Assigned(AAfterCreate) then
+      AAfterCreate(result);
+  except
+    result.Free;
+    raise;
+  end;
+
   FLock.BeginWrite;
   try
-    if not FCache.TryGetValue(AKey, result) then
+    if FCache.TryGetValue(AKey, LWinner) then
     begin
-      result := CreateObject(AKey);
-      try
-        if Assigned(AAfterCreate) then
-          AAfterCreate(result);
-        FCache.Add(AKey, result);
-      except
-        result.Free;
-        raise;
-      end;
-    end;
+      result.Free;
+      result := LWinner;
+    end
+    else
+      FCache.Add(AKey, result);
   finally
     FLock.EndWrite;
   end;

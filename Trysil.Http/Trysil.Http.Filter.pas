@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright ï¿½ David Lastrucci
+  Copyright © David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -19,11 +19,15 @@ uses
   System.JSon,
   Data.DB,
   Trysil.Consts,
+  Trysil.Classes,
   Trysil.Rtti,
   Trysil.Data.Parameters,
   Trysil.Metadata,
   Trysil.Context,
   Trysil.Filter,
+
+  Trysil.JSon.Attributes,
+  Trysil.JSon.Types,
 
   Trysil.Http.Consts,
   Trysil.Http.Exceptions;
@@ -33,8 +37,30 @@ type
 { TTHttpTableMetadataHelper }
 
   TTHttpTableMetadataHelper = class helper for TTTableMetadata
+  strict private
+    function ColumnByName(const AName: String): TTColumnMetadata;
+    function ColumnByJSonName(const AName: String): TTColumnMetadata;
+    function Filterable(
+      const AColumn: TTColumnMetadata): TTColumnMetadata;
   public
     function FindColumn(const AName: String): TTColumnMetadata;
+  end;
+
+{ TTHttpFilterValues }
+
+  TTHttpFilterValues = class
+  strict private
+    class procedure CheckState(
+      const AState: TTJSonValueState; const AName: String);
+  public
+    class function GetString(
+      const AJSon: TJSonValue; const AName: String): String;
+    class function GetInteger(
+      const AJSon: TJSonValue;
+      const AName: String;
+      const ADefault: Integer): Integer;
+    class function GetArray(
+      const AJSon: TJSonValue; const AName: String): TJSonArray;
   end;
 
 { TTHttpFilterParameters }
@@ -132,7 +158,7 @@ type
   strict private
     const Directions: array[0..2] of string = ('ASC', 'DESC', '');
   strict private
-    FColumnName: String;
+    FSqlReference: String;
     FDirection: String;
 
     procedure ValidateDirection;
@@ -182,26 +208,97 @@ implementation
 
 { TTHttpTableMetadataHelper }
 
-function TTHttpTableMetadataHelper.FindColumn(
+function TTHttpTableMetadataHelper.ColumnByName(
   const AName: String): TTColumnMetadata;
 var
   LColumn: TTColumnMetadata;
 begin
   result := nil;
   for LColumn in Self.Columns do
-    if String.Compare(LColumn.ColumnName, AName, True) = 0 then
+    if TTIdentifier.Same(LColumn.ColumnName, AName) then
     begin
       result := LColumn;
       Break;
     end;
+end;
 
+function TTHttpTableMetadataHelper.ColumnByJSonName(
+  const AName: String): TTColumnMetadata;
+var
+  LColumn: TTColumnMetadata;
+begin
+  result := nil;
+  for LColumn in Self.Columns do
+    if (not LColumn.JSonName.IsEmpty) and
+      TTIdentifier.Same(LColumn.JSonName, AName) then
+    begin
+      result := LColumn;
+      Break;
+    end;
+end;
+
+function TTHttpTableMetadataHelper.Filterable(
+  const AColumn: TTColumnMetadata): TTColumnMetadata;
+begin
+  result := nil;
+  if Assigned(AColumn) and AColumn.IsFilterable and
+    TTJSonDirection.CanSerialize(AColumn) then
+    result := AColumn;
+end;
+
+function TTHttpTableMetadataHelper.FindColumn(
+  const AName: String): TTColumnMetadata;
+begin
+  result := ColumnByName(AName);
+  if not Assigned(result) then
+    result := ColumnByJSonName(AName);
+
+  result := Filterable(result);
   if not Assigned(result) then
     raise ETHttpBadRequest.CreateFmt(
-      TTLanguage.Instance.Translate(SColumnNotFound), [AName]);
-
-  if not result.IsFilterable then
-    raise ETHttpBadRequest.CreateFmt(
       TTLanguage.Instance.Translate(SColumnNotFilterable), [AName]);
+end;
+
+{ TTHttpFilterValues }
+
+class procedure TTHttpFilterValues.CheckState(
+  const AState: TTJSonValueState; const AName: String);
+begin
+  if AState = TTJSonValueState.Invalid then
+    raise ETHttpBadRequest.CreateFmt(
+      TTLanguage.Instance.Translate(SNotValidFilterValue), [
+        AName]);
+end;
+
+class function TTHttpFilterValues.GetString(
+  const AJSon: TJSonValue; const AName: String): String;
+var
+  LState: TTJSonValueState;
+begin
+  LState := TTJSonValues.GetString(AJSon, AName, result);
+  CheckState(LState, AName);
+end;
+
+class function TTHttpFilterValues.GetInteger(
+  const AJSon: TJSonValue;
+  const AName: String;
+  const ADefault: Integer): Integer;
+var
+  LState: TTJSonValueState;
+begin
+  LState := TTJSonValues.GetInteger(AJSon, AName, result);
+  CheckState(LState, AName);
+  if LState = TTJSonValueState.Missing then
+    result := ADefault;
+end;
+
+class function TTHttpFilterValues.GetArray(
+  const AJSon: TJSonValue; const AName: String): TJSonArray;
+var
+  LState: TTJSonValueState;
+begin
+  LState := TTJSonValues.GetArray(AJSon, AName, result);
+  CheckState(LState, AName);
 end;
 
 { TTHttpFilterParameters }
@@ -277,20 +374,20 @@ constructor TTHttpFilterWhere.Create(
   const ATableMetadata: TTTableMetadata;
   const AParameterIndex: Integer);
 begin
-  FCondition := AJSon.GetValue<String>('condition', String.Empty);
-  FValue := AJSon.GetValue<String>('value', String.Empty);
+  FCondition := TTHttpFilterValues.GetString(AJSon, 'condition');
+  FValue := TTHttpFilterValues.GetString(AJSon, 'value');
   FParameterName := Format('p%d', [AParameterIndex]);
 
-  FColumnMetadata := ATableMetadata.FindColumn(
-    AJSon.GetValue<String>('columnName', String.Empty));
-  FColumnName := FColumnMetadata.ColumnName;
+  FColumnName := TTHttpFilterValues.GetString(AJSon, 'columnName');
+  FColumnMetadata := ATableMetadata.FindColumn(FColumnName);
   ValidateCondition;
   ValidateConditionForColumn;
 end;
 
 function TTHttpFilterWhere.ToString: String;
 begin
-  result := Format('%s %s :%s', [FColumnName, FCondition, FParameterName]);
+  result := Format('%s %s :%s', [
+    FColumnMetadata.SqlReference, FCondition, FParameterName]);
 end;
 
 procedure TTHttpFilterWhere.AddParameter(var AFilter: TTFilter);
@@ -312,13 +409,14 @@ begin
     TFieldType.ftFixedChar,
     TFieldType.ftFixedWideChar,
     TFieldType.ftMemo,
-    TFieldType.ftWideMemo];
+    TFieldType.ftWideMemo,
+    TFieldType.ftOraClob];
 end;
 
 function TTHttpFilterWhere.IsLikeCondition: Boolean;
 begin
-  result := (String.Compare(FCondition, 'LIKE', True) = 0) or
-    (String.Compare(FCondition, 'NOT LIKE', True) = 0);
+  result := TTIdentifier.Same(FCondition, 'LIKE') or
+    TTIdentifier.Same(FCondition, 'NOT LIKE');
 end;
 
 procedure TTHttpFilterWhere.ValidateConditionForColumn;
@@ -353,8 +451,9 @@ var
 begin
   LIsValid := False;
   for LIndex := Low(Conditions) to High(Conditions) do
-    if String.Compare(Conditions[LIndex], FCondition, True) = 0 then
+    if TTIdentifier.Same(Conditions[LIndex], FCondition) then
     begin
+      FCondition := Conditions[LIndex];
       LIsValid := True;
       Break;
     end;
@@ -426,17 +525,17 @@ constructor TTHttpFilterOrderBy.Create(
 var
   LColumnMetadata: TTColumnMetadata;
 begin
-  FDirection := AJSon.GetValue<String>('direction', String.Empty);
+  FDirection := TTHttpFilterValues.GetString(AJSon, 'direction');
 
   LColumnMetadata := ATableMetadata.FindColumn(
-    AJSon.GetValue<String>('columnName', String.Empty));
-  FColumnName := LColumnMetadata.ColumnName;
+    TTHttpFilterValues.GetString(AJSon, 'columnName'));
+  FSqlReference := LColumnMetadata.SqlReference;
   ValidateDirection;
 end;
 
 function TTHttpFilterOrderBy.ToString: String;
 begin
-  result := Format('%s %s', [FColumnName, FDirection]);
+  result := Format('%s %s', [FSqlReference, FDirection]);
 end;
 
 procedure TTHttpFilterOrderBy.ValidateDirection;
@@ -446,8 +545,9 @@ var
 begin
   LIsValid := False;
   for LIndex := Low(Directions) to High(Directions) do
-    if String.Compare(Directions[LIndex], FDirection, True) = 0 then
+    if TTIdentifier.Same(Directions[LIndex], FDirection) then
     begin
+      FDirection := Directions[LIndex];
       LIsValid := True;
       Break;
     end;
@@ -522,18 +622,26 @@ var
   LStart, LLimit: Integer;
   LOrderBy: TTHttpFilterOrderByList;
 begin
+  if Assigned(AJSon) and (not (AJSon is TJSonObject)) then
+    raise ETHttpBadRequest.Create(
+      TTLanguage.Instance.Translate(SNotValidFilterContent));
+
   LTableMetadata := AContext.GetMetadata<T>();
 
   LWhere := TTHttpFilterWhereList.Create(
-    AJSon.GetValue<TJSonArray>('where', nil),
+    TTHttpFilterValues.GetArray(AJSon, 'where'),
     LTableMetadata,
     AParameters.MaxWhereConditions);
-  LStart := AJSon.GetValue<Integer>('start', 0);
+  LStart := TTHttpFilterValues.GetInteger(AJSon, 'start', -1);
   if LStart < 0 then
-    LStart := 0;
-  LLimit := AParameters.LimitOrDefault(AJSon.GetValue<Integer>('limit', 0));
+    LStart := -1;
+  LLimit := AParameters.LimitOrDefault(
+    TTHttpFilterValues.GetInteger(AJSon, 'limit', 0));
+  if (LStart > 0) and (LLimit <= 0) then
+    raise ETHttpBadRequest.CreateFmt(
+      TTLanguage.Instance.Translate(SStartWithoutLimit), [LStart]);
   LOrderBy := TTHttpFilterOrderByList.Create(
-    AJSon.GetValue<TJSonArray>('orderBy', nil),
+    TTHttpFilterValues.GetArray(AJSon, 'orderBy'),
     LTableMetadata,
     AParameters.MaxOrderByColumns);
 

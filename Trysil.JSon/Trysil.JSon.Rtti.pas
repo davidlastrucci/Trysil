@@ -1,7 +1,7 @@
 ﻿(*
 
   Trysil
-  Copyright � David Lastrucci
+  Copyright © David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -17,6 +17,7 @@ uses
   System.Classes,
   System.Rtti,
   System.TypInfo,
+  Trysil.Classes,
   Trysil.Rtti;
 
 type
@@ -102,16 +103,14 @@ type
 { TTJSon }
 
   TTJSon = class
+  strict private
+    function HasTypePrefix(const AName: String): Boolean;
   strict protected
-    FRttiContext: TRttiContext;
-
     function GetName(const AName: String): String;
+    function GetEntityName(const AName: String): String;
     function IsDateTime(const AValue: TTValue): Boolean;
 
     function GetLazyObject(const AObject: TObject): TObject;
-  public
-    constructor Create;
-    destructor Destroy; override;
   end;
 
 implementation
@@ -303,34 +302,29 @@ end;
 
 { TTJSon }
 
-constructor TTJSon.Create;
+function TTJSon.HasTypePrefix(const AName: String): Boolean;
 begin
-  inherited Create;
-  FRttiContext.Create;
+  result := (AName.Length > 1) and CharInSet(AName.Chars[0], ['T']) and
+    CharInSet(AName.Chars[1], ['A' .. 'Z']);
 end;
 
-destructor TTJSon.Destroy;
+function TTJSon.GetEntityName(const AName: String): String;
 begin
-  FRttiContext.Free;
-  inherited Destroy;
+  result := AName;
+  if HasTypePrefix(result) then
+    result := result.Substring(1);
 end;
 
 function TTJSon.GetName(const AName: String): String;
 begin
-  result := AName;
-  if result.StartsWith('f') or result.StartsWith('F') then
-    result := result.Substring(1);
-  if result.Length <= 2 then
-    result := result.ToLower()
-  else
-    result := result.Substring(0, 1).ToLower() + result.Substring(1);
+  result := TTIdentifier.PublishedName(AName);
 end;
 
 function TTJSon.IsDateTime(const AValue: TTValue): Boolean;
 var
   LTypeName: String;
 begin
-  LTypeName := String(AValue.TypeInfo.Name).ToLower();
+  LTypeName := String(AValue.TypeInfo.Name).ToLowerInvariant;
 
   result :=
     LTypeName.Equals('tdatetime') or

@@ -89,6 +89,7 @@ type
     function GetName: String;
   private // internal
     property Name: String read GetName;
+    property RttiMethod: TRttiMethod read FMethod;
   public
     constructor Create(
       const AMethod: TRttiMethod;
@@ -131,6 +132,8 @@ type
 
     procedure SearchMethodsAreasAttributes;
     procedure SearchAreasAttributes(const AMethod: TTHttpRttiMethod);
+    function SameSignature(
+      const ALeft: TRttiMethod; const ARight: TRttiMethod): Boolean;
 
     procedure SearchMethods;
   strict protected
@@ -176,9 +179,16 @@ type
   strict private
     FControllerMethods: TObjectDictionary<String, TDictionary<
       TTHttpMethodType, TTHttpRttiControllerMethod<C>>>;
+    FControllerUriParts: TDictionary<String, TTHttpUriParts>;
 
     function TrySearchParametrizedUri(
       const AUri: String;
+      const AMethodType: TTHttpMethodType;
+      const AParams: TList<Integer>;
+      out ADictionary: TDictionary<
+        TTHttpMethodType, TTHttpRttiControllerMethod<C>>): Boolean;
+    function TryGetDictionary(
+      const AControllerID: TTHttpControllerID;
       const AParams: TList<Integer>;
       out ADictionary: TDictionary<
         TTHttpMethodType, TTHttpRttiControllerMethod<C>>): Boolean;
@@ -189,6 +199,15 @@ type
     procedure Add(
       const ARttiController: TTHttpRttiController<C>;
       const AAddedEvent: TTHttpRttiControllerAddedEvent);
+
+    function HasAreas: Boolean;
+    function FindAnonymousArea(out AUri: String): Boolean;
+
+    function CreateMethodNotAllowed(
+      const AControllerID: TTHttpControllerID;
+      const ADictionary: TDictionary<
+        TTHttpMethodType,
+        TTHttpRttiControllerMethod<C>>): ETHttpMethodNotAllowed;
 
     function Get(
       const AControllerID: TTHttpControllerID;
@@ -272,7 +291,9 @@ begin
   result := nil;
   LResult := FConstructor.Invoke(FInstanceType.MetaclassType, []);
   if LResult.IsType<TTHttpLogAbstractWriter>() then
-    result := LResult.AsType<TTHttpLogAbstractWriter>;
+    result := LResult.AsType<TTHttpLogAbstractWriter>
+  else
+    LResult.AsObject.Free;
 end;
 
 { TTHttpAbstractRtti<C> }
@@ -293,7 +314,9 @@ begin
   LResult := FConstructor.Invoke(
     FInstanceType.MetaclassType, [AContext]);
   if LResult.IsType<TTHttpAbstractAuthentication<C>>() then
-    result := LResult.AsType<TTHttpAbstractAuthentication<C>>;
+    result := LResult.AsType<TTHttpAbstractAuthentication<C>>
+  else
+    LResult.AsObject.Free;
 end;
 
 { TTHttpRttiMethod }
@@ -455,7 +478,7 @@ begin
   try
     for LAttribute in FType.GetInheritedAttributes do
       if LAttribute is TAreaAttribute then
-        LAreas.Add(TAreaAttribute(LAttribute).Area.ToLower());
+        LAreas.Add(TAreaAttribute(LAttribute).Area.ToLowerInvariant);
 
     for LMethod in FType.GetMethods do
       if not LMethod.IsClassMethod then
@@ -474,6 +497,25 @@ begin
     SearchAreasAttributes(LMethod);
 end;
 
+function TTHttpRttiController<C>.SameSignature(
+  const ALeft: TRttiMethod; const ARight: TRttiMethod): Boolean;
+var
+  LLeft: TArray<TRttiParameter>;
+  LRight: TArray<TRttiParameter>;
+  LIndex: Integer;
+begin
+  LLeft := ALeft.GetParameters;
+  LRight := ARight.GetParameters;
+  result := Length(LLeft) = Length(LRight);
+  if result then
+    for LIndex := Low(LLeft) to High(LLeft) do
+    begin
+      result := LLeft[LIndex].ParamType = LRight[LIndex].ParamType;
+      if not result then
+        Break;
+    end;
+end;
+
 procedure TTHttpRttiController<C>.SearchAreasAttributes(
   const AMethod: TTHttpRttiMethod);
 var
@@ -481,9 +523,10 @@ var
   LAttribute: TCustomAttribute;
 begin
   for LMethod in FType.GetMethods(AMethod.Name) do
-    for LAttribute in LMethod.GetAttributes do
-      if LAttribute is TAreaAttribute then
-        AMethod.Areas.Add(TAreaAttribute(LAttribute).Area.ToLower());
+    if SameSignature(LMethod, AMethod.RttiMethod) then
+      for LAttribute in LMethod.GetAttributes do
+        if LAttribute is TAreaAttribute then
+          AMethod.Areas.Add(TAreaAttribute(LAttribute).Area.ToLowerInvariant);
 end;
 
 function TTHttpRttiController<C>.GetConstructorParamTypes: TArray<PTypeInfo>;
@@ -503,7 +546,9 @@ begin
   LResult := FConstructor.Invoke(
     FInstanceType.MetaclassType, [AContext, ARequest, AResponse]);
   if LResult.IsType<TTHttpController<C>>() then
-    result := LResult.AsType<TTHttpController<C>>;
+    result := LResult.AsType<TTHttpController<C>>
+  else
+    LResult.AsObject.Free;
 end;
 
 { TTHttpRttiControllerMethod<C> }
@@ -524,10 +569,12 @@ begin
   inherited Create;
   FControllerMethods := TObjectDictionary<String, TDictionary<
     TTHttpMethodType, TTHttpRttiControllerMethod<C>>>.Create([doOwnsValues]);
+  FControllerUriParts := TDictionary<String, TTHttpUriParts>.Create;
 end;
 
 destructor TTHttpRttiControllers<C>.Destroy;
 begin
+  FControllerUriParts.Free;
   FControllerMethods.Free;
   inherited Destroy;
 end;
@@ -537,11 +584,18 @@ procedure TTHttpRttiControllers<C>.Add(
   const AAddedEvent: TTHttpRttiControllerAddedEvent);
 var
   LMethod: TTHttpRttiMethod;
+  LUriParts: TTHttpUriParts;
   LDictionary: TDictionary<
     TTHttpMethodType, TTHttpRttiControllerMethod<C>>;
 begin
   for LMethod in ARttiController.Methods do
   begin
+    LUriParts := TTHttpUriParts.Create(LMethod.ControllerID.Uri);
+    if not LUriParts.HasParamsOnlyAtTheEnd then
+      raise ETHttpServerException.CreateFmt(
+        TTLanguage.Instance.Translate(SNotValidParametrizedUri), [
+          LMethod.ControllerID.Uri]);
+
     if not FControllerMethods.TryGetValue(
       LMethod.ControllerID.Uri, LDictionary) then
     begin
@@ -553,6 +607,7 @@ begin
         LDictionary.Free;
         raise;
       end;
+      FControllerUriParts.Add(LMethod.ControllerID.Uri, LUriParts);
     end;
 
     if LDictionary.ContainsKey(LMethod.ControllerID.MethodType) then
@@ -569,27 +624,98 @@ begin
   end;
 end;
 
+function TTHttpRttiControllers<C>.HasAreas: Boolean;
+var
+  LDictionary: TDictionary<
+    TTHttpMethodType, TTHttpRttiControllerMethod<C>>;
+  LControllerMethod: TTHttpRttiControllerMethod<C>;
+begin
+  result := False;
+  for LDictionary in FControllerMethods.Values do
+    for LControllerMethod in LDictionary.Values do
+      if LControllerMethod.Method.Areas.Count > 0 then
+      begin
+        result := True;
+        Break;
+      end;
+end;
+
+function TTHttpRttiControllers<C>.FindAnonymousArea(
+  out AUri: String): Boolean;
+var
+  LDictionary: TDictionary<
+    TTHttpMethodType, TTHttpRttiControllerMethod<C>>;
+  LControllerMethod: TTHttpRttiControllerMethod<C>;
+begin
+  result := False;
+  AUri := String.Empty;
+  for LDictionary in FControllerMethods.Values do
+    for LControllerMethod in LDictionary.Values do
+      if (not result) and (LControllerMethod.Method.Areas.Count > 0) and
+        (LControllerMethod.Method.AuthorizationType =
+          TTHttpAuthorizationType.None) then
+      begin
+        AUri := LControllerMethod.Method.ControllerID.Uri;
+        result := True;
+      end;
+end;
+
 function TTHttpRttiControllers<C>.TrySearchParametrizedUri(
   const AUri: String;
+  const AMethodType: TTHttpMethodType;
   const AParams: TList<Integer>;
   out ADictionary: TDictionary<
     TTHttpMethodType, TTHttpRttiControllerMethod<C>>): Boolean;
 var
-  LRequestUri, LControllerUri: TTHttpUriParts;
-  LUri: String;
+  LRequestUri: TTHttpUriParts;
+  LControllerUri: TPair<String, TTHttpUriParts>;
+  LCandidate: TDictionary<
+    TTHttpMethodType, TTHttpRttiControllerMethod<C>>;
+  LAllowed: Boolean;
 begin
   result := False;
+  LAllowed := False;
   LRequestUri := TTHttpUriParts.Create(AUri);
-  for LUri in FControllerMethods.Keys do
-  begin
-    LControllerUri := TTHttpUriParts.Create(LUri);
-    result := LRequestUri.Equals(LControllerUri, AParams);
-    if result then
+  for LControllerUri in FControllerUriParts do
+    if (not LAllowed) and LRequestUri.Equals(LControllerUri.Value, AParams) then
     begin
-      ADictionary := FControllerMethods.Items[LUri];
-      Break;
+      LCandidate := FControllerMethods.Items[LControllerUri.Key];
+      LAllowed := LCandidate.ContainsKey(AMethodType);
+      if LAllowed or (not result) then
+        ADictionary := LCandidate;
+      result := True;
     end;
-  end;
+end;
+
+function TTHttpRttiControllers<C>.TryGetDictionary(
+  const AControllerID: TTHttpControllerID;
+  const AParams: TList<Integer>;
+  out ADictionary: TDictionary<
+    TTHttpMethodType, TTHttpRttiControllerMethod<C>>): Boolean;
+var
+  LParametrized: TDictionary<
+    TTHttpMethodType, TTHttpRttiControllerMethod<C>>;
+begin
+  result := False;
+  ADictionary := nil;
+  if FControllerMethods.TryGetValue(AControllerID.Uri, ADictionary) then
+    result := ADictionary.ContainsKey(AControllerID.MethodType);
+
+  if not result then
+    if TrySearchParametrizedUri(
+      AControllerID.Uri,
+      AControllerID.MethodType,
+      AParams,
+      LParametrized) then
+    begin
+      result := LParametrized.ContainsKey(AControllerID.MethodType);
+      if result or (not Assigned(ADictionary)) then
+        ADictionary := LParametrized;
+    end;
+
+  if (not result) and (not Assigned(ADictionary)) then
+    if FControllerMethods.TryGetValue('*', ADictionary) then
+      result := ADictionary.ContainsKey(AControllerID.MethodType);
 end;
 
 function TTHttpRttiControllers<C>.Get(
@@ -600,16 +726,40 @@ var
     TTHttpMethodType, TTHttpRttiControllerMethod<C>>;
 begin
   result := nil;
-  if not FControllerMethods.TryGetValue(AControllerID.Uri, LDictionary) then
-    if not TrySearchParametrizedUri(
-      AControllerID.Uri, AParams, LDictionary) then
-      if not FControllerMethods.TryGetValue('*', LDictionary) then
-        raise ETHttpNotFound.CreateFmt(
-          TTLanguage.Instance.Translate(SNotFound), [AControllerID.Uri]);
-  if not LDictionary.TryGetValue(AControllerID.MethodType, result) then
-    raise ETHttpMethodNotAllowed.CreateFmt(
-      TTLanguage.Instance.Translate(SMethodNotAllowed), [
-        AControllerID.Method, AControllerID.Uri])
+  if not TryGetDictionary(AControllerID, AParams, LDictionary) then
+  begin
+    if not Assigned(LDictionary) then
+      raise ETHttpNotFound.CreateFmt(
+        TTLanguage.Instance.Translate(SNotFound), [AControllerID.Uri]);
+
+    raise CreateMethodNotAllowed(AControllerID, LDictionary);
+  end;
+
+  LDictionary.TryGetValue(AControllerID.MethodType, result);
+end;
+
+function TTHttpRttiControllers<C>.CreateMethodNotAllowed(
+  const AControllerID: TTHttpControllerID;
+  const ADictionary: TDictionary<
+    TTHttpMethodType,
+    TTHttpRttiControllerMethod<C>>): ETHttpMethodNotAllowed;
+var
+  LMethodType: TTHttpMethodType;
+  LAllowed: String;
+begin
+  LAllowed := String.Empty;
+  for LMethodType in ADictionary.Keys do
+  begin
+    if not LAllowed.IsEmpty then
+      LAllowed := LAllowed + ', ';
+    LAllowed := LAllowed +
+      TRttiEnumerationType.GetName<TTHttpMethodType>(LMethodType);
+  end;
+
+  result := ETHttpMethodNotAllowed.CreateFmt(
+    TTLanguage.Instance.Translate(SMethodNotAllowed), [
+      AControllerID.Method, AControllerID.Uri]);
+  result.AllowedMethods := LAllowed;
 end;
 
 end.

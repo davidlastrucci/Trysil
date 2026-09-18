@@ -181,7 +181,7 @@ ORDER BY Orders.ID
 Join entities are queried exactly like single-table entities:
 
 ```pascal
-LOrders := TTObjectList<TOrderReport>.Create;
+LOrders := LContext.CreateEntityList<TOrderReport>();
 try
   // Load all
   LContext.SelectAll<TOrderReport>(LOrders);
@@ -201,6 +201,16 @@ end;
 ### Read-Only
 
 Join entities cannot be written. Calling `Insert<T>`, `Update<T>`, or `Delete<T>` on a join entity raises `ETException` with the message *"Join entities are read-only: Insert, Update, and Delete are not supported."*
+
+### Column Alias Length
+
+A joined column is selected as `Alias_Column`, and that name is also the key of the metadata and the `columnName` a client filters by. Identifier length limits differ: Oracle up to 12.1 takes **30** bytes - bytes, not characters, so an accented letter counts two on an `AL32UTF8` database - Firebird up to 3.0 and InterBase **31** characters, the others 63 or more. `DocumentiRighe_PrezzoUnitarioNetto` is 34, so the same mapping worked on SQL Server and was refused on Oracle, with nothing to say so until it ran there.
+
+An alias longer than 30 bytes in UTF-8 is therefore shortened to its first 23 bytes, cut between two UTF-16 code units, plus a hash of the **whole** name: `DocumentiRighe_PrezzoUn_A3F19C`. The head keeps the alias recognisable in a query, and the hash keeps two columns apart that share their first 23 bytes - `PrezzoUnitarioNetto` and `PrezzoUnitarioLordo` would otherwise become the same column twice in one select list.
+
+An alias that fits in 30 bytes is left exactly as it was. One that fits in 30 characters but not in 30 bytes is shortened too: `DocumentiRighe_QuantitàResidua` is 30 characters and 31 bytes.
+
+A client filtering over HTTP can also name a joined column by the JSON name of its member, the one it sees in every response and in `MetadataToJSon<T>`. That name does not depend on the alias, so it does not change when the alias is shortened. And a mapping with names long enough to be shortened now works on every engine, where before it worked on some.
 
 ### Identity Map
 
@@ -224,15 +234,13 @@ All join-related changes are behind `HasJoins` checks. Existing single-table ent
 
 ## Limitations (v1)
 
-- **TTFilterBuilder\<T\>** does not resolve join aliases. For filtered queries on join entities, use `TTFilter.Create(whereClause)` with manually qualified column names:
-
-```pascal
-var LFilter := TTFilter.Create('Customers.CompanyName LIKE :Name');
-LFilter.AddParameter('Name', ftWideString, 'Acme%');
-LContext.Select<TOrderReport>(LOrders, LFilter);
-```
-
 - **TWhereClause** on join entities requires manually qualified column names.
+
+!!! note "TTFilterBuilder\<T\> is no longer one of them"
+    Until 2.0.0 the builder did not resolve join aliases, and a filtered query
+    on a join entity had to be written by hand with `TTFilter.Create`. It
+    resolves them now, in the expression form and in the fluent string form
+    alike - see [Filtering join entities](filtering.md#filtering-join-entities).
 
 ## See Also
 

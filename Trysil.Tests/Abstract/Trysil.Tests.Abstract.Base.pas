@@ -17,7 +17,8 @@ uses
   DUnitX.TestFramework,
 
   Trysil.Context,
-  Trysil.Data;
+  Trysil.Data,
+  Trysil.Transaction;
 
 type
 
@@ -28,7 +29,8 @@ type
     FContext: TTContext;
 
     function GetConnection: TTConnection; virtual; abstract;
-    procedure ClearTables; virtual;
+    procedure DeleteTables; virtual;
+    procedure ClearTables;
   public
     property Connection: TTConnection read GetConnection;
 
@@ -43,7 +45,7 @@ implementation
 
 { TTAbstractBaseTests }
 
-procedure TTAbstractBaseTests.ClearTables;
+procedure TTAbstractBaseTests.DeleteTables;
 begin
   Connection.Execute('DELETE FROM Orders;');
   Connection.Execute('DELETE FROM Customers;');
@@ -55,6 +57,16 @@ begin
   Connection.Execute('DELETE FROM SimpleItems;');
 end;
 
+procedure TTAbstractBaseTests.ClearTables;
+begin
+  TTTransaction.Run(
+    Connection,
+    procedure
+    begin
+      DeleteTables;
+    end);
+end;
+
 procedure TTAbstractBaseTests.Setup;
 begin
   ClearTables;
@@ -63,7 +75,8 @@ end;
 
 procedure TTAbstractBaseTests.TearDown;
 begin
-  FContext.Free;
+  if Assigned(FContext) then
+    FContext.Free;
 end;
 
 end.

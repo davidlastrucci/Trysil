@@ -10,10 +10,14 @@ uses
   DUnitX.TestFramework,
   FireDAC.ConsoleUI.Wait,
   Trysil.Tests.Config in 'Trysil.Tests.Config.pas',
+  Trysil.Tests.Configuration in 'Trysil.Tests.Configuration.pas',
+  Trysil.Tests.VendorLibrary in 'Trysil.Tests.VendorLibrary.pas',
   Trysil.Tests.Types in 'Trysil.Tests.Types.pas',
   Trysil.Tests.Data.Parameters in 'Trysil.Tests.Data.Parameters.pas',
   Trysil.Tests.Data.ConnectionPool in 'Trysil.Tests.Data.ConnectionPool.pas',
   Trysil.Tests.IdentityMap in 'Trysil.Tests.IdentityMap.pas',
+  Trysil.Tests.Validation in 'Trysil.Tests.Validation.pas',
+  Trysil.Tests.JSon.Values in 'Trysil.Tests.JSon.Values.pas',
   Trysil.Tests.Mapping in 'Trysil.Tests.Mapping.pas',
   Trysil.Tests.Filter in 'Trysil.Tests.Filter.pas',
   Trysil.Tests.Model in 'Trysil.Tests.Model.pas',
@@ -31,13 +35,20 @@ uses
   Trysil.Tests.Abstract.ContextApi in 'Abstract\Trysil.Tests.Abstract.ContextApi.pas',
   Trysil.Tests.Abstract.UpdateMode in 'Abstract\Trysil.Tests.Abstract.UpdateMode.pas',
   Trysil.Tests.Http.Exceptions in 'Trysil.Tests.Http.Exceptions.pas',
+  Trysil.Tests.Cache in 'Trysil.Tests.Cache.pas',
+  Trysil.Tests.LoadBalancing in 'Trysil.Tests.LoadBalancing.pas',
   Trysil.Tests.Http.JWT in 'Trysil.Tests.Http.JWT.pas',
+  Trysil.Tests.Http.Authentication in 'Trysil.Tests.Http.Authentication.pas',
   Trysil.Tests.Http.JWT.RS256 in 'Trysil.Tests.Http.JWT.RS256.pas',
   Trysil.Tests.Http.Uri in 'Trysil.Tests.Http.Uri.pas',
+  Trysil.Tests.Http.Language in 'Trysil.Tests.Http.Language.pas',
   Trysil.Tests.Http.Log in 'Trysil.Tests.Http.Log.pas',
   Trysil.Tests.Http.Filter in 'Trysil.Tests.Http.Filter.pas',
   Trysil.Tests.Http.MultiTenant in 'Trysil.Tests.Http.MultiTenant.pas',
+  Trysil.Tests.Http.Harness in 'Trysil.Tests.Http.Harness.pas',
+  Trysil.Tests.Http.Server in 'Trysil.Tests.Http.Server.pas',
   Trysil.Tests.Logger in 'Trysil.Tests.Logger.pas',
+  Trysil.Tests.SqlServerParams in 'Trysil.Tests.SqlServerParams.pas',
   Trysil.Tests.Abstract.JSon in 'Abstract\Trysil.Tests.Abstract.JSon.pas',
   Trysil.Tests.Abstract.AllTypes in 'Abstract\Trysil.Tests.Abstract.AllTypes.pas',
   Trysil.Tests.Abstract.AllTypesJSon in 'Abstract\Trysil.Tests.Abstract.AllTypesJSon.pas',
@@ -51,6 +62,10 @@ uses
   Trysil.Tests.SQLite.Join in 'SQLite\Trysil.Tests.SQLite.Join.pas',
   Trysil.Tests.SQLite.Session in 'SQLite\Trysil.Tests.SQLite.Session.pas',
   Trysil.Tests.SQLite.Transaction in 'SQLite\Trysil.Tests.SQLite.Transaction.pas',
+  Trysil.Tests.SQLite.CommitFailure in 'SQLite\Trysil.Tests.SQLite.CommitFailure.pas',
+  Trysil.Tests.SQLite.SequenceCeiling in 'SQLite\Trysil.Tests.SQLite.SequenceCeiling.pas',
+  Trysil.Tests.SQLite.HttpFilter in 'SQLite\Trysil.Tests.SQLite.HttpFilter.pas',
+  Trysil.Tests.SQLite.JSonReentrance in 'SQLite\Trysil.Tests.SQLite.JSonReentrance.pas',
   Trysil.Tests.SQLite.Lazy in 'SQLite\Trysil.Tests.SQLite.Lazy.pas',
   Trysil.Tests.SQLite.Events in 'SQLite\Trysil.Tests.SQLite.Events.pas',
   Trysil.Tests.SQLite.Relation in 'SQLite\Trysil.Tests.SQLite.Relation.pas',
@@ -61,6 +76,7 @@ uses
   Trysil.Tests.SQLite.AllTypesJSon in 'SQLite\Trysil.Tests.SQLite.AllTypesJSon.pas',
   Trysil.Tests.SQLite.NullablePrimitives in 'SQLite\Trysil.Tests.SQLite.NullablePrimitives.pas',
   Trysil.Tests.SQLite.NullablePrimitivesJSon in 'SQLite\Trysil.Tests.SQLite.NullablePrimitivesJSon.pas',
+  Trysil.Tests.SQLite.SqlSyntax in 'SQLite\Trysil.Tests.SQLite.SqlSyntax.pas',
   Trysil.Tests.SQLite.Register in 'SQLite\Trysil.Tests.SQLite.Register.pas',
   Trysil.Tests.SqlServer.Connection in 'SqlServer\Trysil.Tests.SqlServer.Connection.pas',
   Trysil.Tests.SqlServer.Crud in 'SqlServer\Trysil.Tests.SqlServer.Crud.pas',
@@ -80,6 +96,8 @@ uses
   Trysil.Tests.SqlServer.AllTypesJSon in 'SqlServer\Trysil.Tests.SqlServer.AllTypesJSon.pas',
   Trysil.Tests.SqlServer.NullablePrimitives in 'SqlServer\Trysil.Tests.SqlServer.NullablePrimitives.pas',
   Trysil.Tests.SqlServer.NullablePrimitivesJSon in 'SqlServer\Trysil.Tests.SqlServer.NullablePrimitivesJSon.pas',
+  Trysil.Tests.SqlServer.Params in 'SqlServer\Trysil.Tests.SqlServer.Params.pas',
+  Trysil.Tests.SqlServer.SchemaName in 'SqlServer\Trysil.Tests.SqlServer.SchemaName.pas',
   Trysil.Tests.SqlServer.Register in 'SqlServer\Trysil.Tests.SqlServer.Register.pas',
   Trysil.Tests.PostgreSQL.Connection in 'PostgreSQL\Trysil.Tests.PostgreSQL.Connection.pas',
   Trysil.Tests.PostgreSQL.Crud in 'PostgreSQL\Trysil.Tests.PostgreSQL.Crud.pas',
@@ -161,6 +179,7 @@ uses
   Trysil.Tests.Oracle.Crud in 'Oracle\Trysil.Tests.Oracle.Crud.pas',
   Trysil.Tests.Oracle.ChangeTracking in 'Oracle\Trysil.Tests.Oracle.ChangeTracking.pas',
   Trysil.Tests.Oracle.IdentityMap in 'Oracle\Trysil.Tests.Oracle.IdentityMap.pas',
+  Trysil.Tests.Oracle.SqlSyntax in 'Oracle\Trysil.Tests.Oracle.SqlSyntax.pas',
   Trysil.Tests.Oracle.Validation in 'Oracle\Trysil.Tests.Oracle.Validation.pas',
   Trysil.Tests.Oracle.Join in 'Oracle\Trysil.Tests.Oracle.Join.pas',
   Trysil.Tests.Oracle.Session in 'Oracle\Trysil.Tests.Oracle.Session.pas',
@@ -176,6 +195,58 @@ uses
   Trysil.Tests.Oracle.NullablePrimitives in 'Oracle\Trysil.Tests.Oracle.NullablePrimitives.pas',
   Trysil.Tests.Oracle.NullablePrimitivesJSon in 'Oracle\Trysil.Tests.Oracle.NullablePrimitivesJSon.pas',
   Trysil.Tests.Oracle.Register in 'Oracle\Trysil.Tests.Oracle.Register.pas';
+
+function IsUnattended: Boolean;
+begin
+  result := FindCmdLineSwitch('ci', True) or
+    (not GetEnvironmentVariable('CI').IsEmpty);
+end;
+
+procedure SafeRun(const AName: String; const AAction: TProc);
+begin
+  try
+    AAction();
+  except
+    on E: Exception do
+      Writeln(Format('%s: %s: %s', [AName, E.ClassName, E.Message]));
+  end;
+end;
+
+procedure RegisterDatabases;
+begin
+  SafeRun('SQLite',
+    procedure begin TTSQLiteTestRegister.Register end);
+  SafeRun('PostgreSQL',
+    procedure begin TTPostgreSQLTestRegister.Register end);
+  SafeRun('SqlServer',
+    procedure begin TTSqlServerTestRegister.Register end);
+  SafeRun('FirebirdSQL',
+    procedure begin TTFirebirdSQLTestRegister.Register end);
+  SafeRun('InterBase',
+    procedure begin TTInterBaseTestRegister.Register end);
+  SafeRun('MariaDB',
+    procedure begin TTMariaDBTestRegister.Register end);
+  SafeRun('Oracle',
+    procedure begin TTOracleTestRegister.Register end);
+end;
+
+procedure UnregisterDatabases;
+begin
+  SafeRun('SQLite',
+    procedure begin TTSQLiteTestRegister.Unregister end);
+  SafeRun('PostgreSQL',
+    procedure begin TTPostgreSQLTestRegister.Unregister end);
+  SafeRun('SqlServer',
+    procedure begin TTSqlServerTestRegister.Unregister end);
+  SafeRun('FirebirdSQL',
+    procedure begin TTFirebirdSQLTestRegister.Unregister end);
+  SafeRun('InterBase',
+    procedure begin TTInterBaseTestRegister.Unregister end);
+  SafeRun('MariaDB',
+    procedure begin TTMariaDBTestRegister.Unregister end);
+  SafeRun('Oracle',
+    procedure begin TTOracleTestRegister.Unregister end);
+end;
 
 var
   LRunner: ITestRunner;
@@ -198,14 +269,20 @@ begin
       TDUnitX.Options.XMLOutputFile);
     LRunner.AddLogger(LNUnitLogger);
 
-    LResults := LRunner.Execute;
-    if not LResults.AllPassed then
-      System.ExitCode := EXIT_ERRORS;
+    RegisterDatabases;
+    try
+      LResults := LRunner.Execute;
+      if not LResults.AllPassed then
+        System.ExitCode := EXIT_ERRORS;
+    finally
+      UnregisterDatabases;
+    end;
 
-    {$IFNDEF CI}
-    Write('Done.. press <Enter> key to quit.');
-    ReadLn;
-    {$ENDIF}
+    if not IsUnattended then
+    begin
+      Write('Done.. press <Enter> key to quit.');
+      ReadLn;
+    end;
   except
     on E: Exception do
       Writeln(Format('%s: %s', [E.ClassName, E.Message]));

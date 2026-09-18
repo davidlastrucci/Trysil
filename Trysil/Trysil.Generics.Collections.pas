@@ -15,9 +15,18 @@ interface
 uses
   System.SysUtils,
   System.Classes,
+  System.Hash,
+  System.Generics.Defaults,
   System.Generics.Collections;
 
 type
+
+{ TTEntityComparer<T> }
+
+  TTEntityComparer<T: class> = record
+  public
+    class function Identity: IEqualityComparer<T>; static;
+  end;
 
 { TTHashList<T> }
 
@@ -96,29 +105,51 @@ type
     function Where(const APredicate: TTPredicate<T>): ITEnumerable<T>;
   end;
 
+{ TTDisposeItemNotify }
+
+  TTDisposeItemNotify = procedure(const AObject: TObject) of object;
+
 { TTObjectList<T> }
 
   TTObjectList<T: class> = class(TTList<T>)
   strict private
     FOwnsObjects: Boolean;
+    FIsValid: Boolean;
+    FOnDisposeItem: TTDisposeItemNotify;
   strict protected
     procedure Notify(
       const AValue: T; AAction: TCollectionNotification); override;
   public
     constructor Create; overload;
     constructor Create(const AOwnsObjects: Boolean); overload;
-  end;
 
-{ TTObjectLazyList<T> }
+    procedure AfterConstruction; override;
 
-  TTObjectLazyList<T: class> = class(TTObjectList<T>)
-  strict private
-    FIsValid: Boolean;
-  public
     property IsValid: Boolean read FIsValid write FIsValid;
+
+    property OnDisposeItem: TTDisposeItemNotify
+      read FOnDisposeItem write FOnDisposeItem;
   end;
 
 implementation
+
+{ TTEntityComparer<T> }
+
+class function TTEntityComparer<T>.Identity: IEqualityComparer<T>;
+begin
+  result := TEqualityComparer<T>.Construct(
+    function(const ALeft: T; const ARight: T): Boolean
+    begin
+      result := TObject(ALeft) = TObject(ARight);
+    end,
+    function(const AValue: T): Integer
+    var
+      LAddress: Pointer;
+    begin
+      LAddress := Pointer(AValue);
+      result := THashBobJenkins.GetHashValue(LAddress, SizeOf(Pointer));
+    end);
+end;
 
 { TTHashList<T> }
 
@@ -234,12 +265,23 @@ begin
   FOwnsObjects := AOwnsObjects;
 end;
 
+procedure TTObjectList<T>.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  FIsValid := False;
+  FOnDisposeItem := nil;
+end;
+
 procedure TTObjectList<T>.Notify(
   const AValue: T; AAction: TCollectionNotification);
 begin
   inherited Notify(AValue, AAction);
   if FOwnsObjects and (AAction = TCollectionNotification.cnRemoved) then
+  begin
+    if Assigned(FOnDisposeItem) then
+      FOnDisposeItem(AValue);
     AValue.Free;
+  end;
 end;
 
 end.

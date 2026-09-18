@@ -16,6 +16,8 @@ uses
   System.Classes,
   System.SysUtils,
   System.Generics.Collections,
+  System.Rtti,
+  IdHeaderList,
 
   Trysil.Http.Types,
   Trysil.Http.Classes;
@@ -26,11 +28,17 @@ type
 
   TTHttpCorsConfig = class
   strict private
+    const DefaultMaxAge: Integer = 600;
+  strict private
     FAllowHeaders: String;
     FAllowOrigin: String;
+    FMaxAge: Integer;
   public
+    constructor Create;
+
     property AllowHeaders: String read FAllowHeaders write FAllowHeaders;
     property AllowOrigin: String read FAllowOrigin write FAllowOrigin;
+    property MaxAge: Integer read FMaxAge write FMaxAge;
   end;
 
 { TTHttpCorsValues }
@@ -79,6 +87,7 @@ type
     const CorsAllowHeaders: String = 'Access-Control-Allow-Headers';
     const CorsAllowMethods: String = 'Access-Control-Allow-Methods';
     const CorsAllowOrigin: String = 'Access-Control-Allow-Origin';
+    const CorsMaxAge: String = 'Access-Control-Max-Age';
   strict private
     FConfig: TTHttpCorsConfig;
     FControllers: TObjectDictionary<String, TTHttpCorsController>;
@@ -87,6 +96,8 @@ type
       const AController: TTHttpCorsController; const AResponse: TTHttpResponse);
     procedure AddAllowMethods(
       const AController: TTHttpCorsController; const AResponse: TTHttpResponse);
+    procedure AddMaxAge(const AResponse: TTHttpResponse);
+    procedure AddAllowMethodNames(const AController: TTHttpCorsController);
   public
     constructor Create;
     destructor Destroy; override;
@@ -98,7 +109,8 @@ type
     procedure AddCorsHeaders(
       const AUri: String; const AResponse: TTHttpResponse);
 
-    procedure AddAllowOrigin(const AResponse: TTHttpResponse);
+    procedure AddAllowOrigin(const AResponse: TTHttpResponse); overload;
+    procedure AddAllowOrigin(const AHeaders: TIdHeaderList); overload;
 
     property Config: TTHttpCorsConfig read FConfig;
   end;
@@ -230,8 +242,7 @@ begin
   end;
 
   LController.AddHeader('Content-Type');
-  if AAuthType <> TTHttpAuthorizationType.None then
-    LController.AddHeader('Authorization');
+  LController.AddHeader('Authorization');
 
   LController.AddMethod(AControllerID.Method);
 end;
@@ -259,6 +270,13 @@ begin
     AResponse.AddHeader(CorsAllowMethods, AController.Methods.Value);
 end;
 
+procedure TTHttpCors.AddAllowOrigin(const AHeaders: TIdHeaderList);
+begin
+  if (not FConfig.AllowOrigin.IsEmpty) and
+    AHeaders.Values[CorsAllowOrigin].IsEmpty then
+    AHeaders.AddValue(CorsAllowOrigin, FConfig.AllowOrigin);
+end;
+
 procedure TTHttpCors.AddAllowOrigin(const AResponse: TTHttpResponse);
 begin
   if not FConfig.AllowOrigin.IsEmpty then
@@ -268,36 +286,42 @@ end;
 procedure TTHttpCors.AddCorsHeaders(
   const AUri: String; const AResponse: TTHttpResponse);
 var
-  LUris: TArray<String>;
-  LLength, LIndex, LIdx: Integer;
-  LUri: String;
   LController: TTHttpCorsController;
 begin
-  LUris := AUri.Split(['/']);
-  LLength := Length(LUris);
-  LIndex := LLength - 1;
+  LController := TTHttpCorsController.Create;
+  try
+    LController.AddHeader('Content-Type');
+    LController.AddHeader('Authorization');
+    AddAllowMethodNames(LController);
 
-  LUri := AUri;
-  while True do
-  begin
-    if FControllers.TryGetValue(LUri, LController) then
-    begin
-      AddAllowHeaders(LController, AResponse);
-      AddAllowMethods(LController, AResponse);
-      Break;
-    end
-    else
-    begin
-      LUris[LIndex] := '?';
-      Dec(LIndex);
-      if LIndex < 0 then
-        Break;
-
-      LUri := String.Empty;
-      for LIdx := 1 to LLength - 1 do
-        LUri := Format('%s/%s', [LUri, LUris[LIdx]]);
-    end;
+    AddAllowHeaders(LController, AResponse);
+    AddAllowMethods(LController, AResponse);
+    AddMaxAge(AResponse);
+  finally
+    LController.Free;
   end;
+end;
+
+procedure TTHttpCors.AddAllowMethodNames(
+  const AController: TTHttpCorsController);
+var
+  LMethodType: TTHttpMethodType;
+begin
+  for LMethodType := Low(TTHttpMethodType) to High(TTHttpMethodType) do
+    AController.AddMethod(
+      TRttiEnumerationType.GetName<TTHttpMethodType>(LMethodType));
+end;
+
+procedure TTHttpCors.AddMaxAge(const AResponse: TTHttpResponse);
+begin
+  if FConfig.MaxAge > 0 then
+    AResponse.AddHeader(CorsMaxAge, FConfig.MaxAge.ToString());
+end;
+
+constructor TTHttpCorsConfig.Create;
+begin
+  inherited Create;
+  FMaxAge := DefaultMaxAge;
 end;
 
 end.

@@ -1,6 +1,8 @@
 # Build folders
 Win32/
 Win64/
+Linux64/
+Lib/
 
 # Binaries
 *.exe
@@ -55,6 +57,3 @@ Trysil.Tests/CodeCoverage/
 # Claude
 .claude/
 CLAUDE.md
-
-# Miscellaneous
-nul

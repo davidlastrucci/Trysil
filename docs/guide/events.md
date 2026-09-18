@@ -1,6 +1,6 @@
 # Events
 
-Trysil provides lifecycle events that fire during Insert, Update, and Delete operations. Events are defined across several units: `Trysil.Events.Abstract.pas`, `Trysil.Events.pas`, `Trysil.Events.Attributes.pas`, and `Trysil.Events.Factory.pas`.
+Trysil provides lifecycle events that fire during Insert, Update and Delete operations (`Undelete` fires the update events). Events are defined across several units: `Trysil.Events.Abstract.pas`, `Trysil.Events.pas`, `Trysil.Events.Attributes.pas`, and `Trysil.Events.Factory.pas`.
 
 ## Lifecycle Events
 
@@ -49,7 +49,7 @@ Inside an event class, the following properties are available via `TTEvent<T>`:
 | `OldEntity` | `T` | The entity state before changes (loaded lazily from the database on first access) |
 | `Context` | `TTContext` | The current context, allowing additional queries or operations |
 
-`OldEntity` is loaded on demand by calling `TTContext.OldEntity<T>` internally. It is most useful in update events to compare old and new values.
+`OldEntity` is loaded on demand by calling `TTContext.OldEntity<T>` internally. It is most useful in update events to compare old and new values. The clone belongs to the event, which frees it when the event is destroyed: do not free it, and do not hand it to a lazy member or keep it past the event. See [who frees what](context.md#who-frees-what).
 
 ## Registering Event Classes
 
@@ -80,23 +80,23 @@ For simpler cases where a full event class is not needed, add event methods dire
 TPerson = class
 strict private
   // fields...
-
-  [TBeforeInsert]
+public
+  [TBeforeInsertEvent]
   procedure BeforeInsert;
 
-  [TAfterInsert]
+  [TAfterInsertEvent]
   procedure AfterInsert;
 
-  [TBeforeUpdate]
+  [TBeforeUpdateEvent]
   procedure BeforeUpdate;
 
-  [TAfterUpdate]
+  [TAfterUpdateEvent]
   procedure AfterUpdate;
 
-  [TBeforeDelete]
+  [TBeforeDeleteEvent]
   procedure BeforeDelete;
 
-  [TAfterDelete]
+  [TAfterDeleteEvent]
   procedure AfterDelete;
 end;
 ```
@@ -105,29 +105,36 @@ end;
 
 | Attribute | When |
 |---|---|
-| `TBeforeInsert` | Before INSERT |
-| `TAfterInsert` | After INSERT |
-| `TBeforeUpdate` | Before UPDATE |
-| `TAfterUpdate` | After UPDATE |
-| `TBeforeDelete` | Before DELETE |
-| `TAfterDelete` | After DELETE |
+| `TBeforeInsertEvent` | Before INSERT |
+| `TAfterInsertEvent` | After INSERT |
+| `TBeforeUpdateEvent` | Before UPDATE |
+| `TAfterUpdateEvent` | After UPDATE |
+| `TBeforeDeleteEvent` | Before DELETE |
+| `TAfterDeleteEvent` | After DELETE |
 
-These methods are invoked by the resolver via RTTI. They must be declared on the entity class itself (not on a parent class) and must take no parameters.
+These methods are invoked by the resolver via RTTI. They must be declared on the entity class itself (not on a parent class), must take no parameters, and must be **`public`**.
+
+!!! warning "A private event method is never called"
+    Delphi emits RTTI for `public` and `published` methods only. An event
+    attribute on a `private`, `strict private` or `protected` method is
+    therefore never seen by the resolver: nothing is registered, nothing
+    raises, and the method is simply never called. The mistake is silent, so
+    put event methods in the `public` section.
 
 ## Event Execution Order
 
 When the resolver processes a write operation, the full sequence is:
 
-1. **Validation** (attribute-based validation runs first)
-2. **Event method** `[TBeforeInsert]` / `[TBeforeUpdate]` / `[TBeforeDelete]` on the entity
-3. **Event class** `DoBefore` (if a `TInsertEvent` / `TUpdateEvent` / `TDeleteEvent` is registered)
+1. **Validation** (attribute-based validation, on `Insert`, `Update` and `Undelete`: `Delete` does not validate; `Undelete` fires the update events)
+2. **Event class** `DoBefore` (if a `TInsertEvent` / `TUpdateEvent` / `TDeleteEvent` is registered)
+3. **Event method** `[TBeforeInsertEvent]` / `[TBeforeUpdateEvent]` / `[TBeforeDeleteEvent]` on the entity
 4. **SQL command execution** (INSERT / UPDATE / DELETE)
 5. **Event class** `DoAfter`
-6. **Event method** `[TAfterInsert]` / `[TAfterUpdate]` / `[TAfterDelete]` on the entity
+6. **Event method** `[TAfterInsertEvent]` / `[TAfterUpdateEvent]` / `[TAfterDeleteEvent]` on the entity
 
 ## Raising Exceptions in Events
 
-Raising an exception in a `DoBefore` method or a `[TBeforeInsert]` method prevents the SQL command from executing. If a transaction is active, the exception propagates and can trigger a rollback:
+Raising an exception in a `DoBefore` method or a `[TBeforeInsertEvent]` method prevents the SQL command from executing. If a transaction is active, the exception propagates and can trigger a rollback:
 
 ```pascal
 procedure TOrderDeleteEvent.DoBefore;
@@ -151,10 +158,19 @@ var
   LAudit: TAuditLog;
 begin
   LAudit := Context.CreateEntity<TAuditLog>();
-  LAudit.TableName := 'Persons';
-  LAudit.EntityID := Entity.ID;
-  LAudit.Action := 'UPDATE';
-  LAudit.Timestamp := Now;
-  Context.Insert<TAuditLog>(LAudit);
+  try
+    LAudit.TableName := 'Persons';
+    LAudit.EntityID := Entity.ID;
+    LAudit.Action := 'UPDATE';
+    LAudit.Timestamp := Now;
+    Context.Insert<TAuditLog>(LAudit);
+  finally
+    Context.FreeEntity<TAuditLog>(LAudit);
+  end;
 end;
 ```
+
+The audit entry is freed with `FreeEntity<T>`, not with `Free`. The event runs
+inside the transaction Trysil opened for the update, and if that transaction
+rolls back it puts back what it wrote to `LAudit` too: `FreeEntity<T>` tells it
+to forget the entity first, a bare `Free` leaves it writing into freed memory.

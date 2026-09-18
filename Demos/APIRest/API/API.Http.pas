@@ -15,9 +15,11 @@ interface
 uses
   System.Classes,
   System.SysUtils,
+  Trysil.Data.FireDAC.ConnectionPool,
   Trysil.Data.FireDAC.SqlServer,
   Trysil.JSon.Events,
   Trysil.Http,
+  Trysil.Http.Classes,
   Trysil.Http.Log.Types,
 
   API.Config,
@@ -26,6 +28,7 @@ uses
   API.Model.Employee,
   API.Log.Writer,
   API.Authentication,
+  API.Authentication.JWT,
   API.Authentication.Controller,
   API.Controller;
 
@@ -81,6 +84,10 @@ begin
   FServer.CorsConfig.AllowHeaders := TAPIConfig.Instance.Cors.AllowHeaders;
   FServer.CorsConfig.AllowOrigin := TAPIConfig.Instance.Cors.AllowOrigin;
 
+  TAPIJWTPayload.CheckSecretIsConfigured;
+
+  TTFireDACConnectionPool.Instance.Config.Enabled := True;
+
   TTSqlServerConnection.RegisterConnection(
     TAPIConfig.Instance.Database.ConnectionName,
     TAPIConfig.Instance.Database.Server,
@@ -97,6 +104,14 @@ procedure TAPIHttp.RegisterLogWriter;
 begin
   FServer.RegisterLogWriter<TAPILogWriter>(
     TTHttpLogParameters.Create(2, 10000, 65536));
+
+  FServer.OnRedactContent :=
+    function(ARequest: TTHttpRequest; AContent: String): String
+    begin
+      result := AContent;
+      if ARequest.ControllerID.Uri.ToLower().Contains('logon') then
+        result := '<redacted>';
+    end;
 end;
 
 procedure TAPIHttp.RegisterAuthentication;

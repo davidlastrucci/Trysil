@@ -16,7 +16,7 @@ var LConfig := TTJSonSerializerConfig.Create(AMaxLevels, ADetails);
 
 | Parameter | Type | Description |
 |---|---|---|
-| `AMaxLevels` | `Integer` | How deep to serialize nested objects. `-1` = unlimited, `0` = current level only (no nested), `1` = one level of nesting, etc. |
+| `AMaxLevels` | `Integer` | How deep to serialize nested objects **and detail collections**. `-1` = unlimited, `0` = current level only (no nested), `1` = one level of nesting, etc. |
 | `ADetails` | `Boolean` | When `True`, includes detail columns (child collections). When `False`, skips them. |
 
 ### Common Configurations
@@ -45,13 +45,36 @@ The `MaxLevels` parameter controls how deep the serializer traverses related ent
 | Value | Behavior |
 |---|---|
 | `-1` | Serialize all levels (unlimited depth) |
-| `0` | Serialize only the current entity's scalar fields -- no nested objects |
-| `1` | Serialize the current entity and one level of related entities |
+| `0` | Serialize only the current entity's scalar fields -- no nested objects, no detail collections |
+| `1` | Serialize the current entity and one level of related entities or detail collections |
 | `2` | Current entity + two levels of nesting |
 | `n` | Current entity + `n` levels of nesting |
 
 !!! note "MaxLevels bounds queries, not just payload"
     When the current level is past `MaxLevels`, the serializer does **not** resolve the lazy reference: it emits the foreign key id and moves on. The contract towards the client is unchanged, because the id is still written. What changes is the cost: on a list endpoint, `Create(0, False)` used to pay `rows x N:1 relations` queries whose results were then discarded. See [Lazy Loading](../guide/lazy-loading.md).
+
+!!! warning "On a list, the only safe value is 0"
+    The gate that stops the query is the same one that lets it through. At
+    `MaxLevels = 0` a `TTLazy<T>` reference is written as its foreign key id
+    **without a query**, so the client already has the identifier for free. At
+    `MaxLevels = 1` the gate opens and every reference is resolved: **one query
+    per relation per row**.
+
+    A list of 50 rows with 4 relations costs 2 queries at `Create(0, False)`
+    and 202 at `Create(1, False)`. It is the N+1 problem, reached by changing a
+    zero into a one, and it grows with the page size rather than with the
+    depth you asked for.
+
+    Serialize a list with `Create(0, False)`. Depth belongs to the endpoint
+    that returns **one** entity, where the number of queries is bounded by the
+    shape of that entity and not by how many rows came back.
+
+!!! note "Detail collections are dropped, not degraded"
+    The fallback above applies to `TTLazy<T>` references, which always carry an
+    id. A detail collection has no single id to write, so when it falls past
+    `MaxLevels` the key is **omitted from the object entirely**. An empty array
+    would claim the collection has no rows, which is not what the serializer
+    knows; an absent key means "not included at this depth".
 
 ### Example
 
@@ -74,6 +97,8 @@ LConfig := TTJSonSerializerConfig.Create(2, True);
 ## Details Parameter
 
 When `ADetails` is `True`, the serializer includes fields marked with `TDetailColumn` -- typically child collections. When `False`, these fields are omitted from the output.
+
+`ADetails` and `AMaxLevels` are two separate gates and both must open: `ADetails` decides whether detail collections are eligible at all, `AMaxLevels` decides how deep they may go. `Create(0, True)` therefore emits no details, because level `0` allows nothing below the current entity.
 
 This is useful for API responses where you want to return a flat list without loading and serializing the entire object graph:
 

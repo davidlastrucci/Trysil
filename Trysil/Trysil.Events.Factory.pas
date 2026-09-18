@@ -78,6 +78,7 @@ end;
 class destructor TTEventFactory.ClassDestroy;
 begin
   FInstance.Free;
+  FInstance := nil;
 end;
 
 constructor TTEventFactory.Create;
@@ -148,7 +149,8 @@ begin
     begin
       LRttiType := FContext.GetType(TTFactory.Instance.GetType(AEventClassInfo));
       result := InternalSearchMethod(LRttiType, AContext, AEntity);
-      FMethods.Add(AEventClassInfo, result);
+      if Assigned(result) then
+        FMethods.Add(AEventClassInfo, result);
     end;
   finally
     FLock.EndWrite;

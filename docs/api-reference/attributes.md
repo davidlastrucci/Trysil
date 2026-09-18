@@ -12,7 +12,7 @@ Unit: `Trysil.Attributes`
 | `TSequence(name)` | Class | Sequence for ID generation |
 | `TPrimaryKey` | Field | Marks primary key field |
 | `TColumn(name)` | Field | Maps field to database column |
-| `TDetailColumn(fk, name)` | Field | Maps a detail/lookup column |
+| `TDetailColumn(local, childFk)` | Field | Maps a `TTLazyList<T>` detail collection |
 | `TVersionColumn` | Field | Enables optimistic locking |
 | `TNotFilterable` | Field | Excludes the column from the HTTP JSON filter |
 | `TRelation(table, fk, cascade)` | Class | Declares child relationship |
@@ -45,10 +45,24 @@ TPerson = class
 
 Names the database sequence used for ID generation. Behavior varies by database:
 
-- **SQL Server**: `NEXT VALUE FOR [dbo].[PersonsID]`
-- **PostgreSQL**: `nextval('PersonsID')`
-- **Firebird**: `NEXT VALUE FOR PersonsID`
-- **SQLite**: `AUTOINCREMENT` (sequence name used as reference)
+| Database | Form of the statement |
+|---|---|
+| SQL Server | `SELECT NEXT VALUE FOR [PersonsID] AS ID` |
+| PostgreSQL | `SELECT NEXTVAL('PersonsID') AS ID` |
+| Oracle | `SELECT "PERSONSID".NEXTVAL ID FROM DUAL` |
+| Firebird | `SELECT GEN_ID("PERSONSID", 1) ID FROM RDB$DATABASE` |
+| InterBase | `SELECT GEN_ID("PERSONSID", 1) ID FROM RDB$DATABASE` |
+| MariaDB | `SELECT NEXTVAL(PersonsID) AS ID` (MariaDB 10.3+) |
+| SQLite | `SELECT IFNULL(MAX([ID]), 0) + 1 FROM [Persons]` |
+
+SQLite has no sequences, so it reads the highest key in the table and adds one,
+or one past the last key it handed out on this connection name if that is higher: the
+name in `[TSequence]` is required by the mapping but unused there, and two
+processes writing the same file can still get the same key. Every other engine
+reads a real sequence, which must exist in the database - Trysil never creates
+it. The identifier is quoted and case-folded per engine, which is why the
+uppercase forms appear above: see the note on quoting in
+[Database Drivers](../database-drivers/index.md).
 
 ### TPrimaryKey
 
@@ -81,11 +95,13 @@ The first parameter is the **alias** of the joined table (must match the alias f
 ### TDetailColumn
 
 ```pascal
-[TDetailColumn('CompanyID', 'CompanyName')]
-FCompanyName: String;
+[TDetailColumn('ID', 'OrderID')]
+FDetails: TTLazyList<TOrderDetail>;
 ```
 
-Maps a read-only column from a related table. First parameter is the foreign key column, second is the detail column name.
+Maps a **detail collection**: the field is a `TTLazyList<T>` of the child entity, loaded on first access. First parameter is the column on this entity the children are matched against - normally the primary key - and second is the column in the child table that points back to it. It is never part of an INSERT or an UPDATE.
+
+The field must be a `TTLazyList<T>`, and nothing checks it. Another owning list is accepted by the mapper and even loaded, but every reload of the master - a `Refresh`, or with the identity map on any read that finds it again - clears it without telling the context, so a detail row written inside a transaction that then rolls back makes the rollback write into freed memory, and the lazy members of the rows it frees stay registered on addresses nobody holds.
 
 ### TVersionColumn
 
@@ -105,11 +121,13 @@ Enables optimistic locking. The version is incremented on each update. If anothe
 FPassword: String;
 ```
 
-Excludes the column from the JSON filter of the HTTP module: `where` and `orderBy` naming it answer `400`. Every mapped column is filterable unless annotated.
+Excludes the column from the JSON filter of the HTTP module: `where` and `orderBy` naming it answer `400`. A mapped column is filterable unless it is annotated, or unless no response ever returns it: a column carrying `[TJSonIgnore]` or `[TJSonIgnoreSerialize]` is refused by the filter and by the `orderBy` as well, because `LIKE` plus the row count of the answer reads a value one character at a time.
 
 Put it on the columns a caller must not be able to probe. A column the client cannot read is the case that matters: `LIKE` plus the row count in the response is enough to recover a value one character at a time without it ever being serialized, so excluding a field from the payload is not by itself enough to protect it.
 
-It is a property of the mapping, so it is resolved once per entity and costs nothing per request. `MetadataToJSon<T>` reports it as `"filterable": false`, so a client that builds its filter UI from the metadata can hide the column instead of discovering it through a `400`. See also the ceilings in `TTHttpFilterParameters`, described in [REST API](../examples/rest-api.md).
+**`[TJSonIgnore]` without `[TNotFilterable]` used to be the combination to look for**, and from 2.0.0 the framework closes it for you: a column kept out of every response but still filterable is exactly the target described above, and it is the shape a `PasswordHash` naturally takes if you stop at the first attribute. Marking both is still the clearer declaration of intent, and it is what keeps the column out of a filter written by your own code with `TTFilterBuilder<T>`, which the framework does not police.
+
+It is a property of the mapping, so it is resolved once per entity and costs nothing per request. `MetadataToJSon<T>` reports `"filterable": false` for the columns it does describe - and from 2.0.0 it leaves out the columns the entity neither serializes nor deserializes, so a client that builds its filter UI from the metadata can hide the column instead of discovering it through a `400`. See also the ceilings in `TTHttpFilterParameters`, described in [REST API](../examples/rest-api.md).
 
 ### TRelation
 
@@ -122,7 +140,7 @@ Parameters:
 
 1. **Child table name** — the table that references this entity
 2. **Foreign key column** — the column in the child table
-3. **Cascade delete** — `True`: auto-delete children; `False`: block delete if children exist (raises `ETDataIntegrityException`)
+3. **Cascade delete** — `True`: auto-delete children; `False`: block delete if children exist (raises `ETException`, not `ETDataIntegrityException`)
 
 Multiple `TRelation` attributes can be applied to the same class.
 
@@ -203,14 +221,25 @@ FDeletedBy: String;
 The resolver automatically populates these fields:
 
 - **`TCreatedAt` / `TCreatedBy`** — set during `Insert` with `Now` and the value from `TTContext.OnGetCurrentUser`.
-- **`TUpdatedAt` / `TUpdatedBy`** — set during `Update`.
-- **`TDeletedAt` / `TDeletedBy`** — set during `Delete`. When `TDeletedAt` is present, delete becomes a **soft delete** (UPDATE instead of DELETE). All SELECT queries automatically add `DeletedAt IS NULL` to exclude soft-deleted records.
+- **`TUpdatedAt` / `TUpdatedBy`** — set during `Update`, and during `Undelete`, which is an update like any other as far as the audit is concerned.
+- **`TDeletedAt` / `TDeletedBy`** — set during `Delete`. When `TDeletedAt` is present, delete becomes a **soft delete** (UPDATE instead of DELETE). All SELECT queries automatically add `DeletedAt IS NULL` to exclude soft-deleted records, and so does every `UPDATE` and every soft `DELETE`, so a soft-deleted row cannot be modified through the entity that declares the pair. The guard is built from the mapping, not from the table: a second class mapped on the same table without `[TDeletedAt]` still reaches the row.
+
+
+!!! warning "These columns are the framework's, not the client's"
+    Two rules protect them, both added in 2.0.0. `Update<T>` writes only
+    `[TUpdatedAt]` and `[TUpdatedBy]`: the creation pair is set once, on
+    `Insert`, and the delete pair only by `Delete` and `Undelete`, so setting
+    any of the four by hand on an existing entity has no effect - an import or
+    a migration that needs to backdate a row has to go through raw SQL. And no
+    deserialization entry point reads any of the six from JSON, so a value for
+    them in a body never reaches the entity.
 
 Type constraints:
 
 - `*At` fields must be `TTNullable<TDateTime>` — validated at mapping time.
 - `*By` fields must be `String` — validated at mapping time.
 - Duplicate attributes of the same kind on the same entity raise `ETException`.
+- `[TDeletedBy]` requires `[TDeletedAt]` on the same entity — validated at mapping time. Without it the column would be mapped and read but never written by any path, since `Delete` would take the hard-delete branch and neither `Update` nor `Undelete` writes it. The other two pairs may be declared half: a lone `[TCreatedBy]` or `[TUpdatedBy]` is still written by `Insert` and `Update`.
 
 See [Entity Mapping — Change Tracking](../guide/entities.md#change-tracking) for a full example.
 
@@ -293,22 +322,24 @@ Declare event methods directly on the entity:
 
 | Attribute | Description |
 |---|---|
-| `TBeforeInsert` | Method called before insert |
-| `TAfterInsert` | Method called after insert |
-| `TBeforeUpdate` | Method called before update |
-| `TAfterUpdate` | Method called after update |
-| `TBeforeDelete` | Method called before delete |
-| `TAfterDelete` | Method called after delete |
+| `TBeforeInsertEvent` | Method called before insert |
+| `TAfterInsertEvent` | Method called after insert |
+| `TBeforeUpdateEvent` | Method called before update |
+| `TAfterUpdateEvent` | Method called after update |
+| `TBeforeDeleteEvent` | Method called before delete |
+| `TAfterDeleteEvent` | Method called after delete |
 
 ```pascal
 TPerson = class
-strict private
-  [TBeforeInsert]
+public
+  [TBeforeInsertEvent]
   procedure OnBeforeInsert;
-  [TAfterUpdate]
+  [TAfterUpdateEvent]
   procedure OnAfterUpdate;
 end;
 ```
+
+Event methods must be `public`: the default RTTI does not emit private or protected methods, so an attribute on one of those is never seen and the method is never called.
 
 See [Events](../guide/events.md) for detailed usage.
 
@@ -320,7 +351,13 @@ Unit: `Trysil.JSon.Attributes`
 
 | Attribute | Description |
 |---|---|
-| `TJSonIgnore` | Exclude field from JSON serialization/deserialization |
+| `TJSonIgnore` | Exclude field from JSON serialization **and** deserialization |
+| `TJSonIgnoreSerialize` | Field is read from JSON but never written to it (a password on creation) |
+| `TJSonIgnoreDeserialize` | Field is written to JSON but never read from it (a computed total, a server-side status, a tenant column) |
+
+It is read on every mapped member, a `TTLazy<T>` foreign key and a `[TDetailColumn]` collection included, which is what makes it the way to close a relation the client must not repoint - see [Restricting what the body may write](../json/deserialization.md#restricting-what-the-body-may-write).
+
+The three share one polarity: every name says *ignore*, and the qualifier says only where. Change tracking columns are excluded from deserialization without any attribute, see [Change Tracking](../guide/entities.md#change-tracking).
 
 ```pascal
 [TJSonIgnore]

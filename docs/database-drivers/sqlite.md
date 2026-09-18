@@ -40,7 +40,7 @@ The database file path can be absolute or relative. If the file does not exist, 
 
 ## Sequences
 
-SQLite uses `AUTOINCREMENT` for primary key generation. The `TSequence` attribute name is used as the table name for the autoincrement lookup.
+SQLite has no sequences. `CreateEntity<T>` reads the highest key in the table and adds one (`SELECT IFNULL(MAX([ID]), 0) + 1 FROM [Persons]`), or one past the last key it handed out on this connection name if that is higher: the `[TSequence]` attribute is still required on the entity, but its name is not used, and two processes writing the same file can still get the same key.
 
 ```pascal
 [TTable('Persons')]

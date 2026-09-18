@@ -54,6 +54,7 @@ end;
 class destructor TTFactory.ClassDestroy;
 begin
   FInstance.Free;
+  FInstance := nil;
 end;
 
 constructor TTFactory.Create;

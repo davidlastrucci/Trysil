@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright Â© David Lastrucci
+  Copyright © David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -56,7 +56,8 @@ implementation
 
 function TTOracleSequenceSyntax.GetSequenceSyntax: String;
 begin
-  result := Format('SELECT %s.NEXTVAL ID FROM DUAL', [FTableMap.SequenceName]);
+  result := Format('SELECT %s.NEXTVAL ID FROM DUAL', [
+    FConnection.GetDatabaseObjectName(FTableMap.SequenceName)]);
 end;
 
 { TTOracleSelectSyntax }

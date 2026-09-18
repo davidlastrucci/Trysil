@@ -30,6 +30,9 @@ LContext.Select<TPerson>(LPersons, LFilter);
 
 Parameters: WHERE clause, start offset, limit, ORDER BY.
 
+!!! warning "A start needs a limit"
+    A **positive** start with no limit raises `ETException`: "skip 500 and return the rest" has no portable SQL across the seven dialects, so Trysil says so instead of silently returning everything, which is what it used to do. A start of `0` is not an offset: `Create('Active = 1', 0, 0, 'Lastname ASC')` still means "order, no paging", as it always has.
+
 ### Adding Parameters
 
 ```pascal
@@ -214,7 +217,7 @@ var LFilter := LContext.CreateFilterBuilder<TOrderReport>()
 // WHERE: Customers.CompanyName LIKE :p0
 ```
 
-The alias matches the one in the `[TColumn('Alias', 'Column')]` attribute. For a column that comes from the FROM table, use the FROM table name as the alias (e.g. `TTProperty.Create('Orders', 'ID')`). This is the only filtering form that resolves join aliases — the fluent string form does not (see below).
+The alias matches the one in the `[TColumn('Alias', 'Column')]` attribute. For a column that comes from the FROM table, use the FROM table name as the alias (e.g. `TTProperty.Create('Orders', 'ID')`). From 2.0.0 the fluent string form resolves them too, by looking the name up in the metadata (see below); this form is the one that reads better when the alias is part of what you are expressing.
 
 ## Sorting and Pagination
 
@@ -224,6 +227,8 @@ LBuilder
   .Limit(50)                    // LIMIT 50
   .Offset(100)                  // OFFSET 100
 ```
+
+The offset is optional and defaults to the first row, so `.Limit(50)` on its own pages correctly. The reverse is not allowed: `.Offset(100)` with no `.Limit` raises `ETException` on `Build`. Until 2.0.0 both of those silently returned the whole table.
 
 ```pascal
 LBuilder
@@ -287,7 +292,7 @@ var LFilter := LContext.CreateFilterBuilder<TOrderReport>()
 LContext.Select<TOrderReport>(LOrders, LFilter);
 ```
 
-The fluent **string** form (`.Where('Column')`) does not qualify join aliases. As an alternative, `TTFilter.Create` with a manually written WHERE also works:
+The fluent **string** form qualifies them as well: `.Where('Customers_CompanyName')` - the output alias, which is the name the metadata carry - reaches the engine as `"Customers"."CompanyName"`. Before 2.0.0 it emitted the output alias itself, which no engine resolves inside a `WHERE`. As an alternative, `TTFilter.Create` with a manually written WHERE also works:
 
 ```pascal
 var LFilter := TTFilter.Create('Customers.CompanyName LIKE :Name');

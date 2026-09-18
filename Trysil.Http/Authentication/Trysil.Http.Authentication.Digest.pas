@@ -72,7 +72,7 @@ type
       const AResponse: TTHttpResponse); override;
 
     property Realm: String read FRealm write FRealm;
-  end;
+  end deprecated 'Digest is RFC 2069 only: use Bearer with JWT';
 
 implementation
 
@@ -93,10 +93,10 @@ begin
       LIndex := LValue.IndexOf('=');
       if LIndex >= 0 then
       begin
-        LKey := LValue.Substring(0, LIndex).ToLower();
+        LKey := LValue.Substring(0, LIndex).ToLowerInvariant;
         LAuthValue := LValue.Substring(LIndex + 1);
         LAuthValue := LAuthValue.Substring(1, LAuthValue.Length - 2);
-        LAuthContext.Add(LKey.TrimLeft(), LAuthValue);
+        LAuthContext.AddOrSetValue(LKey.TrimLeft(), LAuthValue);
       end;
     end;
 

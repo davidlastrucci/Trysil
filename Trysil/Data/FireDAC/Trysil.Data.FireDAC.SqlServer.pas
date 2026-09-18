@@ -18,12 +18,16 @@ uses
   FireDAC.Phys,
   FireDAC.Phys.MSSQL,
 
+  Trysil.Classes,
+  Trysil.Data,
   Trysil.Data.FireDAC.ConnectionPool,
   Trysil.Data.FireDAC,
   Trysil.Data.SqlSyntax,
   Trysil.Data.SqlSyntax.SqlServer;
 
 type
+
+{$SCOPEDENUMS ON}
 
 { TTSqlServerDriver }
 
@@ -47,6 +51,59 @@ type
     property ODBCAdvanced: String read GetODBCAdvanced write SetODBCAdvanced;
   end;
 
+{ TTSqlServerEncrypt }
+
+  TTSqlServerEncrypt = (DriverDefault, Yes, No);
+
+{ TTSqlServerTrustServerCertificate }
+
+  TTSqlServerTrustServerCertificate = (DriverDefault, Yes, No);
+
+{ TTSqlServerParams }
+
+  TTSqlServerParams = class
+  strict private
+    class var FInstance: TTSqlServerParams;
+    class constructor ClassCreate;
+    class destructor ClassDestroy;
+  strict private
+    FEncrypt: TTSqlServerEncrypt;
+    FTrustServerCertificate: TTSqlServerTrustServerCertificate;
+
+    function DriverODBCAdvanced: String;
+    function IndexOfName(
+      const AParameters: TStrings; const AName: String): Integer;
+    function KeywordOf(const AItem: String): String;
+    function ContainsKeyword(
+      const AValue: String; const AKeyword: String): Boolean;
+    function JoinKeyword(
+      const AValue: String;
+      const AKeyword: String;
+      const AKeywordValue: String): String;
+
+    procedure AddValue(
+      const AParameters: TStrings;
+      const AName: String;
+      const AValue: String);
+    procedure AddKeyword(
+      const AParameters: TStrings;
+      const AName: String;
+      const AKeyword: String;
+      const AKeywordValue: String);
+    procedure AddEncryption(const AParameters: TStrings);
+    procedure AddTrustServerCertificate(const AParameters: TStrings);
+  public
+    procedure AfterConstruction; override;
+
+    procedure AddExtraParameters(const AParameters: TStrings);
+
+    property Encrypt: TTSqlServerEncrypt read FEncrypt write FEncrypt;
+    property TrustServerCertificate: TTSqlServerTrustServerCertificate
+      read FTrustServerCertificate write FTrustServerCertificate;
+
+    class property Instance: TTSqlServerParams read FInstance;
+  end;
+
 { TTSqlServerConnection }
 
   TTSqlServerConnection = class(TTFireDACConnection)
@@ -58,6 +115,7 @@ type
     function CreateSyntaxClasses: TTSyntaxClasses; override;
 
     class function GetDriver: String; override;
+    class function GetDriverAliases: TArray<String>; override;
     class procedure InternalRegisterConnection(
       const AName: String;
       const AParameters: TTFireDACConnectionParameters); override;
@@ -77,6 +135,9 @@ type
     class procedure RegisterConnection(
       const AName: String;
       const AParameters: TStrings); overload;
+
+    function GetDatabaseObjectName(
+      const ADatabaseObjectName: String): String; override;
 
     class property Driver: TTSqlServerDriver read FDriver;
   end;
@@ -128,6 +189,161 @@ begin
   FDriverLink.ODBCAdvanced := AValue;
 end;
 
+{ TTSqlServerParams }
+
+class constructor TTSqlServerParams.ClassCreate;
+begin
+  FInstance := TTSqlServerParams.Create;
+end;
+
+class destructor TTSqlServerParams.ClassDestroy;
+begin
+  FInstance.Free;
+  FInstance := nil;
+end;
+
+procedure TTSqlServerParams.AddValue(
+  const AParameters: TStrings;
+  const AName: String;
+  const AValue: String);
+begin
+  if IndexOfName(AParameters, AName) < 0 then
+    AParameters.Add(Format('%s=%s', [AName, AValue]));
+end;
+
+function TTSqlServerParams.DriverODBCAdvanced: String;
+begin
+  result := String.Empty;
+  if Assigned(TTSqlServerConnection.Driver) then
+    result := TTSqlServerConnection.Driver.ODBCAdvanced;
+end;
+
+function TTSqlServerParams.IndexOfName(
+  const AParameters: TStrings; const AName: String): Integer;
+var
+  LIndex: Integer;
+begin
+  result := -1;
+  for LIndex := 0 to AParameters.Count - 1 do
+    if TTIdentifier.Same(AParameters.Names[LIndex], AName) then
+    begin
+      result := LIndex;
+      Break;
+    end;
+end;
+
+function TTSqlServerParams.KeywordOf(const AItem: String): String;
+var
+  LIndex: Integer;
+begin
+  LIndex := AItem.IndexOf('=');
+  if LIndex < 0 then
+    result := AItem.Trim
+  else
+    result := AItem.Substring(0, LIndex).Trim;
+end;
+
+function TTSqlServerParams.ContainsKeyword(
+  const AValue: String; const AKeyword: String): Boolean;
+var
+  LItem: String;
+begin
+  result := False;
+  for LItem in AValue.Split([';']) do
+    if TTIdentifier.Same(KeywordOf(LItem), AKeyword) then
+    begin
+      result := True;
+      Break;
+    end;
+end;
+
+function TTSqlServerParams.JoinKeyword(
+  const AValue: String;
+  const AKeyword: String;
+  const AKeywordValue: String): String;
+var
+  LValue: String;
+begin
+  LValue := AValue.Trim;
+  while LValue.EndsWith(';') do
+    LValue := LValue.Substring(0, LValue.Length - 1).Trim;
+
+  if LValue.IsEmpty then
+    result := Format('%s=%s', [AKeyword, AKeywordValue])
+  else
+    result := Format('%s;%s=%s', [LValue, AKeyword, AKeywordValue]);
+end;
+
+procedure TTSqlServerParams.AddKeyword(
+  const AParameters: TStrings;
+  const AName: String;
+  const AKeyword: String;
+  const AKeywordValue: String);
+var
+  LIndex: Integer;
+  LValue: String;
+begin
+  LIndex := IndexOfName(AParameters, AName);
+  if LIndex < 0 then
+    LValue := DriverODBCAdvanced
+  else
+    LValue := AParameters.ValueFromIndex[LIndex];
+
+  if not ContainsKeyword(LValue, AKeyword) then
+  begin
+    LValue := JoinKeyword(LValue, AKeyword, AKeywordValue);
+    if LIndex < 0 then
+      AParameters.Add(Format('%s=%s', [AName, LValue]))
+    else
+      AParameters[LIndex] := Format('%s=%s', [AName, LValue]);
+  end;
+end;
+
+procedure TTSqlServerParams.AddEncryption(const AParameters: TStrings);
+begin
+  case FEncrypt of
+    TTSqlServerEncrypt.DriverDefault:
+      ;
+
+    TTSqlServerEncrypt.Yes:
+      AddValue(AParameters, 'Encrypt', 'Yes');
+
+    TTSqlServerEncrypt.No:
+      AddValue(AParameters, 'Encrypt', 'No');
+  end;
+end;
+
+procedure TTSqlServerParams.AddTrustServerCertificate(
+  const AParameters: TStrings);
+begin
+  case FTrustServerCertificate of
+    TTSqlServerTrustServerCertificate.DriverDefault:
+      ;
+
+    TTSqlServerTrustServerCertificate.Yes:
+      AddKeyword(
+        AParameters, 'ODBCAdvanced', 'TrustServerCertificate', 'yes');
+
+    TTSqlServerTrustServerCertificate.No:
+      AddKeyword(
+        AParameters, 'ODBCAdvanced', 'TrustServerCertificate', 'no');
+  end;
+end;
+
+procedure TTSqlServerParams.AddExtraParameters(const AParameters: TStrings);
+begin
+  AddEncryption(AParameters);
+  AddTrustServerCertificate(AParameters);
+end;
+
+procedure TTSqlServerParams.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  FEncrypt := TTSqlServerEncrypt.DriverDefault;
+  FTrustServerCertificate :=
+    TTSqlServerTrustServerCertificate.DriverDefault;
+end;
+
 { TTSqlServerConnection }
 
 class constructor TTSqlServerConnection.ClassCreate;
@@ -138,6 +354,7 @@ end;
 class destructor TTSqlServerConnection.ClassDestroy;
 begin
   FDriver.Free;
+  FDriver := nil;
 end;
 
 function TTSqlServerConnection.CreateSyntaxClasses: TTSyntaxClasses;
@@ -148,6 +365,11 @@ end;
 class function TTSqlServerConnection.GetDriver: String;
 begin
   result := FDriver.DriverLink.DriverID;
+end;
+
+class function TTSqlServerConnection.GetDriverAliases: TArray<String>;
+begin
+  result := ['SqlServer'];
 end;
 
 class procedure TTSqlServerConnection.InternalRegisterConnection(
@@ -191,11 +413,6 @@ begin
       LParameters.Add(Format('Password=%s', [APassword]));
     end;
 
-    // ODBC Driver 18.0 for SQL Server
-    // https://techcommunity.microsoft.com/blog/sqlserver/odbc-driver-18-0-for-sql-server-released/3169228
-    // BREAKING CHANGE - Default Encrypt to Yes/Mandatory
-    LParameters.Add('Encrypt=No');
-
     RegisterConnection(AName, LParameters);
   finally
     LParameters.Free;
@@ -204,9 +421,25 @@ end;
 
 class procedure TTSqlServerConnection.RegisterConnection(
   const AName: String; const AParameters: TStrings);
+var
+  LParameters: TStrings;
 begin
-  TTFireDACConnectionPool.Instance.RegisterConnection(
-    AName, FDriver.DriverLink.DriverID, AParameters);
+  LParameters := TStringList.Create;
+  try
+    LParameters.AddStrings(AParameters);
+    TTSqlServerParams.Instance.AddExtraParameters(LParameters);
+    TTFireDACConnectionPool.Instance.RegisterConnection(
+      AName, FDriver.DriverLink.DriverID, LParameters);
+  finally
+    LParameters.Free;
+  end;
+end;
+
+function TTSqlServerConnection.GetDatabaseObjectName(
+  const ADatabaseObjectName: String): String;
+begin
+  result := TTDatabaseObjectName.Quoted(
+    ADatabaseObjectName, '[', ']', TTNameCase.AsIs);
 end;
 
 initialization

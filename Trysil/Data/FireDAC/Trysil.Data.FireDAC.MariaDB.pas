@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright Â© David Lastrucci
+  Copyright © David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -18,6 +18,7 @@ uses
   FireDAC.Phys,
   FireDAC.Phys.MySQL,
 
+  Trysil.Data,
   Trysil.Data.FireDAC.ConnectionPool,
   Trysil.Data.FireDAC,
   Trysil.Data.SqlSyntax,
@@ -53,6 +54,7 @@ type
     function GetDatabaseVersion: String; override;
 
     class function GetDriver: String; override;
+    class function GetDriverAliases: TArray<String>; override;
     class procedure InternalRegisterConnection(
       const AName: String;
       const AParameters: TTFireDACConnectionParameters); override;
@@ -75,6 +77,9 @@ type
     class procedure RegisterConnection(
       const AName: String;
       const AParameters: TStrings); overload;
+
+    function GetDatabaseObjectName(
+      const ADatabaseObjectName: String): String; override;
 
     class property Driver: TTMariaDBDriver read FDriver;
   end;
@@ -117,6 +122,7 @@ end;
 class destructor TTMariaDBConnection.ClassDestroy;
 begin
   FDriver.Free;
+  FDriver := nil;
 end;
 
 function TTMariaDBConnection.CreateSyntaxClasses: TTSyntaxClasses;
@@ -132,6 +138,11 @@ end;
 class function TTMariaDBConnection.GetDriver: String;
 begin
   result := FDriver.DriverLink.DriverID;
+end;
+
+class function TTMariaDBConnection.GetDriverAliases: TArray<String>;
+begin
+  result := ['MariaDB'];
 end;
 
 class procedure TTMariaDBConnection.InternalRegisterConnection(
@@ -194,6 +205,13 @@ class procedure TTMariaDBConnection.RegisterConnection(
 begin
   TTFireDACConnectionPool.Instance.RegisterConnection(
     AName, FDriver.DriverLink.DriverID, AParameters);
+end;
+
+function TTMariaDBConnection.GetDatabaseObjectName(
+  const ADatabaseObjectName: String): String;
+begin
+  result := TTDatabaseObjectName.Quoted(
+    ADatabaseObjectName, '`', '`', TTNameCase.AsIs);
 end;
 
 initialization

@@ -163,6 +163,9 @@ The application reads its configuration from a JSON file alongside the executabl
     "allowHeaders": "",
     "allowOrigin": "*"
   },
+  "authentication": {
+    "secret": ""
+  },
   "database": {
     "connectionName": "",
     "server": "",
@@ -206,7 +209,6 @@ end;
 constructor TAPIContext.Create;
 begin
   inherited Create;
-  TTFireDACConnectionPool.Instance.Config.Enabled := True;
   FConnection := TTSqlServerConnection.Create(
     TAPIConfig.Instance.Database.ConnectionName);
   FContext := TTHttpContext.Create(FConnection);
@@ -287,9 +289,11 @@ end;
 
 The payload is `{"where": [{"columnName", "condition", "value"}], "orderBy": [...], "start", "limit"}`.
 
-The column name is checked against the table metadata and the operator against a closed list. The name that reaches the SQL text is the canonical one from the metadata, not the string the client sent. The **value** never reaches the SQL text: each condition emits a `:p0`, `:p1` placeholder and the value is bound as a typed parameter, converted from the column's `TFieldType`. Beyond injection, this keeps the plan cache from filling with single-use plans -- one distinct SQL text per distinct value would evict the plans that matter, degrading the whole database and not just the endpoint.
+The column name is checked against the table metadata and the operator against a closed list. `columnName` may be the column name or the JSON name of the member, the one the client sees in every response; the column name is tried first, and if the column it finds is hidden from the responses or not filterable, the filter is refused: the name is not passed on to another member whose JSON name is spelled the same. And when the column it finds is visible and filterable, the filter reaches that column even if the payload published the same name for another member: keep the JSON names of the members apart from the column names. A refusal repeats the name the client sent. The name that reaches the SQL text is the canonical one from the metadata, not the string the client sent. The **value** never reaches the SQL text: each condition emits a `:p0`, `:p1` placeholder and the value is bound as a typed parameter, converted from the column's `TFieldType`. A date or a timestamp is read as ISO 8601: with a time zone it is moved to the server's local time, without one it is the server's local time as written. Beyond injection, this keeps the plan cache from filling with single-use plans -- one distinct SQL text per distinct value would evict the plans that matter, degrading the whole database and not just the endpoint.
 
 Anything that does not add up is a **400** at parse time, not a failed query: unknown column, operator outside the closed list, a value that does not match the column type, a non-object item inside `where` or inside `orderBy`, or `LIKE` on a non-string column.
+
+A field of the payload that carries the wrong **kind** of value is a 400 as well: `{"where": {}}` where an array is expected, `{"start": {}}` where a number is, `{"condition": []}` where a string is. The filter is refused whole rather than applied in part, because the part that gets dropped is a restriction: a `where` that is not an array used to leave no filter at all, and the endpoint answered with the table.
 
 #### Ceilings
 
@@ -313,10 +317,16 @@ This governs the filter **built from the payload**. An endpoint that builds its 
     `LIKE` on a non-string column used to go through, relying on the engine's implicit conversion. It now returns 400. A client filtering that way needs fixing.
 
 !!! warning "Behaviour change"
+    A payload field of the wrong kind used to depend on the Delphi version: a 500 up to Delphi 11, and silently the default value from Delphi 12 on. It is now a 400 everywhere.
+
+!!! warning "Behaviour change"
     `includeDeleted` is no longer read from the payload. Letting the client turn off the soft-delete filter made row visibility a client decision. It is now `TTHttpFilterParameters.IncludeDeleted`, set server-side after your own authorization check.
 
 !!! warning "Behaviour change"
     An omitted `limit` used to mean no pagination at all -- the whole table. It now means `MaxLimit`. An endpoint that really returns everything must say so with a negative `MaxLimit`.
+
+!!! warning "Behaviour change"
+    A positive `start` with no resolvable `limit` is a 400. It can only happen on an endpoint with a negative `MaxLimit`, since otherwise the ceiling supplies the missing limit: there the request used to return the whole table from the first row, ignoring the `start` the client asked for. A `start` of `0` is unaffected.
 
 ### Read-Write Controller
 
@@ -359,10 +369,34 @@ begin
     Context.Insert<T>(LEntity);
     FResponse.Content := Context.EntityToJSon<T>(LEntity, ConfigGet);
   finally
-    LEntity.Free;
+    Context.FreeEntity<T>(LEntity);
   end;
 end;
 ```
+
+`Update` deserializes, persists, and then **reloads before serializing the response**:
+
+```pascal
+procedure TAPIReadWriteController<T>.Update;
+var
+  LEntity: T;
+begin
+  LEntity := Context.EntityFromJSonObject<T>(FRequest.JSonContent);
+  try
+    Context.Update<T>(LEntity);
+    Context.Refresh<T>(LEntity);
+    FResponse.Content := Context.EntityToJSon<T>(LEntity, ConfigGet);
+  finally
+    Context.FreeEntity<T>(LEntity);
+  end;
+end;
+```
+
+The `Refresh<T>` is not decoration. The entity was built from the request body, and the body no longer carries the change tracking columns: they are the framework's to write, so `EntityFromJSonObject` skips them. Without the reload the response would echo an entity whose `createdAt` and `createdBy` are blank, and whose version is the one the client sent rather than the one the update produced.
+
+An update endpoint that deserializes onto the **loaded** entity instead of a fresh one is the other shape, and it does not need the reload for the tracking columns -- see [Deserialization](../json/deserialization.md).
+
+Note what this endpoint accepts. `Update` addresses the row through the `id` in the body, and the body is also what fills every other mapped column: a foreign key behind a `TTLazy<T>`, a `[TDetailColumn]` collection, the version. That is what makes the generic controller generic, and it is also why the entity is where you say what a client may not write. A column that decides who may see the row - a tenant, an owner - is repointed by a `PUT` like any other, and `[TArea('write')]` does not help, because the caller does hold the area: what it must not hold is that particular row. Close those fields with `[TJSonIgnoreDeserialize]` and scope the read the endpoint does before the write. [Restricting what the body may write](../json/deserialization.md#restricting-what-the-body-may-write) has the details, and the two columns not to close.
 
 ## Server Setup
 
@@ -383,6 +417,8 @@ begin
 
   FServer.CorsConfig.AllowHeaders := TAPIConfig.Instance.Cors.AllowHeaders;
   FServer.CorsConfig.AllowOrigin := TAPIConfig.Instance.Cors.AllowOrigin;
+
+  TTFireDACConnectionPool.Instance.Config.Enabled := True;
 
   TTSqlServerConnection.RegisterConnection(
     TAPIConfig.Instance.Database.ConnectionName,
@@ -486,7 +522,7 @@ begin
     LLogRequest.SetValues(ARequest);
     FContext.Context.Insert<TLogRequest>(LLogRequest);
   finally
-    LLogRequest.Free;
+    FContext.Context.FreeEntity<TLogRequest>(LLogRequest);
   end;
 end;
 ```
@@ -513,7 +549,7 @@ begin
     LLogDiscarded.SetValues(ADiscarded);
     FContext.Context.Insert<TLogDiscarded>(LLogDiscarded);
   finally
-    LLogDiscarded.Free;
+    FContext.Context.FreeEntity<TLogDiscarded>(LLogDiscarded);
   end;
 end;
 ```

@@ -32,6 +32,9 @@ type
     class function GetName: String; override;
     function GetHeader: String; override;
 
+    function TryDecodeCredentials(
+      const AValue: String; out ACredentials: String): Boolean;
+
     function IsValid(const AUser: TTHttpUser): Boolean; virtual; abstract;
   public
     procedure Check(
@@ -55,21 +58,35 @@ begin
   result := Format('%s realm="%s"', [GetName, FRealm]);
 end;
 
+function TTHttpAuthenticationBasic<C>.TryDecodeCredentials(
+  const AValue: String; out ACredentials: String): Boolean;
+begin
+  result := True;
+  try
+    ACredentials := TNetEncoding.Base64.Decode(AValue);
+  except
+    result := False;
+  end;
+end;
+
 procedure TTHttpAuthenticationBasic<C>.Check(
   const ARequest: TTHttpRequest;
   const AResponse: TTHttpResponse);
 var
   LValue: String;
+  LCredentials: String;
   LIndex: Integer;
 begin
   LValue := GetValue(ARequest, AResponse);
-  LValue := TNetEncoding.Base64.Decode(LValue);
-  LIndex := LValue.IndexOf(':');
+  if not TryDecodeCredentials(LValue, LCredentials) then
+    ResponseForbiddenError(ARequest, AResponse);
+
+  LIndex := LCredentials.IndexOf(':');
   if LIndex < 0 then
     ResponseForbiddenError(ARequest, AResponse);
 
-  ARequest.User.Username := LValue.Substring(0, LIndex);
-  ARequest.User.Password := LValue.Substring(LIndex + 1);
+  ARequest.User.Username := LCredentials.Substring(0, LIndex);
+  ARequest.User.Password := LCredentials.Substring(LIndex + 1);
   if not IsValid(ARequest.User) then
     ResponseForbiddenError(ARequest, AResponse);
 end;

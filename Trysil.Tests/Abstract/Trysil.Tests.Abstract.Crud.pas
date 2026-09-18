@@ -1,4 +1,4 @@
-(*
+﻿(*
 
   Trysil
   Copyright (c) David Lastrucci
@@ -20,16 +20,28 @@ uses
   Trysil.Exceptions,
   Trysil.Generics.Collections,
   Trysil.Filter,
+  Trysil.Filter.Expression,
+  Trysil.Transaction,
   Trysil.Context,
+  Trysil.Events,
 
   Trysil.Tests.Abstract.Base,
   Trysil.Tests.Model;
 
 type
 
+{ TTestOldEntityEvent }
+
+  TTestOldEntityEvent = class(TTEvent<TTestCustomer>)
+  public
+    function ReadOldEntity: TTestCustomer;
+  end;
+
 { TTAbstractCrudTests }
 
   TTAbstractCrudTests = class(TTAbstractBaseTests)
+  strict private
+    function CountWith(const AExpression: TTExpression): Integer;
   public
     [Test]
     procedure SelectAllOnEmptyTableReturnsEmptyList;
@@ -45,6 +57,12 @@ type
 
     [Test]
     procedure SelectCountMatchesRowCount;
+
+    [Test]
+    procedure SelectCountHonoursTheFilterItIsGiven;
+
+    [Test]
+    procedure TheExpressionApiReachesTheEngine;
 
     [Test]
     procedure UpdateChangesColumnAndIncrementsVersion;
@@ -65,6 +83,12 @@ type
     procedure PagingLimitsResultCount;
 
     [Test]
+    procedure PagingWithoutOffsetLimitsResultCount;
+
+    [Test]
+    procedure PagingWithOffsetReturnsTheSecondPage;
+
+    [Test]
     procedure UpdateWithStaleVersionRaisesConcurrentUpdateException;
 
     [Test]
@@ -77,6 +101,18 @@ type
 
     [Test]
     procedure ApplyAllRollsBackOnFailure;
+
+    [Test]
+    procedure AFailedApplyAllRewindsTheVersionsInMemory;
+
+    [Test]
+    procedure AnEntityFreedInATransactionIsForgotten;
+
+    [Test]
+    procedure AContextBuiltInsideATransactionRewindsOnRollback;
+
+    [Test]
+    procedure AnOwningListFreedInATransactionIsForgotten;
 
     { Save / SaveAll }
 
@@ -105,6 +141,18 @@ type
     [Test]
     procedure OldEntityReturnsPersistedState;
 
+    [Test]
+    procedure AMappedColumnTheTableDoesNotHaveNamesTheEntity;
+
+    [Test]
+    procedure RefreshRaisesWhenTheRowIsGone;
+
+    [Test]
+    procedure OldEntityIsNilWhenTheRowIsGone;
+
+    [Test]
+    procedure OldEntityReadAfterTheCommandIsRefused;
+
     { WhereClause }
 
     [Test]
@@ -112,6 +160,12 @@ type
 
     [Test]
     procedure WhereClauseFiltersSelectCount;
+
+    [Test]
+    procedure WhereClauseParameterIsBoundOnSelectAll;
+
+    [Test]
+    procedure WhereClauseParameterIsBoundOnSelectCount;
 
     { FilterBuilder advanced }
 
@@ -163,6 +217,13 @@ type
   end;
 
 implementation
+
+{ TTestOldEntityEvent }
+
+function TTestOldEntityEvent.ReadOldEntity: TTestCustomer;
+begin
+  result := OldEntity;
+end;
 
 { TTAbstractCrudTests }
 
@@ -232,6 +293,110 @@ begin
   finally
     LList.Free;
   end;
+end;
+
+function TTAbstractCrudTests.CountWith(
+  const AExpression: TTExpression): Integer;
+var
+  LBuilder: TTFilterBuilder<TTestCustomer>;
+  LFilter: TTFilter;
+  LList: TTList<TTestCustomer>;
+begin
+  LBuilder := FContext.CreateFilterBuilder<TTestCustomer>();
+  try
+    LFilter := LBuilder.Where(AExpression).Build;
+  finally
+    LBuilder.Free;
+  end;
+
+  LList := TTList<TTestCustomer>.Create;
+  try
+    FContext.Select<TTestCustomer>(LList, LFilter);
+    result := LList.Count;
+  finally
+    LList.Free;
+  end;
+end;
+
+procedure TTAbstractCrudTests.SelectCountHonoursTheFilterItIsGiven;
+var
+  LCustomer: TTestCustomer;
+  LBuilder: TTFilterBuilder<TTestCustomer>;
+  LFilter: TTFilter;
+begin
+  LCustomer := FContext.CreateEntity<TTestCustomer>();
+  LCustomer.Name := 'Counted';
+  FContext.Insert<TTestCustomer>(LCustomer);
+
+  LCustomer := FContext.CreateEntity<TTestCustomer>();
+  LCustomer.Name := 'NotCounted';
+  FContext.Insert<TTestCustomer>(LCustomer);
+
+  LBuilder := FContext.CreateFilterBuilder<TTestCustomer>();
+  try
+    LFilter := LBuilder.Where('Name').Equal('Counted').Build;
+  finally
+    LBuilder.Free;
+  end;
+
+  Assert.AreEqual<Integer>(
+    1,
+    FContext.SelectCount<TTestCustomer>(LFilter),
+    'Every SelectCount of the suite passed an empty filter, so the count ' +
+    'syntax with a WHERE and a bound parameter had never run against any ' +
+    'of the seven engines, and it is the count behind every list endpoint');
+end;
+
+procedure TTAbstractCrudTests.TheExpressionApiReachesTheEngine;
+var
+  LIndex: Integer;
+  LCustomer: TTestCustomer;
+  LFirst: TTPrimaryKey;
+  LThird: TTPrimaryKey;
+  LName: TTProperty;
+  LID: TTProperty;
+begin
+  LFirst := 0;
+  LThird := 0;
+  for LIndex := 1 to 5 do
+  begin
+    LCustomer := FContext.CreateEntity<TTestCustomer>();
+    LCustomer.Name := Format('C%d', [LIndex]);
+    LCustomer.Email := Format('c%d@example.com', [LIndex]);
+    FContext.Insert<TTestCustomer>(LCustomer);
+    if LIndex = 1 then
+      LFirst := LCustomer.ID;
+    if LIndex = 3 then
+      LThird := LCustomer.ID;
+  end;
+
+  LName := TTProperty.Create('Name');
+  LID := TTProperty.Create('ID');
+
+  Assert.AreEqual<Integer>(
+    3,
+    CountWith(LID.Between(LFirst, LThird)),
+    'BETWEEN had never been sent to an engine, only asserted as a string');
+  Assert.AreEqual<Integer>(
+    2, CountWith(LName.InValues(['C1', 'C3'])), 'nor IN with values');
+  Assert.AreEqual<Integer>(
+    0,
+    CountWith(LName.InValues([])),
+    'nor the empty IN, which is written as (1 = 0) and has to parse on ' +
+    'all seven');
+  Assert.AreEqual<Integer>(
+    5, CountWith(LName.Like('C%')), 'nor LIKE through a property');
+  Assert.AreEqual<Integer>(0, CountWith(LName.NotLike('C%')));
+  Assert.AreEqual<Integer>(5, CountWith(LID.IsNotNull));
+  Assert.AreEqual<Integer>(
+    0,
+    CountWith(LID.IsNull),
+    'The key is asked instead of a string column because an empty string ' +
+    'is NULL on Oracle and is not on the other six');
+  Assert.AreEqual<Integer>(
+    4,
+    CountWith(not (LName = 'C1')),
+    'and NOT, which is the one that wraps the group in parentheses');
 end;
 
 procedure TTAbstractCrudTests.SelectCountMatchesRowCount;
@@ -380,6 +545,38 @@ begin
   end;
 end;
 
+procedure TTAbstractCrudTests.PagingWithoutOffsetLimitsResultCount;
+var
+  LCustomer: TTestCustomer;
+  LIndex: Integer;
+  LBuilder: TTFilterBuilder<TTestCustomer>;
+  LFilter: TTFilter;
+  LList: TTList<TTestCustomer>;
+begin
+  for LIndex := 1 to 10 do
+  begin
+    LCustomer := FContext.CreateEntity<TTestCustomer>();
+    LCustomer.Name := Format('User%.2d', [LIndex]);
+    FContext.Insert<TTestCustomer>(LCustomer);
+  end;
+
+  LBuilder := FContext.CreateFilterBuilder<TTestCustomer>();
+  try
+    LFilter := LBuilder.OrderByAsc('ID').Limit(3).Build;
+  finally
+    LBuilder.Free;
+  end;
+
+  LList := TTList<TTestCustomer>.Create;
+  try
+    FContext.Select<TTestCustomer>(LList, LFilter);
+    Assert.AreEqual<Integer>(3, LList.Count,
+      'A limit with no offset must page from the first row');
+  finally
+    LList.Free;
+  end;
+end;
+
 procedure TTAbstractCrudTests.PagingLimitsResultCount;
 var
   LCustomer: TTestCustomer;
@@ -406,6 +603,45 @@ begin
   try
     FContext.Select<TTestCustomer>(LList, LFilter);
     Assert.AreEqual<Integer>(3, LList.Count);
+  finally
+    LList.Free;
+  end;
+end;
+
+procedure TTAbstractCrudTests.PagingWithOffsetReturnsTheSecondPage;
+var
+  LCustomer: TTestCustomer;
+  LIndex: Integer;
+  LBuilder: TTFilterBuilder<TTestCustomer>;
+  LFilter: TTFilter;
+  LList: TTList<TTestCustomer>;
+begin
+  for LIndex := 1 to 10 do
+  begin
+    LCustomer := FContext.CreateEntity<TTestCustomer>();
+    LCustomer.Name := Format('User%.2d', [LIndex]);
+    FContext.Insert<TTestCustomer>(LCustomer);
+  end;
+
+  LBuilder := FContext.CreateFilterBuilder<TTestCustomer>();
+  try
+    LFilter := LBuilder.OrderByAsc('ID').Limit(3).Offset(3).Build;
+  finally
+    LBuilder.Free;
+  end;
+
+  LList := TTList<TTestCustomer>.Create;
+  try
+    FContext.Select<TTestCustomer>(LList, LFilter);
+
+    Assert.AreEqual<Integer>(3, LList.Count,
+      'A limit of 3 with an offset of 3 must return exactly three rows');
+    Assert.AreEqual('User04', LList[0].Name,
+      'The second page starts at the fourth row: the InterBase form is ' +
+      'ROWS Start+1 TO Start+Limit, 1-based and inclusive, and no test ' +
+      'has ever computed it with an offset other than zero');
+    Assert.AreEqual('User06', LList[2].Name,
+      'and it ends at the sixth');
   finally
     LList.Free;
   end;
@@ -560,6 +796,215 @@ begin
     'Rollback must revert the insert from ApplyAll');
 end;
 
+procedure TTAbstractCrudTests.AFailedApplyAllRewindsTheVersionsInMemory;
+var
+  LFirst: TTestCustomer;
+  LSecond: TTestCustomer;
+  LVersion: TTVersion;
+  LInsertList: TTList<TTestCustomer>;
+  LUpdateList: TTList<TTestCustomer>;
+  LDeleteList: TTList<TTestCustomer>;
+  LRaised: Boolean;
+begin
+  LFirst := FContext.CreateEntity<TTestCustomer>();
+  LFirst.Name := 'First';
+  FContext.Insert<TTestCustomer>(LFirst);
+
+  LSecond := FContext.CreateEntity<TTestCustomer>();
+  LSecond.Name := 'Second';
+  FContext.Insert<TTestCustomer>(LSecond);
+
+  LVersion := LFirst.Version;
+
+  LInsertList := TTList<TTestCustomer>.Create;
+  LUpdateList := TTList<TTestCustomer>.Create;
+  LDeleteList := TTList<TTestCustomer>.Create;
+  try
+    Connection.Execute(Format(
+      'UPDATE Customers SET VersionID = VersionID + 10 WHERE ID = %d;',
+      [LSecond.ID]));
+
+    LFirst.Name := 'First updated';
+    LUpdateList.Add(LFirst);
+    LSecond.Name := 'Second updated';
+    LUpdateList.Add(LSecond);
+
+    LRaised := False;
+    try
+      FContext.ApplyAll<TTestCustomer>(
+        LInsertList, LUpdateList, LDeleteList);
+    except
+      on E: ETConcurrentUpdateException do
+        LRaised := True;
+    end;
+
+    Assert.IsTrue(LRaised, 'The stale version must make ApplyAll fail');
+  finally
+    LDeleteList.Free;
+    LUpdateList.Free;
+    LInsertList.Free;
+  end;
+
+  Assert.AreEqual<TTVersion>(
+    LVersion,
+    LFirst.Version,
+    'The first update succeeded and incremented the version in memory, ' +
+    'then the transaction rolled the row back to where it was: an entity ' +
+    'left one version ahead of its row answers 409 for ever');
+end;
+
+procedure TTAbstractCrudTests.AnEntityFreedInATransactionIsForgotten;
+var
+  LContext: TTContext;
+  LKept: TTestCustomer;
+  LFreed: TTestCustomer;
+  LVersion: TTVersion;
+  LRaised: Boolean;
+begin
+  LContext := TTContext.Create(Connection, False);
+  try
+    LKept := LContext.CreateEntity<TTestCustomer>();
+    try
+      LKept.Name := 'Kept';
+      LContext.Insert<TTestCustomer>(LKept);
+      LVersion := LKept.Version;
+
+      LRaised := False;
+      try
+        LContext.RunInTransaction(
+          procedure
+          begin
+            LFreed := LContext.CreateEntity<TTestCustomer>();
+            LFreed.Name := 'Freed';
+            LContext.Insert<TTestCustomer>(LFreed);
+            LContext.FreeEntity<TTestCustomer>(LFreed);
+
+            LKept.Name := 'Kept updated';
+            LContext.Update<TTestCustomer>(LKept);
+
+            raise ETException.Create('Rollback on purpose');
+          end);
+      except
+        on E: ETException do
+          LRaised := True;
+      end;
+
+      Assert.IsTrue(LRaised, 'The transaction must roll back');
+      Assert.AreEqual<TTVersion>(
+        LVersion,
+        LKept.Version,
+        'The insert wrote a version into the entity that was freed a line ' +
+        'later, still inside the transaction: the rewind has to drop it ' +
+        'and reach the entity that is still alive');
+    finally
+      LContext.FreeEntity<TTestCustomer>(LKept);
+    end;
+  finally
+    LContext.Free;
+  end;
+end;
+
+procedure TTAbstractCrudTests.AContextBuiltInsideATransactionRewindsOnRollback;
+var
+  LCustomer: TTestCustomer;
+  LID: TTPrimaryKey;
+  LTransaction: TTTransaction;
+  LContext: TTContext;
+  LVersion: TTVersion;
+begin
+  LCustomer := FContext.CreateEntity<TTestCustomer>();
+  try
+    LCustomer.Name := 'Outside';
+    FContext.Insert<TTestCustomer>(LCustomer);
+    LID := LCustomer.ID;
+  finally
+    FContext.FreeEntity<TTestCustomer>(LCustomer);
+  end;
+
+  LTransaction := TTTransaction.Create(
+    Connection, TTTransactionMode.RollbackOnDestroy);
+  try
+    LContext := TTContext.Create(Connection, False);
+    try
+      LCustomer := LContext.Get<TTestCustomer>(LID);
+      try
+        LVersion := LCustomer.Version;
+        LCustomer.Name := 'Inside';
+        LContext.Update<TTestCustomer>(LCustomer);
+        LTransaction.Rollback;
+
+        Assert.AreEqual<TTVersion>(
+          LVersion,
+          LCustomer.Version,
+          'A context built after the transaction started has to see that ' +
+          'transaction: its rollback rewinds the version the update wrote');
+      finally
+        LContext.FreeEntity<TTestCustomer>(LCustomer);
+      end;
+    finally
+      LContext.Free;
+    end;
+  finally
+    LTransaction.Free;
+  end;
+end;
+
+procedure TTAbstractCrudTests.AnOwningListFreedInATransactionIsForgotten;
+var
+  LContext: TTContext;
+  LKept: TTestCustomer;
+  LOwned: TTestCustomer;
+  LList: TTList<TTestCustomer>;
+  LVersion: TTVersion;
+  LRaised: Boolean;
+begin
+  LContext := TTContext.Create(Connection, False);
+  try
+    LKept := LContext.CreateEntity<TTestCustomer>();
+    try
+      LKept.Name := 'Kept';
+      LContext.Insert<TTestCustomer>(LKept);
+      LVersion := LKept.Version;
+
+      LRaised := False;
+      try
+        LContext.RunInTransaction(
+          procedure
+          begin
+            LOwned := LContext.CreateEntity<TTestCustomer>();
+            LOwned.Name := 'Owned';
+            LContext.Insert<TTestCustomer>(LOwned);
+
+            LList := LContext.CreateEntityList<TTestCustomer>();
+            LList.Add(LOwned);
+            LList.Free;
+
+            LKept.Name := 'Kept updated';
+            LContext.Update<TTestCustomer>(LKept);
+
+            raise ETException.Create('Rollback on purpose');
+          end);
+      except
+        on E: ETException do
+          LRaised := True;
+      end;
+
+      Assert.IsTrue(LRaised, 'The transaction must roll back');
+      Assert.AreEqual<TTVersion>(
+        LVersion,
+        LKept.Version,
+        'A list built by the context owns its entities when there is no ' +
+        'identity map, and freeing it mid-transaction used to leave the ' +
+        'rewind holding freed memory: the rollback has to reach the ' +
+        'entity that is still alive all the same');
+    finally
+      LContext.FreeEntity<TTestCustomer>(LKept);
+    end;
+  finally
+    LContext.Free;
+  end;
+end;
+
 { Save / SaveAll }
 
 procedure TTAbstractCrudTests.SaveInsertsNewEntity;
@@ -676,6 +1121,119 @@ begin
     'Refresh must reload entity from database');
 end;
 
+procedure TTAbstractCrudTests.AMappedColumnTheTableDoesNotHaveNamesTheEntity;
+var
+  LList: TTList<TTestMissingColumn>;
+  LMessage: String;
+begin
+  LMessage := String.Empty;
+  LList := FContext.CreateEntityList<TTestMissingColumn>();
+  try
+    try
+      FContext.SelectAll<TTestMissingColumn>(LList);
+    except
+      on E: ETException do
+        LMessage := E.Message;
+    end;
+  finally
+    LList.Free;
+  end;
+
+  Assert.IsTrue(
+    LMessage.Contains('TTestMissingColumn'),
+    'The probe asks the server for the mapped columns, and a column that ' +
+    'is not there comes back as the driver''s own error with no idea ' +
+    'which entity asked for it: on seven engines that is seven different ' +
+    'messages, none of which names the class to go and look at');
+end;
+
+procedure TTAbstractCrudTests.RefreshRaisesWhenTheRowIsGone;
+var
+  LCustomer: TTestCustomer;
+  LRaised: Boolean;
+begin
+  LCustomer := FContext.CreateEntity<TTestCustomer>();
+  LCustomer.Name := 'Doomed';
+  FContext.Insert<TTestCustomer>(LCustomer);
+
+  Connection.Execute(Format(
+    'DELETE FROM Customers WHERE ID = %d;', [LCustomer.ID]));
+
+  LRaised := False;
+  try
+    FContext.Refresh<TTestCustomer>(LCustomer);
+  except
+    on E: ETConcurrentUpdateException do
+      LRaised := True;
+  end;
+
+  Assert.IsTrue(
+    LRaised,
+    'A row that is no longer there used to leave the entity exactly as ' +
+    'it was, with nothing said, so the caller went on working on a ' +
+    'record that does not exist believing it had just re-read it');
+  Assert.IsFalse(
+    FContext.TryRefresh<TTestCustomer>(LCustomer),
+    'TryRefresh is the same question asked without an exception');
+end;
+
+procedure TTAbstractCrudTests.OldEntityIsNilWhenTheRowIsGone;
+var
+  LCustomer: TTestCustomer;
+  LOld: TTestCustomer;
+begin
+  LCustomer := FContext.CreateEntity<TTestCustomer>();
+  LCustomer.Name := 'Doomed';
+  FContext.Insert<TTestCustomer>(LCustomer);
+
+  Connection.Execute(Format(
+    'DELETE FROM Customers WHERE ID = %d;', [LCustomer.ID]));
+
+  LOld := FContext.OldEntity<TTestCustomer>(LCustomer);
+  try
+    Assert.IsFalse(
+      Assigned(LOld),
+      'It is a clone plus a refresh, and the refresh used to do nothing ' +
+      'silently: what came back was a copy of the state in memory, ' +
+      'handed over as the state of the database');
+  finally
+    if Assigned(LOld) then
+      LOld.Free;
+  end;
+end;
+
+procedure TTAbstractCrudTests.OldEntityReadAfterTheCommandIsRefused;
+var
+  LCustomer: TTestCustomer;
+  LEvent: TTestOldEntityEvent;
+  LRaised: Boolean;
+begin
+  LCustomer := FContext.CreateEntity<TTestCustomer>();
+  LCustomer.Name := 'Persisted';
+  FContext.Insert<TTestCustomer>(LCustomer);
+
+  LRaised := False;
+  LEvent := TTestOldEntityEvent.Create(FContext, LCustomer);
+  try
+    LEvent.CommandExecuted;
+    try
+      LEvent.ReadOldEntity;
+    except
+      on E: ETException do
+        LRaised := True;
+    end;
+  finally
+    LEvent.Free;
+  end;
+
+  Assert.IsTrue(
+    LRaised,
+    'OldEntity is memoized on first access while DoBefore and DoAfter ' +
+    'run on the two sides of the command: reading it for the first time ' +
+    'in DoAfter used to return the row the command had just written, ' +
+    'under the name of the old one');
+end;
+
 procedure TTAbstractCrudTests.OldEntityReturnsPersistedState;
 var
   LCustomer: TTestCustomer;
@@ -737,6 +1295,45 @@ begin
   LCount := FContext.SelectCount<TTestActiveCustomer>(TTFilter.Empty);
   Assert.AreEqual<Integer>(1, LCount,
     'SelectCount with WhereClause must exclude filtered rows');
+end;
+
+procedure TTAbstractCrudTests.WhereClauseParameterIsBoundOnSelectAll;
+var
+  LList: TTList<TTestParameterCustomer>;
+begin
+  Connection.Execute(
+    'INSERT INTO Customers (ID, Name, Email, VersionID) ' +
+    'VALUES (1, ''Kept'', ''a@b.com'', 0);');
+  Connection.Execute(
+    'INSERT INTO Customers (ID, Name, Email, VersionID) ' +
+    'VALUES (2, ''Excluded'', ''c@d.com'', 0);');
+
+  LList := TTList<TTestParameterCustomer>.Create;
+  try
+    FContext.SelectAll<TTestParameterCustomer>(LList);
+    Assert.AreEqual<Integer>(1, LList.Count,
+      'WhereClauseParameter must be bound on SelectAll');
+    Assert.AreEqual<String>('Kept', LList[0].Name,
+      'WhereClauseParameter must exclude the parameter value');
+  finally
+    LList.Free;
+  end;
+end;
+
+procedure TTAbstractCrudTests.WhereClauseParameterIsBoundOnSelectCount;
+var
+  LCount: Integer;
+begin
+  Connection.Execute(
+    'INSERT INTO Customers (ID, Name, Email, VersionID) ' +
+    'VALUES (1, ''Kept'', ''a@b.com'', 0);');
+  Connection.Execute(
+    'INSERT INTO Customers (ID, Name, Email, VersionID) ' +
+    'VALUES (2, ''Excluded'', ''c@d.com'', 0);');
+
+  LCount := FContext.SelectCount<TTestParameterCustomer>(TTFilter.Empty);
+  Assert.AreEqual<Integer>(1, LCount,
+    'WhereClauseParameter must be bound on SelectCount');
 end;
 
 { FilterBuilder advanced }

@@ -14,6 +14,7 @@ interface
 
 uses
   System.SysUtils,
+  System.SysConst,
   System.Classes,
   System.Generics.Collections,
   System.JSon,
@@ -53,6 +54,13 @@ type
     function FromJSon(const AJSon: TJSonValue): TTValue; override;
   end;
 
+{ TTJSonSmallIntDeserializer }
+
+  TTJSonSmallIntDeserializer = class(TTJSonAbstractDeserializer)
+  public
+    function FromJSon(const AJSon: TJSonValue): TTValue; override;
+  end;
+
 { TTJSonLargeIntegerDeserializer }
 
   TTJSonLargeIntegerDeserializer = class(TTJSonAbstractDeserializer)
@@ -88,6 +96,20 @@ type
     function FromJSon(const AJSon: TJSonValue): TTValue; override;
   end;
 
+{ TTJSonDateDeserializer }
+
+  TTJSonDateDeserializer = class(TTJSonAbstractDeserializer)
+  public
+    function FromJSon(const AJSon: TJSonValue): TTValue; override;
+  end;
+
+{ TTJSonTimeDeserializer }
+
+  TTJSonTimeDeserializer = class(TTJSonAbstractDeserializer)
+  public
+    function FromJSon(const AJSon: TJSonValue): TTValue; override;
+  end;
+
 { TTJSonGuidDeserializer }
 
   TTJSonGuidDeserializer = class(TTJSonAbstractDeserializer)
@@ -110,7 +132,7 @@ type
     class constructor ClassCreate;
     class destructor ClassDestroy;
   strict private
-    FDeserializers: TDictionary<PTypeInfo, TTJSonDeserializerClass>;
+    FInstances: TObjectDictionary<PTypeInfo, TTJSonAbstractDeserializer>;
 
     procedure RegisterBaseTypes;
   public
@@ -119,7 +141,8 @@ type
 
     procedure AfterConstruction; override;
 
-    function Get(const ATypeInfo: PTypeInfo): TTJSonDeserializerClass;
+    function GetInstance(
+      const ATypeInfo: PTypeInfo): TTJSonAbstractDeserializer;
     procedure Register<T>(const AClass: TTJSonDeserializerClass);
 
     class property Instance: TTJSonDeserializers read FInstance;
@@ -141,12 +164,29 @@ begin
   result := TTValue.From<Integer>(AJSon.GetValue<Integer>());
 end;
 
+{ TTJSonSmallIntDeserializer }
+
+function TTJSonSmallIntDeserializer.FromJSon(
+  const AJSon: TJSonValue): TTValue;
+var
+  LValue: Integer;
+begin
+  LValue := AJSon.GetValue<Integer>();
+  if (LValue < Low(Int16)) or (LValue > High(Int16)) then
+    raise ERangeError.CreateRes(@SRangeError);
+  result := TTValue.From<Int16>(LValue);
+end;
+
 { TTJSonLargeIntegerDeserializer }
 
 function TTJSonLargeIntegerDeserializer.FromJSon(
   const AJSon: TJSonValue): TTValue;
+var
+  LValue: Int64;
 begin
-  result := TTValue.From<Int64>(AJSon.GetValue<Int64>());
+  if not TryStrToInt64(AJSon.Value, LValue) then
+    LValue := AJSon.GetValue<Int64>();
+  result := TTValue.From<Int64>(LValue);
 end;
 
 { TTJSonDoubleDeserializer }
@@ -182,6 +222,32 @@ begin
     TTimeZone.Local.ToLocalTime(ISO8601ToDate(AJSon.AsType<String>(), True)));
 end;
 
+{ TTJSonDateDeserializer }
+
+function TTJSonDateDeserializer.FromJSon(const AJSon: TJSonValue): TTValue;
+var
+  LValue: String;
+  LDate: TDateTime;
+begin
+  LValue := AJSon.AsType<String>();
+  if not TryStrToDate(LValue, LDate, TFormatSettings.Invariant) then
+    LDate := ISO8601ToDate(LValue, True);
+  result := TTValue.From<TDate>(DateOf(LDate));
+end;
+
+{ TTJSonTimeDeserializer }
+
+function TTJSonTimeDeserializer.FromJSon(const AJSon: TJSonValue): TTValue;
+var
+  LValue: String;
+  LTime: TDateTime;
+begin
+  LValue := AJSon.AsType<String>();
+  if not TryStrToTime(LValue, LTime, TFormatSettings.Invariant) then
+    LTime := ISO8601ToDate(LValue, True);
+  result := TTValue.From<TTime>(TimeOf(LTime));
+end;
+
 { TTJSonGuidDeserializer }
 
 function TTJSonGuidDeserializer.FromJSon(const AJSon: TJSonValue): TTValue;
@@ -207,17 +273,19 @@ end;
 class destructor TTJSonDeserializers.ClassDestroy;
 begin
   FInstance.Free;
+  FInstance := nil;
 end;
 
 constructor TTJSonDeserializers.Create;
 begin
   inherited Create;
-  FDeserializers := TDictionary<PTypeInfo, TTJSonDeserializerClass>.Create;
+  FInstances := TObjectDictionary<
+    PTypeInfo, TTJSonAbstractDeserializer>.Create([doOwnsValues]);
 end;
 
 destructor TTJSonDeserializers.Destroy;
 begin
-  FDeserializers.Free;
+  FInstances.Free;
   inherited Destroy;
 end;
 
@@ -227,26 +295,34 @@ begin
   RegisterBaseTypes;
 end;
 
-function TTJSonDeserializers.Get(
-  const ATypeInfo: PTypeInfo): TTJSonDeserializerClass;
-begin
-  if not FDeserializers.TryGetValue(ATypeInfo, result) then
-    raise ETJSonException.CreateFmt(
-      TTLanguage.Instance.Translate(SDeserializerNotFound), [
-        String(ATypeInfo.Name)]);
-end;
-
 procedure TTJSonDeserializers.Register<T>(
   const AClass: TTJSonDeserializerClass);
+var
+  LInstance: TTJSonAbstractDeserializer;
 begin
-  FDeserializers.Add(TypeInfo(T), AClass);
+  LInstance := AClass.Create;
+  try
+    FInstances.Add(TypeInfo(T), LInstance);
+  except
+    LInstance.Free;
+    raise;
+  end;
+end;
+
+function TTJSonDeserializers.GetInstance(
+  const ATypeInfo: PTypeInfo): TTJSonAbstractDeserializer;
+begin
+  if not FInstances.TryGetValue(ATypeInfo, result) then
+    raise ETJSonServerException.CreateFmt(
+      TTLanguage.Instance.Translate(SDeserializerNotFound), [
+        String(ATypeInfo.Name)]);
 end;
 
 procedure TTJSonDeserializers.RegisterBaseTypes;
 begin
   Self.Register<String>(TTJSonStringDeserializer);
 
-  Self.Register<Int16>(TTJSonIntegerDeserializer);
+  Self.Register<Int16>(TTJSonSmallIntDeserializer);
   Self.Register<Int32>(TTJSonIntegerDeserializer);
   Self.Register<Int64>(TTJSonLargeIntegerDeserializer);
 
@@ -257,8 +333,8 @@ begin
   Self.Register<Boolean>(TTJSonBooleanDeserializer);
 
   Self.Register<TDateTime>(TTJSonDateTimeDeserializer);
-  Self.Register<TDate>(TTJSonDateTimeDeserializer);
-  Self.Register<TTime>(TTJSonDateTimeDeserializer);
+  Self.Register<TDate>(TTJSonDateDeserializer);
+  Self.Register<TTime>(TTJSonTimeDeserializer);
 
   Self.Register<TGuid>(TTJSonGuidDeserializer);
 

@@ -81,10 +81,4 @@ begin
     TTMariaDBTestConnection.Finalize;
 end;
 
-initialization
-  TTMariaDBTestRegister.Register;
-
-finalization
-  TTMariaDBTestRegister.Unregister;
-
 end.

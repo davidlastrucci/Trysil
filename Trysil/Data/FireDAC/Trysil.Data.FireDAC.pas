@@ -63,6 +63,7 @@ type
     function GetAsGuid: TGUID; override;
     procedure SetAsGuid(const AValue: TGUID); override;
     procedure SetAsBytes(const AValue: TBytes); override;
+    procedure SetAsText(const AValue: String); override;
   public
     constructor Create(const AParam: TFDParam);
 
@@ -99,6 +100,7 @@ type
     FUsername: String;
     FPassword: String;
     FDatabaseName: String;
+    FCharacterSet: String;
     FPoolParameters: TTFireDACPoolParameters;
   public
     property Driver: String read FDriver write FDriver;
@@ -107,6 +109,7 @@ type
     property Username: String read FUsername write FUsername;
     property Password: String read FPassword write FPassword;
     property DatabaseName: String read FDatabaseName write FDatabaseName;
+    property CharacterSet: String read FCharacterSet write FCharacterSet;
     property PoolParameters: TTFireDACPoolParameters
       read FPoolParameters write FPoolParameters;
   end;
@@ -120,6 +123,8 @@ type
     FWaitCursor: TFDGUIxWaitCursor;
     FConnection: TFDConnection;
 
+    procedure SetNumericScale(
+      const AParam: TFDParam; const AColumn: TTColumnMetadata);
     procedure SetParameter(
       const ADataset: TFDQuery;
       const AParameter: TTFilterParameter);
@@ -135,21 +140,25 @@ type
     function GetSupportTransaction: Boolean; override;
     function GetConnectionName: String; override;
 
-    procedure ConfigureConnection(const AConnection: TFDConnection); virtual;
+    procedure ConfigureConnection(const AConnection: TFDConnection);
+    procedure ConfigureMapRules(const AConnection: TFDConnection); virtual;
+    procedure DoConfigureConnection(
+      const AConnection: TFDConnection); virtual;
+
+    procedure InternalStartTransaction; override;
+    procedure InternalCommitTransaction; override;
+    procedure InternalRollbackTransaction; override;
   protected // internal
     class procedure InternalRegisterConnection(
       const AName: String;
       const AParameter: TTFireDACConnectionParameters); virtual; abstract;
     class function GetDriver: String; virtual; abstract;
+    class function GetDriverAliases: TArray<String>; virtual;
   public
     constructor Create(const AConnectionName: String);
     destructor Destroy; override;
 
     procedure AfterConstruction; override;
-
-    procedure StartTransaction; override;
-    procedure CommitTransaction; override;
-    procedure RollbackTransaction; override;
 
     function Execute(
       const ASQL: String;
@@ -317,12 +326,22 @@ begin
   end;
 end;
 
+procedure TTFDParam.SetAsText(const AValue: String);
+begin
+  FParam.Text := AValue;
+end;
+
 { TTFireDACDriver }
 
 procedure TTFireDACDriver.AfterConstruction;
 begin
   inherited AfterConstruction;
   DriverLink.DriverID := GetDriverID(DriverLink.BaseDriverID);
+end;
+
+class function TTFireDACConnection.GetDriverAliases: TArray<String>;
+begin
+  result := [];
 end;
 
 class function TTFireDACDriver.GetDriverID(const ABaseDriverID: String): String;
@@ -383,6 +402,18 @@ end;
 procedure TTFireDACConnection.ConfigureConnection(
   const AConnection: TFDConnection);
 begin
+  ConfigureMapRules(AConnection);
+  DoConfigureConnection(AConnection);
+end;
+
+procedure TTFireDACConnection.ConfigureMapRules(
+  const AConnection: TFDConnection);
+begin
+end;
+
+procedure TTFireDACConnection.DoConfigureConnection(
+  const AConnection: TFDConnection);
+begin
 end;
 
 function TTFireDACConnection.Execute(
@@ -416,21 +447,18 @@ begin
   result := FConnectionName;
 end;
 
-procedure TTFireDACConnection.StartTransaction;
+procedure TTFireDACConnection.InternalStartTransaction;
 begin
-  inherited StartTransaction;
   FConnection.StartTransaction;
 end;
 
-procedure TTFireDACConnection.CommitTransaction;
+procedure TTFireDACConnection.InternalCommitTransaction;
 begin
-  inherited CommitTransaction;
   FConnection.Commit;
 end;
 
-procedure TTFireDACConnection.RollbackTransaction;
+procedure TTFireDACConnection.InternalRollbackTransaction;
 begin
-  inherited RollbackTransaction;
   FConnection.Rollback;
 end;
 
@@ -478,6 +506,17 @@ begin
   end;
 end;
 
+procedure TTFireDACConnection.SetNumericScale(
+  const AParam: TFDParam; const AColumn: TTColumnMetadata);
+begin
+  if (AColumn.DataType in [TFieldType.ftBCD, TFieldType.ftFMTBcd]) and
+    (AColumn.Precision > 0) then
+  begin
+    AParam.Precision := AColumn.Precision;
+    AParam.NumericScale := AColumn.DataSize;
+  end;
+end;
+
 procedure TTFireDACConnection.SetParameters(
   const ADataSet: TFDQuery;
   const ATableMap: TTTableMap;
@@ -498,6 +537,7 @@ begin
       LFireDACParam.ParamType := TParamType.ptInput;
       LFireDACParam.DataType := LColumn.DataType;
       LFireDACParam.Size := LColumn.DataSize;
+      SetNumericScale(LFireDACParam, LColumn);
 
       LParam := TTFDParam.Create(LFireDACParam);
       try
@@ -528,9 +568,8 @@ begin
   try
     LDataSet.Connection := FConnection;
     LDataSet.SQL.Text := ASQL;
-    if not AFilter.IsEmpty then
-      for LParameter in AFilter.Parameters do
-        SetParameter(LDataSet, LParameter);
+    for LParameter in AFilter.Parameters do
+      SetParameter(LDataSet, LParameter);
   except
     LDataSet.Free;
     raise;
@@ -553,6 +592,7 @@ end;
 class destructor TTFireDACConnectionFactory.ClassDestroy;
 begin
   FInstance.Free;
+  FInstance := nil;
 end;
 
 constructor TTFireDACConnectionFactory.Create;
@@ -577,7 +617,7 @@ begin
   FLock.BeginRead;
   try
     if not FDrivers.TryGetValue(
-      TTFireDACDriver.GetDriverID(ADriver).ToLower(), result) then
+      TTFireDACDriver.GetDriverID(ADriver).ToLowerInvariant, result) then
       result := nil;
   finally
     FLock.EndRead;
@@ -589,10 +629,15 @@ begin
 end;
 
 procedure TTFireDACConnectionFactory.RegisterDriver<T>();
+var
+  LAlias: String;
 begin
   FLock.BeginWrite;
   try
-    FDrivers.Add(T.GetDriver().ToLower(), T);
+    FDrivers.AddOrSetValue(T.GetDriver().ToLowerInvariant, T);
+    for LAlias in T.GetDriverAliases() do
+      FDrivers.AddOrSetValue(
+        TTFireDACDriver.GetDriverID(LAlias).ToLowerInvariant, T);
   finally
     FLock.EndWrite;
   end;
@@ -608,11 +653,10 @@ begin
   LConnectionClass := GetDriverClass(AParameters.Driver);
   FLock.BeginRead;
   try
-    if FConnections.TryGetValue(AName.ToLower(), LRegisteredClass) and
+    if FConnections.TryGetValue(AName.ToLowerInvariant, LRegisteredClass) and
       (LRegisteredClass <> LConnectionClass) then
       raise ETException.CreateFmt(
-        TTLanguage.Instance.Translate(SConnectionAlreadyRegistered),
-        [AName]);
+        TTLanguage.Instance.Translate(SConnectionAlreadyRegistered), [AName]);
   finally
     FLock.EndRead;
   end;
@@ -622,7 +666,7 @@ begin
 
   FLock.BeginWrite;
   try
-    FConnections.AddOrSetValue(AName.ToLower(), LConnectionClass);
+    FConnections.AddOrSetValue(AName.ToLowerInvariant, LConnectionClass);
   finally
     FLock.EndWrite;
   end;
@@ -635,7 +679,7 @@ var
 begin
   FLock.BeginRead;
   try
-    if not FConnections.TryGetValue(AName.ToLower(), LConnectionClass) then
+    if not FConnections.TryGetValue(AName.ToLowerInvariant, LConnectionClass) then
       LConnectionClass := nil;
   finally
     FLock.EndRead;

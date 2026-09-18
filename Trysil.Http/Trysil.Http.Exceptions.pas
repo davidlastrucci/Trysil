@@ -54,6 +54,13 @@ type
     constructor Create(const AMessage: String);
   end;
 
+{ ETHttpContentTooLarge }
+
+  ETHttpContentTooLarge = class(ETHttpException)
+  public
+    constructor CreateFmt(const AMessage: String; const AArgs: array of const);
+  end;
+
 { ETHttpUnauthorized }
 
   ETHttpUnauthorized = class(ETHttpException)
@@ -81,14 +88,27 @@ type
 { ETHttpMethodNotAllowed }
 
   ETHttpMethodNotAllowed = class(ETHttpException)
+  strict private
+    FAllowedMethods: String;
   public
     constructor CreateFmt(const AMessage: String; const AArgs: array of const);
     constructor Create(const AMessage: String);
+
+    property AllowedMethods: String
+      read FAllowedMethods write FAllowedMethods;
   end;
 
 { ETHttpConflict }
 
   ETHttpConflict = class(ETHttpException)
+  public
+    constructor CreateFmt(const AMessage: String; const AArgs: array of const);
+    constructor Create(const AMessage: String);
+  end;
+
+{ ETHttpUnprocessableContent }
+
+  ETHttpUnprocessableContent = class(ETHttpException)
   public
     constructor CreateFmt(const AMessage: String; const AArgs: array of const);
     constructor Create(const AMessage: String);
@@ -158,6 +178,14 @@ begin
   inherited Create(TTHttpStatusCodeTypes.BadRequest, AMessage);
 end;
 
+{ ETHttpContentTooLarge }
+
+constructor ETHttpContentTooLarge.CreateFmt(
+  const AMessage: String; const AArgs: array of const);
+begin
+  inherited CreateFmt(TTHttpStatusCodeTypes.ContentTooLarge, AMessage, AArgs);
+end;
+
 { ETHttpUnauthorized }
 
 constructor ETHttpUnauthorized.CreateFmt(
@@ -221,6 +249,20 @@ end;
 constructor ETHttpConflict.Create(const AMessage: String);
 begin
   inherited Create(TTHttpStatusCodeTypes.Conflict, AMessage);
+end;
+
+{ ETHttpUnprocessableContent }
+
+constructor ETHttpUnprocessableContent.CreateFmt(
+  const AMessage: String; const AArgs: array of const);
+begin
+  inherited CreateFmt(
+    TTHttpStatusCodeTypes.UnprocessableContent, AMessage, AArgs);
+end;
+
+constructor ETHttpUnprocessableContent.Create(const AMessage: String);
+begin
+  inherited Create(TTHttpStatusCodeTypes.UnprocessableContent, AMessage);
 end;
 
 { ETHttpInternalServerError }

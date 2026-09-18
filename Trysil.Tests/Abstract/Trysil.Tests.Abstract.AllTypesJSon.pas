@@ -36,7 +36,7 @@ type
     FJSonContext: TTJSonContext;
     FCreatedEntities: TObjectList<TObject>;
 
-    procedure ClearTables; override;
+    procedure DeleteTables; override;
   public
     [Setup]
     procedure Setup; override;
@@ -73,7 +73,7 @@ const
 
 { TTAbstractAllTypesJSonTests }
 
-procedure TTAbstractAllTypesJSonTests.ClearTables;
+procedure TTAbstractAllTypesJSonTests.DeleteTables;
 begin
   inherited;
   Connection.Execute('DELETE FROM AllTypes');
@@ -326,8 +326,15 @@ begin
   Assert.IsTrue(LJson.Contains('uniqueID'));
   Assert.IsTrue(LJson.Contains('payload'));
   Assert.IsTrue(LJson.Contains('price'));
-  Assert.IsTrue(LJson.Contains('AllTypes'),
-    'MetadataToJSon must emit the table name');
+  Assert.IsTrue(
+    LJson.Contains('"entity":"TestAllTypes"'),
+    'The payload names the entity by its class, not by its table: the ' +
+    'table was the one line in it that spoke of the database, it is of ' +
+    'no use to a client addressing /api/alltypes, and it is exactly what ' +
+    'someone probing for a way in wants');
+  Assert.IsFalse(
+    LJson.Contains('tableName'),
+    'And the physical name is not there under another key either');
 end;
 
 end.

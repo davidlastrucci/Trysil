@@ -35,7 +35,7 @@ type
     FJSonContext: TTJSonContext;
     FCreatedEntities: TObjectList<TObject>;
 
-    procedure ClearTables; override;
+    procedure DeleteTables; override;
   public
     [Setup]
     procedure Setup; override;
@@ -66,7 +66,7 @@ implementation
 
 { TTAbstractNullablePrimitivesJSonTests }
 
-procedure TTAbstractNullablePrimitivesJSonTests.ClearTables;
+procedure TTAbstractNullablePrimitivesJSonTests.DeleteTables;
 begin
   inherited;
   Connection.Execute('DELETE FROM NullablePrimitives');

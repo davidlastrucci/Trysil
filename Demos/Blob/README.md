@@ -13,13 +13,14 @@ A VCL desktop application demonstrating how to store and retrieve binary data (i
 
 - Delphi Enterprise edition (required for SQL Server driver)
 - SQL Server instance
-- Trysil packages built (see [Setup](../../docs/Setup.md))
+- Trysil packages built (see [Installation](../../docs/getting-started/installation.md))
 
 ## Setup
 
 1. Run `Sql/SqlServer.sql` on your SQL Server instance to create the `Images` table and sequence.
-2. Place PNG files in the `Images/` subfolder (sample images are included).
-3. Open `Blob.dproj` in Delphi, build and run.
+2. Point the `RegisterConnection` call at the top of `Blob.MainForm.pas` at your own instance and replace `PASSWORD` with the password of that login. For Windows authentication drop the user and the password and call the three-argument overload - connection name, server, database. Whichever you use, keep a real password out of the source of a repository.
+3. Place PNG files in the `Images/` subfolder (sample images are included).
+4. Open `Blob.dproj` in Delphi, build and run.
 
 ## Project Structure
 

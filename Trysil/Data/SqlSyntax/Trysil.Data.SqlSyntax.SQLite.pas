@@ -16,6 +16,7 @@ uses
   System.Classes,
   System.SysUtils,
 
+  Trysil.Mapping,
   Trysil.Data.SqlSyntax;
 
 type
@@ -48,8 +49,9 @@ implementation
 
 function TTSQLiteSequenceSyntax.GetSequenceSyntax: String;
 begin
-  result := Format(
-    'SELECT IFNULL(MAX(ROWID), 0) + 1 FROM %s', [FTableMap.Name]);
+  result := Format('SELECT IFNULL(MAX(%s), 0) + 1 FROM %s', [
+    FConnection.GetDatabaseObjectName(FTableMap.PrimaryKey.Name),
+    FConnection.GetDatabaseObjectName(FTableMap.Name)]);
 end;
 
 { TTSQLiteVersionSyntax }

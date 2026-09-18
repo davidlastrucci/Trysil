@@ -32,7 +32,7 @@ type
 
   TTAbstractSessionTests = class(TTAbstractBaseTests)
   strict protected
-    procedure ClearTables; override;
+    procedure DeleteTables; override;
   public
     [Test]
     procedure SessionEntitiesAreClones;
@@ -69,16 +69,70 @@ type
 
     [Test]
     procedure SessionFromLazyListInvalidatesAfterApply;
+
+    [Test]
+    procedure ASessionKeepsApartTwoEntitiesThatCompareEqual;
+
+    [Test]
+    procedure AnEntityInsertedByTheSessionIsNoLongerNew;
   end;
 
 implementation
 
 { TTAbstractSessionTests }
 
-procedure TTAbstractSessionTests.ClearTables;
+procedure TTAbstractSessionTests.DeleteTables;
 begin
   inherited;
   Connection.Execute('DELETE FROM NullablePrimitives');
+end;
+
+procedure TTAbstractSessionTests.ASessionKeepsApartTwoEntitiesThatCompareEqual;
+var
+  LFirst: TTestValueCustomer;
+  LSecond: TTestValueCustomer;
+  LList: TTList<TTestValueCustomer>;
+  LSession: TTSession<TTestValueCustomer>;
+begin
+  LFirst := FContext.CreateEntity<TTestValueCustomer>();
+  LFirst.Name := 'Twin';
+  FContext.Insert<TTestValueCustomer>(LFirst);
+
+  LSecond := FContext.CreateEntity<TTestValueCustomer>();
+  LSecond.Name := 'Twin';
+  FContext.Insert<TTestValueCustomer>(LSecond);
+
+  LList := TTList<TTestValueCustomer>.Create;
+  try
+    FContext.SelectAll<TTestValueCustomer>(LList);
+    Assert.AreEqual<Integer>(2, LList.Count, 'Precondition: two rows');
+
+    LSession := FContext.CreateSession<TTestValueCustomer>(LList);
+    try
+      Assert.AreEqual<Integer>(
+        2,
+        LSession.Entities.Count,
+        'The session keys three dictionaries on the entity itself, and the ' +
+        'default comparer for a class calls the virtual Equals of the ' +
+        'object: two rows an application compares by value, which is ' +
+        'legitimate, collapsed onto one key');
+      Assert.AreEqual<TTPrimaryKey>(
+        LSession.Entities[0].ID,
+        LSession.GetOriginalEntity(LSession.Entities[0]).ID,
+        'And each clone still names the row it was made from');
+      Assert.AreEqual<TTPrimaryKey>(
+        LSession.Entities[1].ID,
+        LSession.GetOriginalEntity(LSession.Entities[1]).ID,
+        'And each clone still names the row it was made from');
+      Assert.IsFalse(
+        LSession.Entities[0].ID = LSession.Entities[1].ID,
+        'which is only worth checking because the two are two rows');
+    finally
+      LSession.Free;
+    end;
+  finally
+    LList.Free;
+  end;
 end;
 
 procedure TTAbstractSessionTests.SessionEntitiesAreClones;
@@ -508,6 +562,41 @@ begin
   finally
     LFreshContext.Free;
   end;
+end;
+
+procedure TTAbstractSessionTests.AnEntityInsertedByTheSessionIsNoLongerNew;
+var
+  LList: TTList<TTestCustomer>;
+  LSession: TTSession<TTestCustomer>;
+  LNewCustomer: TTestCustomer;
+  LCount: Int64;
+begin
+  LList := TTList<TTestCustomer>.Create;
+  try
+    FContext.SelectAll<TTestCustomer>(LList);
+    LSession := FContext.CreateSession<TTestCustomer>(LList);
+    try
+      LNewCustomer := FContext.CreateEntity<TTestCustomer>();
+      LNewCustomer.Name := 'InsertedByTheSession';
+      LNewCustomer.Email := 'session-insert@example.com';
+      LSession.Insert(LNewCustomer);
+      LSession.ApplyChanges;
+
+      LNewCustomer.Name := 'ChangedAfterApply';
+      FContext.Save<TTestCustomer>(LNewCustomer);
+    finally
+      LSession.Free;
+    end;
+  finally
+    LList.Free;
+  end;
+
+  LCount := FContext.SelectCount<TTestCustomer>(TTFilter.Empty);
+  Assert.AreEqual<Int64>(
+    1,
+    LCount,
+    'ApplyChanges wrote the row, so the entity is no longer new: a Save ' +
+    'while the session is still alive must update it, not insert it twice');
 end;
 
 end.

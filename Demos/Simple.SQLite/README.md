@@ -13,7 +13,7 @@ A VCL desktop application demonstrating basic CRUD operations with Trysil and SQ
 ## Prerequisites
 
 - Delphi Community edition (or higher)
-- Trysil packages built (see [Setup](../../docs/Setup.md))
+- Trysil packages built (see [Installation](../../docs/getting-started/installation.md))
 
 ## Setup
 

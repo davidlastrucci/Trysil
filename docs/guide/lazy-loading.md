@@ -49,9 +49,10 @@ end;
 ### Behavior
 
 - The related entity is loaded on the first access to `.Entity`. Subsequent accesses return the cached instance.
-- Setting `.Entity` to a different object updates the internal foreign key ID and frees the previous entity (unless the identity map is active).
-- **Assignment does not transfer ownership.** Without the identity map, `.Entity := AValue` stores a *clone* of the assigned entity: the lazy field owns its copy and the caller keeps owning the instance it passed in, so neither is freed twice. With the identity map active the instance is shared, because the map owns it.
-- When the `ID` property on the lazy field changes, the cached entity is cleared and will be reloaded on next access.
+- Setting `.Entity` to a different object updates the internal foreign key ID and frees the previous entity (unless the identity map holds entities of its type).
+- **Assignment does not transfer ownership.** Without the identity map, `.Entity := AValue` stores a *clone* of the assigned entity: the lazy field owns its copy and the caller keeps owning the instance it passed in, so neither is freed twice. With the identity map active and a type with a primary key and no `[TJoin]`, the lazy field keeps the instance itself, whatever it is, because the map would hold an entity of that type (a type with joins or without a key is cloned as above): assign only an entity the context read or created, which the map does own. A clone from `CloneEntity` or `OldEntity`, a row of a raw select or an object you built yourself is kept as it is and freed by nobody, and if you free it the lazy field is left on freed memory. An entity someone else frees does the same with nothing you do: a clone a `TTSession<T>` holds in `Entities`, or the `OldEntity` property of an event, leaves the lazy field on freed memory as soon as the session or the event is destroyed. It is a declared limit of this release. [Who frees what](context.md#who-frees-what) has every case.
+- **A value read through the lazy field goes with the entity it replaces.** Without the identity map, or for a type the map does not hold, `LNext := E.Manager.Entity.Manager.Entity; E.Manager.Entity := LNext` stores a clone of `LNext` and then frees the old manager, and `LNext` with it: it belonged to the old manager's lazy member, not to you. After the assignment read `E.Manager.Entity` again, not `LNext`.
+- When the `ID` property on the lazy field changes, the cached entity is cleared and will be reloaded on next access. When the identity map does not hold its type it is also **freed**, so a pointer to it read before is dangling.
 - **Soft-deleted parents resolve.** The lazy load uses `Get<T>(ID, True)`, so a parent that has been soft-deleted still resolves through its foreign key — a child referencing a logically deleted master is not left with a dangling `nil` reference.
 
 ### IsLoaded
@@ -134,7 +135,7 @@ end;
 
 - **Context lifetime** -- Both `TTLazy<T>` and `TTLazyList<T>` hold a reference to the owning `TTContext`. The context must remain alive for as long as lazy fields may be accessed. Accessing a lazy field after the context is freed will cause an access violation.
 
-- **Identity map interaction** -- When `UseIdentityMap` is `True`, lazy-loaded entities are not freed by the lazy wrapper (the identity map owns them). When `UseIdentityMap` is `False`, the lazy wrapper owns and frees loaded entities on destruction or when the ID changes.
+- **Identity map interaction** -- An entity assigned through `.Entity` follows the rule under [Behavior](#behavior). When `UseIdentityMap` is `True` and the type has a primary key and no `[TJoin]`, lazy-loaded entities are not freed by the lazy wrapper (the identity map owns them); any other type the wrapper frees as without the map. When `UseIdentityMap` is `False`, the lazy wrapper owns and frees loaded entities on destruction or when the ID changes.
 
 - **Used with TRelation** -- Lazy loading is typically combined with the `TRelation` attribute on the parent entity class to declare the referential integrity constraint:
 

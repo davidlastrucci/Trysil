@@ -19,6 +19,7 @@ uses
   Trysil.Data.FireDAC.ConnectionPool,
   Trysil.Data.FireDAC.PostgreSQL,
 
+  Trysil.Tests.VendorLibrary,
   Trysil.Tests.Config;
 
 type
@@ -74,6 +75,8 @@ const
     ' ID INT NOT NULL,' +
     ' Title VARCHAR(100),' +
     ' VersionID INT NOT NULL,' +
+    ' UpdatedAt TIMESTAMP NULL,' +
+    ' UpdatedBy VARCHAR(100),' +
     ' DeletedAt TIMESTAMP NULL,' +
     ' DeletedBy VARCHAR(100),' +
     ' PRIMARY KEY(ID))';
@@ -126,6 +129,7 @@ const
     ' UniqueID UUID NOT NULL,' +
     ' Payload BYTEA NOT NULL,' +
     ' Price decimal(19,4) NOT NULL,' +
+    ' Notes text NULL,' +
     ' OptLargeNumber BIGINT NULL,' +
     ' OptIsActive BOOLEAN NULL,' +
     ' OptBirthDate TIMESTAMP NULL,' +
@@ -177,25 +181,25 @@ end;
 class procedure TTPostgreSQLTestConnection.CreateSequences;
 begin
   FConnection.Execute(
-    'CREATE SEQUENCE CustomersID START 1');
+    'CREATE SEQUENCE CustomersID AS integer START 1');
   FConnection.Execute(
-    'CREATE SEQUENCE CountriesID START 1');
+    'CREATE SEQUENCE CountriesID AS integer START 1');
   FConnection.Execute(
-    'CREATE SEQUENCE OrdersID START 1');
+    'CREATE SEQUENCE OrdersID AS integer START 1');
   FConnection.Execute(
-    'CREATE SEQUENCE TasksID START 1');
+    'CREATE SEQUENCE TasksID AS integer START 1');
   FConnection.Execute(
-    'CREATE SEQUENCE TrackedUsersID START 1');
+    'CREATE SEQUENCE TrackedUsersID AS integer START 1');
   FConnection.Execute(
-    'CREATE SEQUENCE ValidatedItemsID START 1');
+    'CREATE SEQUENCE ValidatedItemsID AS integer START 1');
   FConnection.Execute(
-    'CREATE SEQUENCE FullValidationID START 1');
+    'CREATE SEQUENCE FullValidationID AS integer START 1');
   FConnection.Execute(
-    'CREATE SEQUENCE SimpleItemsID START 1');
+    'CREATE SEQUENCE SimpleItemsID AS integer START 1');
   FConnection.Execute(
-    'CREATE SEQUENCE AllTypesID START 1');
+    'CREATE SEQUENCE AllTypesID AS integer START 1');
   FConnection.Execute(
-    'CREATE SEQUENCE NullablePrimitivesID START 1');
+    'CREATE SEQUENCE NullablePrimitivesID AS integer START 1');
 end;
 
 class procedure TTPostgreSQLTestConnection.CreateTables;
@@ -217,6 +221,7 @@ var
   LPort: Integer;
 begin
   TTFireDACConnectionPool.Instance.Config.Enabled := False;
+  TTTestVendorLibrary.Apply('PostgreSQL', TTPostgreSQLConnection.Driver);
   LPort := StrToIntDef(
     TTTestConfig.GetDatabaseParam('PostgreSQL', 'port'), 5432);
   TTPostgreSQLConnection.RegisterConnection(

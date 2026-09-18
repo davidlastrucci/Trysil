@@ -105,6 +105,7 @@ type
     FEvent: TEvent;
 
     procedure Log(const AItem: TTLoggerItem);
+    procedure DrainQueue;
 
     procedure SetTerminated;
 
@@ -136,7 +137,7 @@ type
     constructor Create; virtual;
     destructor Destroy; override;
 
-    procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
 
     procedure AddLog(const AItem: TTLoggerItem);
   end;
@@ -156,6 +157,7 @@ type
     const DefaultThreadPoolSize: Integer = 1;
   strict private
     FThreads: TTLoggerThreads;
+    FEnabled: Boolean;
 
     procedure Log(const AItem: TTLoggerItem);
   public
@@ -171,10 +173,13 @@ type
       const AValue: String);
     procedure LogSyntax(const AConnectionID: String; const ASyntax: String);
     procedure LogCommand(const AConnectionID: String; const ASyntax: String);
+    procedure LogError(const AConnectionID: String; const AMessage: String);
 
     procedure RegisterLogger<T: TTLoggerThread>(); overload;
     procedure RegisterLogger<T: TTLoggerThread>(
       const AThreadPoolSize: Integer); overload;
+
+    property Enabled: Boolean read FEnabled;
 
     class property Instance: TTLogger read FInstance;
   end;
@@ -269,21 +274,21 @@ begin
   FLoggerMethods := TDictionary<TTLoggerEvent, TTLoggerMethod>.Create;
   FQueue := TTLoggerQueue.Create;
   FEvent := TEvent.Create;
+  RegisterMethods;
 end;
 
 destructor TTLoggerThread.Destroy;
 begin
-  SetTerminated();
   FEvent.Free;
   FQueue.Free;
   FLoggerMethods.Free;
   inherited Destroy;
 end;
 
-procedure TTLoggerThread.AfterConstruction;
+procedure TTLoggerThread.BeforeDestruction;
 begin
-  inherited AfterConstruction;
-  RegisterMethods;
+  SetTerminated();
+  inherited BeforeDestruction;
 end;
 
 procedure TTLoggerThread.AddLog(const AItem: TTLoggerItem);
@@ -307,22 +312,13 @@ procedure TTLoggerThread.Execute;
 const
   Timeout: Cardinal = 5000;
 begin
-  while (not Terminated) or (not FQueue.IsEmpty) do
+  while not Terminated do
   begin
-    while not FQueue.IsEmpty do
-    begin
-      try
-        Log(FQueue.Dequeue);
-      except
-        // Thread should not crash in case of exception
-      end;
-    end;
+    FEvent.ResetEvent;
+    DrainQueue();
 
     if not Terminated then
-    begin
-      FEvent.ResetEvent;
       FEvent.WaitFor(Timeout);
-    end;
   end;
 end;
 
@@ -369,11 +365,25 @@ begin
     LLoggerMethod(AItem);
 end;
 
+procedure TTLoggerThread.DrainQueue;
+begin
+  while not FQueue.IsEmpty do
+  try
+    Log(FQueue.Dequeue);
+  except
+    // Thread should not crash in case of exception
+  end;
+end;
+
 procedure TTLoggerThread.SetTerminated;
 begin
+  FreeOnTerminate := False;
   Terminate();
   FEvent.SetEvent;
+  if Suspended then
+    Suspended := False;
   WaitFor();
+  DrainQueue();
 end;
 
 { TTLogger }
@@ -386,12 +396,14 @@ end;
 class destructor TTLogger.ClassDestroy;
 begin
   FInstance.Free;
+  FInstance := nil;
 end;
 
 constructor TTLogger.Create;
 begin
   inherited Create;
   FThreads := TTLoggerThreads.Create;
+  FEnabled := False;
 end;
 
 destructor TTLogger.Destroy;
@@ -404,41 +416,57 @@ procedure TTLogger.Log(const AItem: TTLoggerItem);
 var
   LThread: TTLoggerThread;
 begin
-  LThread := FThreads.Next;
-  if Assigned(LThread) then
-    LThread.AddLog(AItem);
+  if FEnabled then
+  begin
+    LThread := FThreads.Next;
+    if Assigned(LThread) then
+      LThread.AddLog(AItem);
+  end;
 end;
 
 procedure TTLogger.LogStartTransaction(const AConnectionID: String);
 begin
-  Log(TTLoggerItem.Create(AConnectionID, TTLoggerEvent.StartTransaction));
+  if FEnabled then
+    Log(TTLoggerItem.Create(AConnectionID, TTLoggerEvent.StartTransaction));
 end;
 
 procedure TTLogger.LogCommit(const AConnectionID: String);
 begin
-  Log(TTLoggerItem.Create(AConnectionID, TTLoggerEvent.Commit));
+  if FEnabled then
+    Log(TTLoggerItem.Create(AConnectionID, TTLoggerEvent.Commit));
 end;
 
 procedure TTLogger.LogRollback(const AConnectionID: String);
 begin
-  Log(TTLoggerItem.Create(AConnectionID, TTLoggerEvent.Rollback));
+  if FEnabled then
+    Log(TTLoggerItem.Create(AConnectionID, TTLoggerEvent.Rollback));
 end;
 
 procedure TTLogger.LogParameter(
   const AConnectionID: String; const AName: String; const AValue: String);
 begin
-  Log(TTLoggerItem.Create(
-    AConnectionID, TTLoggerEvent.Parameter, [AName, AValue]));
+  if FEnabled then
+    Log(TTLoggerItem.Create(
+      AConnectionID, TTLoggerEvent.Parameter, [AName, AValue]));
 end;
 
 procedure TTLogger.LogSyntax(const AConnectionID: String; const ASyntax: String);
 begin
-  Log(TTLoggerItem.Create(AConnectionID, TTLoggerEvent.Syntax, ASyntax));
+  if FEnabled then
+    Log(TTLoggerItem.Create(AConnectionID, TTLoggerEvent.Syntax, ASyntax));
 end;
 
 procedure TTLogger.LogCommand(const AConnectionID: String; const ASyntax: String);
 begin
-  Log(TTLoggerItem.Create(AConnectionID, TTLoggerEvent.Command, ASyntax));
+  if FEnabled then
+    Log(TTLoggerItem.Create(AConnectionID, TTLoggerEvent.Command, ASyntax));
+end;
+
+procedure TTLogger.LogError(
+  const AConnectionID: String; const AMessage: String);
+begin
+  if FEnabled then
+    Log(TTLoggerItem.Create(AConnectionID, TTLoggerEvent.Error, AMessage));
 end;
 
 procedure TTLogger.RegisterLogger<T>;
@@ -454,6 +482,7 @@ begin
       result := T.Create;
     end,
     AThreadPoolSize);
+  FEnabled := True;
 end;
 
 end.

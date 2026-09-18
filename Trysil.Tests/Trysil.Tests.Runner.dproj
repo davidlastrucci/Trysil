@@ -211,10 +211,14 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="Trysil.Tests.Config.pas"/>
+        <DCCReference Include="Trysil.Tests.Configuration.pas"/>
+        <DCCReference Include="Trysil.Tests.VendorLibrary.pas"/>
         <DCCReference Include="Trysil.Tests.Types.pas"/>
         <DCCReference Include="Trysil.Tests.Data.Parameters.pas"/>
         <DCCReference Include="Trysil.Tests.Data.ConnectionPool.pas"/>
         <DCCReference Include="Trysil.Tests.IdentityMap.pas"/>
+        <DCCReference Include="Trysil.Tests.Validation.pas"/>
+        <DCCReference Include="Trysil.Tests.JSon.Values.pas"/>
         <DCCReference Include="Trysil.Tests.Mapping.pas"/>
         <DCCReference Include="Trysil.Tests.Filter.pas"/>
         <DCCReference Include="Trysil.Tests.Model.pas"/>
@@ -232,13 +236,20 @@
         <DCCReference Include="Abstract\Trysil.Tests.Abstract.ContextApi.pas"/>
         <DCCReference Include="Abstract\Trysil.Tests.Abstract.UpdateMode.pas"/>
         <DCCReference Include="Trysil.Tests.Http.Exceptions.pas"/>
+        <DCCReference Include="Trysil.Tests.Cache.pas"/>
+        <DCCReference Include="Trysil.Tests.LoadBalancing.pas"/>
         <DCCReference Include="Trysil.Tests.Http.JWT.pas"/>
+        <DCCReference Include="Trysil.Tests.Http.Authentication.pas"/>
         <DCCReference Include="Trysil.Tests.Http.JWT.RS256.pas"/>
         <DCCReference Include="Trysil.Tests.Http.Uri.pas"/>
+        <DCCReference Include="Trysil.Tests.Http.Language.pas"/>
         <DCCReference Include="Trysil.Tests.Http.Log.pas"/>
         <DCCReference Include="Trysil.Tests.Http.Filter.pas"/>
         <DCCReference Include="Trysil.Tests.Http.MultiTenant.pas"/>
+        <DCCReference Include="Trysil.Tests.Http.Harness.pas"/>
+        <DCCReference Include="Trysil.Tests.Http.Server.pas"/>
         <DCCReference Include="Trysil.Tests.Logger.pas"/>
+        <DCCReference Include="Trysil.Tests.SqlServerParams.pas"/>
         <DCCReference Include="Abstract\Trysil.Tests.Abstract.JSon.pas"/>
         <DCCReference Include="Abstract\Trysil.Tests.Abstract.AllTypes.pas"/>
         <DCCReference Include="Abstract\Trysil.Tests.Abstract.AllTypesJSon.pas"/>
@@ -252,6 +263,10 @@
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.Join.pas"/>
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.Session.pas"/>
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.Transaction.pas"/>
+        <DCCReference Include="SQLite\Trysil.Tests.SQLite.CommitFailure.pas"/>
+        <DCCReference Include="SQLite\Trysil.Tests.SQLite.SequenceCeiling.pas"/>
+        <DCCReference Include="SQLite\Trysil.Tests.SQLite.HttpFilter.pas"/>
+        <DCCReference Include="SQLite\Trysil.Tests.SQLite.JSonReentrance.pas"/>
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.Lazy.pas"/>
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.Events.pas"/>
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.Relation.pas"/>
@@ -262,6 +277,7 @@
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.AllTypesJSon.pas"/>
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.NullablePrimitives.pas"/>
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.NullablePrimitivesJSon.pas"/>
+        <DCCReference Include="SQLite\Trysil.Tests.SQLite.SqlSyntax.pas"/>
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.Register.pas"/>
         <DCCReference Include="SqlServer\Trysil.Tests.SqlServer.Connection.pas"/>
         <DCCReference Include="SqlServer\Trysil.Tests.SqlServer.Crud.pas"/>
@@ -281,6 +297,8 @@
         <DCCReference Include="SqlServer\Trysil.Tests.SqlServer.AllTypesJSon.pas"/>
         <DCCReference Include="SqlServer\Trysil.Tests.SqlServer.NullablePrimitives.pas"/>
         <DCCReference Include="SqlServer\Trysil.Tests.SqlServer.NullablePrimitivesJSon.pas"/>
+        <DCCReference Include="SqlServer\Trysil.Tests.SqlServer.Params.pas"/>
+        <DCCReference Include="SqlServer\Trysil.Tests.SqlServer.SchemaName.pas"/>
         <DCCReference Include="SqlServer\Trysil.Tests.SqlServer.Register.pas"/>
         <DCCReference Include="PostgreSQL\Trysil.Tests.PostgreSQL.Connection.pas"/>
         <DCCReference Include="PostgreSQL\Trysil.Tests.PostgreSQL.Crud.pas"/>
@@ -362,6 +380,7 @@
         <DCCReference Include="Oracle\Trysil.Tests.Oracle.Crud.pas"/>
         <DCCReference Include="Oracle\Trysil.Tests.Oracle.ChangeTracking.pas"/>
         <DCCReference Include="Oracle\Trysil.Tests.Oracle.IdentityMap.pas"/>
+        <DCCReference Include="Oracle\Trysil.Tests.Oracle.SqlSyntax.pas"/>
         <DCCReference Include="Oracle\Trysil.Tests.Oracle.Validation.pas"/>
         <DCCReference Include="Oracle\Trysil.Tests.Oracle.Join.pas"/>
         <DCCReference Include="Oracle\Trysil.Tests.Oracle.Session.pas"/>

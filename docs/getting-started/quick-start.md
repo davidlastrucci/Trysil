@@ -119,12 +119,14 @@ begin
     LPerson.Lastname := 'Lastrucci';
     LContext.Insert<TPerson>(LPerson);
   finally
-    LPerson.Free;
+    LContext.FreeEntity<TPerson>(LPerson);
   end;
 end;
 ```
 
 `CreateEntity<T>` allocates a new instance. `Insert<T>` validates the entity and executes the INSERT statement. The primary key is assigned automatically from the sequence.
+
+Free entities with `FreeEntity<T>` rather than `Free`. A context created without arguments keeps an [identity map](../guide/identity-map.md), which **owns** the entities it holds: `LPerson.Free` there is a double free the moment the context goes down. `FreeEntity<T>` frees an entity the context read or created when the caller owns it, and does nothing when the map does. A clone is freed with `FreeClone<T>` instead: see [who frees what](../guide/context.md#who-frees-what).
 
 ### Read All
 
@@ -135,7 +137,7 @@ uses
 var
   LPersons: TTList<TPerson>;
 begin
-  LPersons := TTList<TPerson>.Create;
+  LPersons := LContext.CreateEntityList<TPerson>();
   try
     LContext.SelectAll<TPerson>(LPersons);
 
@@ -157,7 +159,7 @@ begin
   try
     ShowMessage(Format('%s %s', [LPerson.Firstname, LPerson.Lastname]));
   finally
-    LPerson.Free;
+    LContext.FreeEntity<TPerson>(LPerson);
   end;
 end;
 ```
@@ -186,7 +188,7 @@ var
   LFilter: TTFilter;
   LPersons: TTList<TPerson>;
 begin
-  LPersons := TTList<TPerson>.Create;
+  LPersons := LContext.CreateEntityList<TPerson>();
   try
     LFilter := LContext.CreateFilterBuilder<TPerson>()
       .Where('Lastname').Equal('Lastrucci')
@@ -224,5 +226,5 @@ LFilter := LContext.CreateFilterBuilder<TPerson>()
 - Entity fields **must** be `strict private` with Trysil attributes. The ORM accesses them via RTTI.
 - `TTPrimaryKey` is `Int32`. Trysil supports single-integer primary keys only.
 - `TTVersion` is `Int32`. Every table should have a version column for optimistic locking.
-- Use `TTList<T>` from `Trysil.Generics.Collections` for owned object lists.
+- Build entity lists with `LContext.CreateEntityList<T>` and free entities with `LContext.FreeEntity<T>`. `TTList<T>` on its own owns nothing - the owning list is `TTObjectList<T>`, and `CreateEntityList<T>` picks the right ownership for the context it comes from.
 - Always free entities, lists, contexts, and connections in the correct order.

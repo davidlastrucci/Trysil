@@ -30,7 +30,7 @@ type
 
   TTAbstractAllTypesTests = class(TTAbstractBaseTests)
   strict protected
-    procedure ClearTables; override;
+    procedure DeleteTables; override;
   public
     [Setup]
     procedure Setup; override;
@@ -40,6 +40,9 @@ type
 
     [Test]
     procedure InsertAndGetRoundTripsAllNonNullableFields;
+
+    [Test]
+    procedure AnInt64KeepsItsPrecisionBeyondFiftyThreeBits;
 
     [Test]
     procedure InsertAndGetRoundTripsAllNullableFields;
@@ -58,6 +61,9 @@ type
 
     [Test]
     procedure CurrencyRoundTripKeepsFourDecimals;
+
+    [Test]
+    procedure ATextLobKeepsWhatWouldNotFitInAVarchar;
   end;
 
 implementation
@@ -68,7 +74,7 @@ const
 
 { TTAbstractAllTypesTests }
 
-procedure TTAbstractAllTypesTests.ClearTables;
+procedure TTAbstractAllTypesTests.DeleteTables;
 begin
   inherited;
   Connection.Execute('DELETE FROM AllTypes');
@@ -82,6 +88,29 @@ end;
 procedure TTAbstractAllTypesTests.TearDown;
 begin
   inherited;
+end;
+
+procedure TTAbstractAllTypesTests.AnInt64KeepsItsPrecisionBeyondFiftyThreeBits;
+const
+  BeyondDoublePrecision = Int64(9007199254740993);
+var
+  LEntity: TTestAllTypes;
+  LLoaded: TTestAllTypes;
+begin
+  LEntity := FContext.CreateEntity<TTestAllTypes>();
+  LEntity.LargeNumber := BeyondDoublePrecision;
+  LEntity.Price := 0;
+  FContext.Insert<TTestAllTypes>(LEntity);
+
+  LLoaded := FContext.Get<TTestAllTypes>(LEntity.ID);
+
+  Assert.AreEqual<Int64>(
+    BeyondDoublePrecision,
+    LLoaded.LargeNumber,
+    'This is 2^53 + 1, the first whole number a Double cannot tell from ' +
+    'its neighbour. Where the column is decimal rather than BIGINT - ' +
+    'NUMERIC(18,0) on InterBase, NUMBER(19) on Oracle - the parameter used ' +
+    'to travel as a Double and came back one short');
 end;
 
 procedure TTAbstractAllTypesTests.InsertAndGetRoundTripsAllNonNullableFields;
@@ -151,6 +180,37 @@ begin
   Assert.AreEqual<Integer>(2, Length(LLoaded.OptPayload.GetValueOrDefault));
   Assert.IsFalse(LLoaded.OptPrice.IsNull);
   Assert.AreEqual<Currency>(-19.9999, LLoaded.OptPrice.GetValueOrDefault);
+end;
+
+procedure TTAbstractAllTypesTests.ATextLobKeepsWhatWouldNotFitInAVarchar;
+const
+  LobLength = 8000;
+var
+  LNotes: String;
+  LEntity: TTestAllTypes;
+  LLoaded: TTestAllTypes;
+begin
+  LNotes := StringOfChar('T', LobLength);
+
+  LEntity := FContext.CreateEntity<TTestAllTypes>();
+  LEntity.LargeNumber := 0;
+  LEntity.IsActive := False;
+  LEntity.BirthDate := Now;
+  LEntity.UniqueID := GUID_ONE;
+  LEntity.Payload := TBytes.Create($00);
+  LEntity.Notes := LNotes;
+  FContext.Insert<TTestAllTypes>(LEntity);
+
+  LLoaded := FContext.Get<TTestAllTypes>(LEntity.ID);
+  Assert.AreEqual<Integer>(
+    LobLength,
+    LLoaded.Notes.Length,
+    'The parameter was declared with the type the metadata gives - ftMemo ' +
+    'for a CLOB, a TEXT or an nvarchar(max) - and then AsString wrote it ' +
+    'back to ftString, because FireDAC keeps the declared type only for ' +
+    'the four character types. So the value left as an ordinary string, ' +
+    'and on Oracle an ordinary string bind stops at 4000 bytes');
+  Assert.AreEqual(LNotes, LLoaded.Notes);
 end;
 
 procedure TTAbstractAllTypesTests.NullableFieldsDefaultToNull;

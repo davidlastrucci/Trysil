@@ -9,16 +9,29 @@ Firebird is an open-source relational database with a small footprint, well-suit
 **Unit:** `Trysil.Data.FireDAC.FirebirdSQL`
 **Delphi Edition:** Community
 
+## Character set
+
+A database created with a Unicode default character set - `UTF8`, or `UNICODE_FSS` on older files - must be told to the connection:
+
+```pascal
+TTFirebirdSQLConnection.RegisterConnection(
+  'Main', 'localhost', 'SYSDBA', 'masterkey', 'C:\data\database.fdb', 'UTF8');
+```
+
+Without it the connection opens with no character set, and the server stops transliterating. Two things follow, and both are quiet. Text travels as raw bytes in each direction, so anything outside ASCII comes back changed. And the server stops counting **characters** in a `VARCHAR(n)`, counting the bytes behind it instead: a column declared for 100 characters accepts 300 ASCII ones on a UTF8 database, and the column metadata Trysil reads reports that width too, so the guard that refuses a string longer than its column has nothing to refuse.
+
+The parameter is optional and defaults to the previous behaviour, so an application that has been storing raw bytes keeps reading them back the same way. Declare it on a new database, or after checking what is really stored in an old one - `SELECT RDB$CHARACTER_SET_NAME FROM RDB$DATABASE` says what the database was created with.
+
 ## Setup
 
 ```pascal
 uses
   Trysil.Data.FireDAC.FirebirdSQL;
 
-TTFirebirdConnection.RegisterConnection(
+TTFirebirdSQLConnection.RegisterConnection(
   'Main', 'localhost', 'SYSDBA', 'masterkey', '/path/to/database.fdb');
 
-LConnection := TTFirebirdConnection.Create('Main');
+LConnection := TTFirebirdSQLConnection.Create('Main');
 try
   LContext := TTContext.Create(LConnection);
   try
@@ -33,13 +46,13 @@ end;
 
 ## Connection Pooling
 
-Enable connection pooling for server applications:
+Pooling is on by default. A desktop application holding a single connection can turn it off:
 
 ```pascal
 uses
   Trysil.Data.FireDAC.ConnectionPool;
 
-TTFireDACConnectionPool.Instance.Config.Enabled := True;
+TTFireDACConnectionPool.Instance.Config.Enabled := False;
 ```
 
 ## Sequences
@@ -50,10 +63,10 @@ Firebird uses database sequences (generators) for primary key generation:
 CREATE SEQUENCE PersonsID;
 ```
 
-The sequence value is retrieved using `NEXT VALUE FOR`:
+The sequence value is retrieved using `GEN_ID`:
 
 ```sql
-SELECT NEXT VALUE FOR PersonsID FROM RDB$DATABASE;
+SELECT GEN_ID("PERSONSID", 1) ID FROM RDB$DATABASE;
 ```
 
 Map it to the entity:

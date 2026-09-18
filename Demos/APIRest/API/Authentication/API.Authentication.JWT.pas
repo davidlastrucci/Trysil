@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright ï¿½ David Lastrucci
+  Copyright © David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -20,7 +20,8 @@ uses
   System.DateUtils,
   Trysil.Http.Exceptions,
   Trysil.Http.JWT,
-  Trysil.Http.JWT.Payload.HS256;
+  Trysil.Http.JWT.Payload.HS256,
+  API.Config;
 
 type
 
@@ -28,7 +29,9 @@ type
 
   TAPIJWTPayload = class(TTHttpJWTHS256Payload)
   strict private
-    const Secret: String ='958o77!9#37c9@447ï¿½%b142^557d5382B756';
+    const MinSecretLength = 32;
+    const LifetimeMinutes = 30;
+    const ClockSkewSeconds = 30;
   strict private
     FUsername: String;
     FAreas: TList<String>;
@@ -38,6 +41,8 @@ type
   public
     constructor Create;
     destructor Destroy; override;
+
+    class procedure CheckSecretIsConfigured; static;
 
     function IsValid: Boolean;
 
@@ -52,22 +57,33 @@ type
 
 resourcestring
   NotValidJSon = 'JWT: Payload is not a valid JSon value.';
+  SSecretNotConfigured = 'JWT secret not configured: set ' +
+    '"authentication.secret" in the configuration file, with at least ' +
+    '%d characters.';
 
 implementation
 
 { TAPIJWTPayload }
 
+class procedure TAPIJWTPayload.CheckSecretIsConfigured;
+begin
+  if TAPIConfig.Instance.Authentication.Secret.Length < MinSecretLength then
+    raise Exception.CreateFmt(SSecretNotConfigured, [MinSecretLength]);
+end;
+
 function TAPIJWTPayload.GetSecret: String;
 begin
-  result := Secret;
+  result := TAPIConfig.Instance.Authentication.Secret;
+  if result.Length < MinSecretLength then
+    raise Exception.CreateFmt(SSecretNotConfigured, [MinSecretLength]);
 end;
 
 function TAPIJWTPayload.IsValid: Boolean;
 var
-  LCurrentTime: Int64;
+  LNow: Int64;
 begin
-  LCurrentTime := Int64.Parse(FormatDateTime('yyyymmddhhnnss', now));
-  result := (FExpireTime > LCurrentTime);
+  LNow := DateTimeToUnix(Now, False);
+  result := (FExpireTime > LNow - ClockSkewSeconds);
 end;
 
 procedure TAPIJWTPayload.Assign(const APayload: TAPIJWTPayload);
@@ -111,7 +127,7 @@ begin
         if LArea is TJSonString then
           FAreas.Add(TJSonString(LArea).Value);
 
-    FExpireTime := LJSon.GetValue<Int64>('expireTime', 0);
+    FExpireTime := LJSon.GetValue<Int64>('exp', 0);
   finally
     LJSon.Free;
   end;
@@ -124,7 +140,7 @@ var
   LAreas: TJSonArray;
   LArea: String;
 begin
-  LExpireTime := IncMinute(now, 30);
+  LExpireTime := IncMinute(Now, LifetimeMinutes);
   LJSon := TJSonObject.Create;
   try
     LJSon.AddPair('username', FUsername);
@@ -140,9 +156,8 @@ begin
       raise;
     end;
 
-    LJSon.AddPair('expireTime',
-      TJSonNumber.Create(Int64.Parse(
-        FormatDateTime('yyyymmddhhnnss', LExpireTime))));
+    LJSon.AddPair(
+      'exp', TJSonNumber.Create(DateTimeToUnix(LExpireTime, False)));
 
     result := LJSon.ToJSon();
   finally

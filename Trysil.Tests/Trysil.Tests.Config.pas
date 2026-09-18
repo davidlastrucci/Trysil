@@ -24,15 +24,20 @@ type
     class var FEnabled: TDictionary<String, Boolean>;
     class var FParams: TDictionary<String, String>;
 
-    class function GetConfigFile: String;
     class procedure LoadConfig;
 
     class destructor ClassDestroy;
   public
     class procedure PrintConfig;
 
+    class function GetConfigFile: String;
+    class function EnabledDatabaseCount: Integer;
+
     class function IsDatabaseEnabled(
       const ADatabaseName: String): Boolean;
+
+    class function CharacterSetSuffix(
+      const ADatabaseName: String): String;
 
     class function GetDatabaseParam(
       const ADatabaseName: String;
@@ -55,9 +60,42 @@ begin
 end;
 
 class function TTTestConfig.GetConfigFile: String;
+const
+  ConfigFileName = 'Trysil.Tests.json';
+  MaxParentLevels = 4;
+var
+  LFolder: String;
+  LCandidate: String;
+  LLevel: Integer;
 begin
-  result := TPath.Combine(
-    ExtractFilePath(ParamStr(0)), 'Trysil.Tests.json');
+  result := String.Empty;
+  LFolder := ExtractFilePath(ParamStr(0));
+  LLevel := 0;
+  while result.IsEmpty and (LLevel <= MaxParentLevels) and
+    (not LFolder.IsEmpty) do
+  begin
+    LCandidate := TPath.Combine(LFolder, ConfigFileName);
+    if TFile.Exists(LCandidate) then
+      result := LCandidate
+    else
+    begin
+      LFolder := ExtractFilePath(ExcludeTrailingPathDelimiter(LFolder));
+      Inc(LLevel);
+    end;
+  end;
+end;
+
+class function TTTestConfig.EnabledDatabaseCount: Integer;
+var
+  LEnabled: Boolean;
+begin
+  if not Assigned(FEnabled) then
+    LoadConfig;
+
+  result := 0;
+  for LEnabled in FEnabled.Values do
+    if LEnabled then
+      Inc(result);
 end;
 
 class procedure TTTestConfig.LoadConfig;
@@ -86,7 +124,7 @@ begin
           for LDbPair in TJSONObject(LDatabases) do
             if LDbPair.JsonValue is TJSONObject then
             begin
-              LDbName := LDbPair.JsonString.Value.ToLower;
+              LDbName := LDbPair.JsonString.Value.ToLowerInvariant;
               LDbConfig := TJSONObject(LDbPair.JsonValue);
               LEnabledValue := LDbConfig.GetValue('enabled');
               if LEnabledValue is TJSONBool then
@@ -128,10 +166,23 @@ begin
   Writeln('-------------------------');
   for LPair in FEnabled do
     if LPair.Value then
-      Writeln(Format('  %s: enabled', [LPair.Key]))
+      Writeln(Format('  %s: enabled%s', [
+        LPair.Key, CharacterSetSuffix(LPair.Key)]))
     else
       Writeln(Format('  %s: disabled', [LPair.Key]));
   Writeln;
+end;
+
+class function TTTestConfig.CharacterSetSuffix(
+  const ADatabaseName: String): String;
+var
+  LCharacterSet: String;
+begin
+  result := String.Empty;
+  if FParams.TryGetValue(
+    Format('%s.characterset', [ADatabaseName]), LCharacterSet) then
+    if not LCharacterSet.IsEmpty then
+      result := Format(' (CharacterSet=%s)', [LCharacterSet]);
 end;
 
 class function TTTestConfig.IsDatabaseEnabled(
@@ -140,7 +191,8 @@ begin
   if not Assigned(FEnabled) then
     LoadConfig;
 
-  if not FEnabled.TryGetValue(ADatabaseName.ToLower, Result) then
+  if not FEnabled.TryGetValue(
+    ADatabaseName.ToLowerInvariant, Result) then
     result := False;
 end;
 
@@ -152,7 +204,9 @@ begin
     LoadConfig;
 
   if not FParams.TryGetValue(
-    Format('%s.%s', [ADatabaseName.ToLower, AParamName.ToLower]), result) then
+    Format('%s.%s', [
+      ADatabaseName.ToLowerInvariant,
+      AParamName.ToLowerInvariant]), result) then
     result := '';
 end;
 

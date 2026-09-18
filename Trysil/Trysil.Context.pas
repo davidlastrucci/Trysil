@@ -24,6 +24,7 @@ uses
   Trysil.Filter,
   Trysil.Generics.Collections,
   Trysil.Data,
+  Trysil.Mapping,
   Trysil.Metadata,
   Trysil.Provider,
   Trysil.Resolver,
@@ -40,17 +41,18 @@ type
 
   TTContext = class
   strict private
-    FNewEntityCache: TTNewEntityCache;
-
     procedure InternalApplyAll<T: class>(
       const AList: TTList<T>; const AApplyAllMethod: TTApplyAllMethod<T>);
 
     function GetInTransaction: Boolean;
     function GetSupportTransaction: Boolean;
     function GetUseIdentityMap: Boolean;
+    function GetLazyOwnerCount: Integer;
 
     function GetOnGetCurrentUser: TFunc<String>;
     procedure SetOnGetCurrentUser(const AValue: TFunc<String>);
+
+    procedure DisposedEntity(const AEntity: TObject);
   strict protected
     FReadConnection: TTConnection;
     FWriteConnection: TTConnection;
@@ -60,6 +62,7 @@ type
 
     function CreateResolver: TTResolver; virtual;
     function InLoading: Boolean; virtual;
+    procedure CheckSave; virtual;
   public
     constructor Create(const AConnection: TTConnection); overload; virtual;
     constructor Create(
@@ -75,8 +78,11 @@ type
     destructor Destroy; override;
 
     procedure AfterConstruction; override;
+    procedure BeforeDestruction; override;
 
-    function CreateDataset(const ASQL: String): TDataset;
+    function CreateDataset(const ASQL: String): TDataset; overload;
+    function CreateDataset(
+      const ASQL: String; const AFilter: TTFilter): TDataset; overload;
 
     function CreateEntity<T: class>(): T; overload;
     function CreateEntityList<T: class>(): TTList<T>;
@@ -94,14 +100,21 @@ type
     function CreateFilterBuilder<T: class>(): TTFilterBuilder<T>;
 
     function GetMetadata<T: class>(): TTTableMetadata;
+    function IdentityMapOwns(const ATableMap: TTTableMap): Boolean;
+    procedure FreeClone<T: class>(const AEntity: T);
+    function GetDatabaseObjectName(const AName: String): String;
 
-    function SelectCount<T: class>(const AFilter: TTFilter): Integer;
+    function SelectCount<T: class>(const AFilter: TTFilter): Int64;
     procedure SelectAll<T: class>(const AResult: TTList<T>);
     procedure Select<T: class>(
       const AResult: TTList<T>; const AFilter: TTFilter);
 
     procedure RawSelect<T: class>(
-      const ASQL: String; const AResult: TTList<T>);
+      const ASQL: String; const AResult: TTList<T>); overload;
+    procedure RawSelect<T: class>(
+      const ASQL: String;
+      const AFilter: TTFilter;
+      const AResult: TTList<T>); overload;
 
     function Get<T: class>(const AID: TTPrimaryKey): T; overload;
     function Get<T: class>(
@@ -110,9 +123,10 @@ type
       const AID: TTPrimaryKey; out AEntity: T): Boolean; overload;
     function TryGet<T: class>(
       const AID: TTPrimaryKey;
-      out AEntity: T;
-      const AIncludeDeleted: Boolean): Boolean; overload;
+      const AIncludeDeleted: Boolean;
+      out AEntity: T): Boolean; overload;
 
+    function TryRefresh<T: class>(const AEntity: T): Boolean;
     procedure Refresh<T: class>(const AEntity: T);
     function OldEntity<T: class>(const AEntity: T): T;
 
@@ -141,6 +155,7 @@ type
     property InTransaction: Boolean read GetInTransaction;
     property SupportTransaction: Boolean read GetSupportTransaction;
     property UseIdentityMap: Boolean read GetUseIdentityMap;
+    property LazyOwnerCount: Integer read GetLazyOwnerCount;
 
     property OnGetCurrentUser: TFunc<String>
       read GetOnGetCurrentUser write SetOnGetCurrentUser;
@@ -182,15 +197,12 @@ begin
   FProvider := TTProvider.Create(
     FReadConnection, Self, FMetadata, AUseIdentityMap);
   FResolver := CreateResolver;
-
-  FNewEntityCache := TTNewEntityCache.Create(FProvider);
 end;
 
 destructor TTContext.Destroy;
 begin
-  FNewEntityCache.Free;
-  FResolver.Free;
   FProvider.Free;
+  FResolver.Free;
   FMetadata.Free;
   inherited Destroy;
 end;
@@ -198,12 +210,25 @@ end;
 procedure TTContext.AfterConstruction;
 begin
   inherited AfterConstruction;
-  FWriteConnection.TransactionObserver := FNewEntityCache;
+  FWriteConnection.AddTransactionObserver(FProvider.NewEntityCache);
+end;
+
+procedure TTContext.BeforeDestruction;
+begin
+  if Assigned(FWriteConnection) then
+    FWriteConnection.RemoveTransactionObserver(FProvider.NewEntityCache);
+  inherited BeforeDestruction;
 end;
 
 function TTContext.CreateDataset(const ASQL: String): TDataset;
 begin
   result := FProvider.CreateDataset(ASQL);
+end;
+
+function TTContext.CreateDataset(
+  const ASQL: String; const AFilter: TTFilter): TDataset;
+begin
+  result := FProvider.CreateDataset(ASQL, AFilter);
 end;
 
 function TTContext.CreateResolver: TTResolver;
@@ -214,6 +239,11 @@ end;
 function TTContext.InLoading: Boolean;
 begin
   result := False;
+end;
+
+procedure TTContext.CheckSave;
+begin
+  // A context that creates the entities it writes can answer the question
 end;
 
 function TTContext.GetInTransaction: Boolean;
@@ -231,6 +261,11 @@ begin
   result := FProvider.UseIdentityMap;
 end;
 
+function TTContext.GetLazyOwnerCount: Integer;
+begin
+  result := FProvider.LazyOwnerCount;
+end;
+
 function TTContext.GetOnGetCurrentUser: TFunc<String>;
 begin
   result := FResolver.OnGetCurrentUser;
@@ -244,12 +279,38 @@ end;
 function TTContext.CreateEntity<T>(): T;
 begin
   result := FProvider.CreateEntity<T>(InLoading);
-  FNewEntityCache.Add<T>(result);
+  if not InLoading then
+    FProvider.NewEntityCache.Add(result);
+end;
+
+function TTContext.IdentityMapOwns(const ATableMap: TTTableMap): Boolean;
+begin
+  result := FProvider.IdentityMapOwns(ATableMap);
 end;
 
 function TTContext.CreateEntityList<T>: TTList<T>;
+var
+  LResult: TTObjectList<T>;
 begin
-  result := TTObjectList<T>.Create(not FProvider.UseIdentityMap);
+  LResult := TTObjectList<T>.Create(
+    not IdentityMapOwns(TTMapper.Instance.Load<T>()));
+  LResult.OnDisposeItem := DisposedEntity;
+  result := LResult;
+end;
+
+procedure TTContext.DisposedEntity(const AEntity: TObject);
+begin
+  FResolver.DisposedEntity(AEntity);
+  FProvider.DisposedEntity(AEntity);
+end;
+
+procedure TTContext.FreeClone<T>(const AEntity: T);
+begin
+  if Assigned(AEntity) then
+  begin
+    DisposedEntity(AEntity);
+    AEntity.Free;
+  end;
 end;
 
 function TTContext.CloneEntity<T>(const AEntity: T): T;
@@ -259,8 +320,11 @@ end;
 
 procedure TTContext.FreeEntity<T>(const AEntity: T);
 begin
-  if not FProvider.UseIdentityMap then
+  if not IdentityMapOwns(TTMapper.Instance.Load<T>()) then
+  begin
+    DisposedEntity(AEntity);
     AEntity.Free;
+  end;
 end;
 
 function TTContext.CreateTransaction: TTTransaction;
@@ -302,7 +366,12 @@ begin
   result := FProvider.GetMetadata<T>();
 end;
 
-function TTContext.SelectCount<T>(const AFilter: TTFilter): Integer;
+function TTContext.GetDatabaseObjectName(const AName: String): String;
+begin
+  result := FReadConnection.GetDatabaseObjectName(AName);
+end;
+
+function TTContext.SelectCount<T>(const AFilter: TTFilter): Int64;
 begin
   result := FProvider.SelectCount<T>(AFilter);
 end;
@@ -324,6 +393,14 @@ begin
   FProvider.RawSelect<T>(ASQL, AResult);
 end;
 
+procedure TTContext.RawSelect<T>(
+  const ASQL: String;
+  const AFilter: TTFilter;
+  const AResult: TTList<T>);
+begin
+  FProvider.RawSelect<T>(ASQL, AFilter, AResult);
+end;
+
 function TTContext.Get<T>(const AID: TTPrimaryKey): T;
 begin
   result := Get<T>(AID, False);
@@ -337,16 +414,21 @@ end;
 
 function TTContext.TryGet<T>(const AID: TTPrimaryKey; out AEntity: T): Boolean;
 begin
-  result := TryGet<T>(AID, AEntity, False);
+  result := TryGet<T>(AID, False, AEntity);
 end;
 
 function TTContext.TryGet<T>(
   const AID: TTPrimaryKey;
-  out AEntity: T;
-  const AIncludeDeleted: Boolean): Boolean;
+  const AIncludeDeleted: Boolean;
+  out AEntity: T): Boolean;
 begin
   AEntity := Get<T>(AID, AIncludeDeleted);
   result := Assigned(AEntity);
+end;
+
+function TTContext.TryRefresh<T>(const AEntity: T): Boolean;
+begin
+  result := FProvider.TryRefresh<T>(AEntity);
 end;
 
 procedure TTContext.Refresh<T>(const AEntity: T);
@@ -358,9 +440,18 @@ function TTContext.OldEntity<T>(const AEntity: T): T;
 begin
   result := CloneEntity<T>(AEntity);
   try
-    Refresh<T>(result);
+    if not TryRefresh<T>(result) then
+    begin
+      DisposedEntity(result);
+      FreeAndNil(result);
+    end;
   except
-    result.Free;
+    if Assigned(result) then
+    begin
+      DisposedEntity(result);
+      result.Free;
+      result := default(T);
+    end;
     raise;
   end;
 end;
@@ -386,7 +477,8 @@ end;
 
 procedure TTContext.Save<T>(const AEntity: T);
 begin
-  if FNewEntityCache.Contains<T>(AEntity) then
+  CheckSave;
+  if FProvider.NewEntityCache.Contains(AEntity) then
     Insert<T>(AEntity)
   else
     Update<T>(AEntity);
@@ -404,7 +496,7 @@ end;
 procedure TTContext.Insert<T>(const AEntity: T);
 begin
   FResolver.Insert<T>(AEntity);
-  FNewEntityCache.Remove<T>(AEntity);
+  FProvider.NewEntityCache.Remove(AEntity);
 end;
 
 procedure TTContext.InsertAll<T>(const AList: TTList<T>);

@@ -105,10 +105,7 @@ procedure TTHttpLogQueue.Enqueue(const AError: TTHttpLogError);
 begin
   FCriticalSection.Enter;
   try
-    if CanEnqueue then
-      FQueue.Enqueue(TTHttpLogQueueValue.Create(AError))
-    else
-      Discard(AError.Host);
+    FQueue.Enqueue(TTHttpLogQueueValue.Create(AError));
   finally
     FCriticalSection.Leave;
   end;
@@ -151,7 +148,7 @@ var
   LChar: Char;
   LResult: TStringBuilder;
 begin
-  LHost := AHost.ToLower();
+  LHost := AHost.ToLowerInvariant;
   if LHost.Length > MaxHostLength then
     LHost := LHost.Substring(0, MaxHostLength);
 

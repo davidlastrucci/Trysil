@@ -37,9 +37,15 @@ type
 
   TTJSonContext = class(TTContext)
   strict private
-    FInLoading: Boolean;
+    FLoadingCount: Integer;
     FSerializer: TTJSonSerializer;
     FDeserializer: TTJSonDeserializer;
+
+    procedure BeginLoading;
+    procedure EndLoading;
+
+    procedure CheckJSonObjects(const AJSon: TJSonArray);
+    function ParseJSon(const AJSon: String): TJSonValue;
   strict protected
     function InLoading: Boolean; override;
   public
@@ -68,8 +74,14 @@ type
     function ListToJSonArray<T: class>(
       const AList: TList<T>; const AConfig: TTJSonSerializerConfig): TJSonArray;
 
-    function EntityFromJSon<T: class>(const AJSon: String): T;
-    function EntityFromJSonObject<T: class>(const AJSon: TJSonValue): T;
+    function EntityFromJSon<T: class>(const AJSon: String): T; overload;
+    function EntityFromJSonObject<T: class>(
+      const AJSon: TJSonValue): T; overload;
+
+    procedure EntityFromJSon<T: class>(
+      const AJSon: String; const AEntity: T); overload;
+    procedure EntityFromJSonObject<T: class>(
+      const AJSon: TJSonValue; const AEntity: T); overload;
     procedure ListFromJSon<T: class>(
       const AJSon: String; const AList: TList<T>);
     procedure ListFromJSonArray<T: class>(
@@ -109,7 +121,7 @@ begin
   if AUseIdentityMap then
     raise ETJSonException.Create(TTLanguage.Instance.Translate(SNoIdentityMap));
 
-  FInLoading := False;
+  FLoadingCount := 0;
 
   FSerializer := TTJSonSerializer.Create;
   FDeserializer := TTJSonDeserializer.Create;
@@ -122,9 +134,19 @@ begin
   inherited Destroy;
 end;
 
+procedure TTJSonContext.BeginLoading;
+begin
+  Inc(FLoadingCount);
+end;
+
+procedure TTJSonContext.EndLoading;
+begin
+  Dec(FLoadingCount);
+end;
+
 function TTJSonContext.InLoading: Boolean;
 begin
-  result := FInLoading;
+  result := FLoadingCount > 0;
 end;
 
 function TTJSonContext.DatasetToJSon(const ADataset: TDataset): String;
@@ -198,7 +220,7 @@ function TTJSonContext.EntityFromJSon<T>(const AJSon: String): T;
 var
   LJSon: TJSonValue;
 begin
-  LJSon := TJSonObject.ParseJSonValue(AJSon, False, True);
+  LJSon := ParseJSon(AJSon);
   try
     if not (LJSon is TJSonObject) then
       raise ETJSonException.Create(
@@ -211,17 +233,52 @@ end;
 
 function TTJSonContext.EntityFromJSonObject<T>(const AJSon: TJSonValue): T;
 begin
-  FInLoading := True;
+  if not (AJSon is TJSonObject) then
+    raise ETJSonException.Create(
+      TTLanguage.Instance.Translate(SNotAJSonObject));
+
+  BeginLoading;
   try
     result := CreateEntity<T>();
     try
       FDeserializer.EntityFromJSon(AJSon, result);
     except
-      result.Free;
+      FreeEntity<T>(result);
       raise;
     end;
   finally
-    FInLoading := False;
+    EndLoading;
+  end;
+end;
+
+procedure TTJSonContext.EntityFromJSon<T>(
+  const AJSon: String; const AEntity: T);
+var
+  LJSon: TJSonValue;
+begin
+  LJSon := ParseJSon(AJSon);
+  try
+    if not (LJSon is TJSonObject) then
+      raise ETJSonException.Create(
+        TTLanguage.Instance.Translate(SNotAJSonObject));
+    EntityFromJSonObject<T>(TJSonObject(LJSon), AEntity);
+  finally
+    LJSon.Free;
+  end;
+end;
+
+procedure TTJSonContext.EntityFromJSonObject<T>(
+  const AJSon: TJSonValue; const AEntity: T);
+begin
+  if not (AJSon is TJSonObject) then
+    raise ETJSonException.Create(
+      TTLanguage.Instance.Translate(SNotAJSonObject));
+
+  BeginLoading;
+  try
+    FDeserializer.EntityFromJSon(AJSon, AEntity);
+  finally
+    EndLoading;
   end;
 end;
 
@@ -230,7 +287,7 @@ procedure TTJSonContext.ListFromJSon<T>(
 var
   LJSon: TJSonValue;
 begin
-  LJSon := TJSonObject.ParseJSonValue(AJSon, False, True);
+  LJSon := ParseJSon(AJSon);
   try
     if not (LJSon is TJSonArray) then
       raise ETJSonException.Create(
@@ -241,27 +298,50 @@ begin
   end;
 end;
 
+function TTJSonContext.ParseJSon(const AJSon: String): TJSonValue;
+begin
+  try
+    result := TJSonObject.ParseJSonValue(AJSon, False, True);
+  except
+    on E: EJSONException do
+      raise ETJSonException.CreateFmt(
+        TTLanguage.Instance.Translate(SNotValidJSon), [E.Message]);
+  end;
+end;
+
+procedure TTJSonContext.CheckJSonObjects(const AJSon: TJSonArray);
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to AJSon.Count - 1 do
+    if not (AJSon.Items[LIndex] is TJSonObject) then
+      raise ETJSonException.CreateFmt(
+        TTLanguage.Instance.Translate(SNotAJSonObjectInArray), [
+          LIndex]);
+end;
+
 procedure TTJSonContext.ListFromJSonArray<T>(
   const AJSon: TJSonArray; const AList: TList<T>);
 var
   LJSon: TJSonValue;
   LEntity: T;
 begin
-  FInLoading := True;
+  CheckJSonObjects(AJSon);
+
+  BeginLoading;
   try
     for LJSon in AJSon do
-      if LJSon is TJSonObject then
-      begin
-        LEntity := EntityFromJSonObject<T>(TJSonObject(LJSon));
-        try
-          AList.Add(LEntity);
-        except
-          LEntity.Free;
-          raise;
-        end;
+    begin
+      LEntity := EntityFromJSonObject<T>(TJSonObject(LJSon));
+      try
+        AList.Add(LEntity);
+      except
+        FreeEntity<T>(LEntity);
+        raise;
       end;
+    end;
   finally
-    FInLoading := False;
+    EndLoading;
   end;
 end;
 

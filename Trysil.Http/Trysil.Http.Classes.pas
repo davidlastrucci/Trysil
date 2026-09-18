@@ -18,12 +18,30 @@ uses
   System.Generics.Collections,
   System.Generics.Defaults,
   System.JSon,
+  System.NetEncoding,
   IdCustomHttpServer,
 
+  Trysil.Consts,
+  Trysil.Classes,
+
   Trysil.Http.Consts,
-  Trysil.Http.Types;
+  Trysil.Http.Types,
+  Trysil.Http.Exceptions;
 
 type
+
+{ TTHttpCappedStream }
+
+  TTHttpCappedStream = class(TMemoryStream)
+  strict private
+    FMaxSize: Int64;
+  strict protected
+    function Realloc(var ANewCapacity: NativeInt): Pointer; override;
+  public
+    constructor Create(const AMaxSize: Int64);
+
+    property MaxSize: Int64 read FMaxSize;
+  end;
 
 { TTHttpNameValue }
 
@@ -111,6 +129,7 @@ type
   strict private
     FUsername: String;
     FPassword: String;
+    FTenant: String;
     FAreas: TTHttpUserAreas;
   public
     constructor Create;
@@ -118,6 +137,7 @@ type
 
     property Username: String read FUsername write FUsername;
     property Password: String read FPassword write FPassword;
+    property Tenant: String read FTenant write FTenant;
     property Areas: TTHttpUserAreas read FAreas;
   end;
 
@@ -145,8 +165,14 @@ type
     function IsLoopback(const AValue: String): Boolean;
     function StripPort(const AValue: String): String;
 
+    function HasContent: Boolean;
     function GetContentText: String;
     function GetContentLength: Int64;
+    function GetIsMethodOverridden: Boolean;
+    function GetMethod: String;
+    function GetSentMethod: String;
+
+    class function DecodeUri(const AUri: String): String; static;
   public
     constructor Create(
       const ATaskID: TTHttpTaskID; const ARequestInfo: TIdHttpRequestInfo);
@@ -162,6 +188,9 @@ type
     property Headers: TTHttpHeaders read GetHeaders;
     property RemoteIP: String read GetRemoteIP;
     property ClientIP: String read GetClientIP;
+    property Method: String read GetMethod;
+    property SentMethod: String read GetSentMethod;
+    property IsMethodOverridden: Boolean read GetIsMethodOverridden;
     property User: TTHttpUser read FUser;
   end;
 
@@ -175,6 +204,10 @@ type
     FIsContentStream: Boolean;
     FContent: String;
     FContentStream: TMemoryStream;
+    FHeaderMark: Integer;
+
+    class var FServerHeader: String;
+    class constructor ClassCreate;
 
     function GetStatusCode: Integer;
     procedure SetStatusCode(const AValue: Integer);
@@ -195,6 +228,11 @@ type
     procedure GetContentStream(const AStream: TMemoryStream);
 
     procedure AddHeader(const AName: String; const AValue: String);
+    procedure MarkHeaders;
+    procedure ResetToMark;
+
+    class property ServerHeader: String
+      read FServerHeader write FServerHeader;
 
     property TaskID: TTHttpTaskID read FTaskID;
     property StatusCode: Integer read GetStatusCode write SetStatusCode;
@@ -208,6 +246,49 @@ type
   end;
 
 implementation
+
+const
+  ByteOrderMark = #$FEFF;
+
+{ TTHttpCappedStream }
+
+constructor TTHttpCappedStream.Create(const AMaxSize: Int64);
+begin
+  inherited Create;
+  FMaxSize := AMaxSize;
+end;
+
+function TTHttpCappedStream.Realloc(var ANewCapacity: NativeInt): Pointer;
+begin
+  if ANewCapacity > FMaxSize then
+    raise ETHttpContentTooLarge.CreateFmt(
+      TTLanguage.Instance.Translate(SContentTooLarge), [
+        FMaxSize]);
+
+  result := inherited Realloc(ANewCapacity);
+end;
+
+type
+
+{ TTHttpEncodingHelper }
+
+  TTHttpEncodingHelper = class helper for TEncoding
+  public
+    procedure GetBytesInto(
+      const AValue: String;
+      const ABuffer: Pointer;
+      const AByteCount: Integer);
+  end;
+
+{ TTHttpEncodingHelper }
+
+procedure TTHttpEncodingHelper.GetBytesInto(
+  const AValue: String;
+  const ABuffer: Pointer;
+  const AByteCount: Integer);
+begin
+  GetBytes(PChar(AValue), AValue.Length, PByte(ABuffer), AByteCount);
+end;
 
 { TTHttpNameValue }
 
@@ -274,7 +355,7 @@ end;
 
 class constructor TTHttpHeaders.ClassCreate;
 begin
-  FComparer := TIStringComparer.Ordinal;
+  FComparer := TTIdentifier.Comparer;
 end;
 
 function TTHttpHeaders.CreateNameValues: TDictionary<String, String>;
@@ -287,7 +368,7 @@ end;
 function TTHttpEncoding.AreEquals(
   const ALeftCharSet: String; const ARightCharSet: String): Boolean;
 begin
-  result := (String.Compare(ALeftCharSet, ARightCharSet, True) = 0);
+  result := TTIdentifier.Same(ALeftCharSet, ARightCharSet);
 end;
 
 function TTHttpEncoding.GetEncoding(const ACharSet: String): TEncoding;
@@ -318,12 +399,12 @@ end;
 
 procedure TTHttpUserAreas.Add(const AArea: String);
 begin
-  FItems.Add(AArea.ToLower());
+  FItems.Add(AArea.ToLowerInvariant);
 end;
 
 function TTHttpUserAreas.Contains(const AArea: String): Boolean;
 begin
-  result := FItems.Contains(AArea.ToLower());
+  result := FItems.Contains(AArea.ToLowerInvariant);
 end;
 
 function TTHttpUserAreas.GetCount: Integer;
@@ -352,6 +433,22 @@ end;
 
 { TTHttpRequest }
 
+class function TTHttpRequest.DecodeUri(const AUri: String): String;
+var
+  LParts: TArray<String>;
+  LIndex: Integer;
+  LDecoded: String;
+begin
+  LParts := AUri.Split(['/']);
+  for LIndex := Low(LParts) to High(LParts) do
+  begin
+    LDecoded := TNetEncoding.URL.Decode(LParts[LIndex], []);
+    if not LDecoded.Contains('/') then
+      LParts[LIndex] := LDecoded;
+  end;
+  result := String.Join('/', LParts);
+end;
+
 constructor TTHttpRequest.Create(
   const ATaskID: TTHttpTaskID; const ARequestInfo: TIdHttpRequestInfo);
 begin
@@ -360,7 +457,7 @@ begin
   FRequestInfo := ARequestInfo;
   FEncoding := TTHttpEncoding.Create;
   FControllerID := TTHttpControllerID.Create(
-    FRequestInfo.Uri, FRequestInfo.CommandType);
+    DecodeUri(FRequestInfo.Uri), FRequestInfo.CommandType);
   FHost := FRequestInfo.Host;
   FParameters := nil;
   FJSonContent := nil;
@@ -397,12 +494,24 @@ begin
 end;
 
 function TTHttpRequest.GetJSonContent: TJSonValue;
+var
+  LContent: String;
 begin
   if not Assigned(FJSonContent) then
   begin
-    FJSonContent := TJSonObject.ParseJSONValue(GetContentText);
-    if not Assigned(FJSonContent) then
-      FJSonContent := TJSonObject.Create;
+    LContent := String.Empty;
+    if HasContent then
+      LContent := GetContentText;
+
+    if LContent.Trim.IsEmpty then
+      FJSonContent := TJSonObject.Create
+    else
+    begin
+      FJSonContent := TJSonObject.ParseJSONValue(LContent);
+      if not Assigned(FJSonContent) then
+        raise ETHttpBadRequest.Create(
+          TTLanguage.Instance.Translate(SNotValidJSonContent));
+    end;
   end;
   result := FJSonContent;
 end;
@@ -490,6 +599,14 @@ begin
   end;
 end;
 
+function TTHttpRequest.HasContent: Boolean;
+begin
+  result :=
+    (Assigned(FRequestInfo.PostStream) and
+      (FRequestInfo.PostStream.Size > 0)) or
+    (not FRequestInfo.FormParams.IsEmpty);
+end;
+
 function TTHttpRequest.GetContentText: String;
 var
   LPosition: Int64;
@@ -508,11 +625,37 @@ begin
     end;
 
     result := FEncoding.GetEncoding(FRequestInfo.CharSet).GetString(LBytes);
+    if result.StartsWith(ByteOrderMark) then
+      result := result.Substring(1);
   end
   else if not FRequestInfo.FormParams.IsEmpty then
     result := FRequestInfo.FormParams
   else if not FRequestInfo.UnparsedParams.IsEmpty then
     result := FRequestInfo.UnparsedParams;
+end;
+
+function TTHttpRequest.GetMethod: String;
+begin
+  result := FRequestInfo.Command;
+end;
+
+function TTHttpRequest.GetSentMethod: String;
+var
+  LParts: TArray<String>;
+begin
+  result := String.Empty;
+  LParts := FRequestInfo.RawHTTPCommand.Split([' ']);
+  if Length(LParts) > 0 then
+    result := LParts[0];
+end;
+
+function TTHttpRequest.GetIsMethodOverridden: Boolean;
+var
+  LSentMethod: String;
+begin
+  LSentMethod := GetSentMethod;
+  result := (not LSentMethod.IsEmpty) and
+    (not SameText(LSentMethod, FRequestInfo.Command));
 end;
 
 function TTHttpRequest.GetContentLength: Int64;
@@ -537,6 +680,7 @@ begin
   FIsContentStream := False;
   FContent := String.Empty;
   FContentStream := TMemoryStream.Create;
+  FHeaderMark := -1;
 end;
 
 destructor TTHttpResponse.Destroy;
@@ -549,8 +693,29 @@ end;
 procedure TTHttpResponse.AfterConstruction;
 begin
   inherited AfterConstruction;
-  FResponseInfo.Server :=
-    'API REST made simple by Trysil Delphi ORM - https://github.com/davidlastrucci/Trysil';
+  FResponseInfo.Server := FServerHeader;
+end;
+
+class constructor TTHttpResponse.ClassCreate;
+begin
+  FServerHeader := TTHttpServerHeader.Default;
+end;
+
+procedure TTHttpResponse.MarkHeaders;
+begin
+  FHeaderMark := FResponseInfo.CustomHeaders.Count;
+end;
+
+procedure TTHttpResponse.ResetToMark;
+begin
+  while (FHeaderMark >= 0) and
+    (FResponseInfo.CustomHeaders.Count > FHeaderMark) do
+    FResponseInfo.CustomHeaders.Delete(
+      FResponseInfo.CustomHeaders.Count - 1);
+
+  FResponseInfo.ContentType := TTHttpContentTypes.JSon;
+  FResponseInfo.CharSet := TTHttpContentEncodingTypes.Utf8;
+  FIsContentStream := False;
 end;
 
 procedure TTHttpResponse.AddHeader(const AName, AValue: String);
@@ -563,16 +728,19 @@ end;
 
 procedure TTHttpResponse.GetContentStream(const AStream: TMemoryStream);
 var
-  LBytes: TBytes;
+  LEncoding: TEncoding;
+  LByteCount: Integer;
 begin
   if FIsContentStream then
     AStream.LoadFromStream(FContentStream)
   else
   begin
-    AStream.Clear;
-    LBytes := FEncoding.GetEncoding(
-      FResponseInfo.CharSet).GetBytes(FContent);
-    AStream.Write(LBytes, Length(LBytes));
+    LEncoding := FEncoding.GetEncoding(FResponseInfo.CharSet);
+    LByteCount := LEncoding.GetByteCount(FContent);
+    AStream.Size := LByteCount;
+    if LByteCount > 0 then
+      LEncoding.GetBytesInto(FContent, AStream.Memory, LByteCount);
+    AStream.Position := 0;
   end;
 end;
 
@@ -624,7 +792,8 @@ begin
   if FIsContentStream then
     result := FContentStream.Size
   else
-    result := FContent.Length;
+    result := FEncoding.GetEncoding(
+      FResponseInfo.CharSet).GetByteCount(FContent);
 end;
 
 end.

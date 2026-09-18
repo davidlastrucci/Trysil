@@ -15,6 +15,7 @@ interface
 uses
   System.SysUtils,
   System.Classes,
+  System.TypInfo,
   Data.DB,
 
   Trysil.Consts,
@@ -197,6 +198,15 @@ type
       const AExpression: TTExpression): TTFilterBuilder<T>;
   private
     function NextParamIndex: Integer;
+    procedure CheckColumn(const AColumnName: String);
+    function SqlReferenceOf(const AColumnName: String): String;
+    class function StripDirection(const AItem: String): String; static;
+    class function Direction(
+      const AItem: String;
+      const ADescending: Boolean): String; static;
+    function CanonicalOrderBy(
+      const AOrderBy: String;
+      const ADescending: Boolean): String;
     procedure AppendCondition(
       const AOperator: TTFilterOperator;
       const AConditionSQL: String);
@@ -246,6 +256,14 @@ begin
   FStart := AStart;
   FLimit := ALimit;
   FOrderBy := AOrderBy;
+  if FLimit > 0 then
+  begin
+    if FStart < 0 then
+      FStart := 0;
+  end
+  else if FStart > 0 then
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SPagingStartWithoutLimit), [FStart]);
 end;
 
 function TTFilterPaging.GetIsEmpty: Boolean;
@@ -363,7 +381,8 @@ end;
 
 function TTFilter.GetIsEmpty: Boolean;
 begin
-  result := FWhere.IsEmpty and FPaging.IsEmpty;
+  result :=
+    FWhere.IsEmpty and FPaging.IsEmpty and (Length(FParameters) = 0);
 end;
 
 { TTFilterCondition<T> }
@@ -392,7 +411,8 @@ function TTFilterCondition<T>.AddCondition(
 begin
   FBuilder.AppendCondition(
     FOperator,
-    Format('%s %s :%s', [FColumnName, AOperatorSQL, ParamName]));
+    Format('%s %s :%s', [
+      FBuilder.SqlReferenceOf(FColumnName), AOperatorSQL, ParamName]));
   FBuilder.AppendParameter(FColumnName, ParamName, AValue);
   result := FBuilder;
 end;
@@ -444,14 +464,16 @@ end;
 function TTFilterCondition<T>.IsNull: TTFilterBuilder<T>;
 begin
   FBuilder.AppendCondition(
-    FOperator, Format('%s IS NULL', [FColumnName]));
+    FOperator,
+    Format('%s IS NULL', [FBuilder.SqlReferenceOf(FColumnName)]));
   result := FBuilder;
 end;
 
 function TTFilterCondition<T>.IsNotNull: TTFilterBuilder<T>;
 begin
   FBuilder.AppendCondition(
-    FOperator, Format('%s IS NOT NULL', [FColumnName]));
+    FOperator,
+    Format('%s IS NOT NULL', [FBuilder.SqlReferenceOf(FColumnName)]));
   result := FBuilder;
 end;
 
@@ -502,6 +524,68 @@ begin
   FOperators[LLength] := AOperator;
 end;
 
+procedure TTFilterBuilder<T>.CheckColumn(const AColumnName: String);
+begin
+  if not Assigned(FTableMetadata) then
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(STableMapNotFound), [
+        PTypeInfo(TypeInfo(T))^.Name]);
+
+  if not Assigned(FTableMetadata.Columns.Find(AColumnName)) then
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SColumnNotFound), [
+        AColumnName]);
+end;
+
+function TTFilterBuilder<T>.SqlReferenceOf(const AColumnName: String): String;
+begin
+  CheckColumn(AColumnName);
+  result := FTableMetadata.Columns.Find(AColumnName).SqlReference;
+end;
+
+class function TTFilterBuilder<T>.StripDirection(
+  const AItem: String): String;
+begin
+  result := AItem.Trim;
+  if result.ToUpper.EndsWith(' DESC') then
+    result := result.Substring(0, result.Length - 5).Trim
+  else if result.ToUpper.EndsWith(' ASC') then
+    result := result.Substring(0, result.Length - 4).Trim;
+end;
+
+class function TTFilterBuilder<T>.Direction(
+  const AItem: String;
+  const ADescending: Boolean): String;
+begin
+  result := String.Empty;
+  if AItem.Trim.ToUpper.EndsWith(' DESC') then
+    result := ' DESC'
+  else if AItem.Trim.ToUpper.EndsWith(' ASC') then
+    result := String.Empty
+  else if ADescending then
+    result := ' DESC';
+end;
+
+function TTFilterBuilder<T>.CanonicalOrderBy(
+  const AOrderBy: String;
+  const ADescending: Boolean): String;
+var
+  LItem: String;
+  LColumn: String;
+begin
+  result := String.Empty;
+  for LItem in AOrderBy.Split([',']) do
+  begin
+    LColumn := StripDirection(LItem);
+    if not result.IsEmpty then
+      result := Format('%s, ', [result]);
+    result := Format('%s%s%s', [
+      result,
+      SqlReferenceOf(LColumn),
+      Direction(LItem, ADescending)]);
+  end;
+end;
+
 procedure TTFilterBuilder<T>.AppendParameter(
   const AColumnName: String;
   const AParamName: String;
@@ -510,18 +594,18 @@ var
   LColumnMetadata: TTColumnMetadata;
   LLength: Integer;
 begin
-  if not Assigned(FTableMetadata) then
-    raise ETException.Create(
-      TTLanguage.Instance.Translate(STableMapNotFound));
-
+  CheckColumn(AColumnName);
   LColumnMetadata := FTableMetadata.Columns.Find(AColumnName);
-  if not Assigned(LColumnMetadata) then
-    raise ETException.CreateFmt(SColumnNotFound, [AColumnName]);
 
   LLength := Length(FParameters);
   SetLength(FParameters, LLength + 1);
   FParameters[LLength] := TTFilterParameter.Create(
-    AParamName, LColumnMetadata.DataType, LColumnMetadata.DataSize, AValue);
+    AParamName,
+    LColumnMetadata.DataType,
+    LColumnMetadata.DataSize,
+    AValue,
+    LColumnMetadata.IsGuid,
+    LColumnMetadata.IsCurrency);
 end;
 
 function TTFilterBuilder<T>.BuildWhereClause: String;
@@ -581,10 +665,14 @@ function TTFilterBuilder<T>.AddExpression(
   const AOperator: TTFilterOperator;
   const AExpression: TTExpression): TTFilterBuilder<T>;
 var
+  LColumnName: String;
   LSql: String;
   LParamName: String;
   LParameter: TTExpressionParam;
 begin
+  for LColumnName in AExpression.ColumnNames do
+    CheckColumn(LColumnName);
+
   LSql := AExpression.Sql;
   for LParameter in AExpression.Params do
   begin
@@ -617,27 +705,29 @@ end;
 function TTFilterBuilder<T>.OrderByAsc(
   const AColumnName: String): TTFilterBuilder<T>;
 begin
-  FOrderBy := AColumnName;
+  FOrderBy := CanonicalOrderBy(AColumnName, False);
   result := Self;
 end;
 
 function TTFilterBuilder<T>.OrderByDesc(
   const AColumnName: String): TTFilterBuilder<T>;
 begin
-  FOrderBy := Format('%s DESC', [AColumnName]);
+  FOrderBy := CanonicalOrderBy(AColumnName, True);
   result := Self;
 end;
 
 function TTFilterBuilder<T>.OrderByAsc(
   const AProperty: TTProperty): TTFilterBuilder<T>;
 begin
-  result := OrderByAsc(AProperty.SqlReference);
+  FOrderBy := SqlReferenceOf(AProperty.ColumnName);
+  result := Self;
 end;
 
 function TTFilterBuilder<T>.OrderByDesc(
   const AProperty: TTProperty): TTFilterBuilder<T>;
 begin
-  result := OrderByDesc(AProperty.SqlReference);
+  FOrderBy := Format('%s DESC', [SqlReferenceOf(AProperty.ColumnName)]);
+  result := Self;
 end;
 
 function TTFilterBuilder<T>.Limit(const ALimit: Integer): TTFilterBuilder<T>;
@@ -676,7 +766,12 @@ begin
 
   for LParam in FParameters do
     result.AddParameter(
-      LParam.Name, LParam.DataType, LParam.Size, LParam.Value);
+      LParam.Name,
+      LParam.DataType,
+      LParam.Size,
+      LParam.Value,
+      LParam.IsGuid,
+      LParam.IsCurrency);
 end;
 
 end.

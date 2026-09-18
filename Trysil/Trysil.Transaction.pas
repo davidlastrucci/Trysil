@@ -18,6 +18,7 @@ uses
 
   Trysil.Consts,
   Trysil.Exceptions,
+  Trysil.Logger,
   Trysil.Data;
 
 type
@@ -36,6 +37,7 @@ type
 
     procedure Start;
     procedure Stop;
+    procedure LogStopFailure(const AException: Exception);
 
     procedure SilentRollback;
   public
@@ -102,7 +104,21 @@ begin
         Rollback;
     end;
   except
-    // no exception here
+    on E: Exception do
+      LogStopFailure(E);
+  end;
+end;
+
+procedure TTTransaction.LogStopFailure(const AException: Exception);
+begin
+  try
+    TTLogger.Instance.LogError(
+      FConnection.ConnectionID,
+      Format(
+        TTLanguage.Instance.Translate(SStopTransactionError), [
+          AException.ClassName, AException.Message]));
+  except
+    // A destructor is not a place to raise from, logging included
   end;
 end;
 
@@ -126,6 +142,7 @@ begin
       FConnection.CommitTransaction;
     except
       SilentRollback;
+      FLocalTransaction := FConnection.InTransaction;
       raise;
     end;
 

@@ -16,6 +16,7 @@ uses
   System.Classes,
   System.SysUtils,
 
+  Trysil.Data,
   Trysil.Data.SqlSyntax;
 
 type
@@ -48,8 +49,9 @@ implementation
 
 function TTPostgreSQLSequenceSyntax.GetSequenceSyntax: String;
 begin
-  result := Format(
-    'SELECT NEXTVAL(%s) AS ID', [QuotedStr(FTableMap.SequenceName)]);
+  result := Format('SELECT NEXTVAL(%s) AS ID', [
+    QuotedStr(TTDatabaseObjectName.Quoted(
+      FTableMap.SequenceName, '"', '"', TTNameCase.Lower))]);
 end;
 
 { TTPostgreSQLVersionSyntax }

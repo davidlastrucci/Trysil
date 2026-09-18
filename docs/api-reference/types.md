@@ -90,7 +90,7 @@ LConnection.UpdateMode := TTUpdateMode.KeyOnly;
 Generic list with LINQ-style filtering. Unit: `Trysil.Generics.Collections`.
 
 ```pascal
-var LPersons := TTList<TPerson>.Create;
+var LPersons := LContext.CreateEntityList<TPerson>();
 try
   LContext.SelectAll<TPerson>(LPersons);
 
@@ -112,7 +112,7 @@ Supports `ITEnumerable<T>` / `ITEnumerator<T>` for `for..in` loops.
 
 ### TTObjectList&lt;T&gt;
 
-Owned list (`OwnsObjects = True`). Used internally by the framework for managing object lifetimes.
+Owned list (`OwnsObjects = True`). Used internally by the framework for managing object lifetimes. For a list of entities use `TTContext.CreateEntityList<T>` instead, which owns what the identity map does not and tells the context about every entity it frees; an owning `TTObjectList<T>` of your own is right for the result of a `RawSelect<T>` into a plain DTO and for objects that are not entities. See [who frees what](../guide/context.md#who-frees-what).
 
 ```pascal
 // Default: OwnsObjects = True
@@ -147,21 +147,38 @@ Used internally by `TTMapper` and other components for caching computed results.
 
 Generic round-robin load balancer. Unit: `Trysil.LoadBalancing`.
 
-```pascal
-var LBalancer := TTRoundRobin<TTConnection>.Create;
-try
-  LBalancer.CreateItems(
-    function: TTConnection
-    begin
-      Result := TTSqlServerConnection.Create('Main');
-    end,
-    4);  // pool of 4 connections
+`TTRoundRobin<T>` is **abstract**: declare a descendant for the type you are
+balancing.
 
-  // Each call returns the next item in rotation
-  var LConnection := LBalancer.Next;
-finally
-  LBalancer.Free;
+```pascal
+type
+  TConnectionPool = class(TTRoundRobin<TTConnection>)
+  end;
+
+var
+  LBalancer: TConnectionPool;
+  LConnection: TTConnection;
+begin
+  LBalancer := TConnectionPool.Create;
+  try
+    LBalancer.CreateItems(
+      function: TTConnection
+      begin
+        result := TTSqlServerConnection.Create('Main');
+      end,
+      4);
+
+    LConnection := LBalancer.Next;
+  finally
+    LBalancer.Free;
+  end;
 end;
 ```
 
-Used by the HTTP layer to distribute requests across multiple backend nodes.
+`Next` returns `nil` when nothing has been created, and cycles from the first
+item afterwards. `CreateItems` **adds** to the pool rather than replacing it, so
+calling it twice doubles the pool; a size below one is clamped to one. The
+balancer **owns** what the factory returns and frees it with itself, so the
+connections above must not be freed by the caller.
+
+Trysil uses it to spread log items across the logger threads, in the core logger (`TTLoggerThreads`) and in the HTTP log (`TTHttpLogThreads`).

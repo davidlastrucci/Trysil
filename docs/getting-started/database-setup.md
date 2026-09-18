@@ -14,7 +14,7 @@ Every table used with Trysil must follow these rules:
 
 2. **Version column** -- every table should have an integer version column for optimistic locking. Trysil increments this value on every update and checks it before writing, preventing lost updates in concurrent scenarios.
 
-3. **Sequence for ID generation** -- Trysil uses database sequences (or autoincrement in SQLite) to generate primary key values. The `[TSequence('...')]` attribute on the entity class tells Trysil which sequence to use.
+3. **Sequence for ID generation** -- Trysil uses database sequences to generate primary key values (SQLite, which has none, reads the highest key). The `[TSequence('...')]` attribute on the entity class tells Trysil which sequence to use.
 
 ## SQL Server
 
@@ -39,11 +39,11 @@ ALTER TABLE [dbo].[Persons] ADD CONSTRAINT [DF_Persons_ID] DEFAULT ((0)) FOR [ID
 ALTER TABLE [dbo].[Persons] ADD CONSTRAINT [DF_Persons_VersionID] DEFAULT ((0)) FOR [VersionID];
 ```
 
-The entity maps to this table with `[TSequence('PersonsID')]`. Before inserting, Trysil calls `NEXT VALUE FOR [dbo].[PersonsID]` to obtain the new ID.
+The entity maps to this table with `[TSequence('PersonsID')]`. `CreateEntity<T>` runs `SELECT NEXT VALUE FOR [PersonsID]` to obtain the new ID.
 
 ## SQLite
 
-SQLite uses `AUTOINCREMENT` instead of named sequences. Trysil handles this internally -- the `[TSequence]` attribute is still required on the entity but SQLite ignores the sequence name and uses its built-in autoincrement mechanism.
+SQLite has no sequences. `CreateEntity<T>` reads the highest key in the table and adds one (`SELECT IFNULL(MAX([ID]), 0) + 1 FROM [Persons]`), or one past the last key it handed out on this connection name if that is higher: the `[TSequence]` attribute is still required on the entity, but its name is not used, and two processes writing the same file can still get the same key.
 
 ```sql
 CREATE TABLE IF NOT EXISTS [Persons] (
@@ -74,7 +74,7 @@ CREATE TABLE Persons (
 );
 ```
 
-Trysil calls `nextval('PersonsID')` before inserting to obtain the new ID.
+`CreateEntity<T>` calls `nextval('PersonsID')` to obtain the new ID.
 
 ## Firebird
 
@@ -95,7 +95,7 @@ CREATE TABLE Persons (
 );
 ```
 
-Trysil calls `NEXT VALUE FOR PersonsID` before inserting to obtain the new ID.
+`CreateEntity<T>` reads the next value of `PersonsID` to obtain the new ID.
 
 ## Entity-to-Schema Mapping
 
@@ -153,4 +153,4 @@ CREATE TABLE [dbo].[Orders](
 );
 ```
 
-On the entity side, use `[TRelation]` and `TTLazy<T>` or `TTLazyList<T>` to map relationships. See the [Guide](../guide/) for details on lazy loading and relationship mapping.
+On the entity side, use `[TRelation]` and `TTLazy<T>` or `TTLazyList<T>` to map relationships. See [Lazy Loading](../guide/lazy-loading.md) for details on lazy loading and relationship mapping.

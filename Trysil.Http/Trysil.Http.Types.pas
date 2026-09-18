@@ -44,12 +44,9 @@ type
     FParamsCount: Integer;
 
     function GetIntegerParam(
-      const AIndex: Integer;
-      const AParam: String;
-      out AValue: Integer): Boolean;
+      const AParam: String; out AValue: Integer): Boolean;
     function IsParamPartCompatible(
       const AIndex: Integer;
-      const AParamIndex: Integer;
       const AOther: TTHttpUriParts;
       const AParams: TList<Integer>): Boolean;
   public
@@ -57,6 +54,7 @@ type
 
     function Equals(
       const AOther: TTHttpUriParts; const AParams: TList<Integer>): Boolean;
+    function HasParamsOnlyAtTheEnd: Boolean;
 
     property Parts: TArray<String> read FParts;
     property ParamsCount: Integer read FParamsCount;
@@ -71,6 +69,7 @@ type
 
     function MethodTypeToCommandType(
       const AMethodType: TTHttpMethodType): THttpCommandType;
+    function TryGetMethodType(out AMethodType: TTHttpMethodType): Boolean;
     function GetMethodType: TTHttpMethodType;
     function GetMethod: String;
   public
@@ -85,6 +84,7 @@ type
     function Equals(const AControllerID: TTHttpControllerID): Boolean;
 
     property Uri: String read FUri;
+    property CommandType: THttpCommandType read FCommandType;
     property MethodType: TTHttpMethodType read GetMethodType;
     property Method: String read GetMethod;
   end;
@@ -121,9 +121,18 @@ begin
       Inc(FParamsCount);
 end;
 
+function TTHttpUriParts.HasParamsOnlyAtTheEnd: Boolean;
+var
+  LIndex: Integer;
+begin
+  result := True;
+  for LIndex := Low(FParts) to High(FParts) - FParamsCount do
+    if FParts[LIndex].Equals('?') then
+      result := False;
+end;
+
 function TTHttpUriParts.IsParamPartCompatible(
   const AIndex: Integer;
-  const AParamIndex: Integer;
   const AOther: TTHttpUriParts;
   const AParams: TList<Integer>): Boolean;
 var
@@ -131,9 +140,9 @@ var
 begin
   result := False;
   if Self.FParts[AIndex].Equals('?') then
-    result := GetIntegerParam(AParamIndex, AOther.FParts[AIndex], LParam)
+    result := GetIntegerParam(AOther.FParts[AIndex], LParam)
   else if AOther.FParts[AIndex].Equals('?') then
-    result := GetIntegerParam(AParamIndex, Self.FParts[AIndex], LParam);
+    result := GetIntegerParam(Self.FParts[AIndex], LParam);
 
   if result and Assigned(AParams) then
     AParams.Add(LParam);
@@ -142,12 +151,11 @@ end;
 function TTHttpUriParts.Equals(
   const AOther: TTHttpUriParts; const AParams: TList<Integer>): Boolean;
 var
-  LParamIndex, LIndex: Integer;
+  LIndex: Integer;
 begin
   if Assigned(AParams) then
     AParams.Clear;
 
-  LParamIndex := 0;
   result := (Low(Self.FParts) = Low(AOther.FParts)) and
     (High(Self.FParts) = High(AOther.FParts));
   if result then
@@ -155,23 +163,21 @@ begin
     begin
       result := (Self.FParts[LIndex].Equals(AOther.FParts[LIndex]));
       if not result then
-      begin
-        result := IsParamPartCompatible(LIndex, LParamIndex, AOther, AParams);
-        Inc(LParamIndex);
-      end;
+        result := IsParamPartCompatible(LIndex, AOther, AParams);
 
       if not result then
+      begin
+        if Assigned(AParams) then
+          AParams.Clear;
         Break;
+      end;
     end;
 end;
 
 function TTHttpUriParts.GetIntegerParam(
-  const AIndex: Integer; const AParam: String; out AValue: Integer): Boolean;
+  const AParam: String; out AValue: Integer): Boolean;
 begin
-  if (AIndex = 0) and TTJSonSqids.Instance.UseSqids then
-    result := TTJSonSqids.Instance.TryDecode(AParam, AValue)
-  else
-    result := Integer.TryParse(AParam, AValue);
+  result := TTJSonSqids.Instance.TryDecode(AParam, AValue);
 end;
 
 { TTHttpControllerID }
@@ -179,7 +185,7 @@ end;
 constructor TTHttpControllerID.Create(
   const AUri: String; const ACommandType: THttpCommandType);
 begin
-  FUri := AUri.ToLower();
+  FUri := AUri.ToLowerInvariant;
   FCommandType := ACommandType;
 end;
 
@@ -187,7 +193,7 @@ constructor TTHttpControllerID.Create(
   const AUri: String;
   const AMethodType: TTHttpMethodType);
 begin
-  FUri := AUri.ToLower();
+  FUri := AUri.ToLowerInvariant;
   FCommandType := MethodTypeToCommandType(AMethodType);
 end;
 
@@ -224,28 +230,42 @@ begin
 end;
 
 function TTHttpControllerID.GetMethod: String;
+var
+  LMethodType: TTHttpMethodType;
 begin
-  result := TRttiEnumerationType.GetName<TTHttpMethodType>(MethodType);
+  if TryGetMethodType(LMethodType) then
+    result := TRttiEnumerationType.GetName<TTHttpMethodType>(LMethodType)
+  else
+    result := TRttiEnumerationType.GetName<THttpCommandType>(
+      FCommandType).Substring(2).ToUpperInvariant;
+end;
+
+function TTHttpControllerID.TryGetMethodType(
+  out AMethodType: TTHttpMethodType): Boolean;
+begin
+  result := True;
+  case FCommandType of
+    THttpCommandType.hcGET:
+      AMethodType := TTHttpMethodType.GET;
+    THttpCommandType.hcPOST:
+      AMethodType := TTHttpMethodType.POST;
+    THttpCommandType.hcDELETE:
+      AMethodType := TTHttpMethodType.DELETE;
+    THttpCommandType.hcPUT:
+      AMethodType := TTHttpMethodType.PUT;
+    THttpCommandType.hcOPTION:
+      AMethodType := TTHttpMethodType.OPTIONS;
+    else
+      result := False;
+  end;
 end;
 
 function TTHttpControllerID.GetMethodType: TTHttpMethodType;
 begin
-  case FCommandType of
-    THttpCommandType.hcGET:
-      result := TTHttpMethodType.GET;
-    THttpCommandType.hcPOST:
-      result := TTHttpMethodType.POST;
-    THttpCommandType.hcDELETE:
-      result := TTHttpMethodType.DELETE;
-    THttpCommandType.hcPUT:
-      result := TTHttpMethodType.PUT;
-    THttpCommandType.hcOPTION:
-      result := TTHttpMethodType.OPTIONS;
-    else
-      raise ETHttpServerException.CreateFmt(
-        TTLanguage.Instance.Translate(SNotValidCommandType), [
-          TRttiEnumerationType.GetName<THttpCommandType>(FCommandType)]);
-  end;
+  if not TryGetMethodType(result) then
+    raise ETHttpMethodNotAllowed.CreateFmt(
+      TTLanguage.Instance.Translate(SNotValidCommandType), [
+        TRttiEnumerationType.GetName<THttpCommandType>(FCommandType)]);
 end;
 
 { TTHttpTaskID }

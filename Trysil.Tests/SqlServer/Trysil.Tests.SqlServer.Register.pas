@@ -45,7 +45,9 @@ uses
   Trysil.Tests.SqlServer.AllTypes,
   Trysil.Tests.SqlServer.AllTypesJSon,
   Trysil.Tests.SqlServer.NullablePrimitives,
-  Trysil.Tests.SqlServer.NullablePrimitivesJSon;
+  Trysil.Tests.SqlServer.NullablePrimitivesJSon,
+  Trysil.Tests.SqlServer.Params,
+  Trysil.Tests.SqlServer.SchemaName;
 
 { TTSqlServerTestRegister }
 
@@ -72,6 +74,8 @@ begin
     TDUnitX.RegisterTestFixture(TTSqlServerAllTypesJSonTests);
     TDUnitX.RegisterTestFixture(TTSqlServerNullablePrimitivesTests);
     TDUnitX.RegisterTestFixture(TTSqlServerNullablePrimitivesJSonTests);
+    TDUnitX.RegisterTestFixture(TTSqlServerParamsTests);
+    TDUnitX.RegisterTestFixture(TTSqlServerSchemaNameTests);
   end;
 end;
 
@@ -80,11 +84,5 @@ begin
   if TTTestConfig.IsDatabaseEnabled('SqlServer') then
     TTSqlServerTestConnection.Finalize;
 end;
-
-initialization
-  TTSqlServerTestRegister.Register;
-
-finalization
-  TTSqlServerTestRegister.Unregister;
 
 end.

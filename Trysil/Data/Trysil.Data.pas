@@ -15,6 +15,7 @@ interface
 uses
   System.Classes,
   System.SysUtils,
+  System.Character,
   System.Generics.Collections,
   Data.DB,
 
@@ -55,6 +56,7 @@ type
     function GetAsGuid: TGUID; virtual; abstract;
     procedure SetAsGuid(const Value: TGUID); virtual; abstract;
     procedure SetAsBytes(const Value: TBytes); virtual; abstract;
+    procedure SetAsText(const Value: String); virtual;
   public
     procedure Clear; virtual; abstract;
 
@@ -70,6 +72,7 @@ type
     property AsDateTime: TDateTime write SetAsDateTime;
     property AsGuid: TGUID write SetAsGuid;
     property AsBytes: TBytes write SetAsBytes;
+    property AsText: String write SetAsText;
   end;
 
 { TTReader }
@@ -114,6 +117,30 @@ type
 
   TTUpdateMode = (KeyAndVersionColumn, KeyOnly);
 
+{ TTNameCase }
+
+  TTNameCase = (AsIs, Upper, Lower);
+
+{ TTDatabaseObjectName }
+
+  TTDatabaseObjectName = class
+  strict private
+    class function Fold(
+      const AName: String;
+      const ANameCase: TTNameCase): String; static;
+    class function QuotedPart(
+      const APart: String;
+      const AOpenQuote: String;
+      const ACloseQuote: String;
+      const ANameCase: TTNameCase): String; static;
+  public
+    class function Quoted(
+      const AName: String;
+      const AOpenQuote: String;
+      const ACloseQuote: String;
+      const ANameCase: TTNameCase): String; static;
+  end;
+
 { TTAbstractCommand }
 
   TTAbstractCommand = class abstract
@@ -145,10 +172,15 @@ type
 { TTConnection }
 
   TTConnection = class abstract(TTMetadataProvider)
+  strict private
+    FTransactionObservers: TList<TTTransactionObserver>;
+
+    function GetTransactionObserverCount: Integer;
+    function IsValidParameterChar(const AChar: Char): Boolean;
   strict protected
-    FTransactionObserver: TTTransactionObserver;
     FUpdateMode: TTUpdateMode;
 
+    function GetConnectionID: String; virtual;
     function GetDatabaseVersion: String; virtual; abstract;
     function InternalCreateDataSet(
       const ASQL: String; const AFilter: TTFilter): TDataSet; virtual; abstract;
@@ -161,6 +193,12 @@ type
       const AEntity: TObject): Boolean; virtual; abstract;
   public
     constructor Create;
+    destructor Destroy; override;
+
+    procedure AddTransactionObserver(
+      const AObserver: TTTransactionObserver);
+    procedure RemoveTransactionObserver(
+      const AObserver: TTTransactionObserver);
 
     procedure StartTransaction; virtual;
     procedure CommitTransaction; virtual;
@@ -168,7 +206,9 @@ type
 
     function SelectCount(
       const ATableMap: TTTableMap;
-      const AFilter: TTFilter): Integer; virtual; abstract;
+      const AFilter: TTFilter): Int64; virtual; abstract;
+
+    property ConnectionID: String read GetConnectionID;
 
     function GetDatabaseObjectName(
       const ADatabaseObjectName: String): String; virtual;
@@ -209,6 +249,10 @@ type
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata): TTAbstractCommand; virtual; abstract;
 
+    function CreateUndeleteCommand(
+      const ATableMap: TTTableMap;
+      const ATableMetadata: TTTableMetadata): TTAbstractCommand; virtual;
+
     function CreateDeleteCommand(
       const ATableMap: TTTableMap;
       const ATableMetadata: TTTableMetadata): TTAbstractCommand; virtual; abstract;
@@ -217,11 +261,18 @@ type
     property InTransaction: Boolean read GetInTransaction;
     property SupportTransaction: Boolean read GetSupportTransaction;
     property UpdateMode: TTUpdateMode read FUpdateMode write FUpdateMode;
-    property TransactionObserver: TTTransactionObserver
-      read FTransactionObserver write FTransactionObserver;
+    property TransactionObserverCount: Integer
+      read GetTransactionObserverCount;
   end;
 
 implementation
+
+{ TTParam }
+
+procedure TTParam.SetAsText(const Value: String);
+begin
+  SetAsString(Value);
+end;
 
 { TTReader }
 
@@ -326,25 +377,65 @@ end;
 constructor TTConnection.Create;
 begin
   inherited Create;
+  FTransactionObservers := TList<TTTransactionObserver>.Create;
   FUpdateMode := TTUpdateMode.KeyAndVersionColumn;
 end;
 
-procedure TTConnection.StartTransaction;
+destructor TTConnection.Destroy;
 begin
-  if Assigned(FTransactionObserver) then
-    FTransactionObserver.TransactionStarted();
+  FTransactionObservers.Free;
+  inherited Destroy;
+end;
+
+procedure TTConnection.AddTransactionObserver(
+  const AObserver: TTTransactionObserver);
+begin
+  if not FTransactionObservers.Contains(AObserver) then
+  begin
+    FTransactionObservers.Add(AObserver);
+    if InTransaction then
+      try
+        AObserver.TransactionStarted();
+      except
+        FTransactionObservers.Remove(AObserver);
+        raise;
+      end;
+  end;
+end;
+
+procedure TTConnection.RemoveTransactionObserver(
+  const AObserver: TTTransactionObserver);
+begin
+  FTransactionObservers.Remove(AObserver);
+end;
+
+function TTConnection.GetTransactionObserverCount: Integer;
+begin
+  result := FTransactionObservers.Count;
+end;
+
+procedure TTConnection.StartTransaction;
+var
+  LObserver: TTTransactionObserver;
+begin
+  for LObserver in FTransactionObservers do
+    LObserver.TransactionStarted();
 end;
 
 procedure TTConnection.CommitTransaction;
+var
+  LObserver: TTTransactionObserver;
 begin
-  if Assigned(FTransactionObserver) then
-    FTransactionObserver.TransactionCommitted();
+  for LObserver in FTransactionObservers do
+    LObserver.TransactionCommitted();
 end;
 
 procedure TTConnection.RollbackTransaction;
+var
+  LObserver: TTTransactionObserver;
 begin
-  if Assigned(FTransactionObserver) then
-    FTransactionObserver.TransactionRolledback();
+  for LObserver in FTransactionObservers do
+    LObserver.TransactionRolledback();
 end;
 
 function TTConnection.CreateDataSet(
@@ -372,9 +463,66 @@ begin
           TTLanguage.Instance.Translate(SRelationError), [AEntity.ToString()]);
 end;
 
+function TTConnection.CreateUndeleteCommand(
+  const ATableMap: TTTableMap;
+  const ATableMetadata: TTTableMetadata): TTAbstractCommand;
+begin
+  raise ETException.CreateFmt(
+    TTLanguage.Instance.Translate(SUndeleteNotImplemented), [ClassName]);
+end;
+
 function TTConnection.Execute(const ASQL: String): Integer;
 begin
   result := Execute(ASQL, nil, nil, nil);
+end;
+
+class function TTDatabaseObjectName.Fold(
+  const AName: String;
+  const ANameCase: TTNameCase): String;
+begin
+  case ANameCase of
+    TTNameCase.Upper: result := AName.ToUpperInvariant;
+    TTNameCase.Lower: result := AName.ToLowerInvariant;
+  else
+    result := AName;
+  end;
+end;
+
+class function TTDatabaseObjectName.QuotedPart(
+  const APart: String;
+  const AOpenQuote: String;
+  const ACloseQuote: String;
+  const ANameCase: TTNameCase): String;
+var
+  LPart: String;
+begin
+  LPart := Fold(APart, ANameCase).Replace(
+    ACloseQuote, Format('%0:s%0:s', [ACloseQuote]), [rfReplaceAll]);
+  result := Format('%s%s%s', [AOpenQuote, LPart, ACloseQuote]);
+end;
+
+class function TTDatabaseObjectName.Quoted(
+  const AName: String;
+  const AOpenQuote: String;
+  const ACloseQuote: String;
+  const ANameCase: TTNameCase): String;
+var
+  LPart: String;
+begin
+  result := String.Empty;
+  if not AName.IsEmpty then
+    for LPart in AName.Split(['.']) do
+    begin
+      if not result.IsEmpty then
+        result := Format('%s.', [result]);
+      result := Format('%s%s', [
+        result, QuotedPart(LPart, AOpenQuote, ACloseQuote, ANameCase)]);
+    end;
+end;
+
+function TTConnection.GetConnectionID: String;
+begin
+  result := String.Empty;
 end;
 
 function TTConnection.GetDatabaseObjectName(
@@ -383,10 +531,25 @@ begin
   result := ADatabaseObjectName;
 end;
 
+function TTConnection.IsValidParameterChar(const AChar: Char): Boolean;
+begin
+  result :=
+    CharInSet(AChar, ['0'..'9', 'a'..'z', 'A'..'Z', '#', '$', '_']) or
+    AChar.IsLetter;
+end;
+
 function TTConnection.GetParameterName(
   const AParameterName: String): String;
+var
+  LChar: Char;
 begin
   result := AParameterName.Replace(' ', '_', [rfReplaceAll]);
+  for LChar in result do
+    if not IsValidParameterChar(LChar) then
+      raise ETException.CreateFmt(
+        TTLanguage.Instance.Translate(SNotValidParameterName), [
+          AParameterName,
+          LChar]);
 end;
 
 end.

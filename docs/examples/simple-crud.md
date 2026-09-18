@@ -112,11 +112,11 @@ begin
   FConnection := TTSQLiteConnection.Create('Test');
   FContext := TTContext.Create(FConnection);
 
-  FMasterData := TTList<TTMasterData>.Create;
+  FMasterData := FContext.CreateEntityList<TTMasterData>();
 end;
 ```
 
-Connection pooling is disabled because this is a single-user desktop application. In a server application you would leave it enabled (the default).
+Connection pooling is turned off because this is a single-user desktop application holding one connection for its whole life: there is nothing for a pool to hand out, and leaving it on would keep the database file open past the point where the connection is freed. A server application leaves it enabled, which is the default.
 
 ## Auto-Creating the Database
 
@@ -148,7 +148,7 @@ end;
 
 ## Loading Data (SelectAll)
 
-`SelectAll<T>` loads every row from the mapped table into the provided list. The list is an `TTList<TTMasterData>` (which extends `TObjectList<T>` with `OwnsObjects = True`), so previously loaded entities are freed automatically when the list is repopulated.
+`SelectAll<T>` loads every row from the mapped table into the provided list. Build that list with `CreateEntityList<T>`, which gives it the ownership the context calls for: with an identity map - the default, and what this form uses - the entities belong to the map and the list only refers to them; without one the list owns them and frees them when it is cleared or destroyed.
 
 ```pascal
 procedure TMainForm.OpenButtonClick(Sender: TObject);
@@ -248,6 +248,12 @@ end;
 
 The demo uses `TTListView<T>` from `Trysil.Vcl.ListView` -- a generic VCL ListView wrapper that binds entity lists to columns via property names. The `TTMasterDataListView` subclass adds columns and an optional client-side search predicate.
 
+!!! note "`TTListView<T>` is demo code, not part of the library"
+    `Trysil.UI/Trysil.Vcl.ListView.pas` is in no package: the demos compile it
+    from source and the units installed by [Installation](../getting-started/installation.md)
+    do not include it. Copy the unit into your project if you want it, and
+    treat it as an example rather than as an API with a compatibility promise.
+
 ```pascal
 TTMasterDataListView = class(TTListView<TTMasterData>)
 public
@@ -298,7 +304,7 @@ end;
 
 ## Cleanup
 
-All owned objects are freed in reverse creation order. Because `TTList<T>` owns its objects, freeing the list also frees every entity in it.
+All owned objects are freed in reverse creation order. Note that `TTList<T>` owns nothing by itself: here the entities belong to the context's identity map, which is why the context is freed after the list and frees them with it.
 
 ```pascal
 destructor TMainForm.Destroy;
@@ -316,7 +322,7 @@ end;
 
 ## Running the Demo
 
-1. Open `Demos/Simple.SQLite/Demo.dproj` in the Delphi IDE.
+1. Open `Demos/Simple.SQLite/Demo.SQLite.dproj` in the Delphi IDE.
 2. Build and run -- the `Test.db` database file is created automatically on first launch.
 3. Click **Open** to load data, then use the **Insert**, **Edit**, and **Delete** buttons.
 4. Use the search box to filter the ListView client-side.

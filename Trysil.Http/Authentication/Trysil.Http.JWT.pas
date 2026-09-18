@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright Â© David Lastrucci
+  Copyright © David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -19,14 +19,20 @@ uses
 
   Trysil.Http.JWT.Payload;
 
+{$BOOLEVAL OFF}
+
 type
 
 { TTHttpJWTEncoding }
 
   TTHttpJWTEncoding = class
+  strict private
+    class function IsBase64Url(const AValue: String): Boolean;
+    class function IsCanonical(const AValue: String): Boolean;
   public
     class function Encode(const ABytes: TBytes): String;
     class function Decode(const AValue: String): TBytes;
+    class function IsValid(const AValue: String): Boolean;
   end;
 
 { TTHttpJWT<P> }
@@ -36,6 +42,8 @@ type
     FPayload: P;
 
     function BuildHeader: String;
+    function GetStringValue(
+      const AJSon: TJSonValue; const AName: String): String;
     function LoadHeader(
       const AHeaderSegment: String; out AKeyID: String): Boolean;
   public
@@ -61,6 +69,35 @@ begin
     Replace('+', '-', [rfReplaceAll]).
     Replace('/', '_', [rfReplaceAll]).
     TrimRight(['=']);
+end;
+
+class function TTHttpJWTEncoding.IsBase64Url(const AValue: String): Boolean;
+var
+  LIndex: Integer;
+begin
+  result := True;
+  LIndex := 1;
+  while result and (LIndex <= AValue.Length) do
+  begin
+    result := CharInSet(
+      AValue.Chars[LIndex - 1], ['A'..'Z', 'a'..'z', '0'..'9', '-', '_']);
+    Inc(LIndex);
+  end;
+end;
+
+class function TTHttpJWTEncoding.IsCanonical(const AValue: String): Boolean;
+begin
+  try
+    result := Encode(Decode(AValue)) = AValue;
+  except
+    result := False;
+  end;
+end;
+
+class function TTHttpJWTEncoding.IsValid(const AValue: String): Boolean;
+begin
+  result := (not AValue.IsEmpty) and IsBase64Url(AValue) and
+    IsCanonical(AValue);
 end;
 
 class function TTHttpJWTEncoding.Decode(const AValue: String): TBytes;
@@ -113,23 +150,35 @@ begin
   result := Format('%s.%s.%s', [LHeaderSeg, LPayloadSeg, LSignatureSeg]);
 end;
 
+function TTHttpJWT<P>.GetStringValue(
+  const AJSon: TJSonValue; const AName: String): String;
+begin
+  try
+    result := AJSon.GetValue<String>(AName, String.Empty);
+  except
+    result := String.Empty;
+  end;
+end;
+
 function TTHttpJWT<P>.LoadHeader(
   const AHeaderSegment: String; out AKeyID: String): Boolean;
 var
-  LJSon: TJSonObject;
+  LJSon: TJSonValue;
   LAlgorithm: String;
 begin
   result := False;
   AKeyID := String.Empty;
   LJSon := TJSonObject.ParseJSonValue(
-    TEncoding.UTF8.GetString(
-      TTHttpJWTEncoding.Decode(AHeaderSegment))) as TJSonObject;
+    TEncoding.UTF8.GetString(TTHttpJWTEncoding.Decode(AHeaderSegment)));
   if Assigned(LJSon) then
     try
-      LAlgorithm := LJSon.GetValue<String>('alg', String.Empty);
-      AKeyID := LJSon.GetValue<String>('kid', String.Empty);
-      result := (not FPayload.Algorithm.IsEmpty) and
-        SameText(LAlgorithm, FPayload.Algorithm);
+      if LJSon is TJSonObject then
+      begin
+        LAlgorithm := GetStringValue(LJSon, 'alg');
+        AKeyID := GetStringValue(LJSon, 'kid');
+        result := (not FPayload.Algorithm.IsEmpty) and
+          SameText(LAlgorithm, FPayload.Algorithm);
+      end;
     finally
       LJSon.Free;
     end;
@@ -143,7 +192,10 @@ var
 begin
   result := False;
   LParts := AToken.Split(['.']);
-  if Length(LParts) = 3 then
+  if (Length(LParts) = 3) and
+    TTHttpJWTEncoding.IsValid(LParts[0]) and
+    TTHttpJWTEncoding.IsValid(LParts[1]) and
+    TTHttpJWTEncoding.IsValid(LParts[2]) then
     if LoadHeader(LParts[0], LKeyID) then
     begin
       LSigningInput := TEncoding.UTF8.GetBytes(

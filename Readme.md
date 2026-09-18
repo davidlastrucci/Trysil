@@ -28,7 +28,7 @@
 - **Change tracking & soft delete** — `[TCreatedAt]`, `[TUpdatedAt]`, `[TDeletedAt]` with automatic timestamps and user tracking
 - **Optimistic locking** — built-in via `[TVersionColumn]`
 - **Identity map** — per-context, multi-tenant safe
-- **Unit of Work** — `TTSession<T>` tracks and applies changes automatically
+- **Unit of Work** — `TTSession<T>` applies the inserts, updates and deletes you mark in one transaction
 - **JSON serialization** — full round-trip with `TTJSonContext`
 - **REST HTTP module** — attribute-based routing, CORS, JWT (HS256 and RS256, with `kid` key rotation), multi-tenant support
 - **Nullable types** — `TTNullable<T>` generic wrapper
@@ -77,7 +77,7 @@ begin
   LContext := TTContext.Create(LConnection);
   try
     // Read all
-    LPersons := TTList<TPerson>.Create;
+    LPersons := LContext.CreateEntityList<TPerson>();
     try
       LContext.SelectAll<TPerson>(LPersons);
       for LPerson in LPersons do
@@ -93,7 +93,7 @@ begin
       LPerson.Lastname := 'Lastrucci';
       LContext.Insert<TPerson>(LPerson);
     finally
-      LPerson.Free;
+      LContext.FreeEntity<TPerson>(LPerson);
     end;
   finally
     LContext.Free;
@@ -166,6 +166,11 @@ Or visit: [getitnow.embarcadero.com/trysil-delphi-orm](https://getitnow.embarcad
 boss install davidlastrucci/Trysil
 ```
 
+Boss adds the core sources to the Search Path, subfolders included. For the JSON
+and HTTP modules add `modules\Trysil\Trysil.JSon` and `modules\Trysil\Trysil.Http`
+as well, together with the three subfolders of the latter: `Authentication`,
+`Log` and `MultiTenant`.
+
 ### Manual
 
 1. Clone the repository
@@ -182,7 +187,7 @@ boss install davidlastrucci/Trysil
    ```
    where `$(Trysil)` points to `Lib/<ver>`.
 
-See the full [Setup guide](https://github.com/davidlastrucci/Trysil/blob/master/docs/Setup.md) for details.
+See the full [Installation guide](https://davidlastrucci.github.io/Trysil/getting-started/installation/) for details, including the optional IDE Expert.
 
 ## Documentation
 
@@ -190,8 +195,6 @@ See the full [Setup guide](https://github.com/davidlastrucci/Trysil/blob/master/
 |---|---|
 | Online Help | [davidlastrucci.github.io/Trysil](https://davidlastrucci.github.io/Trysil) |
 | Blog | [trysil.lastrucci.net](https://trysil.lastrucci.net) |
-| Manual (English) | [PDF](https://www.lastrucci.net/trysil/trysil-en.pdf) |
-| Manual (Italiano) | [PDF](https://www.lastrucci.net/trysil/trysil-it.pdf) |
 
 ## Architecture Overview
 

@@ -7,31 +7,31 @@
             <Dependencies/>
         </Projects>
         <Projects Include="Trysil.FirebirdSQL270.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil270.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.PostgreSQL270.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil270.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.SQLite270.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil270.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.SqlServer270.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil270.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.InterBase270.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil270.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.MariaDB270.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil270.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.Oracle270.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil270.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.JSon270.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil270.dproj</Dependencies>
         </Projects>
         <Projects Include="Trysil.Http270.dproj">
-            <Dependencies/>
+            <Dependencies>Trysil270.dproj;Trysil.JSon270.dproj</Dependencies>
         </Projects>
     </ItemGroup>
     <ProjectExtensions>
@@ -148,12 +148,6 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Trysil.Http270.dproj">
-            <ProjectGuid>{1F3CD306-0A96-4D5A-B562-9E641619E333}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="Trysil.FirebirdSQL270.dproj">
             <ProjectGuid>{202D19A4-BEFF-4F24-A5F4-E7F98E050DFF}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
@@ -162,6 +156,18 @@
         </BuildGroupProject>
         <BuildGroupProject Include="Trysil.PostgreSQL270.dproj">
             <ProjectGuid>{F4568167-F236-47E8-BC62-F6697F268163}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.SQLite270.dproj">
+            <ProjectGuid>{97EACA67-3D39-4DC4-8C03-1607128EC00C}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.SqlServer270.dproj">
+            <ProjectGuid>{48800C8D-839F-44F6-A0BC-FCADBC31A910}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
@@ -190,14 +196,8 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Trysil.SQLite270.dproj">
-            <ProjectGuid>{97EACA67-3D39-4DC4-8C03-1607128EC00C}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Trysil.SqlServer270.dproj">
-            <ProjectGuid>{48800C8D-839F-44F6-A0BC-FCADBC31A910}</ProjectGuid>
+        <BuildGroupProject Include="Trysil.Http270.dproj">
+            <ProjectGuid>{1F3CD306-0A96-4D5A-B562-9E641619E333}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>

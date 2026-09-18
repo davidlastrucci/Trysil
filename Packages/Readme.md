@@ -18,5 +18,8 @@
 |Trysil.PostgreSQL|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|
 |Trysil.SQLite|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|
 |Trysil.SqlServer|||<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|
+|Trysil.InterBase|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|
+|Trysil.MariaDB|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|
+|Trysil.Oracle|||<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|
 |Trysil.JSon|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|
 |Trysil.Http|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|<p align="center">:heavy_check_mark:</p>|

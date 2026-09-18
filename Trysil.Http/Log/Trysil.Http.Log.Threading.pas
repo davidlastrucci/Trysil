@@ -35,7 +35,9 @@ type
     FRttiLogWriter: TTHttpRttiLogWriter;
     FQueue: TTHttpLogQueue;
     FEvent: TEvent;
+    FWriter: TTHttpLogAbstractWriter;
 
+    function EnsureWriter: Boolean;
     procedure WriteDiscarded(const AWriter: TTHttpLogAbstractWriter);
     procedure WriteValue(
       const AWriter: TTHttpLogAbstractWriter;
@@ -72,6 +74,7 @@ begin
   FRttiLogWriter := ARttiLogWriter;
   FQueue := TTHttpLogQueue.Create(AQueueCapacity);
   FEvent := TEvent.Create;
+  FWriter := nil;
   FreeOnTerminate := False;
 end;
 
@@ -84,6 +87,7 @@ end;
 
 procedure TTHttpLogThread.BeforeDestruction;
 begin
+  FreeOnTerminate := False;
   Terminate;
   FEvent.SetEvent;
   WaitFor;
@@ -156,22 +160,35 @@ begin
   WriteDiscarded(AWriter);
 end;
 
-procedure TTHttpLogThread.Execute;
-var
-  LWriter: TTHttpLogAbstractWriter;
+function TTHttpLogThread.EnsureWriter: Boolean;
 begin
-  LWriter := FRttiLogWriter.CreateLogWriter;
+  if not Assigned(FWriter) then
+    try
+      FWriter := FRttiLogWriter.CreateLogWriter;
+    except
+      FWriter := nil;
+    end;
+  result := Assigned(FWriter);
+end;
+
+procedure TTHttpLogThread.Execute;
+begin
   try
     while not Terminated do
     begin
       FEvent.ResetEvent;
-      ProcessQueue(LWriter);
+      if EnsureWriter then
+        ProcessQueue(FWriter);
 
       if not Terminated then
         FEvent.WaitFor(WaitInterval);
     end;
   finally
-    LWriter.Free;
+    if Assigned(FWriter) then
+    begin
+      ProcessQueue(FWriter);
+      FWriter.Free;
+    end;
   end;
 end;
 

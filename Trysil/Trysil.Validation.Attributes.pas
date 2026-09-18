@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright ï¿½ David Lastrucci
+  Copyright © David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -16,6 +16,7 @@ uses
   System.SysUtils,
   System.Classes,
   System.Rtti,
+  System.TypInfo,
   System.RegularExpressions,
 
   Trysil.Rtti,
@@ -41,6 +42,10 @@ type
   strict private
     FErrorMessage: String;
   strict protected
+    function NumericValue(const AValue: TValue): TValue;
+    function TryAsInt64(const AValue: TValue; out AResult: Int64): Boolean;
+    function TryAsDouble(const AValue: TValue; out AResult: Double): Boolean;
+
     function CheckType<T>(
       const AColumnName: String;
       const AValue: TValue;
@@ -64,6 +69,7 @@ type
     function IsNullDateTime(const AValue: TValue): Boolean;
     function IsNullObject(const AValue: TValue): Boolean;
     function IsNullNullable(const AValue: TValue): Boolean;
+    function IsMissingRelation(const AValue: TValue): Boolean;
   public
     constructor Create; overload;
     constructor Create(const AErrorMessage: String); overload;
@@ -115,34 +121,28 @@ type
       const AErrors: TTValidationErrors); override;
   end;
 
-{ TValidationValueType }
-
-  TValidationValueType = (vvtInteger, vvtDouble);
-
 { TValueAttibute }
 
   TValueAttribute = class abstract(TValidationAttribute)
   strict private
-    FValueType: TValidationValueType;
     FValue: TValue;
 
     constructor Create(
-      const AValueType: TValidationValueType;
       const AValue: TValue;
       const AErrorMessage: String); overload;
 
-    procedure ValidateInteger(
+    function ValidateInteger(
       const AColumnName: String;
       const AValue: TValue;
-      const AErrors: TTValidationErrors);
-    procedure ValidateDouble(
+      const AErrors: TTValidationErrors): Boolean;
+    function ValidateDouble(
       const AColumnName: String;
       const AValue: TValue;
-      const AErrors: TTValidationErrors);
+      const AErrors: TTValidationErrors): Boolean;
   strict protected
     function IsValidInteger(
-      const AValue1: Integer;
-      const AValue2: Integer): Boolean; virtual; abstract;
+      const AValue1: Int64;
+      const AValue2: Int64): Boolean; virtual; abstract;
     function IsValidDouble(
       const AValue1: Double;
       const AValue2: Double): Boolean; virtual; abstract;
@@ -170,7 +170,7 @@ type
   TMinValueAttribute = class(TValueAttribute)
   strict protected
     function IsValidInteger(
-      const AValue1: Integer; const AValue2: Integer): Boolean; override;
+      const AValue1: Int64; const AValue2: Int64): Boolean; override;
     function IsValidDouble(
       const AValue1: Double; const AValue2: Double): Boolean; override;
 
@@ -185,7 +185,7 @@ type
   TMaxValueAttribute = class(TValueAttribute)
   strict protected
     function IsValidInteger(
-      const AValue1: Integer; const AValue2: Integer): Boolean; override;
+      const AValue1: Int64; const AValue2: Int64): Boolean; override;
     function IsValidDouble(
       const AValue1: Double; const AValue2: Double): Boolean; override;
 
@@ -200,7 +200,7 @@ type
   TLessAttribute = class(TValueAttribute)
   strict protected
     function IsValidInteger(
-      const AValue1: Integer; const AValue2: Integer): Boolean; override;
+      const AValue1: Int64; const AValue2: Int64): Boolean; override;
     function IsValidDouble(
       const AValue1: Double; const AValue2: Double): Boolean; override;
 
@@ -215,7 +215,7 @@ type
   TGreaterAttribute = class(TValueAttribute)
   strict protected
     function IsValidInteger(
-      const AValue1: Integer; const AValue2: Integer): Boolean; override;
+      const AValue1: Int64; const AValue2: Int64): Boolean; override;
     function IsValidDouble(
       const AValue1: Double; const AValue2: Double): Boolean; override;
 
@@ -229,23 +229,26 @@ type
 
   TRangeAttribute = class(TValidationAttribute)
   strict private
-    FValueType: TValidationValueType;
     FMinValue: TValue;
     FMaxValue: TValue;
 
     constructor Create(
-      const AValueType: TValidationValueType;
       const AMinValue: TValue;
       const AMaxValue: TValue;
       const AErrorMessage: String); overload;
 
-    procedure ValidateInteger(
+    function ValidateInteger(
       const AColumnName: String;
       const AValue: TValue;
-      const AErrors: TTValidationErrors);
-    procedure ValidateDouble(
+      const AErrors: TTValidationErrors): Boolean;
+    function ValidateDouble(
       const AColumnName: String;
       const AValue: TValue;
+      const AErrors: TTValidationErrors): Boolean;
+    procedure AddRangeError(
+      const AColumnName: String;
+      const AMinValue: String;
+      const AMaxValue: String;
       const AErrors: TTValidationErrors);
   public
     constructor Create(
@@ -315,6 +318,34 @@ begin
   FErrorMessage := AErrorMessage;
 end;
 
+function TValidationAttribute.NumericValue(const AValue: TValue): TValue;
+begin
+  if AValue.IsNullable then
+    result := AValue.NullableValue
+  else
+    result := AValue;
+end;
+
+function TValidationAttribute.TryAsInt64(
+  const AValue: TValue; out AResult: Int64): Boolean;
+begin
+  result := AValue.Kind in [tkInteger, tkInt64];
+  if result then
+    AResult := AValue.AsInt64
+  else
+    AResult := 0;
+end;
+
+function TValidationAttribute.TryAsDouble(
+  const AValue: TValue; out AResult: Double): Boolean;
+begin
+  result := AValue.Kind in [tkInteger, tkInt64, tkFloat];
+  if result then
+    AResult := AValue.AsExtended
+  else
+    AResult := 0;
+end;
+
 function TValidationAttribute.CheckType<T>(
   const AColumnName: String;
   const AValue: TValue;
@@ -378,7 +409,7 @@ begin
     begin
       LRttiLazy := TTRttiLazy.Create(LObject);
       try
-        result := not Assigned(LRttiLazy.ObjectValue);
+        result := LRttiLazy.ID = 0;
       finally
         LRttiLazy.Free;
       end;
@@ -391,6 +422,29 @@ begin
   result := AValue.IsNull;
 end;
 
+function TRequiredAttribute.IsMissingRelation(
+  const AValue: TValue): Boolean;
+var
+  LObject: TObject;
+  LRttiLazy: TTRttiLazy;
+begin
+  result := False;
+  if AValue.IsType<TObject>() then
+  begin
+    LObject := AValue.AsType<TObject>();
+    if TTRttiLazy.IsLazy(LObject) then
+    begin
+      LRttiLazy := TTRttiLazy.Create(LObject);
+      try
+        result := (LRttiLazy.ID <> 0) and
+          (not Assigned(LRttiLazy.ObjectValue));
+      finally
+        LRttiLazy.Free;
+      end;
+    end;
+  end;
+end;
+
 procedure TRequiredAttribute.Validate(
   const AColumnName: String;
   const AValue: TValue;
@@ -400,7 +454,12 @@ begin
     IsNullDateTime(AValue) or IsNullNullable(AValue) then
     AErrors.Add(
       AColumnName,
-      Format(GetErrorMessage(SRequiredValidation), [AColumnName]));
+      Format(GetErrorMessage(SRequiredValidation), [AColumnName]))
+  else if IsMissingRelation(AValue) then
+    AErrors.Add(
+      AColumnName,
+      Format(
+        GetErrorMessage(SRequiredRelationValidation), [AColumnName]));
 end;
 
 { TLengthAttribute }
@@ -463,87 +522,78 @@ end;
 { TValueAttribute }
 
 constructor TValueAttribute.Create(
-  const AValueType: TValidationValueType;
   const AValue: TValue;
   const AErrorMessage: String);
 begin
   inherited Create(AErrorMessage);
-  FValueType := AValueType;
   FValue := AValue;
 end;
 
 constructor TValueAttribute.Create(const AValue: Integer);
 begin
-  Create(TValidationValueType.vvtInteger, AValue, String.Empty);
+  Create(TValue.From<Integer>(AValue), String.Empty);
 end;
 
 constructor TValueAttribute.Create(
   const AValue: Integer; const AErrorMessage: String);
 begin
-  Create(TValidationValueType.vvtInteger, AValue, AErrorMessage);
+  Create(TValue.From<Integer>(AValue), AErrorMessage);
 end;
 
 constructor TValueAttribute.Create(const AValue: Double);
 begin
-  Create(TValidationValueType.vvtDouble, AValue, String.Empty);
+  Create(TValue.From<Double>(AValue), String.Empty);
 end;
 
 constructor TValueAttribute.Create(
   const AValue: Double; const AErrorMessage: String);
 begin
-  Create(TValidationValueType.vvtDouble, AValue, AErrorMessage);
+  Create(TValue.From<Double>(AValue), AErrorMessage);
 end;
 
 procedure TValueAttribute.Validate(
   const AColumnName: String;
   const AValue: TValue;
   const AErrors: TTValidationErrors);
-begin
-  case FValueType of
-    TValidationValueType.vvtInteger:
-      ValidateInteger(AColumnName, AValue, AErrors);
-
-    TValidationValueType.vvtDouble:
-      ValidateDouble(AColumnName, AValue, AErrors);
-  end;
-end;
-
-procedure TValueAttribute.ValidateInteger(
-  const AColumnName: String;
-  const AValue: TValue;
-  const AErrors: TTValidationErrors);
 var
-  LValue1, LValue2: Integer;
+  LValue: TValue;
 begin
-  if CheckType<Integer>(AColumnName, AValue, AErrors) then
-  begin
-    LValue1 := AValue.AsType<Integer>;
-    LValue2 := FValue.AsType<Integer>;
-    if not IsValidInteger(LValue1, LValue2) then
-      AddValidationError(AColumnName, LValue2.ToString(), AErrors);
-  end;
+  LValue := NumericValue(AValue);
+  if (not ValidateInteger(AColumnName, LValue, AErrors)) and
+    (not ValidateDouble(AColumnName, LValue, AErrors)) then
+    AErrors.Add(
+      AColumnName,
+      Format(GetErrorMessage(SNotInvalidTypeValidation), [AColumnName]));
 end;
 
-procedure TValueAttribute.ValidateDouble(
+function TValueAttribute.ValidateInteger(
   const AColumnName: String;
   const AValue: TValue;
-  const AErrors: TTValidationErrors);
+  const AErrors: TTValidationErrors): Boolean;
+var
+  LValue1, LValue2: Int64;
+begin
+  result := TryAsInt64(AValue, LValue1) and TryAsInt64(FValue, LValue2);
+  if result and (not IsValidInteger(LValue1, LValue2)) then
+    AddValidationError(AColumnName, LValue2.ToString(), AErrors);
+end;
+
+function TValueAttribute.ValidateDouble(
+  const AColumnName: String;
+  const AValue: TValue;
+  const AErrors: TTValidationErrors): Boolean;
 var
   LValue1, LValue2: Double;
 begin
-  if CheckType<Double>(AColumnName, AValue, AErrors) then
-  begin
-    LValue1 := AValue.AsType<Double>;
-    LValue2 := FValue.AsType<Double>;
-    if not IsValidDouble(LValue1, LValue2) then
-      AddValidationError(AColumnName, LValue2.ToString(), AErrors);
-  end;
+  result := TryAsDouble(AValue, LValue1) and TryAsDouble(FValue, LValue2);
+  if result and (not IsValidDouble(LValue1, LValue2)) then
+    AddValidationError(AColumnName, LValue2.ToString(), AErrors);
 end;
 
 { TMinValueAttribute }
 
 function TMinValueAttribute.IsValidInteger(
-  const AValue1: Integer; const AValue2: Integer): Boolean;
+  const AValue1: Int64; const AValue2: Int64): Boolean;
 begin
   result := (AValue1 >= AValue2);
 end;
@@ -567,7 +617,7 @@ end;
 { TMaxValueAttribute }
 
 function TMaxValueAttribute.IsValidInteger(
-  const AValue1: Integer; const AValue2: Integer): Boolean;
+  const AValue1: Int64; const AValue2: Int64): Boolean;
 begin
   result := (AValue1 <= AValue2);
 end;
@@ -591,7 +641,7 @@ end;
 { TLessAttribute }
 
 function TLessAttribute.IsValidInteger(
-  const AValue1: Integer; const AValue2: Integer): Boolean;
+  const AValue1: Int64; const AValue2: Int64): Boolean;
 begin
   result := (AValue1 < AValue2);
 end;
@@ -615,7 +665,7 @@ end;
 { TGreaterAttribute }
 
 function TGreaterAttribute.IsValidInteger(
-  const AValue1: Integer; const AValue2: Integer): Boolean;
+  const AValue1: Int64; const AValue2: Int64): Boolean;
 begin
   result := (AValue1 > AValue2);
 end;
@@ -639,13 +689,11 @@ end;
 { TRangeAttribute }
 
 constructor TRangeAttribute.Create(
-  const AValueType: TValidationValueType;
   const AMinValue: TValue;
   const AMaxValue: TValue;
   const AErrorMessage: String);
 begin
   inherited Create(AErrorMessage);
-  FValueType := AValueType;
   FMinValue := AMinValue;
   FMaxValue := AMaxValue;
 end;
@@ -653,7 +701,10 @@ end;
 constructor TRangeAttribute.Create(
   const AMinValue: Integer; const AMaxValue: Integer);
 begin
-  Create(TValidationValueType.vvtInteger, AMinValue, AMaxValue, String.Empty);
+  Create(
+    TValue.From<Integer>(AMinValue),
+    TValue.From<Integer>(AMaxValue),
+    String.Empty);
 end;
 
 constructor TRangeAttribute.Create(
@@ -661,13 +712,19 @@ constructor TRangeAttribute.Create(
   const AMaxValue: Integer;
   const AErrorMessage: String);
 begin
-  Create(TValidationValueType.vvtInteger, AMinValue, AMaxValue, AErrorMessage);
+  Create(
+    TValue.From<Integer>(AMinValue),
+    TValue.From<Integer>(AMaxValue),
+    AErrorMessage);
 end;
 
 constructor TRangeAttribute.Create(
   const AMinValue: Double; const AMaxValue: Double);
 begin
-  Create(TValidationValueType.vvtDouble, AMinValue, AMaxValue, String.Empty);
+  Create(
+    TValue.From<Double>(AMinValue),
+    TValue.From<Double>(AMaxValue),
+    String.Empty);
 end;
 
 constructor TRangeAttribute.Create(
@@ -675,61 +732,65 @@ constructor TRangeAttribute.Create(
   const AMaxValue: Double;
   const AErrorMessage: String);
 begin
-  Create(TValidationValueType.vvtDouble, AMinValue, AMaxValue, AErrorMessage);
+  Create(
+    TValue.From<Double>(AMinValue),
+    TValue.From<Double>(AMaxValue),
+    AErrorMessage);
 end;
 
 procedure TRangeAttribute.Validate(
   const AColumnName: String;
   const AValue: TValue;
   const AErrors: TTValidationErrors);
-begin
-  case FValueType of
-    TValidationValueType.vvtInteger:
-      ValidateInteger(AColumnName, AValue, AErrors);
-
-    TValidationValueType.vvtDouble:
-      ValidateDouble(AColumnName, AValue, AErrors);
-  end;
-end;
-
-procedure TRangeAttribute.ValidateInteger(
-  const AColumnName: String;
-  const AValue: TValue;
-  const AErrors: TTValidationErrors);
 var
-  LValue, LMinValue, LMaxValue: Integer;
+  LValue: TValue;
 begin
-  if CheckType<Integer>(AColumnName, AValue, AErrors) then
-  begin
-    LValue := AValue.AsType<Integer>;
-    LMinValue := FMinValue.AsType<Integer>;
-    LMaxValue := FMaxValue.AsType<Integer>;
-    if (LValue < LMinValue) or (LValue > LMaxValue) then
-      AErrors.Add(
-        AColumnName,
-        Format(GetErrorMessage(SRangeValidation), [
-          AColumnName, LMinValue.ToString(), LMaxValue.ToString()]));
-  end;
+  LValue := NumericValue(AValue);
+  if (not ValidateInteger(AColumnName, LValue, AErrors)) and
+    (not ValidateDouble(AColumnName, LValue, AErrors)) then
+    AErrors.Add(
+      AColumnName,
+      Format(GetErrorMessage(SNotInvalidTypeValidation), [AColumnName]));
 end;
 
-procedure TRangeAttribute.ValidateDouble(
+procedure TRangeAttribute.AddRangeError(
+  const AColumnName: String;
+  const AMinValue: String;
+  const AMaxValue: String;
+  const AErrors: TTValidationErrors);
+begin
+  AErrors.Add(
+    AColumnName,
+    Format(GetErrorMessage(SRangeValidation), [
+      AColumnName, AMinValue, AMaxValue]));
+end;
+
+function TRangeAttribute.ValidateInteger(
   const AColumnName: String;
   const AValue: TValue;
-  const AErrors: TTValidationErrors);
+  const AErrors: TTValidationErrors): Boolean;
+var
+  LValue, LMinValue, LMaxValue: Int64;
+begin
+  result := TryAsInt64(AValue, LValue) and TryAsInt64(FMinValue, LMinValue) and
+    TryAsInt64(FMaxValue, LMaxValue);
+  if result and ((LValue < LMinValue) or (LValue > LMaxValue)) then
+    AddRangeError(
+      AColumnName, LMinValue.ToString(), LMaxValue.ToString(), AErrors);
+end;
+
+function TRangeAttribute.ValidateDouble(
+  const AColumnName: String;
+  const AValue: TValue;
+  const AErrors: TTValidationErrors): Boolean;
 var
   LValue, LMinValue, LMaxValue: Double;
 begin
-  if CheckType<Double>(AColumnName, AValue, AErrors) then
-  begin
-    LValue := AValue.AsType<Double>;
-    LMinValue := FMinValue.AsType<Double>;
-    LMaxValue := FMaxValue.AsType<Double>;
-    if (LValue < LMinValue) or (LValue > LMaxValue) then
-      AErrors.Add(
-        AColumnName,
-        Format(GetErrorMessage(SRangeValidation), [
-          AColumnName, LMinValue.ToString(), LMaxValue.ToString()]));
-  end;
+  result := TryAsDouble(AValue, LValue) and
+    TryAsDouble(FMinValue, LMinValue) and TryAsDouble(FMaxValue, LMaxValue);
+  if result and ((LValue < LMinValue) or (LValue > LMaxValue)) then
+    AddRangeError(
+      AColumnName, LMinValue.ToString(), LMaxValue.ToString(), AErrors);
 end;
 
 { TRegexAttribute }

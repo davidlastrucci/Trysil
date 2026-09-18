@@ -16,6 +16,7 @@ uses
   System.SysUtils,
   System.Classes,
 
+  Trysil.Classes,
   Trysil.Rtti;
 
 type
@@ -39,13 +40,18 @@ type
   strict private
     FSql: String;
     FParams: TArray<TTExpressionParam>;
+    FColumnNames: TArray<String>;
 
-    class function MergeParameters(
-      const ALeft: TArray<TTExpressionParam>;
-      const ARight: TArray<TTExpressionParam>): TArray<TTExpressionParam>; static;
+    class function Merge<T>(
+      const ALeft: TArray<T>; const ARight: TArray<T>): TArray<T>; static;
   public
     constructor Create(
-      const ASql: String; const AParams: TArray<TTExpressionParam>);
+      const ASql: String;
+      const AParams: TArray<TTExpressionParam>); overload;
+    constructor Create(
+      const ASql: String;
+      const AParams: TArray<TTExpressionParam>;
+      const AColumnNames: TArray<String>); overload;
 
     class operator LogicalAnd(
       const ALeft: TTExpression; const ARight: TTExpression): TTExpression;
@@ -55,6 +61,7 @@ type
 
     property Sql: String read FSql;
     property Params: TArray<TTExpressionParam> read FParams;
+    property ColumnNames: TArray<String> read FColumnNames;
   end;
 
 { TTProperty }
@@ -91,6 +98,8 @@ type
     function Between(const ALow: TTValue; const AHigh: TTValue): TTExpression;
     function InValues(const AValues: array of TTValue): TTExpression;
 
+    const NoValuesSql = '(1 = 0)';
+
     property ColumnName: String read FColumnName;
     property SqlReference: String read FSqlReference;
   end;
@@ -108,15 +117,24 @@ end;
 { TTExpression }
 
 constructor TTExpression.Create(
-  const ASql: String; const AParams: TArray<TTExpressionParam>);
+  const ASql: String;
+  const AParams: TArray<TTExpressionParam>);
+begin
+  Self := TTExpression.Create(ASql, AParams, nil);
+end;
+
+constructor TTExpression.Create(
+  const ASql: String;
+  const AParams: TArray<TTExpressionParam>;
+  const AColumnNames: TArray<String>);
 begin
   FSql := ASql;
   FParams := AParams;
+  FColumnNames := AColumnNames;
 end;
 
-class function TTExpression.MergeParameters(
-  const ALeft: TArray<TTExpressionParam>;
-  const ARight: TArray<TTExpressionParam>): TArray<TTExpressionParam>;
+class function TTExpression.Merge<T>(
+  const ALeft: TArray<T>; const ARight: TArray<T>): TArray<T>;
 var
   LLeftLength: Integer;
   LIndex: Integer;
@@ -134,7 +152,8 @@ class operator TTExpression.LogicalAnd(
 begin
   result := TTExpression.Create(
     Format('(%s AND %s)', [ALeft.Sql, ARight.Sql]),
-    MergeParameters(ALeft.Params, ARight.Params));
+    Merge<TTExpressionParam>(ALeft.Params, ARight.Params),
+    Merge<String>(ALeft.ColumnNames, ARight.ColumnNames));
 end;
 
 class operator TTExpression.LogicalOr(
@@ -142,14 +161,15 @@ class operator TTExpression.LogicalOr(
 begin
   result := TTExpression.Create(
     Format('(%s OR %s)', [ALeft.Sql, ARight.Sql]),
-    MergeParameters(ALeft.Params, ARight.Params));
+    Merge<TTExpressionParam>(ALeft.Params, ARight.Params),
+    Merge<String>(ALeft.ColumnNames, ARight.ColumnNames));
 end;
 
 class operator TTExpression.LogicalNot(
   const AValue: TTExpression): TTExpression;
 begin
   result := TTExpression.Create(
-    Format('NOT (%s)', [AValue.Sql]), AValue.Params);
+    Format('NOT (%s)', [AValue.Sql]), AValue.Params, AValue.ColumnNames);
 end;
 
 { TTProperty }
@@ -163,7 +183,7 @@ end;
 constructor TTProperty.Create(
   const AAlias: String; const AColumnName: String);
 begin
-  FColumnName := Format('%s_%s', [AAlias, AColumnName]);
+  FColumnName := TTIdentifier.JoinAliasName(AAlias, AColumnName);
   FSqlReference := Format('%s.%s', [AAlias, AColumnName]);
 end;
 
@@ -171,8 +191,9 @@ function TTProperty.Compare(
   const AOperator: String; const AValue: TTValue): TTExpression;
 begin
   result := TTExpression.Create(
-    Format('%s %s ?', [FSqlReference, AOperator]),
-    [TTExpressionParam.Create(FColumnName, AValue)]);
+    Format('%s %s ?', [FSqlReference, AOperator]), [
+      TTExpressionParam.Create(FColumnName, AValue)], [
+      FColumnName]);
 end;
 
 class operator TTProperty.Equal(
@@ -223,12 +244,14 @@ end;
 
 function TTProperty.IsNull: TTExpression;
 begin
-  result := TTExpression.Create(Format('%s IS NULL', [FSqlReference]), []);
+  result := TTExpression.Create(
+    Format('%s IS NULL', [FSqlReference]), [], [FColumnName]);
 end;
 
 function TTProperty.IsNotNull: TTExpression;
 begin
-  result := TTExpression.Create(Format('%s IS NOT NULL', [FSqlReference]), []);
+  result := TTExpression.Create(
+    Format('%s IS NOT NULL', [FSqlReference]), [], [FColumnName]);
 end;
 
 function TTProperty.Between(
@@ -237,7 +260,8 @@ begin
   result := TTExpression.Create(
     Format('%s BETWEEN ? AND ?', [FSqlReference]),
     [TTExpressionParam.Create(FColumnName, ALow),
-     TTExpressionParam.Create(FColumnName, AHigh)]);
+     TTExpressionParam.Create(FColumnName, AHigh)],
+    [FColumnName]);
 end;
 
 function TTProperty.InValues(const AValues: array of TTValue): TTExpression;
@@ -246,18 +270,26 @@ var
   LParams: TArray<TTExpressionParam>;
   LIndex: Integer;
 begin
-  SetLength(LParams, Length(AValues));
-  LPlaceholders := String.Empty;
-  for LIndex := 0 to High(AValues) do
+  if Length(AValues) = 0 then
+    result := TTExpression.Create(NoValuesSql, [], [FColumnName])
+  else
   begin
-    if LIndex = 0 then
-      LPlaceholders := '?'
-    else
-      LPlaceholders := Format('%s, ?', [LPlaceholders]);
-    LParams[LIndex] := TTExpressionParam.Create(FColumnName, AValues[LIndex]);
+    SetLength(LParams, Length(AValues));
+    LPlaceholders := String.Empty;
+    for LIndex := 0 to High(AValues) do
+    begin
+      if LIndex = 0 then
+        LPlaceholders := '?'
+      else
+        LPlaceholders := Format('%s, ?', [LPlaceholders]);
+      LParams[LIndex] := TTExpressionParam.Create(
+        FColumnName, AValues[LIndex]);
+    end;
+    result := TTExpression.Create(
+      Format('%s IN (%s)', [FSqlReference, LPlaceholders]),
+      LParams,
+      [FColumnName]);
   end;
-  result := TTExpression.Create(
-    Format('%s IN (%s)', [FSqlReference, LPlaceholders]), LParams);
 end;
 
 end.

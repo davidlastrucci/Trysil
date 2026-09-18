@@ -19,10 +19,10 @@ Trysil maps your Delphi classes to database tables using attributes, giving you 
 - **Raw Select** -- `RawSelect<T>` maps arbitrary SQL (GROUP BY, UNION, subqueries) to typed DTO classes
 - **Optimistic locking** -- automatic version-column checks on every update
 - **Lazy loading** -- `TTLazy<T>` and `TTLazyList<T>` for deferred related-entity loading
-- **Unit of Work pattern** -- `TTSession<T>` tracks changes and applies them in a single transaction
+- **Unit of Work pattern** -- `TTSession<T>` applies the inserts, updates and deletes you mark in a single transaction
 - **Built-in validation attributes** -- `[TRequired]`, `[TMaxLength]`, `[TMinValue]`, `[TMaxValue]` and more
 - **JSON serialization module** -- `TTJSonContext` for entity-to-JSON and JSON-to-entity conversion
-- **HTTP REST server** -- attribute-based routing, authentication (Basic/Bearer/Digest/JWT), CORS, multi-tenant support
+- **HTTP REST server** -- attribute-based routing, authentication (Basic/Bearer/JWT), CORS, multi-tenant support
 - **Multi-database support** -- SQLite, SQL Server, PostgreSQL, Firebird, InterBase, MariaDB, and Oracle
 - **AI assistant skills** -- install ready-made instruction files so AI coding agents (Claude Code, Cursor, Copilot, Windsurf) use the real Trysil API
 - **Connection pooling** -- built-in via FireDAC

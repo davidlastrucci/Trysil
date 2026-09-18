@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright Â© David Lastrucci
+  Copyright © David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -59,7 +59,8 @@ implementation
 function TTInterBaseSequenceSyntax.GetSequenceSyntax: String;
 begin
   result := Format(
-    'SELECT GEN_ID(%s, 1) ID FROM RDB$DATABASE', [FTableMap.SequenceName]);
+    'SELECT GEN_ID(%s, 1) ID FROM RDB$DATABASE', [
+      FConnection.GetDatabaseObjectName(FTableMap.SequenceName)]);
 end;
 
 { TTInterBaseSelectSyntax }

@@ -71,6 +71,7 @@ nav:
     - Nullable Types: guide/nullable.md
     - Logging: guide/logging.md
     - Cookbook: guide/cookbook.md
+    - Upgrading from 1.0.0: guide/upgrading.md
   - Tooling:
     - AI Assistant Skills: tooling/ai-skills.md
   - Database Drivers:

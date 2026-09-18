@@ -23,6 +23,10 @@ type
 
   ETJSonException = class(ETException);
 
+{ ETJSonServerException }
+
+  ETJSonServerException = class(ETJSonException);
+
 implementation
 
 end.

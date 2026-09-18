@@ -61,6 +61,9 @@ type
 
     [Test]
     procedure RunInTransactionNestedUsesOuterTransaction;
+
+    [Test]
+    procedure SaveTwiceInTransactionInsertsOnlyOnce;
   end;
 
 implementation
@@ -334,6 +337,32 @@ begin
   LCount := FContext.SelectCount<TTestCustomer>(TTFilter.Empty);
   Assert.AreEqual<Integer>(0, LCount,
     'Inner RunInTransaction must join the outer transaction');
+end;
+
+procedure TTAbstractTransactionTests.SaveTwiceInTransactionInsertsOnlyOnce;
+var
+  LCustomer: TTestCustomer;
+  LCount: Integer;
+  LReloaded: TTestCustomer;
+begin
+  FContext.RunInTransaction(
+    procedure
+    begin
+      LCustomer := FContext.CreateEntity<TTestCustomer>();
+      LCustomer.Name := 'First';
+      FContext.Save<TTestCustomer>(LCustomer);
+
+      LCustomer.Name := 'Second';
+      FContext.Save<TTestCustomer>(LCustomer);
+    end);
+
+  LCount := FContext.SelectCount<TTestCustomer>(TTFilter.Empty);
+  Assert.AreEqual<Integer>(1, LCount,
+    'The second Save inside the transaction must update, not insert again');
+
+  LReloaded := FContext.Get<TTestCustomer>(LCustomer.ID);
+  Assert.AreEqual<String>('Second', LReloaded.Name,
+    'The second Save must have updated the row');
 end;
 
 end.

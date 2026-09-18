@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright Â© David Lastrucci
+  Copyright © David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -21,6 +21,9 @@ uses
   FireDAC.Stan.Option,
   FireDAC.Comp.Client,
 
+  Trysil.Consts,
+  Trysil.Exceptions,
+  Trysil.Data,
   Trysil.Data.FireDAC.ConnectionPool,
   Trysil.Data.FireDAC,
   Trysil.Data.SqlSyntax,
@@ -56,12 +59,16 @@ type
       const APrecMin: Integer;
       const APrecMax: Integer;
       const ATargetType: TFDDataType);
+    procedure AddBooleanMapRule(
+      const AConnection: TFDConnection;
+      const ASourceType: TFDDataType);
 
     function CreateSyntaxClasses: TTSyntaxClasses; override;
     function GetDatabaseVersion: String; override;
-    procedure ConfigureConnection(const AConnection: TFDConnection); override;
+    procedure ConfigureMapRules(const AConnection: TFDConnection); override;
 
     class function GetDriver: String; override;
+    class function GetDriverAliases: TArray<String>; override;
     class procedure InternalRegisterConnection(
       const AName: String;
       const AParameters: TTFireDACConnectionParameters); override;
@@ -84,6 +91,9 @@ type
     class procedure RegisterConnection(
       const AName: String;
       const AParameters: TStrings); overload;
+
+    function GetDatabaseObjectName(
+      const ADatabaseObjectName: String): String; override;
 
     class property Driver: TTOracleDriver read FDriver;
   end;
@@ -119,6 +129,7 @@ end;
 class destructor TTOracleConnection.ClassDestroy;
 begin
   FDriver.Free;
+  FDriver := nil;
 end;
 
 function TTOracleConnection.CreateSyntaxClasses: TTSyntaxClasses;
@@ -144,15 +155,24 @@ begin
   LRule.TargetDataType := ATargetType;
 end;
 
-procedure TTOracleConnection.ConfigureConnection(
+procedure TTOracleConnection.AddBooleanMapRule(
+  const AConnection: TFDConnection;
+  const ASourceType: TFDDataType);
+begin
+  AddIntegerMapRule(AConnection, ASourceType, 1, 1, dtBoolean);
+end;
+
+procedure TTOracleConnection.ConfigureMapRules(
   const AConnection: TFDConnection);
 begin
-  inherited ConfigureConnection(AConnection);
+  inherited ConfigureMapRules(AConnection);
 
   AConnection.FormatOptions.OwnMapRules := True;
-  AddIntegerMapRule(AConnection, dtFmtBCD, 1, 9, dtInt32);
+  AddBooleanMapRule(AConnection, dtFmtBCD);
+  AddBooleanMapRule(AConnection, dtBCD);
+  AddIntegerMapRule(AConnection, dtFmtBCD, 2, 9, dtInt32);
   AddIntegerMapRule(AConnection, dtFmtBCD, 10, 19, dtInt64);
-  AddIntegerMapRule(AConnection, dtBCD, 1, 9, dtInt32);
+  AddIntegerMapRule(AConnection, dtBCD, 2, 9, dtInt32);
   AddIntegerMapRule(AConnection, dtBCD, 10, 19, dtInt64);
 end;
 
@@ -164,6 +184,11 @@ end;
 class function TTOracleConnection.GetDriver: String;
 begin
   result := FDriver.DriverLink.DriverID;
+end;
+
+class function TTOracleConnection.GetDriverAliases: TArray<String>;
+begin
+  result := ['Oracle'];
 end;
 
 class procedure TTOracleConnection.InternalRegisterConnection(
@@ -224,6 +249,20 @@ class procedure TTOracleConnection.RegisterConnection(
 begin
   TTFireDACConnectionPool.Instance.RegisterConnection(
     AName, FDriver.DriverLink.DriverID, AParameters);
+end;
+
+function TTOracleConnection.GetDatabaseObjectName(
+  const ADatabaseObjectName: String): String;
+begin
+  if ADatabaseObjectName.Contains('"') then
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SNotEscapableObjectName), [
+        ADatabaseObjectName,
+        '"',
+        'Oracle']);
+
+  result := TTDatabaseObjectName.Quoted(
+    ADatabaseObjectName, '"', '"', TTNameCase.Upper);
 end;
 
 initialization

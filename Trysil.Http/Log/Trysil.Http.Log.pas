@@ -32,6 +32,7 @@ type
     FRttiLogWriter: TTHttpRttiLogWriter;
     FParameters: TTHttpLogParameters;
     FOnCanLog: TFunc<TTHttpRequest, Boolean>;
+    FOnRedactContent: TFunc<TTHttpRequest, String, String>;
 
     function CanLog(const ARequest: TTHttpRequest): Boolean;
   public
@@ -51,6 +52,8 @@ type
 
     property OnCanLog: TFunc<TTHttpRequest, Boolean>
       read FOnCanLog write FOnCanLog;
+    property OnRedactContent: TFunc<TTHttpRequest, String, String>
+      read FOnRedactContent write FOnRedactContent;
   end;
 
 implementation
@@ -64,6 +67,7 @@ begin
   FRttiLogWriter := nil;
   FParameters := TTHttpLogParameters.Create(0, 0);
   FOnCanLog := nil;
+  FOnRedactContent := nil;
 end;
 
 destructor TTHttpLog.Destroy;
@@ -96,14 +100,18 @@ procedure TTHttpLog.LogAction(const ATaskID: String; const AAction: String);
 var
   LWriter: TTHttpLogAbstractWriter;
 begin
-  if Assigned(FRttiLogWriter) then
-  begin
-    LWriter := FRttiLogWriter.CreateLogWriter;
-    try
-      LWriter.WriteAction(TTHttpLogAction.Create(ATaskID, AAction));
-    finally
-      LWriter.Free;
+  try
+    if Assigned(FRttiLogWriter) then
+    begin
+      LWriter := FRttiLogWriter.CreateLogWriter;
+      try
+        LWriter.WriteAction(TTHttpLogAction.Create(ATaskID, AAction));
+      finally
+        LWriter.Free;
+      end;
     end;
+  except
+    // Logging must not break the operation being logged
   end;
 end;
 
@@ -135,11 +143,16 @@ procedure TTHttpLog.LogRequest(const ARequest: TTHttpRequest);
 var
   LLogThread: TTHttpLogThread;
 begin
-  if CanLog(ARequest) then
-  begin
-    LLogThread := FLogThreads.Next;
-    if Assigned(LLogThread) then
-      LLogThread.Add(TTHttpLogRequest.Create(ARequest, FParameters));
+  try
+    if CanLog(ARequest) then
+    begin
+      LLogThread := FLogThreads.Next;
+      if Assigned(LLogThread) then
+        LLogThread.Add(TTHttpLogRequest.Create(
+          ARequest, FParameters, FOnRedactContent));
+    end;
+  except
+    // Logging must not break the operation being logged
   end;
 end;
 
@@ -148,12 +161,17 @@ procedure TTHttpLog.LogResponse(
 var
   LLogThread: TTHttpLogThread;
 begin
-  if CanLog(ARequest) then
-  begin
-    LLogThread := FLogThreads.Next;
-    if Assigned(LLogThread) then
-      LLogThread.Add(
-        TTHttpLogResponse.Create(ARequest, AResponse, FParameters));
+  try
+    if CanLog(ARequest) then
+    begin
+      LLogThread := FLogThreads.Next;
+      if Assigned(LLogThread) then
+        LLogThread.Add(
+          TTHttpLogResponse.Create(
+            ARequest, AResponse, FParameters, FOnRedactContent));
+    end;
+  except
+    // Logging must not break the operation being logged
   end;
 end;
 

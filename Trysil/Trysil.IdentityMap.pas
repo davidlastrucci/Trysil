@@ -1,7 +1,7 @@
-(*
+﻿(*
 
   Trysil
-  Copyright � David Lastrucci
+  Copyright © David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -18,7 +18,9 @@ uses
   System.Generics.Collections,
   System.TypInfo,
 
-  Trysil.Types;
+  Trysil.Consts,
+  Trysil.Types,
+  Trysil.Exceptions;
 
 type
 
@@ -34,7 +36,6 @@ type
     procedure Add(const APrimaryKey: TTPrimaryKey; const AEntity: TObject);
     function TryGetValue(
       const APrimaryKey: TTPrimaryKey; var AEntity: TObject): Boolean;
-    procedure Remove(const APrimaryKey: TTPrimaryKey);
   end;
 
 { TTIdentityMap }
@@ -52,7 +53,6 @@ type
     procedure AddEntity<T: class>(
       const APrimaryKey: TTPrimaryKey; const AEntity: T);
     function GetEntity<T: class>(const APrimaryKey: TTPrimaryKey): T;
-    procedure RemoveEntity<T: class>(const APrimaryKey: TTPrimaryKey);
   end;
 
 implementation
@@ -73,18 +73,8 @@ end;
 
 procedure TTEntityIdentityMap.Add(
   const APrimaryKey: TTPrimaryKey; const AEntity: TObject);
-var
-  LEntity: TObject;
 begin
-  if FCache.TryGetValue(APrimaryKey, LEntity) then
-  begin
-    if LEntity <> AEntity then
-    begin
-      FCache.Remove(APrimaryKey);
-      FCache.Add(APrimaryKey, AEntity);
-    end;
-  end
-  else
+  if not FCache.ContainsKey(APrimaryKey) then
     FCache.Add(APrimaryKey, AEntity);
 end;
 
@@ -92,12 +82,6 @@ function TTEntityIdentityMap.TryGetValue(
   const APrimaryKey: TTPrimaryKey; var AEntity: TObject): Boolean;
 begin
   result := FCache.TryGetValue(APrimaryKey, AEntity);
-end;
-
-procedure TTEntityIdentityMap.Remove(const APrimaryKey: TTPrimaryKey);
-begin
-  if FCache.ContainsKey(APrimaryKey) then
-    FCache.Remove(APrimaryKey);
 end;
 
 { TTIdentityMap }
@@ -132,8 +116,18 @@ end;
 
 procedure TTIdentityMap.AddEntity<T>(
   const APrimaryKey: TTPrimaryKey; const AEntity: T);
+var
+  LEntityIdentityMap: TTEntityIdentityMap;
+  LEntity: TObject;
 begin
-  GetEntityIdentityMap(TypeInfo(T)).Add(APrimaryKey, AEntity);
+  LEntityIdentityMap := GetEntityIdentityMap(TypeInfo(T));
+  if LEntityIdentityMap.TryGetValue(APrimaryKey, LEntity) and
+    (LEntity <> TObject(AEntity)) then
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SDuplicateEntityIdentity), [
+        TObject(AEntity).ClassName, APrimaryKey]);
+
+  LEntityIdentityMap.Add(APrimaryKey, AEntity);
 end;
 
 function TTIdentityMap.GetEntity<T>(const APrimaryKey: TTPrimaryKey): T;
@@ -143,11 +137,6 @@ begin
   result := default(T);
   if GetEntityIdentityMap(TypeInfo(T)).TryGetValue(APrimaryKey, LResult) then
     result := T(LResult);
-end;
-
-procedure TTIdentityMap.RemoveEntity<T>(const APrimaryKey: TTPrimaryKey);
-begin
-  GetEntityIdentityMap(TypeInfo(T)).Remove(APrimaryKey);
 end;
 
 end.

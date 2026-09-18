@@ -1,7 +1,7 @@
 (*
 
   Trysil
-  Copyright Â© David Lastrucci
+  Copyright © David Lastrucci
   All rights reserved
 
   Trysil - Operation ORM (World War II)
@@ -17,6 +17,7 @@ uses
   DUnitX.TestFramework,
 
   Trysil.Types,
+  Trysil.Exceptions,
   Trysil.IdentityMap;
 
 type
@@ -67,19 +68,13 @@ type
     procedure DifferentPrimaryKeysReturnDifferentInstances;
 
     [Test]
-    procedure AddWithDuplicateKeyReplacesAndFreesPrevious;
+    procedure AddWithDuplicateKeyRaisesAndKeepsThePrevious;
 
     [Test]
     procedure AddSameInstanceTwiceDoesNotFree;
 
     [Test]
     procedure DifferentEntityTypesDoNotCollideOnSameKey;
-
-    [Test]
-    procedure RemoveEntityMakesGetReturnNil;
-
-    [Test]
-    procedure RemoveEntityFreesOwnedInstance;
 
     [Test]
     procedure DestroyFreesAllOwnedEntities;
@@ -168,22 +163,44 @@ begin
   end;
 end;
 
-procedure TTIdentityMapTests.AddWithDuplicateKeyReplacesAndFreesPrevious;
+procedure TTIdentityMapTests.AddWithDuplicateKeyRaisesAndKeepsThePrevious;
 var
   LMap: TTIdentityMap;
   LFirst: TTestEntityA;
   LSecond: TTestEntityA;
+  LRaised: Boolean;
 begin
   LMap := TTIdentityMap.Create;
   try
     LFirst := TTestEntityA.Create(10);
     LSecond := TTestEntityA.Create(20);
-    LMap.AddEntity<TTestEntityA>(1, LFirst);
-    LMap.AddEntity<TTestEntityA>(1, LSecond);
-    Assert.AreSame(LSecond, LMap.GetEntity<TTestEntityA>(1),
-      'A colliding key must replace the previous instance');
-    Assert.AreEqual(Integer(1), TTestEntityA.DestroyCount,
-      'The replaced instance must be freed by the identity map');
+    try
+      LMap.AddEntity<TTestEntityA>(1, LFirst);
+
+      LRaised := False;
+      try
+        LMap.AddEntity<TTestEntityA>(1, LSecond);
+      except
+        on E: ETException do
+          LRaised := True;
+      end;
+
+      Assert.IsTrue(
+        LRaised,
+        'Two instances cannot share one identity in a context, and the map ' +
+        'cannot pick a winner: the caller may be holding either');
+      Assert.AreSame(
+        LFirst,
+        LMap.GetEntity<TTestEntityA>(1),
+        'The instance already registered stays registered');
+      Assert.AreEqual(
+        Integer(0),
+        TTestEntityA.DestroyCount,
+        'The map used to free the instance it replaced, which is memory the ' +
+        'caller was still using: it must free nothing here');
+    finally
+      LSecond.Free;
+    end;
   finally
     LMap.Free;
   end;
@@ -221,38 +238,6 @@ begin
     LMap.AddEntity<TTestEntityB>(1, LEntityB);
     Assert.AreSame(LEntityA, LMap.GetEntity<TTestEntityA>(1));
     Assert.AreSame(LEntityB, LMap.GetEntity<TTestEntityB>(1));
-  finally
-    LMap.Free;
-  end;
-end;
-
-procedure TTIdentityMapTests.RemoveEntityMakesGetReturnNil;
-var
-  LMap: TTIdentityMap;
-  LEntity: TTestEntityA;
-begin
-  LMap := TTIdentityMap.Create;
-  try
-    LEntity := TTestEntityA.Create(42);
-    LMap.AddEntity<TTestEntityA>(1, LEntity);
-    LMap.RemoveEntity<TTestEntityA>(1);
-    Assert.IsNull(LMap.GetEntity<TTestEntityA>(1));
-  finally
-    LMap.Free;
-  end;
-end;
-
-procedure TTIdentityMapTests.RemoveEntityFreesOwnedInstance;
-var
-  LMap: TTIdentityMap;
-  LEntity: TTestEntityA;
-begin
-  LMap := TTIdentityMap.Create;
-  try
-    LEntity := TTestEntityA.Create(42);
-    LMap.AddEntity<TTestEntityA>(1, LEntity);
-    LMap.RemoveEntity<TTestEntityA>(1);
-    Assert.AreEqual(Integer(1), TTestEntityA.DestroyCount);
   finally
     LMap.Free;
   end;

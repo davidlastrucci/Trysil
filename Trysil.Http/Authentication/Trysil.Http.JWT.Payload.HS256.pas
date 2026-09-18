@@ -16,6 +16,8 @@ uses
   System.SysUtils,
   System.Hash,
 
+  Trysil.Consts,
+  Trysil.Http.Consts,
   Trysil.Http.JWT.Payload;
 
 type
@@ -60,6 +62,10 @@ end;
 class function TTHttpJWTHS256Payload.ComputeHMAC(
   const ASecret: String; const AInput: TBytes): TBytes;
 begin
+  if ASecret.IsEmpty then
+    raise ETHttpJWTException.Create(
+      TTLanguage.Instance.Translate(SEmptyJWTSecret));
+
   result := THashSHA2.GetHMACAsBytes(
     TEncoding.UTF8.GetString(AInput),
     ASecret,
@@ -75,9 +81,15 @@ function TTHttpJWTHS256Payload.Verify(
   const ASigningInput: TBytes;
   const ASignature: TBytes;
   const AKeyID: String): Boolean;
+var
+  LSecret: String;
 begin
-  result := SameSignature(
-    ComputeHMAC(GetSecretFor(AKeyID), ASigningInput), ASignature);
+  LSecret := GetSecretFor(AKeyID);
+  if LSecret.IsEmpty then
+    result := False
+  else
+    result := SameSignature(
+      ComputeHMAC(LSecret, ASigningInput), ASignature);
 end;
 
 class function TTHttpJWTHS256Payload.SameSignature(

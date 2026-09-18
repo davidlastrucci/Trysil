@@ -17,6 +17,9 @@ uses
   System.SysUtils,
   System.TypInfo,
   System.Rtti,
+  System.Generics.Collections,
+  System.Generics.Defaults,
+  System.Hash,
   Data.DB,
 
   Trysil.Consts,
@@ -73,6 +76,7 @@ type
     FName: String;
     FTableName: String;
     FAliasName: String;
+    FSqlReference: String;
     FDisplayName: String;
     FValidations: TTValidationsMap;
     FIsGuid: Boolean;
@@ -112,7 +116,10 @@ type
     property Name: String read FName;
     property TableName: String read FTableName;
     property AliasName: String read FAliasName write FAliasName;
+    property SqlReference: String
+      read FSqlReference write FSqlReference;
     property LookupName: String read GetLookupName;
+    property ValidationColumnName: String read GetValidationColumnName;
     property IsGuid: Boolean read FIsGuid;
     property IsInteger: Boolean read FIsInteger;
     property IsInt64: Boolean read FIsInt64;
@@ -138,13 +145,19 @@ type
 
   TTColumnsMap = class
   strict private
+    class var FComparer: IEqualityComparer<String>;
+
+    class constructor ClassCreate;
+  strict private
     FColumns: TTObjectList<TTColumnMap>;
+    FLookup: TDictionary<String, TTColumnMap>;
 
     FCreatedChangeTracking: TTChangeTrackingMap;
     FUpdatedChangeTracking: TTChangeTrackingMap;
     FDeletedChangeTracking: TTChangeTrackingMap;
 
     function GetEmpty: Boolean;
+    function FindByCompare(const ALookupName: String): TTColumnMap;
   public
     constructor Create;
     destructor Destroy; override;
@@ -152,6 +165,15 @@ type
     procedure Add(const AColumn: TTColumnMap);
 
     function GetEnumerator(): TTListEnumerator<TTColumnMap>;
+
+    function IsCreatedChangeTracking(const AColumn: TTColumnMap): Boolean;
+    function IsUpdatedChangeTracking(const AColumn: TTColumnMap): Boolean;
+    function IsDeletedChangeTracking(const AColumn: TTColumnMap): Boolean;
+    function IsChangeTracking(const AColumn: TTColumnMap): Boolean;
+    function ChangeTrackingColumns: TArray<TTColumnMap>;
+
+    function Find(const ALookupName: String): TTColumnMap;
+    procedure RebuildLookup;
 
     property Empty: Boolean read GetEmpty;
 
@@ -438,6 +460,11 @@ type
       const AName: String;
       const ADetailName: String;
       const AObject: TRttiObject): TTDetailColumnMap;
+    class function MemberName(const AObject: TRttiObject): String; static;
+    class function JoinAliasName(
+      const AAlias: String;
+      const AColumnName: String): String; static;
+    procedure CheckColumnAttributes(const AObject: TRttiObject);
     procedure SearchColumnAttribute(const AObject: TRttiObject);
     procedure InitializePrimaryKey(
       const AObject: TRttiObject; const AColumnMap: TTColumnMap);
@@ -451,6 +478,13 @@ type
       const AColumnMap: TTColumnMap);
     procedure InitializeChangeTrackingColumn(
       const AObject: TRttiObject; const AColumnMap: TTColumnMap);
+    procedure CheckDeletedChangeTracking;
+    procedure CheckDuplicateChangeTracking;
+    procedure CheckKeyColumn(
+      const AColumnMap: TTColumnMap;
+      const ADescription: String);
+    procedure CheckKeyColumns;
+    procedure InitializeJoinAliases;
   public
     constructor Create(
       const AContext: TRttiContext; const ATypeInfo: PTypeInfo);
@@ -555,6 +589,7 @@ begin
   FName := AName;
   FTableName := String.Empty;
   FAliasName := String.Empty;
+  FSqlReference := FName;
   FDisplayName := String.Empty;
   FValidations := TTValidationsMap.Create;
 end;
@@ -691,10 +726,16 @@ end;
 
 { TTColumnsMap }
 
+class constructor TTColumnsMap.ClassCreate;
+begin
+  FComparer := TTIdentifier.Comparer;
+end;
+
 constructor TTColumnsMap.Create;
 begin
   inherited Create;
   FColumns := TTObjectList<TTColumnMap>.Create(True);
+  FLookup := TDictionary<String, TTColumnMap>.Create(FComparer);
   FCreatedChangeTracking := TTChangeTrackingMap.Create;
   FUpdatedChangeTracking := TTChangeTrackingMap.Create;
   FDeletedChangeTracking := TTChangeTrackingMap.Create;
@@ -705,6 +746,7 @@ begin
   FDeletedChangeTracking.Free;
   FUpdatedChangeTracking.Free;
   FCreatedChangeTracking.Free;
+  FLookup.Free;
   FColumns.Free;
   inherited Destroy;
 end;
@@ -712,6 +754,49 @@ end;
 procedure TTColumnsMap.Add(const AColumn: TTColumnMap);
 begin
   FColumns.Add(AColumn);
+  if not FLookup.ContainsKey(AColumn.LookupName) then
+    FLookup.Add(AColumn.LookupName, AColumn);
+end;
+
+function TTColumnsMap.FindByCompare(
+  const ALookupName: String): TTColumnMap;
+var
+  LColumn: TTColumnMap;
+begin
+  result := nil;
+  for LColumn in FColumns do
+    if TTIdentifier.Same(LColumn.LookupName, ALookupName) then
+    begin
+      result := LColumn;
+      Break;
+    end;
+end;
+
+function TTColumnsMap.Find(const ALookupName: String): TTColumnMap;
+begin
+  if not FLookup.TryGetValue(ALookupName, result) then
+    result := FindByCompare(ALookupName);
+end;
+
+procedure TTColumnsMap.RebuildLookup;
+var
+  LColumn: TTColumnMap;
+begin
+  FLookup.Clear;
+  for LColumn in FColumns do
+    if not FLookup.ContainsKey(LColumn.LookupName) then
+      FLookup.Add(LColumn.LookupName, LColumn);
+end;
+
+function TTColumnsMap.ChangeTrackingColumns: TArray<TTColumnMap>;
+begin
+  result := [
+    FCreatedChangeTracking.ChangedAt,
+    FCreatedChangeTracking.ChangedBy,
+    FUpdatedChangeTracking.ChangedAt,
+    FUpdatedChangeTracking.ChangedBy,
+    FDeletedChangeTracking.ChangedAt,
+    FDeletedChangeTracking.ChangedBy];
 end;
 
 function TTColumnsMap.GetEmpty: Boolean;
@@ -722,6 +807,34 @@ end;
 function TTColumnsMap.GetEnumerator: TTListEnumerator<TTColumnMap>;
 begin
   result := TTListEnumerator<TTColumnMap>.Create(FColumns);
+end;
+
+function TTColumnsMap.IsCreatedChangeTracking(
+  const AColumn: TTColumnMap): Boolean;
+begin
+  result := (AColumn = FCreatedChangeTracking.ChangedAt) or
+    (AColumn = FCreatedChangeTracking.ChangedBy);
+end;
+
+function TTColumnsMap.IsUpdatedChangeTracking(
+  const AColumn: TTColumnMap): Boolean;
+begin
+  result := (AColumn = FUpdatedChangeTracking.ChangedAt) or
+    (AColumn = FUpdatedChangeTracking.ChangedBy);
+end;
+
+function TTColumnsMap.IsDeletedChangeTracking(
+  const AColumn: TTColumnMap): Boolean;
+begin
+  result := (AColumn = FDeletedChangeTracking.ChangedAt) or
+    (AColumn = FDeletedChangeTracking.ChangedBy);
+end;
+
+function TTColumnsMap.IsChangeTracking(const AColumn: TTColumnMap): Boolean;
+begin
+  result := IsCreatedChangeTracking(AColumn) or
+    IsUpdatedChangeTracking(AColumn) or
+    IsDeletedChangeTracking(AColumn);
 end;
 
 { TTDetailColumnMap }
@@ -1086,11 +1199,53 @@ begin
   inherited Destroy;
 end;
 
+procedure TTTableMap.CheckDuplicateChangeTracking;
+var
+  LTracked: TArray<TTColumnMap>;
+  LIndex: Integer;
+  LOther: Integer;
+begin
+  LTracked := FColumns.ChangeTrackingColumns;
+
+  for LIndex := Low(LTracked) to High(LTracked) do
+    for LOther := LIndex + 1 to High(LTracked) do
+      if Assigned(LTracked[LIndex]) and Assigned(LTracked[LOther]) and
+        TTIdentifier.Same(
+          LTracked[LIndex].LookupName, LTracked[LOther].LookupName) then
+        raise ETException.CreateFmt(
+          TTLanguage.Instance.Translate(SDuplicateChangeTrackingColumn), [
+            LTracked[LIndex].Name]);
+end;
+
+class function TTTableMap.JoinAliasName(
+  const AAlias: String;
+  const AColumnName: String): String;
+begin
+  result := TTIdentifier.JoinAliasName(AAlias, AColumnName);
+end;
+
+procedure TTTableMap.InitializeJoinAliases;
+var
+  LColumnMap: TTColumnMap;
+  LResolvedAlias: String;
+begin
+  for LColumnMap in FColumns do
+  begin
+    if LColumnMap.TableName.IsEmpty then
+      LResolvedAlias := FName
+    else
+      LResolvedAlias := LColumnMap.TableName;
+    LColumnMap.AliasName := JoinAliasName(
+      LResolvedAlias, LColumnMap.Name);
+    LColumnMap.SqlReference := Format('%s.%s', [
+      LResolvedAlias, LColumnMap.Name]);
+  end;
+  FColumns.RebuildLookup;
+end;
+
 procedure TTTableMap.AfterConstruction;
 var
   LType: TRttiType;
-  LColumnMap: TTColumnMap;
-  LResolvedAlias: String;
 begin
   inherited AfterConstruction;
   LType := FContext.GetType(FTypeInfo);
@@ -1098,16 +1253,11 @@ begin
   InitializeColumns(LType);
   InitializeValidators(LType);
   InitializeEvents(LType);
-
+  CheckDeletedChangeTracking;
+  CheckDuplicateChangeTracking;
+  CheckKeyColumns;
   if HasJoins then
-    for LColumnMap in FColumns do
-    begin
-      if LColumnMap.TableName.IsEmpty then
-        LResolvedAlias := FName
-      else
-        LResolvedAlias := LColumnMap.TableName;
-      LColumnMap.AliasName := Format('%s_%s', [LResolvedAlias, LColumnMap.Name]);
-    end;
+    InitializeJoinAliases;
 end;
 
 function TTTableMap.GetHasJoins: Boolean;
@@ -1296,11 +1446,41 @@ begin
       TTLanguage.Instance.Translate(SInvalidRttiObjectType));
 end;
 
+class function TTTableMap.MemberName(const AObject: TRttiObject): String;
+begin
+  if AObject is TRttiMember then
+    result := TRttiMember(AObject).Name
+  else
+    result := String.Empty;
+end;
+
+procedure TTTableMap.CheckColumnAttributes(const AObject: TRttiObject);
+var
+  LAttribute: TCustomAttribute;
+  LIsColumn: Boolean;
+  LIsDetailColumn: Boolean;
+begin
+  LIsColumn := False;
+  LIsDetailColumn := False;
+  for LAttribute in AObject.GetAttributes do
+  begin
+    LIsColumn := LIsColumn or (LAttribute is TColumnAttribute);
+    LIsDetailColumn := LIsDetailColumn or
+      (LAttribute is TDetailColumnAttribute);
+  end;
+
+  if LIsColumn and LIsDetailColumn then
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SColumnAndDetailColumn), [
+        MemberName(AObject)]);
+end;
+
 procedure TTTableMap.SearchColumnAttribute(const AObject: TRttiObject);
 var
   LAttribute: TCustomAttribute;
   LColumnMap: TTColumnMap;
 begin
+  CheckColumnAttributes(AObject);
   for LAttribute in AObject.GetAttributes do
     if LAttribute is TColumnAttribute then
     begin
@@ -1308,15 +1488,10 @@ begin
         TColumnAttribute(LAttribute).TableName,
         TColumnAttribute(LAttribute).Name,
         AObject);
-      try
-        InitializePrimaryKey(AObject, LColumnMap);
-        InitializeVersionColumn(AObject, LColumnMap);
-        InitializeChangeTrackingColumn(AObject, LColumnMap);
-        FColumns.Add(LColumnMap);
-      except
-        LColumnMap.Free;
-        raise;
-      end;
+      FColumns.Add(LColumnMap);
+      InitializePrimaryKey(AObject, LColumnMap);
+      InitializeVersionColumn(AObject, LColumnMap);
+      InitializeChangeTrackingColumn(AObject, LColumnMap);
       Break;
     end
     else if LAttribute is TDetailColumnAttribute then
@@ -1405,6 +1580,42 @@ begin
   end;
 end;
 
+procedure TTTableMap.CheckKeyColumn(
+  const AColumnMap: TTColumnMap; const ADescription: String);
+var
+  LTracked: TTColumnMap;
+begin
+  for LTracked in FColumns.ChangeTrackingColumns do
+    if Assigned(AColumnMap) and Assigned(LTracked) and
+      TTIdentifier.Same(AColumnMap.LookupName, LTracked.LookupName) then
+      raise ETException.CreateFmt(
+        TTLanguage.Instance.Translate(SKeyColumnWithChangeTracking), [
+          AColumnMap.Name, ADescription]);
+end;
+
+procedure TTTableMap.CheckKeyColumns;
+begin
+  if Assigned(FPrimaryKey) and Assigned(FVersionColumn) and
+    TTIdentifier.Same(FPrimaryKey.LookupName, FVersionColumn.LookupName) then
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SPrimaryKeyIsVersionColumn), [
+        FPrimaryKey.Name]);
+
+  CheckKeyColumn(FPrimaryKey, 'primary key');
+  CheckKeyColumn(FVersionColumn, 'version column');
+end;
+
+procedure TTTableMap.CheckDeletedChangeTracking;
+var
+  LDeleted: TTChangeTrackingMap;
+begin
+  LDeleted := FColumns.DeletedChangeTracking;
+  if Assigned(LDeleted.ChangedBy) and (not Assigned(LDeleted.ChangedAt)) then
+    raise ETException.CreateFmt(
+      TTLanguage.Instance.Translate(SDeletedByWithoutDeletedAt), [
+        LDeleted.ChangedBy.Name]);
+end;
+
 { TTMapper }
 
 class constructor TTMapper.ClassCreate;
@@ -1415,6 +1626,7 @@ end;
 class destructor TTMapper.ClassDestroy;
 begin
   FInstance.Free;
+  FInstance := nil;
 end;
 
 constructor TTMapper.Create;

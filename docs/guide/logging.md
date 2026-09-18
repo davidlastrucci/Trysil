@@ -55,6 +55,8 @@ TTLogger.Instance.RegisterLogger<TMyLoggerThread>(4);
 
 The default thread pool size is 1. Increasing it distributes log processing across multiple threads using round-robin (`TTRoundRobin`).
 
+Register **once**, at startup. A second `RegisterLogger` adds its threads to the pool; it does not replace the logger already there, so two calls with two classes leave both running, with the log lines divided between them.
+
 ## Creating a Custom Logger
 
 Extend `TTLoggerThread` and override the abstract methods:
@@ -96,15 +98,19 @@ end;
 `TTLoggerThread` uses an internal `TTLoggerQueue` -- a thread-safe queue for `TTLoggerItem` records:
 
 ```pascal
-// Internal consumer pattern (inside TTLoggerThread.Execute)
+// Internal consumer pattern (TTLoggerThread.DrainQueue, called by Execute
+// and, once the thread has stopped, by the thread that frees the logger)
 while not FQueue.IsEmpty do
-begin
-  LItem := FQueue.Dequeue;
-  Log(LItem);
+try
+  Log(FQueue.Dequeue);
+except
+  // a LogXxx that raises does not stop the drain
 end;
 ```
 
 The queue uses a critical section for thread safety. The logger thread waits on an event object and wakes up when new items are enqueued.
+
+`Execute` is not the only consumer. When the logger is freed, `Execute` stops, and whatever is still queued is written by the thread that frees the logger, once the logger's own thread has stopped - during process finalization, the main thread. Your `LogXxx` methods can therefore run on either, and at process exit they can run after the unit that declares them has finalized: keep what they write through inside the thread instance, not in a class variable of that unit.
 
 ## Global Singleton
 

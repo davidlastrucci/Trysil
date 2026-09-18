@@ -14,7 +14,10 @@ interface
 
 uses
   System.SysUtils,
-  System.Classes;
+  System.Classes,
+  System.JSon;
+
+{$SCOPEDENUMS ON}
 
 type
 
@@ -33,6 +36,30 @@ type
     property Details: Boolean read FDetails write FDetails;
   end;
 
+{ TTJSonValueState }
+
+  TTJSonValueState = (Missing, Invalid, Valid);
+
+{ TTJSonValues }
+
+  TTJSonValues = class
+  strict private
+    class function StateOf(const AJSon: TJSonValue): TTJSonValueState;
+  public
+    class function GetString(
+      const AJSon: TJSonValue;
+      const AName: String;
+      out AValue: String): TTJSonValueState;
+    class function GetInteger(
+      const AJSon: TJSonValue;
+      const AName: String;
+      out AValue: Integer): TTJSonValueState;
+    class function GetArray(
+      const AJSon: TJSonValue;
+      const AName: String;
+      out AValue: TJSonArray): TTJSonValueState;
+  end;
+
 implementation
 
 { TTJSonSerializerConfig }
@@ -49,6 +76,64 @@ constructor TTJSonSerializerConfig.Create(
 begin
   FMaxLevels := AMaxLevels;
   FDetails := ADetails;
+end;
+
+{ TTJSonValues }
+
+class function TTJSonValues.StateOf(
+  const AJSon: TJSonValue): TTJSonValueState;
+begin
+  if (not Assigned(AJSon)) or (AJSon is TJSonNull) then
+    result := TTJSonValueState.Missing
+  else
+    result := TTJSonValueState.Valid;
+end;
+
+class function TTJSonValues.GetString(
+  const AJSon: TJSonValue;
+  const AName: String;
+  out AValue: String): TTJSonValueState;
+var
+  LValue: TJSonValue;
+begin
+  AValue := String.Empty;
+  LValue := AJSon.FindValue(AName);
+  result := StateOf(LValue);
+  if (result = TTJSonValueState.Valid) and
+    (not LValue.TryGetValue<String>(AValue)) then
+    result := TTJSonValueState.Invalid;
+end;
+
+class function TTJSonValues.GetInteger(
+  const AJSon: TJSonValue;
+  const AName: String;
+  out AValue: Integer): TTJSonValueState;
+var
+  LValue: TJSonValue;
+begin
+  AValue := 0;
+  LValue := AJSon.FindValue(AName);
+  result := StateOf(LValue);
+  if (result = TTJSonValueState.Valid) and
+    (not LValue.TryGetValue<Integer>(AValue)) then
+    result := TTJSonValueState.Invalid;
+end;
+
+class function TTJSonValues.GetArray(
+  const AJSon: TJSonValue;
+  const AName: String;
+  out AValue: TJSonArray): TTJSonValueState;
+var
+  LValue: TJSonValue;
+begin
+  AValue := nil;
+  LValue := AJSon.FindValue(AName);
+  result := StateOf(LValue);
+  if result = TTJSonValueState.Valid then
+    if LValue is TJSonArray then
+      AValue := TJSonArray(LValue)
+    else
+      result := TTJSonValueState.Invalid;
 end;
 
 end.
