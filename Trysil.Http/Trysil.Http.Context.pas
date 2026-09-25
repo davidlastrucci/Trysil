@@ -37,6 +37,8 @@ type
   public
     function GetID<T: class>(const AEntity: T): TTPrimaryKey;
     procedure SetSequenceID<T: class>(const AEntity: T);
+    procedure SetVersionID<T: class>(
+      const AEntity: T; const AVersionID: TTVersion);
 
     procedure Delete<T: class>(
       const AID: TTPrimaryKey; const AVersionID: TTVersion); overload;
@@ -67,20 +69,27 @@ begin
   FProvider.SetSequenceID<T>(AEntity);
 end;
 
+procedure TTHttpContext.SetVersionID<T>(
+  const AEntity: T; const AVersionID: TTVersion);
+var
+  LTableMap: TTTableMap;
+begin
+  LTableMap := TTMapper.Instance.Load<T>();
+  if Assigned(LTableMap.VersionColumn) then
+    LTableMap.VersionColumn.Member.SetValue(AEntity, AVersionID);
+end;
+
 procedure TTHttpContext.Delete<T>(
   const AID: TTPrimaryKey; const AVersionID: TTVersion);
 var
-  LTableMap: TTTableMap;
   LEntity: T;
 begin
-  LTableMap := TTMapper.Instance.Load<T>();
-  LEntity := Get<T>(AID);
-  if not Assigned(LEntity) then
+  if not TryGet<T>(AID, LEntity) then
     raise ETHttpNotFound.CreateFmt(
       TTLanguage.Instance.Translate(SEntityNotFound), [AID]);
   try
-    if Assigned(LTableMap.VersionColumn) then
-      LTableMap.VersionColumn.Member.SetValue(LEntity, AVersionID);
+
+    SetVersionID<T>(LEntity, AVersionID);
     Delete<T>(LEntity);
   finally
     FreeEntity<T>(LEntity);
