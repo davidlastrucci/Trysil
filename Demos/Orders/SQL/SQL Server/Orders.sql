@@ -13,11 +13,11 @@ CREATE TABLE [dbo].[Customers](
   [PostalCode] [nvarchar](20) NULL,
   [Country] [nvarchar](100) NULL,
   [Email] [nvarchar](255) NULL,
-  [CreatedAt] [datetime] NULL,
+  [CreatedAt] [datetime2] NULL,
   [CreatedBy] [nvarchar](100) NULL,
-  [UpdatedAt] [datetime] NULL,
+  [UpdatedAt] [datetime2] NULL,
   [UpdatedBy] [nvarchar](100) NULL,
-  [DeletedAt] [datetime] NULL,
+  [DeletedAt] [datetime2] NULL,
   [DeletedBy] [nvarchar](100) NULL,
   [VersionID] [int] NOT NULL,
   CONSTRAINT [PK_Customers] PRIMARY KEY CLUSTERED ([ID] ASC) ON [PRIMARY]
@@ -114,9 +114,9 @@ CREATE TABLE [dbo].[OrderDetails](
   [ProductID] [int] NULL,
   [Quantity] [float] NULL,
   [Price] [float] NULL,
-  [Produced] [datetime] NULL,
-  [Delivered] [datetime] NULL,
-  [Cashed] [datetime] NULL,
+  [Produced] [datetime2] NULL,
+  [Delivered] [datetime2] NULL,
+  [Cashed] [datetime2] NULL,
   [VersionID] [int] NOT NULL,
   CONSTRAINT [PK_OrderDetails] PRIMARY KEY CLUSTERED ([ID] ASC) ON [PRIMARY]
 ) ON [PRIMARY]

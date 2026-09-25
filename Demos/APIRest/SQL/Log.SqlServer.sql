@@ -4,7 +4,7 @@ GO
 CREATE TABLE [log].[Actions](
   [ID] [int] NOT NULL,
   [TaskID] [nvarchar](50) NULL,
-  [Date] [datetime] NULL,
+  [Date] [datetime2] NULL,
   [Action] [nvarchar](255) NULL,
   [VersionID] [int] NOT NULL,
   CONSTRAINT [PK_Actions] PRIMARY KEY CLUSTERED ([ID] ASC)
@@ -26,7 +26,7 @@ GO
 CREATE TABLE [log].[Requests](
   [ID] [int] NOT NULL,
   [TaskID] [nvarchar](50) NULL,
-  [Date] [datetime] NULL,
+  [Date] [datetime2] NULL,
   [Uri] [nvarchar](255) NULL,
   [ParamsCount] [int] NULL,
   [ParamsOmitted] [bit] NULL,
@@ -67,7 +67,7 @@ GO
 CREATE TABLE [log].[Responses](
   [ID] [int] NOT NULL,
   [TaskID] [nvarchar](50) NULL,
-  [Date] [datetime] NULL,
+  [Date] [datetime2] NULL,
   [Uri] [nvarchar](255) NULL,
   [Username] [nvarchar](255) NULL,
   [UserAreas] [nvarchar](max) NULL,
@@ -104,7 +104,7 @@ GO
 CREATE TABLE [log].[Errors](
   [ID] [int] NOT NULL,
   [TaskID] [nvarchar](50) NULL,
-  [Date] [datetime] NULL,
+  [Date] [datetime2] NULL,
   [Host] [nvarchar](255) NULL,
   [Uri] [nvarchar](255) NULL,
   [ExceptionClassName] [nvarchar](255) NULL,
@@ -133,7 +133,7 @@ GO
 
 CREATE TABLE [log].[Discarded](
   [ID] [int] NOT NULL,
-  [Date] [datetime] NULL,
+  [Date] [datetime2] NULL,
   [Host] [nvarchar](255) NULL,
   [Entries] [int] NULL,
   [VersionID] [int] NOT NULL,

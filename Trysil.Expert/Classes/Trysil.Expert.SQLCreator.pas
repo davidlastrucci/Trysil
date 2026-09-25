@@ -658,7 +658,7 @@ begin
     dtBoolean:
       result := 'bit';
     dtDateTime:
-      result := 'datetime';
+      result := 'datetime2';
     dtGuid:
       result := 'uniqueidentifier';
     dtBlob:

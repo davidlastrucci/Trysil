@@ -50,7 +50,7 @@ const
     ' Name NVARCHAR(100),' +
     ' Email NVARCHAR(255),' +
     ' CountryID INT NULL,' +
-    ' DeletedAt DATETIME NULL,' +
+    ' DeletedAt DATETIME2 NULL,' +
     ' DeletedBy NVARCHAR(100),' +
     ' VersionID INT NOT NULL,' +
     ' PRIMARY KEY(ID))';
@@ -75,9 +75,9 @@ const
     ' ID INT NOT NULL,' +
     ' Title NVARCHAR(100),' +
     ' VersionID INT NOT NULL,' +
-    ' UpdatedAt DATETIME NULL,' +
+    ' UpdatedAt DATETIME2 NULL,' +
     ' UpdatedBy NVARCHAR(100),' +
-    ' DeletedAt DATETIME NULL,' +
+    ' DeletedAt DATETIME2 NULL,' +
     ' DeletedBy NVARCHAR(100),' +
     ' PRIMARY KEY(ID))';
 
@@ -86,9 +86,9 @@ const
     ' ID INT NOT NULL,' +
     ' Name NVARCHAR(100),' +
     ' VersionID INT NOT NULL,' +
-    ' CreatedAt DATETIME NULL,' +
+    ' CreatedAt DATETIME2 NULL,' +
     ' CreatedBy NVARCHAR(100),' +
-    ' UpdatedAt DATETIME NULL,' +
+    ' UpdatedAt DATETIME2 NULL,' +
     ' UpdatedBy NVARCHAR(100),' +
     ' PRIMARY KEY(ID))';
 
@@ -125,14 +125,14 @@ const
     ' ID INT NOT NULL,' +
     ' LargeNumber BIGINT NOT NULL,' +
     ' IsActive BIT NOT NULL,' +
-    ' BirthDate DATETIME NOT NULL,' +
+    ' BirthDate DATETIME2 NOT NULL,' +
     ' UniqueID UNIQUEIDENTIFIER NOT NULL,' +
     ' Payload VARBINARY(MAX) NOT NULL,' +
     ' Price decimal(19,4) NOT NULL,' +
     ' Notes nvarchar(max) NULL,' +
     ' OptLargeNumber BIGINT NULL,' +
     ' OptIsActive BIT NULL,' +
-    ' OptBirthDate DATETIME NULL,' +
+    ' OptBirthDate DATETIME2 NULL,' +
     ' OptUniqueID UNIQUEIDENTIFIER NULL,' +
     ' OptPayload VARBINARY(MAX) NULL,' +
     ' OptPrice decimal(19,4) NULL,' +
