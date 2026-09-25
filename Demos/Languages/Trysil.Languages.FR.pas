@@ -125,6 +125,7 @@ begin
   TTLanguage.Instance.Add(SSerializerReentered, 'EntityToJSon a été réentrée %0:d fois sans retourner. Chaque appel ouvre sa propre profondeur et son propre ensemble de visités, donc MaxLevels et la garde de cycle ne franchissent pas une réentrance : deux entités dont les événements se sérialisent mutuellement récurrent jusqu''à épuisement de la pile. Sérialisez l''entité liée en dehors de l''événement.');
   TTLanguage.Instance.Add(SDirectionNotValid, 'Direction %s non valide.');
   TTLanguage.Instance.Add(SDuplicateController, 'ControllerID(Uri/MethodType) en double : %0:s.');
+  TTLanguage.Instance.Add(SDuplicateBindAddress, 'L''adresse d''écoute %0:s est déjà enregistrée : une seconde liaison sur la même adresse et le même port ne peut pas s''ouvrir.');
   TTLanguage.Instance.Add(SDuplicateEntityIdentity, 'Identity map : une autre instance de %0:s est déjà enregistrée avec la clé primaire %1:d.');
   TTLanguage.Instance.Add(SEmptyJWTSecret,
     'Le secret HMAC est vide : chaque signature qu''il produit peut être reproduite par n''importe qui, un jeton signé avec lui ne prouve donc rien. ' +
@@ -175,6 +176,9 @@ begin
   TTLanguage.Instance.Add(SNotValidBaseUri,
     'BaseUri %0:s est un préfixe de chemin, pas une adresse : il est placé devant chaque route, une valeur portant un schéma enregistre donc des routes que personne ne peut atteindre. ' +
     'L''adresse sur laquelle le serveur écoute vient de Bindings.');
+  TTLanguage.Instance.Add(SNotValidBindAddress,
+    'L''adresse d''écoute "%0:s" n''est pas une adresse IP. Écrivez-la comme un littéral IPv4 ou IPv6, par exemple 127.0.0.1 ou ::1, ' +
+    'sans port, sans crochets et sans nom d''hôte : le port vient de Port, et un nom peut se résoudre en plusieurs adresses.');
   TTLanguage.Instance.Add(SNotValidCommandType, 'Type de commande non valide %s.');
   TTLanguage.Instance.Add(SNotValidController, 'Le contrôleur %s n''est pas un TTHttpAbstractController valide.');
   TTLanguage.Instance.Add(SNotValidEntityList, 'Liste d''entités non valide : "%0:s" n''est pas une TTObjectList<T>.');

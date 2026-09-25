@@ -22,6 +22,9 @@ uses
   System.Generics.Collections,
   DUnitX.TestFramework,
   IdCustomHTTPServer,
+  IdHTTPServer,
+  IdSocketHandle,
+  IdHTTP,
 
   Trysil.Consts,
   Trysil.Exceptions,
@@ -274,6 +277,9 @@ type
     FStartError: String;
 
     function TryStart: Boolean;
+    function TryAddBindAddress(const AAddress: String): Boolean;
+    function FreePort: Word;
+    function StatusOn(const AUrl: String): Integer;
   public
     [Setup]
     procedure Setup;
@@ -316,6 +322,27 @@ type
 
     [Test]
     procedure BaseUriAcceptsAPathPrefix;
+
+    [Test]
+    procedure ABindAddressIsAnIPLiteral;
+
+    [Test]
+    procedure AHostNameIsNotABindAddress;
+
+    [Test]
+    procedure ABindAddressCarriesNoPort;
+
+    [Test]
+    procedure AMalformedBindAddressIsRefused;
+
+    [Test]
+    procedure ABindAddressIsRefusedTwice;
+
+    [Test]
+    procedure ABindAddressAfterStartIsRefused;
+
+    [Test]
+    procedure TheServerAnswersOnItsBindAddress;
   end;
 
 { TTHttpListenerTests }
@@ -862,6 +889,132 @@ begin
     '/api',
     FServer.BaseUri,
     'A prefix without the leading slash is still a prefix, and gains one');
+end;
+
+function TTHttpServerStartTests.TryAddBindAddress(
+  const AAddress: String): Boolean;
+begin
+  result := True;
+  try
+    FServer.AddBindAddress(AAddress);
+  except
+    on E: ETHttpServerException do
+      result := False;
+  end;
+end;
+
+function TTHttpServerStartTests.FreePort: Word;
+var
+  LServer: TIdHTTPServer;
+  LBinding: TIdSocketHandle;
+begin
+  LServer := TIdHTTPServer.Create(nil);
+  try
+    LBinding := LServer.Bindings.Add;
+    LBinding.IP := '127.0.0.1';
+    LBinding.Port := 0;
+    LServer.Active := True;
+    result := LBinding.Port;
+    LServer.Active := False;
+  finally
+    LServer.Free;
+  end;
+end;
+
+function TTHttpServerStartTests.StatusOn(const AUrl: String): Integer;
+var
+  LClient: TIdHTTP;
+begin
+  LClient := TIdHTTP.Create(nil);
+  try
+    LClient.Get(AUrl);
+    result := LClient.ResponseCode;
+  finally
+    LClient.Free;
+  end;
+end;
+
+procedure TTHttpServerStartTests.ABindAddressIsAnIPLiteral;
+begin
+  Assert.IsTrue(TryAddBindAddress('127.0.0.1'), 'IPv4 loopback');
+  Assert.IsTrue(TryAddBindAddress('::1'), 'IPv6 loopback');
+  Assert.IsTrue(TryAddBindAddress('0.0.0.0'), 'Every IPv4 interface');
+  Assert.IsTrue(TryAddBindAddress('fe80:0:0:0:0:0:0:ab'), 'Eight groups');
+  Assert.IsTrue(
+    TryAddBindAddress('::ffff:192.168.1.10'),
+    'An IPv4 address mapped into IPv6');
+end;
+
+procedure TTHttpServerStartTests.AHostNameIsNotABindAddress;
+begin
+  Assert.IsFalse(
+    TryAddBindAddress('localhost'),
+    'A name can resolve to 127.0.0.1 or to ::1: the server would listen ' +
+    'on one of them and the proxy could connect to the other');
+  Assert.IsFalse(TryAddBindAddress('example.com'));
+end;
+
+procedure TTHttpServerStartTests.ABindAddressCarriesNoPort;
+begin
+  Assert.IsFalse(
+    TryAddBindAddress('127.0.0.1:4460'),
+    'The port comes from Port, not from the address');
+  Assert.IsFalse(TryAddBindAddress('[::1]:4460'));
+  Assert.IsFalse(
+    TryAddBindAddress('[::1]'),
+    'Brackets belong to a URL, not to an address');
+end;
+
+procedure TTHttpServerStartTests.AMalformedBindAddressIsRefused;
+begin
+  Assert.IsFalse(TryAddBindAddress(String.Empty), 'Empty');
+  Assert.IsFalse(TryAddBindAddress('256.0.0.1'), 'Octet out of range');
+  Assert.IsFalse(TryAddBindAddress('127.1'), 'Short IPv4 form');
+  Assert.IsFalse(TryAddBindAddress('127.0.0.1.'), 'Trailing dot');
+  Assert.IsFalse(TryAddBindAddress('010.0.0.1'), 'Leading zero');
+  Assert.IsFalse(TryAddBindAddress(' 127.0.0.1'), 'Leading space');
+  Assert.IsFalse(TryAddBindAddress('1:2:3'), 'Three IPv6 groups');
+  Assert.IsFalse(TryAddBindAddress('1::2::3'), 'Two double colons');
+  Assert.IsFalse(TryAddBindAddress('12345::1'), 'Group of five digits');
+  Assert.IsFalse(TryAddBindAddress('1:2:3:4:5:6:7:8:'), 'Trailing colon');
+  Assert.IsFalse(TryAddBindAddress('1:2:3:4:5:6:7::8'), 'Nine groups');
+  Assert.IsFalse(TryAddBindAddress('1.2.3.4::1'), 'IPv4 before IPv6');
+  Assert.IsFalse(TryAddBindAddress('fe80::1%3'), 'Zone index');
+end;
+
+procedure TTHttpServerStartTests.ABindAddressIsRefusedTwice;
+begin
+  FServer.AddBindAddress('::1');
+
+  Assert.IsFalse(
+    TryAddBindAddress('::1'),
+    'Two bindings on the same address and port cannot both open');
+end;
+
+procedure TTHttpServerStartTests.ABindAddressAfterStartIsRefused;
+begin
+  FServer.RegisterController<TTestAnonymousController>('/open');
+  Assert.IsTrue(TryStart);
+
+  Assert.IsFalse(
+    TryAddBindAddress('127.0.0.1'),
+    'The bindings are created by Start: an address added later would ' +
+    'look accepted and never be listened on');
+end;
+
+procedure TTHttpServerStartTests.TheServerAnswersOnItsBindAddress;
+var
+  LPort: Word;
+begin
+  LPort := FreePort;
+  FServer.Port := LPort;
+  FServer.RegisterController<TTestAnonymousController>('/open');
+  FServer.AddBindAddress('127.0.0.1');
+  Assert.IsTrue(TryStart, FStartError);
+
+  Assert.AreEqual<Integer>(
+    TTHttpStatusCodeTypes.OK,
+    StatusOn(Format('http://127.0.0.1:%d/open', [LPort])));
 end;
 
 { TTHttpListenerTests }

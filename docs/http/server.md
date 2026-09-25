@@ -115,8 +115,9 @@ In a multi-tenant server the same applies to resolving the tenant, which is heav
 
 | Property | Type | Description |
 |---|---|---|
-| `BaseUri` | `String` | Path prefix prepended to every registered route (e.g. `'/api'`). A leading `/` is added if missing, and an empty string registers the routes as the controllers declare them. It is **not** an address: the address the server listens on comes from the port and the bindings, and a value carrying a scheme is refused. |
+| `BaseUri` | `String` | Path prefix prepended to every registered route (e.g. `'/api'`). A leading `/` is added if missing, and an empty string registers the routes as the controllers declare them. It is **not** an address: the address the server listens on comes from `Port` and `AddBindAddress`, and a value carrying a scheme is refused. |
 | `Port` | `Integer` | Listening port |
+| `AddBindAddress(AAddress)` | method | Adds an address the server listens on, written as an IPv4 or IPv6 literal (`'127.0.0.1'`, `'::1'`): no host name, no port, no brackets. Call it once per address; every address is bound on `Port`. With none added the server listens on every IPv4 interface. Refused after `Start`, for an address that is not an IP literal and for an address added twice. |
 | `CorsConfig` | `TTHttpCorsConfig` | CORS configuration (see [CORS](cors.md)) |
 | `OnCanLog` | `TFunc<TTHttpRequest, Boolean>` | Asked on the request thread before a log entry is built. Returning `False` skips the entry entirely. |
 | `OnRedactContent` | `TFunc<TTHttpRequest, String, String>` | Asked on the request thread for the request body and the response body. Receives the request and the content, returns what gets logged. |
@@ -160,7 +161,16 @@ The reason is that TLS is not one feature, it is a standing obligation - cipher 
 
 The server is written for that deployment. `TTHttpRequest` carries `RemoteIP`, the TCP peer, and `ClientIP`, which resolves the **last** `X-Forwarded-For` entry when the peer is loopback, so a proxy on the same host gives you the caller and a header from an outside caller cannot forge it. Configure the proxy to pass `X-Forwarded-For` and terminate on the loopback interface.
 
-Bind the server to loopback when a proxy is in front of it, so nothing reaches it in clear from outside the host.
+Bind the server to loopback when a proxy is in front of it, so nothing reaches it in clear from outside the host. Without a bind address the server listens on every IPv4 interface, and anyone who can reach the port from the network walks past the proxy - no TLS, no path filtering:
+
+```pascal
+LServer.AddBindAddress('127.0.0.1');
+LServer.AddBindAddress('::1');
+```
+
+Point the proxy at one of those addresses and the `Port`. Both are there because `localhost` resolves to `::1` first on most current systems: a proxy configured with `http://localhost:8022` tries `::1` before `127.0.0.1`, and with only the IPv4 loopback bound it finds nothing listening on the address it tried first. Bind the one the proxy uses if you know it, both if you are not sure. `ClientIP` keeps working either way, because the peer is loopback on both families.
+
+`AddBindAddress('::')` listens on every IPv6 interface and, on Windows, **only** on IPv6: IPv4 clients no longer reach the server. It is not a way to say "everything".
 
 ## Registration Methods
 

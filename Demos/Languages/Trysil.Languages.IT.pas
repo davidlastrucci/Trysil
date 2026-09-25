@@ -125,6 +125,7 @@ begin
   TTLanguage.Instance.Add(SSerializerReentered, 'EntityToJSon è stata rientrata %0:d volte senza tornare. Ogni chiamata apre una profondità e un insieme di visitati propri, quindi MaxLevels e la guardia sui cicli non attraversano una rientranza: due entità i cui eventi si serializzano a vicenda ricorrono finché lo stack non finisce. Serializza l''entità collegata fuori dall''evento.');
   TTLanguage.Instance.Add(SDirectionNotValid, 'Direzione %s non valida.');
   TTLanguage.Instance.Add(SDuplicateController, 'ControllerID(Uri/MethodType) duplicato: %0:s.');
+  TTLanguage.Instance.Add(SDuplicateBindAddress, 'L''indirizzo di binding %0:s è già registrato: un secondo binding sullo stesso indirizzo e sulla stessa porta non si può aprire.');
   TTLanguage.Instance.Add(SDuplicateEntityIdentity, 'Identity map: un''altra istanza di %0:s è già registrata con chiave primaria %1:d.');
   TTLanguage.Instance.Add(SEmptyJWTSecret,
     'Il segreto HMAC è vuoto: ogni firma che produce può essere riprodotta da chiunque, quindi un token firmato con quello non dimostra niente. ' +
@@ -174,6 +175,9 @@ begin
   TTLanguage.Instance.Add(SNotValidBaseUri,
     'BaseUri %0:s è un prefisso di percorso, non un indirizzo: viene messo davanti a ogni rotta, quindi un valore che porta uno schema registra rotte che nessuno può raggiungere. ' +
     'L''indirizzo su cui il server ascolta viene da Bindings.');
+  TTLanguage.Instance.Add(SNotValidBindAddress,
+    'L''indirizzo di binding "%0:s" non è un indirizzo IP. Va scritto come letterale IPv4 o IPv6, per esempio 127.0.0.1 o ::1, ' +
+    'senza porta, senza parentesi quadre e senza nome host: la porta viene da Port, e un nome può risolvere a più di un indirizzo.');
   TTLanguage.Instance.Add(SNotValidCommandType, 'Tipo di comando non valido %s.');
   TTLanguage.Instance.Add(SNotValidController, 'Il controller %s non è un TTHttpAbstractController valido.');
   TTLanguage.Instance.Add(SNotValidEntityList, 'Lista di entità non valida: "%0:s" non è una TTObjectList<T>.');

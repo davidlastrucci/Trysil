@@ -11,6 +11,14 @@ newest win** - `includeDeleted`, for one, was read from the select payload in a
 window below and is decided server-side from 2.0.0, and both entries are true of
 their moment.
 
+## In development - HTTP Bind Addresses
+
+Not released yet: what this section describes is on `master` and in no tag.
+
+### HTTP
+
+- **`TTHttpServer<C>.AddBindAddress` chooses the addresses the server listens on.** `Start` created a single binding with the port alone, so the server listened on every IPv4 interface and nothing in the API could narrow it: the documentation recommended binding to loopback behind a reverse proxy, and there was no way to do it, so anyone who could reach the port from the network walked past the proxy - no TLS, no path filtering. `AddBindAddress` takes an IPv4 or IPv6 literal (`'127.0.0.1'`, `'::1'`) and can be called once per address; `Start` binds each of them on `Port`, with the IP version the address carries. A host name, an address with a port or brackets, anything that is not an IP literal, an address added twice, and a call after `Start` raise `ETHttpServerException`, with the new messages `SNotValidBindAddress` and `SDuplicateBindAddress` - a host that translates the framework messages has two strings to add. With no address added the server binds as before, on every IPv4 interface: nothing changes for code that does not call it
+
 ## 2.0.0 - Audit Integrity, Directional JSon Attributes & Fail-Safe Startup
 
 *2026-09-20*

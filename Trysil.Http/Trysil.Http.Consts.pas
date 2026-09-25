@@ -165,6 +165,12 @@ resourcestring
     'is prepended to every route, so a value carrying a scheme registers ' +
     'routes nobody can reach. The address the server listens on comes ' +
     'from Bindings.';
+  SNotValidBindAddress = 'Bind address "%0:s" is not an IP address. ' +
+    'Write it as an IPv4 or an IPv6 literal, such as 127.0.0.1 or ::1, ' +
+    'with no port, no brackets and no host name: the port comes from ' +
+    'Port, and a name can resolve to more than one address.';
+  SDuplicateBindAddress = 'Bind address %0:s is already registered: a ' +
+    'second binding on the same address and port cannot open.';
   SEmptyJWTSecret = 'The HMAC secret is empty: every signature it makes ' +
     'can be reproduced by anyone, so a token signed with it proves ' +
     'nothing. Return a real secret from GetSecret.';

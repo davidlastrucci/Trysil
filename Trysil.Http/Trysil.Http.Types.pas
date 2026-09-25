@@ -106,6 +106,36 @@ type
     property ThreadID: TThreadID read FThreadID;
   end;
 
+{ TTHttpBindAddress }
+
+  TTHttpBindAddress = record
+  strict private
+    const MaxIPv6Groups: Integer = 8;
+  strict private
+    FAddress: String;
+    FIsIPv6: Boolean;
+
+    class function IsOctet(const AOctet: String): Boolean; static;
+    class function IsIPv4Address(const AValue: String): Boolean; static;
+    class function IsHexGroup(const AGroup: String): Boolean; static;
+    class function GroupWidth(
+      const AGroup: String; const AAllowIPv4: Boolean): Integer; static;
+    class function TryCountGroups(
+      const AValue: String;
+      const AAllowIPv4: Boolean;
+      out ACount: Integer): Boolean; static;
+    class function IsCompressedIPv6Address(
+      const AValue: String; const AIndex: Integer): Boolean; static;
+    class function IsIPv6Address(const AValue: String): Boolean; static;
+  public
+    constructor Create(const AAddress: String);
+
+    function SameAs(const AOther: TTHttpBindAddress): Boolean;
+
+    property Address: String read FAddress;
+    property IsIPv6: Boolean read FIsIPv6;
+  end;
+
 implementation
 
 { TTHttpUriParts }
@@ -290,6 +320,117 @@ end;
 function TTHttpTaskID.ToString: String;
 begin
   result := FID;
+end;
+
+{ TTHttpBindAddress }
+
+constructor TTHttpBindAddress.Create(const AAddress: String);
+begin
+  FIsIPv6 := IsIPv6Address(AAddress);
+  if not (FIsIPv6 or IsIPv4Address(AAddress)) then
+    raise ETHttpServerException.CreateFmt(
+      TTLanguage.Instance.Translate(SNotValidBindAddress), [AAddress]);
+  FAddress := AAddress.ToLower();
+end;
+
+class function TTHttpBindAddress.IsOctet(const AOctet: String): Boolean;
+var
+  LChar: Char;
+begin
+  result := (AOctet.Length >= 1) and (AOctet.Length <= 3) and
+    ((AOctet.Length = 1) or (not AOctet.StartsWith('0')));
+  for LChar in AOctet do
+    result := result and CharInSet(LChar, ['0'..'9']);
+  result := result and (AOctet.ToInteger() <= 255);
+end;
+
+class function TTHttpBindAddress.IsIPv4Address(const AValue: String): Boolean;
+var
+  LOctets: TArray<String>;
+  LOctet: String;
+begin
+  LOctets := AValue.Split(['.']);
+  result := (Length(LOctets) = 4) and (not AValue.EndsWith('.'));
+  for LOctet in LOctets do
+    result := result and IsOctet(LOctet);
+end;
+
+class function TTHttpBindAddress.IsHexGroup(const AGroup: String): Boolean;
+var
+  LChar: Char;
+begin
+  result := (AGroup.Length >= 1) and (AGroup.Length <= 4);
+  for LChar in AGroup do
+    result := result and CharInSet(LChar, ['0'..'9', 'a'..'f', 'A'..'F']);
+end;
+
+class function TTHttpBindAddress.GroupWidth(
+  const AGroup: String; const AAllowIPv4: Boolean): Integer;
+begin
+  result := 0;
+  if IsHexGroup(AGroup) then
+    result := 1
+  else if AAllowIPv4 and IsIPv4Address(AGroup) then
+    result := 2;
+end;
+
+class function TTHttpBindAddress.TryCountGroups(
+  const AValue: String;
+  const AAllowIPv4: Boolean;
+  out ACount: Integer): Boolean;
+var
+  LGroups: TArray<String>;
+  LIndex: Integer;
+  LWidth: Integer;
+begin
+  ACount := 0;
+  result := True;
+  if not AValue.IsEmpty then
+  begin
+    LGroups := AValue.Split([':']);
+    result := not AValue.EndsWith(':');
+    for LIndex := 0 to High(LGroups) do
+    begin
+      LWidth := GroupWidth(
+        LGroups[LIndex], AAllowIPv4 and (LIndex = High(LGroups)));
+      result := result and (LWidth > 0);
+      Inc(ACount, LWidth);
+    end;
+  end;
+end;
+
+class function TTHttpBindAddress.IsCompressedIPv6Address(
+  const AValue: String; const AIndex: Integer): Boolean;
+var
+  LHead: String;
+  LTail: String;
+  LHeadCount: Integer;
+  LTailCount: Integer;
+begin
+  LHead := AValue.Substring(0, AIndex);
+  LTail := AValue.Substring(AIndex + 2);
+  result := (not LTail.Contains('::')) and
+    TryCountGroups(LHead, False, LHeadCount) and
+    TryCountGroups(LTail, True, LTailCount) and
+    (LHeadCount + LTailCount < MaxIPv6Groups);
+end;
+
+class function TTHttpBindAddress.IsIPv6Address(const AValue: String): Boolean;
+var
+  LIndex: Integer;
+  LCount: Integer;
+begin
+  LIndex := AValue.IndexOf('::');
+  if LIndex >= 0 then
+    result := IsCompressedIPv6Address(AValue, LIndex)
+  else
+    result := TryCountGroups(AValue, True, LCount) and
+      (LCount = MaxIPv6Groups);
+end;
+
+function TTHttpBindAddress.SameAs(const AOther: TTHttpBindAddress): Boolean;
+begin
+  result := FAddress.Equals(AOther.Address);
 end;
 
 end.

@@ -21,6 +21,7 @@ uses
   IdStack,
   IdCustomHttpServer,
   IdHeaderList,
+  IdGlobal,
   IdHttpServer,
   IdSocketHandle,
   Trysil.Consts,
@@ -57,6 +58,7 @@ type
     FBaseUri: String;
     FHttpServer: TIdHttpServer;
     FPort: Word;
+    FBindAddresses: TList<TTHttpBindAddress>;
     FHasProtectedControllers: Boolean;
     FAllowAnonymous: Boolean;
     FMaxRequestContentLength: Int64;
@@ -68,6 +70,9 @@ type
     procedure CheckAuthenticationIsRegistered;
     procedure CheckAreasNeedAuthentication;
     procedure CheckLogWriterCanBeCreated(const ATypeInfo: PTypeInfo);
+    function ContainsBindAddress(const AAddress: TTHttpBindAddress): Boolean;
+    procedure AddBinding(const AAddress: TTHttpBindAddress);
+    procedure CreateBindings;
 
     function GetStarted: Boolean;
     procedure SetBaseUri(const AValue: String);
@@ -144,6 +149,8 @@ type
     procedure RegisterController<R: TTHttpController<C>>(
       const AUri: String); overload;
 
+    procedure AddBindAddress(const AAddress: String);
+
     procedure Start;
     procedure Stop;
 
@@ -177,6 +184,7 @@ begin
   FLog := TTHttpLog.Create;
   FListener := TTHttpListener<C>.Create(FCors, FRttiControllers, FLog);
   FHttpServer := TIdHttpServer.Create(nil);
+  FBindAddresses := TList<TTHttpBindAddress>.Create;
   FHasProtectedControllers := False;
   FAllowAnonymous := False;
 
@@ -203,6 +211,7 @@ begin
   FCors.Free;
   FRttiControllers.Free;
   FControllers.Free;
+  FBindAddresses.Free;
   if Assigned(FRttiAuthentication) then
     FRttiAuthentication.Free;
   if Assigned(FRttiLogWriter) then
@@ -383,6 +392,57 @@ begin
       TTLanguage.Instance.Translate(SAlreadyStarted));
 end;
 
+function TTHttpServer<C>.ContainsBindAddress(
+  const AAddress: TTHttpBindAddress): Boolean;
+var
+  LAddress: TTHttpBindAddress;
+begin
+  result := False;
+  for LAddress in FBindAddresses do
+    result := result or LAddress.SameAs(AAddress);
+end;
+
+procedure TTHttpServer<C>.AddBindAddress(const AAddress: String);
+var
+  LAddress: TTHttpBindAddress;
+begin
+  CheckNotStarted;
+  LAddress := TTHttpBindAddress.Create(AAddress);
+  if ContainsBindAddress(LAddress) then
+    raise ETHttpServerException.CreateFmt(
+      TTLanguage.Instance.Translate(SDuplicateBindAddress), [AAddress]);
+  FBindAddresses.Add(LAddress);
+end;
+
+procedure TTHttpServer<C>.AddBinding(const AAddress: TTHttpBindAddress);
+var
+  LBinding: TIdSocketHandle;
+begin
+  LBinding := FHttpServer.Bindings.Add;
+  if AAddress.IsIPv6 then
+    LBinding.IPVersion := Id_IPv6
+  else
+    LBinding.IPVersion := Id_IPv4;
+  LBinding.IP := AAddress.Address;
+  LBinding.Port := FPort;
+end;
+
+procedure TTHttpServer<C>.CreateBindings;
+var
+  LAddress: TTHttpBindAddress;
+  LBinding: TIdSocketHandle;
+begin
+  FHttpServer.Bindings.Clear;
+  if FBindAddresses.Count = 0 then
+  begin
+    LBinding := FHttpServer.Bindings.Add;
+    LBinding.Port := FPort;
+  end
+  else
+    for LAddress in FBindAddresses do
+      AddBinding(LAddress);
+end;
+
 procedure TTHttpServer<C>.SetAllowAnonymous(const AValue: Boolean);
 begin
   CheckNotStarted;
@@ -459,17 +519,13 @@ begin
 end;
 
 procedure TTHttpServer<C>.Start;
-var
-  LBinding: TIdSocketHandle;
 begin
   if FHttpServer.Active then
     raise ETHttpServerException.Create(
       TTLanguage.Instance.Translate(SAlreadyStarted));
   CheckAuthenticationIsRegistered;
   CheckAreasNeedAuthentication;
-  FHttpServer.Bindings.Clear;
-  LBinding := FHttpServer.Bindings.Add;
-  LBinding.Port := FPort;
+  CreateBindings;
   TTHttpLogRedactedNames.Instance.BeginServing;
   try
     FHttpServer.Active := True;
