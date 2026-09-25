@@ -15,7 +15,13 @@ their moment.
 
 Not released yet: what this section describes is on `master` and in no tag.
 
+### JSON
+
+- **`TTJSonSerializerConfig` has four presets.** `Default` (`-1, False`), `WithDetails` (`1, True`), `WithRelations` (`1, False`) and `EntityOnly` (`0, False`) are static class functions that return the configuration, so the call site says what it serializes instead of carrying two numbers. `Create` is unchanged, and so is every existing call.
+
 ### HTTP
+
+- **`TTHttpContext.SetVersionID<T>` writes the version the client sent into an entity.** It is the step `Delete<T>(AID, AVersionID)` already took inside, now public: a caller that loads an entity and then updates or deletes it can put the client's version back first, so the `WHERE` of the command compares against it. It does nothing when the entity has no `[TVersionColumn]`.
 
 - **`TTHttpServer<C>.AddBindAddress` chooses the addresses the server listens on.** `Start` created a single binding with the port alone, so the server listened on every IPv4 interface and nothing in the API could narrow it: the documentation recommended binding to loopback behind a reverse proxy, and there was no way to do it, so anyone who could reach the port from the network walked past the proxy - no TLS, no path filtering. `AddBindAddress` takes an IPv4 or IPv6 literal (`'127.0.0.1'`, `'::1'`) and can be called once per address; `Start` binds each of them on `Port`, with the IP version the address carries. A host name, an address with a port or brackets, anything that is not an IP literal, an address added twice, and a call after `Start` raise `ETHttpServerException`, with the new messages `SNotValidBindAddress` and `SDuplicateBindAddress` - a host that translates the framework messages has two strings to add. With no address added the server binds as before, on every IPv4 interface: nothing changes for code that does not call it
 

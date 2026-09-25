@@ -109,6 +109,7 @@ In a multi-tenant server the same applies to resolving the tenant, which is heav
 |---|---|
 | `GetID` | Extract entity ID from request |
 | `SetSequenceID` | Set the sequence ID on an entity |
+| `SetVersionID` | Set the version column on an entity to the version the client sent, so that the `WHERE` of an `Update` or `Delete` checks it; nothing happens when the entity has no `[TVersionColumn]` |
 | `Delete(ID, Version)` | Delete an entity by primary key and version |
 
 ## Server Configuration

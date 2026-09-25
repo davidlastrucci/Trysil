@@ -35,8 +35,25 @@ LConfig := TTJSonSerializerConfig.Create(1, False);
 LConfig := TTJSonSerializerConfig.Create(-1, False);
 ```
 
+### Presets
+
+Four class functions return the configurations that come up most often, so the
+intent reads at the call site instead of in two numbers:
+
+| Function | Equivalent | Serializes |
+|---|---|---|
+| `Default` | `Create(-1, False)` | every level, no detail collections |
+| `WithDetails` | `Create(1, True)` | one level of related entities and of detail collections |
+| `WithRelations` | `Create(1, False)` | one level of related entities, no detail collections |
+| `EntityOnly` | `Create(0, False)` | the entity alone, relations as foreign key ids |
+
+```pascal
+LJSon := LContext.EntityToJSon<TOrder>(LOrder,
+  TTJSonSerializerConfig.WithDetails);
+```
+
 !!! warning "No Default Constructor"
-    `TTJSonSerializerConfig` is a record with **no default constructor**. You must always initialize it explicitly with `Create(AMaxLevels, ADetails)`. An uninitialized config will have undefined behavior.
+    `TTJSonSerializerConfig` is a record with **no default constructor**. You must always initialize it explicitly, with `Create(AMaxLevels, ADetails)` or with one of the presets; for the default settings use `TTJSonSerializerConfig.Default`. An uninitialized config will have undefined behavior.
 
 ## MaxLevels in Detail
 
@@ -53,7 +70,7 @@ The `MaxLevels` parameter controls how deep the serializer traverses related ent
 !!! note "MaxLevels bounds queries, not just payload"
     When the current level is past `MaxLevels`, the serializer does **not** resolve the lazy reference: it emits the foreign key id and moves on. The contract towards the client is unchanged, because the id is still written. What changes is the cost: on a list endpoint, `Create(0, False)` used to pay `rows x N:1 relations` queries whose results were then discarded. See [Lazy Loading](../guide/lazy-loading.md).
 
-!!! warning "On a list, the only safe value is 0"
+!!! warning "On a list, depth is paid per row"
     The gate that stops the query is the same one that lets it through. At
     `MaxLevels = 0` a `TTLazy<T>` reference is written as its foreign key id
     **without a query**, so the client already has the identifier for free. At
@@ -65,9 +82,12 @@ The `MaxLevels` parameter controls how deep the serializer traverses related ent
     zero into a one, and it grows with the page size rather than with the
     depth you asked for.
 
-    Serialize a list with `Create(0, False)`. Depth belongs to the endpoint
-    that returns **one** entity, where the number of queries is bounded by the
-    shape of that entity and not by how many rows came back.
+    When the list needs only the identifiers of the related rows, serialize it
+    with `Create(0, False)`. When it needs their columns - the customer name
+    next to each order - map a read-only entity with `[TJoin]` and select that
+    instead: the related columns come back in the same row, from one query,
+    and the entity has no lazy reference left to resolve. See
+    [JOIN Queries](../guide/joins.md).
 
 !!! note "Detail collections are dropped, not degraded"
     The fallback above applies to `TTLazy<T>` references, which always carry an
