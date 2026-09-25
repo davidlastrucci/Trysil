@@ -34,6 +34,11 @@ type
 
     property MaxLevels: Integer read FMaxLevels write FMaxLevels;
     property Details: Boolean read FDetails write FDetails;
+
+    class function Default: TTJSonSerializerConfig; static;
+    class function WithDetails: TTJSonSerializerConfig; static;
+    class function WithRelations: TTJSonSerializerConfig; static;
+    class function EntityOnly: TTJSonSerializerConfig; static;
   end;
 
 { TTJSonValueState }
@@ -76,6 +81,26 @@ constructor TTJSonSerializerConfig.Create(
 begin
   FMaxLevels := AMaxLevels;
   FDetails := ADetails;
+end;
+
+class function TTJSonSerializerConfig.Default: TTJSonSerializerConfig;
+begin
+  result := TTJSonSerializerConfig.Create(-1, False);
+end;
+
+class function TTJSonSerializerConfig.WithDetails: TTJSonSerializerConfig;
+begin
+  result := TTJSonSerializerConfig.Create(1, True);
+end;
+
+class function TTJSonSerializerConfig.WithRelations: TTJSonSerializerConfig;
+begin
+  result := TTJSonSerializerConfig.Create(1, False);
+end;
+
+class function TTJSonSerializerConfig.EntityOnly: TTJSonSerializerConfig;
+begin
+  result := TTJSonSerializerConfig.Create(0, False);
 end;
 
 { TTJSonValues }
