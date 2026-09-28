@@ -107,6 +107,8 @@ type
       const ALimit: Integer;
       const AOrderBy: String); overload;
 
+    procedure AddWhere(const AWhere: String);
+
     procedure AddParameter(
       const AName: String;
       const ADataType: TFieldType;
@@ -339,6 +341,14 @@ begin
   SetLength(FParameters, 0);
   FPaging := TTFilterPaging.Create(AStart, ALimit, AOrderBy);
   FIncludeDeleted := False;
+end;
+
+procedure TTFilter.AddWhere(const AWhere: String);
+begin
+  if FWhere.IsEmpty then
+    FWhere := AWhere
+  else
+    FWhere := Format('(%s) AND (%s)', [FWhere, AWhere]);
 end;
 
 procedure TTFilter.AddParameter(

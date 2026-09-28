@@ -301,6 +301,18 @@ type
     procedure AnOrderByCarriesTheReferenceTheMetadataGives;
   end;
 
+{ TTFilterAddWhereTests }
+
+  [TestFixture]
+  TTFilterAddWhereTests = class
+  public
+    [Test]
+    procedure AddWhereOnAnEmptyWhereAssignsTheCondition;
+
+    [Test]
+    procedure AddWhereKeepsAnOrOfTheExistingWhereTogether;
+  end;
+
 implementation
 
 { TTestFakeMetadataProvider }
@@ -1245,8 +1257,32 @@ begin
   end;
 end;
 
+{ TTFilterAddWhereTests }
+
+procedure TTFilterAddWhereTests.AddWhereOnAnEmptyWhereAssignsTheCondition;
+var
+  LFilter: TTFilter;
+begin
+  LFilter := TTFilter.Empty;
+  LFilter.AddWhere('UserID = :userID');
+  Assert.AreEqual('UserID = :userID', LFilter.Where);
+end;
+
+procedure TTFilterAddWhereTests.AddWhereKeepsAnOrOfTheExistingWhereTogether;
+var
+  LFilter: TTFilter;
+begin
+  LFilter := TTFilter.Create('Code = :p0 OR Code = :p1');
+  LFilter.AddWhere('UserID = :userID');
+  Assert.AreEqual(
+    '(Code = :p0 OR Code = :p1) AND (UserID = :userID)',
+    LFilter.Where,
+    'The added condition must bind to every row, not only to the last OR');
+end;
+
 initialization
   TDUnitX.RegisterTestFixture(TTFilterBuilderTests);
   TDUnitX.RegisterTestFixture(TTFilterQuotingTests);
+  TDUnitX.RegisterTestFixture(TTFilterAddWhereTests);
 
 end.

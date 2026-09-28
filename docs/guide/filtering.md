@@ -43,6 +43,19 @@ LFilter.AddParameter('MaxAge', ftInteger, 65);
 
 Always use named parameters (`:ParamName`) instead of concatenating values into the WHERE string. This prevents SQL injection and ensures correct type handling.
 
+### Adding a Condition to an Existing Filter
+
+`AddWhere` joins a condition to the WHERE clause the filter already has, with `AND`, and wraps both sides in parentheses, so an `OR` already in the clause cannot swallow the new condition. On an empty clause it assigns the condition as it is:
+
+```pascal
+LFilter := TTFilter.Create('Status = :p0 OR Status = :p1');
+LFilter.AddWhere('OwnerID = :OwnerID');
+LFilter.AddParameter('OwnerID', ftInteger, LOwnerID);
+// (Status = :p0 OR Status = :p1) AND (OwnerID = :OwnerID)
+```
+
+It is meant for a filter that was built elsewhere - by `TTFilterBuilder<T>` or from an HTTP request body - and that has to be narrowed further. Give the added parameters names the filter does not already use: the builder and the HTTP filter name theirs `p0`, `p1`, ...
+
 ## TTFilter.Empty
 
 Use `TTFilter.Empty` when no filter is needed. This is equivalent to selecting all records:

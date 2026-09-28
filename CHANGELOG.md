@@ -15,6 +15,10 @@ their moment.
 
 Not released yet: what this section describes is on `master` and in no tag.
 
+### ORM
+
+- **`TTFilter.AddWhere` adds a condition to the WHERE clause a filter already has.** It joins the two with `AND` and wraps each side in parentheses, so an `OR` in the existing clause cannot swallow the new condition; on an empty clause it assigns the condition as it is. It is meant for a filter built elsewhere - by `TTFilterBuilder<T>` or from an HTTP body - that has to be narrowed further. The parameters it needs are added with `AddParameter`, under names the filter does not already use: the builder and the HTTP filter use `p0`, `p1`, ...
+
 ### JSON
 
 - **`TTJSonSerializerConfig` has four presets.** `Default` (`-1, False`), `WithDetails` (`1, True`), `WithRelations` (`1, False`) and `EntityOnly` (`0, False`) are static class functions that return the configuration, so the call site says what it serializes instead of carrying two numbers. `Create` is unchanged, and so is every existing call.
