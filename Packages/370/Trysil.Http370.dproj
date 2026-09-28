@@ -177,6 +177,7 @@
         <DCCReference Include="..\..\Trysil.Http\Trysil.Http.Context.pas"/>
         <DCCReference Include="..\..\Trysil.Http\Trysil.Http.Controller.pas"/>
         <DCCReference Include="..\..\Trysil.Http\Trysil.Http.Cors.pas"/>
+        <DCCReference Include="..\..\Trysil.Http\Trysil.Http.Entity.pas"/>
         <DCCReference Include="..\..\Trysil.Http\Trysil.Http.Exceptions.pas"/>
         <DCCReference Include="..\..\Trysil.Http\Trysil.Http.Filter.pas"/>
         <DCCReference Include="..\..\Trysil.Http\Trysil.Http.Listener.pas"/>

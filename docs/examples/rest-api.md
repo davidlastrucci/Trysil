@@ -221,7 +221,7 @@ end;
 
 ## Generic CRUD Controllers
 
-The demo defines reusable generic controllers that work with any entity type. This eliminates boilerplate -- you register the same controller class for each entity, and the generic type parameter determines which table it operates on.
+The demo defines reusable generic controllers that work with any entity type. This eliminates boilerplate -- you register the same controller class for each entity, and the generic type parameter determines which table it operates on. The controllers declare the routes and the areas; the work is done by `TTHttpEntityReader<T>` and `TTHttpEntityWriter<T>` from `Trysil.Http.Entity`, to which they delegate. See [Generic CRUD Controllers](../http/controllers.md#generic-crud-controllers).
 
 ### Base Controller
 
@@ -236,11 +236,19 @@ end;
 
 ### Read-Only Controller
 
-Provides GET (by ID), GET (all), POST (filtered select), and GET (metadata) endpoints:
+Provides GET (by ID), GET (all), POST (filtered select), and GET (metadata) endpoints. It creates a `TTHttpEntityReader<T>` on the request's `TTHttpContext` and frees it with itself:
 
 ```pascal
 TAPIReadOnlyController<T: class> = class(TAPIController)
+strict private
+  FReader: TTHttpEntityReader<T>;
 public
+  constructor Create(
+    const AContext: TAPIContext;
+    const ARequest: TTHttpRequest;
+    const AResponse: TTHttpResponse); override;
+  destructor Destroy; override;
+
   [TGet('/?')]
   [TArea('read')]
   procedure Get(const AID: TTPrimaryKey);
@@ -266,26 +274,25 @@ end;
 - `[TGet('/?')]` -- the `?` is a route parameter placeholder that maps to the method's `AID` parameter.
 - `[TArea('read')]` -- the user's JWT must include the `read` area to access these endpoints.
 
-The `SelectAll` implementation shows how simple it is:
+Each endpoint is one line:
 
 ```pascal
-procedure TAPIReadOnlyController<T>.SelectAll;
+constructor TAPIReadOnlyController<T>.Create(
+  const AContext: TAPIContext;
+  const ARequest: TTHttpRequest;
+  const AResponse: TTHttpResponse);
 begin
-  InternalSelect(TTFilter.Empty());
+  inherited Create(AContext, ARequest, AResponse);
+  FReader := TTHttpEntityReader<T>.Create(Context);
 end;
-```
 
-The `Select` endpoint accepts a filter payload in the request body, parsed by `TTHttpFilter<T>`:
-
-```pascal
 procedure TAPIReadOnlyController<T>.Select;
-var
-  LHttpFilter: TTHttpFilter<T>;
 begin
-  LHttpFilter := TTHttpFilter<T>.Create(Context, FRequest.JSonContent);
-  InternalSelect(LHttpFilter.Filter);
+  FResponse.Content := FReader.Select(FRequest.JSonContent);
 end;
 ```
+
+The `Select` endpoint accepts a filter payload in the request body, which the reader parses with `TTHttpFilter<T>`.
 
 The payload is `{"where": [{"columnName", "condition", "value"}], "orderBy": [...], "start", "limit"}`.
 
@@ -297,12 +304,11 @@ A field of the payload that carries the wrong **kind** of value is a 400 as well
 
 #### Ceilings
 
-The three-argument constructor takes a `TTHttpFilterParameters`; the two-argument one applies `TTHttpFilterParameters.Defaults` -- `MaxLimit` 1000, `MaxWhereConditions` 32, `MaxOrderByColumns` 8, `IncludeDeleted` False.
+The reader's two-argument constructor takes a `TTHttpFilterParameters` and hands it to `TTHttpFilter<T>`; the one-argument one applies `TTHttpFilterParameters.Defaults` -- `MaxLimit` 1000, `MaxWhereConditions` 32, `MaxOrderByColumns` 8, `IncludeDeleted` False.
 
 ```pascal
-LHttpFilter := TTHttpFilter<T>.Create(
+FReader := TTHttpEntityReader<T>.Create(
   Context,
-  FRequest.JSonContent,
   TTHttpFilterParameters.Create(200, 16, 4, UserMaySeeDeleted));
 ```
 
@@ -311,7 +317,7 @@ LHttpFilter := TTHttpFilter<T>.Create(
 !!! warning "A local variable is not the zero state"
     The record has no managed fields, so nothing zeroes it on the stack: a local you declare and never assign holds whatever was there. A garbage `MaxLimit` that happens to be negative is unlimited, and a garbage `IncludeDeleted` byte reads as `True`, which returns the soft-deleted rows. Initialise it with `Default(TTHttpFilterParameters)` or one of the constructors - never rely on the declaration alone.
 
-This governs the filter **built from the payload**. An endpoint that builds its own `TTFilter` is not affected: `SelectAll` passes `TTFilter.Empty`, which carries no pagination clause and returns every row by design. Whether that endpoint should paginate is the application's decision, not the framework's.
+This governs the filter **built from the payload**, and the reader's `SelectAll` builds it too, with no body: it stops at `MaxLimit` like `Select`. An endpoint that builds its own `TTFilter` is not affected: `TTFilter.Empty` carries no pagination clause and returns every row.
 
 !!! warning "Behaviour change"
     `LIKE` on a non-string column used to go through, relying on the engine's implicit conversion. It now returns 400. A client filtering that way needs fixing.
@@ -330,11 +336,19 @@ This governs the filter **built from the payload**. An endpoint that builds its 
 
 ### Read-Write Controller
 
-Extends the read-only controller with Insert, Update, Delete, and CreateNew:
+Extends the read-only controller with Insert, Update, Delete, and CreateNew, delegated to a `TTHttpEntityWriter<T>`:
 
 ```pascal
 TAPIReadWriteController<T: class> = class(TAPIReadOnlyController<T>)
+strict private
+  FWriter: TTHttpEntityWriter<T>;
 public
+  constructor Create(
+    const AContext: TAPIContext;
+    const ARequest: TTHttpRequest;
+    const AResponse: TTHttpResponse); override;
+  destructor Destroy; override;
+
   [TPost]
   [TArea('write')]
   procedure Insert;
@@ -353,46 +367,21 @@ public
 end;
 ```
 
-The `Delete` endpoint takes both the ID and the version ID as route parameters (`/?/?`). The version ID is required for optimistic locking -- if the version does not match the current database value, the delete fails.
-
-The `Insert` implementation deserializes the entity from the request JSON, assigns a sequence ID if needed, and persists it:
+The `Delete` endpoint takes both the ID and the version ID as route parameters (`/?/?`). The version ID is required for optimistic locking -- if the version does not match the current database value, the delete fails with a 409. An ID that is not there is a 404.
 
 ```pascal
 procedure TAPIReadWriteController<T>.Insert;
-var
-  LEntity: T;
 begin
-  LEntity := Context.EntityFromJSonObject<T>(FRequest.JSonContent);
-  try
-    if Context.GetID<T>(LEntity) <= 0 then
-      Context.SetSequenceID<T>(LEntity);
-    Context.Insert<T>(LEntity);
-    FResponse.Content := Context.EntityToJSon<T>(LEntity, ConfigGet);
-  finally
-    Context.FreeEntity<T>(LEntity);
-  end;
+  FResponse.Content := FWriter.Insert(FRequest.JSonContent);
 end;
-```
 
-`Update` deserializes, persists, and then **reloads before serializing the response**:
-
-```pascal
 procedure TAPIReadWriteController<T>.Update;
-var
-  LEntity: T;
 begin
-  LEntity := Context.EntityFromJSonObject<T>(FRequest.JSonContent);
-  try
-    Context.Update<T>(LEntity);
-    Context.Refresh<T>(LEntity);
-    FResponse.Content := Context.EntityToJSon<T>(LEntity, ConfigGet);
-  finally
-    Context.FreeEntity<T>(LEntity);
-  end;
+  FResponse.Content := FWriter.Update(FRequest.JSonContent);
 end;
 ```
 
-The `Refresh<T>` is not decoration. The entity was built from the request body, and the body no longer carries the change tracking columns: they are the framework's to write, so `EntityFromJSonObject` skips them. Without the reload the response would echo an entity whose `createdAt` and `createdBy` are blank, and whose version is the one the client sent rather than the one the update produced.
+`TTHttpEntityWriter<T>.Insert` deserializes the entity, takes the ID from the sequence when the body has none, and inserts it. `Update` deserializes, updates, and **reloads the row before serializing the response**: the body no longer carries the change tracking columns, which are the framework's to write, so `EntityFromJSonObject` skips them, and without the reload the response would echo an entity whose `createdAt` and `createdBy` are blank.
 
 An update endpoint that deserializes onto the **loaded** entity instead of a fresh one is the other shape, and it does not need the reload for the tracking columns -- see [Deserialization](../json/deserialization.md).
 

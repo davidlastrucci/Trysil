@@ -17,17 +17,12 @@ interface
 uses
   System.Classes,
   System.SysUtils,
-  System.JSon,
   Trysil.Types,
-  Trysil.Filter,
-  Trysil.Generics.Collections,
-  Trysil.JSon.Types,
-  Trysil.Http.Consts,
+  Trysil.Http.Classes,
   Trysil.Http.Attributes,
-  Trysil.Http.Exceptions,
   Trysil.Http.Context,
-  Trysil.Http.Filter,
   Trysil.Http.Controller,
+  Trysil.Http.Entity,
 
   API.Context;
 
@@ -46,20 +41,13 @@ type
 
   TAPIReadOnlyController<T: class> = class(TAPIController)
   strict private
-    FConfigGet: TTJSonSerializerConfig;
-    FConfigSelect: TTJSonSerializerConfig;
-    FConfigFind: TTJSonSerializerConfig;
-
-    procedure InternalGet(
-      const AID: TTPrimaryKey; const AConfig: TTJSonSerializerConfig);
-
-    procedure InternalSelect(const AFilter: TTFilter);
-  strict protected
-    property ConfigGet: TTJSonSerializerConfig read FConfigGet;
-    property ConfigSelect: TTJSonSerializerConfig read FConfigSelect;
-    property ConfigFind: TTJSonSerializerConfig read FConfigFind;
+    FReader: TTHttpEntityReader<T>;
   public
-    procedure AfterConstruction; override;
+    constructor Create(
+      const AContext: TAPIContext;
+      const ARequest: TTHttpRequest;
+      const AResponse: TTHttpResponse); override;
+    destructor Destroy; override;
 
     [TGet('/?')]
     [TArea('read')]
@@ -85,7 +73,15 @@ type
 { TAPIReadWriteController<T> }
 
   TAPIReadWriteController<T: class> = class(TAPIReadOnlyController<T>)
+  strict private
+    FWriter: TTHttpEntityWriter<T>;
   public
+    constructor Create(
+      const AContext: TAPIContext;
+      const ARequest: TTHttpRequest;
+      const AResponse: TTHttpResponse); override;
+    destructor Destroy; override;
+
     [TPost]
     [TArea('write')]
     procedure Insert;
@@ -114,133 +110,82 @@ end;
 
 { TAPIReadOnlyController<T> }
 
-procedure TAPIReadOnlyController<T>.AfterConstruction;
+constructor TAPIReadOnlyController<T>.Create(
+  const AContext: TAPIContext;
+  const ARequest: TTHttpRequest;
+  const AResponse: TTHttpResponse);
 begin
-  inherited AfterConstruction;
-  FConfigGet := TTJSonSerializerConfig.Create(1, True);
-  FConfigSelect := TTJSonSerializerConfig.Create(1, False);
-  FConfigFind := TTJSonSerializerConfig.Create(0, False);
+  inherited Create(AContext, ARequest, AResponse);
+  FReader := TTHttpEntityReader<T>.Create(Context);
 end;
 
-procedure TAPIReadOnlyController<T>.InternalGet(
-  const AID: TTPrimaryKey; const AConfig: TTJSonSerializerConfig);
-var
-  LEntity: T;
+destructor TAPIReadOnlyController<T>.Destroy;
 begin
-  LEntity := Context.Get<T>(AID);
-  if not Assigned(LEntity) then
-    raise ETHttpNotFound.CreateFmt(SNotFound, [FRequest.ControllerID.Uri]);
-  try
-    FResponse.Content := Context.EntityToJSon<T>(LEntity, AConfig);
-  finally
-    Context.FreeEntity<T>(LEntity);
-  end;
-end;
-
-procedure TAPIReadOnlyController<T>.InternalSelect(const AFilter: TTFilter);
-var
-  LJSon: TJSonObject;
-  LList: TTList<T>;
-  LJSonData: TJSonArray;
-begin
-  LJSon := TJSonObject.Create;
-  try
-    LJSon.AddPair('count', TJSonNumber.Create(Context.SelectCount<T>(AFilter)));
-    LList := Context.CreateEntityList<T>();
-    try
-      Context.Select<T>(LList, AFilter);
-      LJSonData := Context.ListToJSonArray<T>(LList, ConfigSelect);
-      try
-        LJSon.AddPair('data', LJSonData);
-      except
-        LJSonData.Free;
-        raise;
-      end;
-
-      FResponse.Content := LJSon.ToJSon();
-    finally
-      LList.Free;
-    end;
-  finally
-    LJSon.Free;
-  end;
+  FReader.Free;
+  inherited Destroy;
 end;
 
 procedure TAPIReadOnlyController<T>.Get(const AID: TTPrimaryKey);
 begin
-  InternalGet(AID, ConfigGet);
+  FResponse.Content := FReader.Get(AID);
 end;
 
 procedure TAPIReadOnlyController<T>.SelectAll;
 begin
-  InternalSelect(TTFilter.Empty());
+  FResponse.Content := FReader.SelectAll;
 end;
 
 procedure TAPIReadOnlyController<T>.Select;
-var
-  LHttpFilter: TTHttpFilter<T>;
 begin
-  LHttpFilter := TTHttpFilter<T>.Create(Context, FRequest.JSonContent);
-  InternalSelect(LHttpFilter.Filter);
+  FResponse.Content := FReader.Select(FRequest.JSonContent);
 end;
 
-procedure TAPIReadOnlyController<T>.Find;
+procedure TAPIReadOnlyController<T>.Find(const AID: TTPrimaryKey);
 begin
-  InternalGet(AID, ConfigFind);
+  FResponse.Content := FReader.Find(AID);
 end;
 
 procedure TAPIReadOnlyController<T>.Metadata;
 begin
-  FResponse.Content := Context.MetadataToJSon<T>();
+  FResponse.Content := FReader.Metadata;
 end;
 
 { TAPIReadWriteController<T> }
 
-procedure TAPIReadWriteController<T>.Insert;
-var
-  LEntity: T;
+constructor TAPIReadWriteController<T>.Create(
+  const AContext: TAPIContext;
+  const ARequest: TTHttpRequest;
+  const AResponse: TTHttpResponse);
 begin
-  LEntity := Context.EntityFromJSonObject<T>(FRequest.JSonContent);
-  try
-    if Context.GetID<T>(LEntity) <= 0 then
-      Context.SetSequenceID<T>(LEntity);
-    Context.Insert<T>(LEntity);
-    FResponse.Content := Context.EntityToJSon<T>(LEntity, ConfigGet);
-  finally
-    Context.FreeEntity<T>(LEntity);
-  end;
+  inherited Create(AContext, ARequest, AResponse);
+  FWriter := TTHttpEntityWriter<T>.Create(Context);
+end;
+
+destructor TAPIReadWriteController<T>.Destroy;
+begin
+  FWriter.Free;
+  inherited Destroy;
+end;
+
+procedure TAPIReadWriteController<T>.Insert;
+begin
+  FResponse.Content := FWriter.Insert(FRequest.JSonContent);
 end;
 
 procedure TAPIReadWriteController<T>.Update;
-var
-  LEntity: T;
 begin
-  LEntity := Context.EntityFromJSonObject<T>(FRequest.JSonContent);
-  try
-    Context.Update<T>(LEntity);
-    Context.Refresh<T>(LEntity);
-    FResponse.Content := Context.EntityToJSon<T>(LEntity, ConfigGet);
-  finally
-    Context.FreeEntity<T>(LEntity);
-  end;
+  FResponse.Content := FWriter.Update(FRequest.JSonContent);
 end;
 
 procedure TAPIReadWriteController<T>.Delete(
   const AID: TTPrimaryKey; const AVersionID: TTVersion);
 begin
-  Context.Delete<T>(AID, AVersionID);
+  FWriter.Delete(AID, AVersionID);
 end;
 
 procedure TAPIReadWriteController<T>.CreateNew;
-var
-  LEntity: T;
 begin
-  LEntity := Context.CreateEntity<T>();
-  try
-    FResponse.Content := Context.EntityToJSon<T>(LEntity, ConfigFind);
-  finally
-    Context.FreeEntity<T>(LEntity);
-  end;
+  FResponse.Content := FWriter.CreateNew;
 end;
 
 end.

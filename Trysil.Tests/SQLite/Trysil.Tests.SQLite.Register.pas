@@ -42,6 +42,7 @@ uses
   Trysil.Tests.SQLite.ContextApi,
   Trysil.Tests.SQLite.UpdateMode,
   Trysil.Tests.SQLite.JSon,
+  Trysil.Tests.SQLite.HttpEntity,
   Trysil.Tests.SQLite.AllTypes,
   Trysil.Tests.SQLite.AllTypesJSon,
   Trysil.Tests.SQLite.NullablePrimitives,
@@ -78,6 +79,7 @@ begin
     TDUnitX.RegisterTestFixture(TTSQLiteContextApiTests);
     TDUnitX.RegisterTestFixture(TTSQLiteUpdateModeTests);
     TDUnitX.RegisterTestFixture(TTSQLiteJSonTests);
+    TDUnitX.RegisterTestFixture(TTSQLiteHttpEntityTests);
     TDUnitX.RegisterTestFixture(TTSQLiteAllTypesTests);
     TDUnitX.RegisterTestFixture(TTSQLiteAllTypesJSonTests);
     TDUnitX.RegisterTestFixture(TTSQLiteNullablePrimitivesTests);

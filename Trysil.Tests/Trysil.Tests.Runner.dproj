@@ -8,7 +8,7 @@
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Console</AppType>
         <FrameworkType>None</FrameworkType>
-        <ProjectVersion>20.4</ProjectVersion>
+        <ProjectVersion>20.5</ProjectVersion>
         <Platform Condition="'$(Platform)'==''">Win64</Platform>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
@@ -143,6 +143,7 @@
         <Android_NotificationIcon96>$(BDS)\bin\Artwork\Android\FM_NotificationIcon_96x96.png</Android_NotificationIcon96>
         <Android_LauncherIcon192>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_192x192.png</Android_LauncherIcon192>
         <EnabledSysJars>activity-1.7.2.dex.jar;annotation-experimental-1.4.1.dex.jar;annotation-jvm-1.8.1.dex.jar;annotations-23.0.0.dex.jar;appcompat-1.2.0.dex.jar;appcompat-resources-1.2.0.dex.jar;billing-7.1.1.dex.jar;biometric-1.1.0.dex.jar;browser-1.4.0.dex.jar;cloud-messaging.dex.jar;collection-jvm-1.4.2.dex.jar;concurrent-futures-1.1.0.dex.jar;core-1.17.0.dex.jar;core-common-2.2.0.dex.jar;core-ktx-1.17.0.dex.jar;core-runtime-2.2.0.dex.jar;core-viewtree-1.0.0.dex.jar;cursoradapter-1.0.0.dex.jar;customview-1.0.0.dex.jar;documentfile-1.0.0.dex.jar;drawerlayout-1.0.0.dex.jar;error_prone_annotations-2.9.0.dex.jar;exifinterface-1.3.6.dex.jar;firebase-annotations-16.2.0.dex.jar;firebase-common-20.3.1.dex.jar;firebase-components-17.1.0.dex.jar;firebase-datatransport-18.1.7.dex.jar;firebase-encoders-17.0.0.dex.jar;firebase-encoders-json-18.0.0.dex.jar;firebase-encoders-proto-16.0.0.dex.jar;firebase-iid-interop-17.1.0.dex.jar;firebase-installations-17.1.3.dex.jar;firebase-installations-interop-17.1.0.dex.jar;firebase-measurement-connector-19.0.0.dex.jar;firebase-messaging-23.1.2.dex.jar;fmx.dex.jar;fragment-1.2.5.dex.jar;google-play-licensing.dex.jar;interpolator-1.0.0.dex.jar;javax.inject-1.dex.jar;jspecify-1.0.0.dex.jar;kotlin-stdlib-2.1.21.dex.jar;kotlinx-coroutines-android-1.8.1.dex.jar;kotlinx-coroutines-core-jvm-1.8.1.dex.jar;legacy-support-core-utils-1.0.0.dex.jar;lifecycle-common-2.6.2.dex.jar;lifecycle-livedata-2.6.2.dex.jar;lifecycle-livedata-core-2.6.2.dex.jar;lifecycle-runtime-2.6.2.dex.jar;lifecycle-service-2.6.2.dex.jar;lifecycle-viewmodel-2.6.2.dex.jar;lifecycle-viewmodel-savedstate-2.6.2.dex.jar;listenablefuture-1.0.dex.jar;loader-1.0.0.dex.jar;localbroadcastmanager-1.0.0.dex.jar;okio-jvm-3.4.0.dex.jar;play-services-ads-22.2.0.dex.jar;play-services-ads-base-22.2.0.dex.jar;play-services-ads-identifier-18.0.0.dex.jar;play-services-ads-lite-22.2.0.dex.jar;play-services-appset-16.0.1.dex.jar;play-services-base-18.5.0.dex.jar;play-services-basement-18.4.0.dex.jar;play-services-cloud-messaging-17.0.1.dex.jar;play-services-location-21.0.1.dex.jar;play-services-maps-18.1.0.dex.jar;play-services-measurement-base-20.1.2.dex.jar;play-services-measurement-sdk-api-20.1.2.dex.jar;play-services-stats-17.0.2.dex.jar;play-services-tasks-18.2.0.dex.jar;print-1.0.0.dex.jar;profileinstaller-1.3.0.dex.jar;room-common-2.2.5.dex.jar;room-runtime-2.2.5.dex.jar;savedstate-1.2.1.dex.jar;sqlite-2.1.0.dex.jar;sqlite-framework-2.1.0.dex.jar;startup-runtime-1.1.1.dex.jar;tracing-1.2.0.dex.jar;transport-api-3.0.0.dex.jar;transport-backend-cct-3.1.8.dex.jar;transport-runtime-3.1.8.dex.jar;user-messaging-platform-2.0.0.dex.jar;vectordrawable-1.1.0.dex.jar;vectordrawable-animated-1.1.0.dex.jar;versionedparcelable-1.1.1.dex.jar;viewpager-1.0.0.dex.jar;work-runtime-2.7.0.dex.jar</EnabledSysJars>
+        <VerInfo_MinSdkVersion>23</VerInfo_MinSdkVersion>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android64)'!=''">
         <Android_LauncherIcon192>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_192x192.png</Android_LauncherIcon192>
@@ -251,6 +252,7 @@
         <DCCReference Include="Trysil.Tests.Logger.pas"/>
         <DCCReference Include="Trysil.Tests.SqlServerParams.pas"/>
         <DCCReference Include="Abstract\Trysil.Tests.Abstract.JSon.pas"/>
+        <DCCReference Include="Abstract\Trysil.Tests.Abstract.HttpEntity.pas"/>
         <DCCReference Include="Abstract\Trysil.Tests.Abstract.AllTypes.pas"/>
         <DCCReference Include="Abstract\Trysil.Tests.Abstract.AllTypesJSon.pas"/>
         <DCCReference Include="Abstract\Trysil.Tests.Abstract.NullablePrimitives.pas"/>
@@ -273,6 +275,7 @@
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.ContextApi.pas"/>
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.UpdateMode.pas"/>
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.JSon.pas"/>
+        <DCCReference Include="SQLite\Trysil.Tests.SQLite.HttpEntity.pas"/>
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.AllTypes.pas"/>
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.AllTypesJSon.pas"/>
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.NullablePrimitives.pas"/>
@@ -293,6 +296,7 @@
         <DCCReference Include="SqlServer\Trysil.Tests.SqlServer.ContextApi.pas"/>
         <DCCReference Include="SqlServer\Trysil.Tests.SqlServer.UpdateMode.pas"/>
         <DCCReference Include="SqlServer\Trysil.Tests.SqlServer.JSon.pas"/>
+        <DCCReference Include="SqlServer\Trysil.Tests.SqlServer.HttpEntity.pas"/>
         <DCCReference Include="SqlServer\Trysil.Tests.SqlServer.AllTypes.pas"/>
         <DCCReference Include="SqlServer\Trysil.Tests.SqlServer.AllTypesJSon.pas"/>
         <DCCReference Include="SqlServer\Trysil.Tests.SqlServer.NullablePrimitives.pas"/>
@@ -314,6 +318,7 @@
         <DCCReference Include="PostgreSQL\Trysil.Tests.PostgreSQL.ContextApi.pas"/>
         <DCCReference Include="PostgreSQL\Trysil.Tests.PostgreSQL.UpdateMode.pas"/>
         <DCCReference Include="PostgreSQL\Trysil.Tests.PostgreSQL.JSon.pas"/>
+        <DCCReference Include="PostgreSQL\Trysil.Tests.PostgreSQL.HttpEntity.pas"/>
         <DCCReference Include="PostgreSQL\Trysil.Tests.PostgreSQL.AllTypes.pas"/>
         <DCCReference Include="PostgreSQL\Trysil.Tests.PostgreSQL.AllTypesJSon.pas"/>
         <DCCReference Include="PostgreSQL\Trysil.Tests.PostgreSQL.NullablePrimitives.pas"/>
@@ -333,6 +338,7 @@
         <DCCReference Include="FirebirdSQL\Trysil.Tests.FirebirdSQL.ContextApi.pas"/>
         <DCCReference Include="FirebirdSQL\Trysil.Tests.FirebirdSQL.UpdateMode.pas"/>
         <DCCReference Include="FirebirdSQL\Trysil.Tests.FirebirdSQL.JSon.pas"/>
+        <DCCReference Include="FirebirdSQL\Trysil.Tests.FirebirdSQL.HttpEntity.pas"/>
         <DCCReference Include="FirebirdSQL\Trysil.Tests.FirebirdSQL.AllTypes.pas"/>
         <DCCReference Include="FirebirdSQL\Trysil.Tests.FirebirdSQL.AllTypesJSon.pas"/>
         <DCCReference Include="FirebirdSQL\Trysil.Tests.FirebirdSQL.NullablePrimitives.pas"/>
@@ -352,6 +358,7 @@
         <DCCReference Include="InterBase\Trysil.Tests.InterBase.ContextApi.pas"/>
         <DCCReference Include="InterBase\Trysil.Tests.InterBase.UpdateMode.pas"/>
         <DCCReference Include="InterBase\Trysil.Tests.InterBase.JSon.pas"/>
+        <DCCReference Include="InterBase\Trysil.Tests.InterBase.HttpEntity.pas"/>
         <DCCReference Include="InterBase\Trysil.Tests.InterBase.AllTypes.pas"/>
         <DCCReference Include="InterBase\Trysil.Tests.InterBase.AllTypesJSon.pas"/>
         <DCCReference Include="InterBase\Trysil.Tests.InterBase.NullablePrimitives.pas"/>
@@ -371,6 +378,7 @@
         <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.ContextApi.pas"/>
         <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.UpdateMode.pas"/>
         <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.JSon.pas"/>
+        <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.HttpEntity.pas"/>
         <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.AllTypes.pas"/>
         <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.AllTypesJSon.pas"/>
         <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.NullablePrimitives.pas"/>
@@ -391,6 +399,7 @@
         <DCCReference Include="Oracle\Trysil.Tests.Oracle.ContextApi.pas"/>
         <DCCReference Include="Oracle\Trysil.Tests.Oracle.UpdateMode.pas"/>
         <DCCReference Include="Oracle\Trysil.Tests.Oracle.JSon.pas"/>
+        <DCCReference Include="Oracle\Trysil.Tests.Oracle.HttpEntity.pas"/>
         <DCCReference Include="Oracle\Trysil.Tests.Oracle.AllTypes.pas"/>
         <DCCReference Include="Oracle\Trysil.Tests.Oracle.AllTypesJSon.pas"/>
         <DCCReference Include="Oracle\Trysil.Tests.Oracle.NullablePrimitives.pas"/>

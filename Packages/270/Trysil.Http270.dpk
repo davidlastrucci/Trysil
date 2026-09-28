@@ -42,6 +42,7 @@ contains
   Trysil.Http.Context in '..\..\Trysil.Http\Trysil.Http.Context.pas',
   Trysil.Http.Controller in '..\..\Trysil.Http\Trysil.Http.Controller.pas',
   Trysil.Http.Cors in '..\..\Trysil.Http\Trysil.Http.Cors.pas',
+  Trysil.Http.Entity in '..\..\Trysil.Http\Trysil.Http.Entity.pas',
   Trysil.Http.Exceptions in '..\..\Trysil.Http\Trysil.Http.Exceptions.pas',
   Trysil.Http.Filter in '..\..\Trysil.Http\Trysil.Http.Filter.pas',
   Trysil.Http.Listener in '..\..\Trysil.Http\Trysil.Http.Listener.pas',

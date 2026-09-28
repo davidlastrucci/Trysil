@@ -42,6 +42,7 @@ uses
   Trysil.Tests.InterBase.ContextApi,
   Trysil.Tests.InterBase.UpdateMode,
   Trysil.Tests.InterBase.JSon,
+  Trysil.Tests.InterBase.HttpEntity,
   Trysil.Tests.InterBase.AllTypes,
   Trysil.Tests.InterBase.AllTypesJSon,
   Trysil.Tests.InterBase.NullablePrimitives,
@@ -68,6 +69,7 @@ begin
     TDUnitX.RegisterTestFixture(TTInterBaseContextApiTests);
     TDUnitX.RegisterTestFixture(TTInterBaseUpdateModeTests);
     TDUnitX.RegisterTestFixture(TTInterBaseJSonTests);
+    TDUnitX.RegisterTestFixture(TTInterBaseHttpEntityTests);
     TDUnitX.RegisterTestFixture(TTInterBaseAllTypesTests);
     TDUnitX.RegisterTestFixture(TTInterBaseAllTypesJSonTests);
     TDUnitX.RegisterTestFixture(TTInterBaseNullablePrimitivesTests);

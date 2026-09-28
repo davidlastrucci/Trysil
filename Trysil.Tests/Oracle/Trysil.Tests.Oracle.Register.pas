@@ -43,6 +43,7 @@ uses
   Trysil.Tests.Oracle.ContextApi,
   Trysil.Tests.Oracle.UpdateMode,
   Trysil.Tests.Oracle.JSon,
+  Trysil.Tests.Oracle.HttpEntity,
   Trysil.Tests.Oracle.AllTypes,
   Trysil.Tests.Oracle.AllTypesJSon,
   Trysil.Tests.Oracle.NullablePrimitives,
@@ -70,6 +71,7 @@ begin
     TDUnitX.RegisterTestFixture(TTOracleContextApiTests);
     TDUnitX.RegisterTestFixture(TTOracleUpdateModeTests);
     TDUnitX.RegisterTestFixture(TTOracleJSonTests);
+    TDUnitX.RegisterTestFixture(TTOracleHttpEntityTests);
     TDUnitX.RegisterTestFixture(TTOracleAllTypesTests);
     TDUnitX.RegisterTestFixture(TTOracleAllTypesJSonTests);
     TDUnitX.RegisterTestFixture(TTOracleNullablePrimitivesTests);

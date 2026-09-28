@@ -42,6 +42,7 @@ uses
   Trysil.Tests.FirebirdSQL.ContextApi,
   Trysil.Tests.FirebirdSQL.UpdateMode,
   Trysil.Tests.FirebirdSQL.JSon,
+  Trysil.Tests.FirebirdSQL.HttpEntity,
   Trysil.Tests.FirebirdSQL.AllTypes,
   Trysil.Tests.FirebirdSQL.AllTypesJSon,
   Trysil.Tests.FirebirdSQL.NullablePrimitives,
@@ -68,6 +69,7 @@ begin
     TDUnitX.RegisterTestFixture(TTFirebirdSQLContextApiTests);
     TDUnitX.RegisterTestFixture(TTFirebirdSQLUpdateModeTests);
     TDUnitX.RegisterTestFixture(TTFirebirdSQLJSonTests);
+    TDUnitX.RegisterTestFixture(TTFirebirdSQLHttpEntityTests);
     TDUnitX.RegisterTestFixture(TTFirebirdSQLAllTypesTests);
     TDUnitX.RegisterTestFixture(TTFirebirdSQLAllTypesJSonTests);
     TDUnitX.RegisterTestFixture(TTFirebirdSQLNullablePrimitivesTests);

@@ -42,6 +42,7 @@ uses
   Trysil.Tests.MariaDB.ContextApi,
   Trysil.Tests.MariaDB.UpdateMode,
   Trysil.Tests.MariaDB.JSon,
+  Trysil.Tests.MariaDB.HttpEntity,
   Trysil.Tests.MariaDB.AllTypes,
   Trysil.Tests.MariaDB.AllTypesJSon,
   Trysil.Tests.MariaDB.NullablePrimitives,
@@ -68,6 +69,7 @@ begin
     TDUnitX.RegisterTestFixture(TTMariaDBContextApiTests);
     TDUnitX.RegisterTestFixture(TTMariaDBUpdateModeTests);
     TDUnitX.RegisterTestFixture(TTMariaDBJSonTests);
+    TDUnitX.RegisterTestFixture(TTMariaDBHttpEntityTests);
     TDUnitX.RegisterTestFixture(TTMariaDBAllTypesTests);
     TDUnitX.RegisterTestFixture(TTMariaDBAllTypesJSonTests);
     TDUnitX.RegisterTestFixture(TTMariaDBNullablePrimitivesTests);

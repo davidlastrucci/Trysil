@@ -175,46 +175,117 @@ Use `ClientIP` for audit trails and rate limiting, `RemoteIP` when you need to k
 
 ## Generic CRUD Controllers
 
-A powerful pattern is building reusable generic controllers that handle standard CRUD operations for any entity type:
+`Trysil.Http.Entity` carries the logic of the standard CRUD operations, for any entity type, in two classes: `TTHttpEntityReader<T>` reads and `TTHttpEntityWriter<T>` writes. They are not controllers. They take the `TTHttpContext` in the constructor, borrowing it without owning it, receive the request body as a `TJSonValue` and return the response as a JSON string, so they know nothing of routes, areas or authentication: those stay in your controllers, which delegate to them.
+
+### TTHttpEntityReader\<T\>
+
+| Method | Returns | Default configuration |
+|---|---|---|
+| `Get(AID)` | the entity | `WithDetails` |
+| `Find(AID)` | the entity | `EntityOnly` |
+| `SelectAll` | `{"count": n, "data": [...]}` | `WithRelations` |
+| `Select(AJSonFilter)` | `{"count": n, "data": [...]}`, filtered by the body | `WithRelations` |
+| `Metadata` | the entity metadata | - |
+
+Each method but `Metadata` has an overload that takes a `TTJSonSerializerConfig` instead of the default one. `Get` and `Find` raise `ETHttpNotFound` for an id that is not there. `count` is the number of rows the filter matches, `data` only the page.
+
+`Select` and `SelectAll` build the filter with `TTHttpFilter<T>`, bounded by the `TTHttpFilterParameters` given to the constructor, or by `TTHttpFilterParameters.Defaults` with the one-argument constructor: `SelectAll` is the same query with no body, so it stops at `MaxLimit` too.
+
+| Event | Called |
+|---|---|
+| `OnAddEntityFilter` | with the filter built from the body, before `SelectCount` and `Select` |
+| `OnBeforeSerializeEntity` | on each entity, before it is serialized |
+
+`OnAddEntityFilter` is where the server narrows what the client asked for, a row-level restriction for instance. `TTFilter.AddWhere` joins the condition to the one from the body with `AND`, and keeps an `OR` of the body inside its parentheses:
+
+```pascal
+LReader.OnAddEntityFilter :=
+  procedure(var AFilter: TTFilter)
+  begin
+    AFilter.AddWhere('UserID = :userID');
+    AFilter.AddParameter('userID', ftInteger, LUserID);
+  end;
+```
+
+The conditions from the body use the parameters `p0`, `p1`, ...: give yours other names.
+
+### TTHttpEntityWriter\<T\>
+
+| Method | Does | Default configuration |
+|---|---|---|
+| `Insert(AJSonEntity)` | deserializes, takes the id from the sequence if the body has none, inserts, returns the entity | `WithDetails` |
+| `Update(AJSonEntity)` | deserializes, updates, reloads the row, returns it | `WithDetails` |
+| `Delete(AID, AVersionID)` | loads the row, puts back the version the client sent, deletes | - |
+| `CreateNew` | returns a new entity, with its id, without inserting it | `EntityOnly` |
+
+`Insert`, `Update` and `CreateNew` have an overload that takes a `TTJSonSerializerConfig`. `Update` reloads the row before answering because the body does not carry the change tracking columns. `Delete` raises `ETHttpNotFound` for an id that is not there and `ETConcurrentUpdateException`, a 409, for a version the row no longer has.
+
+| Event | Called |
+|---|---|
+| `OnBeforeInsert`, `OnAfterInsert` | around the insert |
+| `OnBeforeUpdate`, `OnAfterUpdate` | around the update |
+| `OnBeforeDelete`, `OnAfterDelete` | around the delete |
+| `OnApplyDetails` | after the insert or the update, before `OnAfterInsert` or `OnAfterUpdate` |
+
+Every write runs in `RunInTransaction` with its events: an exception in any of them, `OnApplyDetails` included, rolls the row back.
+
+### The controllers
+
+The controllers are yours: two generic base classes, one for reading and one, derived from it, for writing, declare the routes and delegate. Everything the application wants to share - areas, events, configurations - lives in them once:
 
 ```pascal
 type
-  TAPIController = class(TTHttpController<TAPIContext>)
-  end;
-
-  TAPIReadOnlyController<T: class> = class(TAPIController)
+  TAPIReadOnlyController<T: class> = class(TTHttpController<TAPIContext>)
+  strict private
+    FReader: TTHttpEntityReader<T>;
   public
+    constructor Create(
+      const AContext: TAPIContext;
+      const ARequest: TTHttpRequest;
+      const AResponse: TTHttpResponse); override;
+    destructor Destroy; override;
+
     [TGet('/?')]
     [TArea('read')]
     procedure Get(const AID: TTPrimaryKey);
 
-    [TGet]
-    [TArea('read')]
-    procedure SelectAll;
-
     [TPost('/select')]
     [TArea('read')]
     procedure Select;
-
-    [TGet('/metadata')]
-    [TArea('read')]
-    procedure Metadata;
   end;
 
   TAPIReadWriteController<T: class> = class(TAPIReadOnlyController<T>)
+  strict private
+    FWriter: TTHttpEntityWriter<T>;
   public
+    constructor Create(
+      const AContext: TAPIContext;
+      const ARequest: TTHttpRequest;
+      const AResponse: TTHttpResponse); override;
+    destructor Destroy; override;
+
     [TPost]
     [TArea('write')]
     procedure Insert;
-
-    [TPut]
-    [TArea('write')]
-    procedure Update;
 
     [TDelete('/?/?')]
     [TArea('write')]
     procedure Delete(const AID: TTPrimaryKey; const AVersionID: TTVersion);
   end;
+
+constructor TAPIReadOnlyController<T>.Create(
+  const AContext: TAPIContext;
+  const ARequest: TTHttpRequest;
+  const AResponse: TTHttpResponse);
+begin
+  inherited Create(AContext, ARequest, AResponse);
+  FReader := TTHttpEntityReader<T>.Create(FContext.Context);
+end;
+
+procedure TAPIReadOnlyController<T>.Select;
+begin
+  FResponse.Content := FReader.Select(FRequest.JSonContent);
+end;
 ```
 
 Register once per entity type:
@@ -225,4 +296,4 @@ FServer.RegisterController<TAPIReadWriteController<TEmployee>>('/employee');
 FServer.RegisterController<TAPIReadOnlyController<TCountry>>('/country');
 ```
 
-This gives you a full REST API for each entity with minimal code. The generic controller methods use the type parameter `T` with `TTJSonContext` methods to serialize and deserialize the correct entity type.
+A read-only controller does not create the writer, so it cannot write: that is visible from its dependencies, not only from the routes it declares. The [REST API example](../examples/rest-api.md) has the complete controllers.

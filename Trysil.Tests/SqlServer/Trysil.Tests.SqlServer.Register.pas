@@ -42,6 +42,7 @@ uses
   Trysil.Tests.SqlServer.ContextApi,
   Trysil.Tests.SqlServer.UpdateMode,
   Trysil.Tests.SqlServer.JSon,
+  Trysil.Tests.SqlServer.HttpEntity,
   Trysil.Tests.SqlServer.AllTypes,
   Trysil.Tests.SqlServer.AllTypesJSon,
   Trysil.Tests.SqlServer.NullablePrimitives,
@@ -70,6 +71,7 @@ begin
     TDUnitX.RegisterTestFixture(TTSqlServerContextApiTests);
     TDUnitX.RegisterTestFixture(TTSqlServerUpdateModeTests);
     TDUnitX.RegisterTestFixture(TTSqlServerJSonTests);
+    TDUnitX.RegisterTestFixture(TTSqlServerHttpEntityTests);
     TDUnitX.RegisterTestFixture(TTSqlServerAllTypesTests);
     TDUnitX.RegisterTestFixture(TTSqlServerAllTypesJSonTests);
     TDUnitX.RegisterTestFixture(TTSqlServerNullablePrimitivesTests);

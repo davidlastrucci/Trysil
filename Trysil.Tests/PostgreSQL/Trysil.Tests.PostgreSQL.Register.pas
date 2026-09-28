@@ -42,6 +42,7 @@ uses
   Trysil.Tests.PostgreSQL.ContextApi,
   Trysil.Tests.PostgreSQL.UpdateMode,
   Trysil.Tests.PostgreSQL.JSon,
+  Trysil.Tests.PostgreSQL.HttpEntity,
   Trysil.Tests.PostgreSQL.AllTypes,
   Trysil.Tests.PostgreSQL.AllTypesJSon,
   Trysil.Tests.PostgreSQL.NullablePrimitives,
@@ -68,6 +69,7 @@ begin
     TDUnitX.RegisterTestFixture(TTPostgreSQLContextApiTests);
     TDUnitX.RegisterTestFixture(TTPostgreSQLUpdateModeTests);
     TDUnitX.RegisterTestFixture(TTPostgreSQLJSonTests);
+    TDUnitX.RegisterTestFixture(TTPostgreSQLHttpEntityTests);
     TDUnitX.RegisterTestFixture(TTPostgreSQLAllTypesTests);
     TDUnitX.RegisterTestFixture(TTPostgreSQLAllTypesJSonTests);
     TDUnitX.RegisterTestFixture(TTPostgreSQLNullablePrimitivesTests);
