@@ -92,6 +92,8 @@ type
     class function TrysilFolder(const AProjectDirectory: String): String;
     class function ModelFolder(
       const AProjectDirectory: String; const ASubFolder: String): String;
+    class function ControllersFolder(
+      const AProjectDirectory: String): String;
 
     class function UnitName(
       const AUnitNames: String;
@@ -257,6 +259,12 @@ class function TTUtils.ModelFolder(
   const AProjectDirectory: String; const ASubFolder: String): String;
 begin
   result := GetFolder(AProjectDirectory, ASubfolder);
+end;
+
+class function TTUtils.ControllersFolder(
+  const AProjectDirectory: String): String;
+begin
+  result := GetFolder(AProjectDirectory, 'Controllers');
 end;
 
 class function TTUtils.UnitName(

@@ -197,6 +197,11 @@
         <DCCReference Include="Classes\Trysil.Expert.ModelCreator.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.ControllerCreator.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.APIHttpModifier.pas"/>
+        <DCCReference Include="Classes\Trysil.Expert.APIRest.Parameters.pas"/>
+        <DCCReference Include="Classes\Trysil.Expert.APIRest.Template.pas"/>
+        <DCCReference Include="Classes\Trysil.Expert.APIRest.Features.pas"/>
+        <DCCReference Include="Classes\Trysil.Expert.APIRest.Configuration.pas"/>
+        <DCCReference Include="Classes\Trysil.Expert.APIRest.Project.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.APIRestCreator.pas"/>
         <DCCReference Include="Model\Trysil.Expert.Config.pas"/>
         <DCCReference Include="Model\Trysil.Expert.Model.pas"/>

@@ -29,6 +29,11 @@ uses
   Trysil.Expert.ModelCreator in 'Classes\Trysil.Expert.ModelCreator.pas',
   Trysil.Expert.ControllerCreator in 'Classes\Trysil.Expert.ControllerCreator.pas',
   Trysil.Expert.APIHttpModifier in 'Classes\Trysil.Expert.APIHttpModifier.pas',
+  Trysil.Expert.APIRest.Parameters in 'Classes\Trysil.Expert.APIRest.Parameters.pas',
+  Trysil.Expert.APIRest.Template in 'Classes\Trysil.Expert.APIRest.Template.pas',
+  Trysil.Expert.APIRest.Features in 'Classes\Trysil.Expert.APIRest.Features.pas',
+  Trysil.Expert.APIRest.Configuration in 'Classes\Trysil.Expert.APIRest.Configuration.pas',
+  Trysil.Expert.APIRest.Project in 'Classes\Trysil.Expert.APIRest.Project.pas',
   Trysil.Expert.APIRestCreator in 'Classes\Trysil.Expert.APIRestCreator.pas',
   Trysil.Expert.SkillsInstaller in 'Classes\Trysil.Expert.SkillsInstaller.pas',
   Trysil.Expert.Config in 'Model\Trysil.Expert.Config.pas',
@@ -53,7 +58,6 @@ uses
   Trysil.Expert.UI.About in 'UI\Trysil.Expert.UI.About.pas' {TAboutForm};
 
 {$R *.res}
-{$R Trysil.Expert.Resources.res}
 
 begin
 end.

@@ -128,10 +128,9 @@ begin
   APIControllersCheckbox.Enabled := False;
 
   LProjectName := TTIOTA.ActiveProjectName;
-  LHttpModule := TTIOTA.SearchModule(
-    Format('API\%s.Http', [LProjectName]));
+  LHttpModule := TTIOTA.SearchModule(Format('%s.Http', [LProjectName]));
   LControllerModule := TTIOTA.SearchModule(
-    Format('API\Controllers\%s.Controller', [LProjectName]));
+    'Core\Controllers\TApiRest.Controller');
 
   APIControllersCheckbox.Enabled :=
     Assigned(LHttpModule) and Assigned(LControllerModule);
@@ -282,9 +281,7 @@ var
   LDirectory: String;
   LCreator: TTControllerCreator;
 begin
-  LDirectory :=
-    TPath.Combine(
-      TPath.Combine(FProject.Directory, 'API'), 'Controllers');
+  LDirectory := TTUtils.ControllersFolder(FProject.Directory);
 
   LCreator := TTControllerCreator.Create(
     FProject.Name, UnitFilenamesTextbox.Text, LDirectory);

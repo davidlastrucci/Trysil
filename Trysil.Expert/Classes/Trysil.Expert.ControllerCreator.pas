@@ -87,7 +87,7 @@ begin
     LSource.Append('  System.SysUtils,');
     LSource.Append('  Trysil.Http.Attributes,');
     LSource.AppendLine;
-    LSource.Append('  %s.Controller,', [FProjectName]);
+    LSource.Append('  TApiRest.Controller,');
     LSource.Append('  %s;', [TTUtils.UnitName(FUnitNames, FProjectName, AEntity.Name)]);
     LSource.AppendLine;
     LSource.Append('type');

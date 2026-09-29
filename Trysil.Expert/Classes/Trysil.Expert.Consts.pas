@@ -35,6 +35,13 @@ resourcestring
   SInvalidEntityType = 'Invalid entity type.';
   SInvalidColumnName = 'Invalid comlumn name.';
   SHttpError = 'Error downloading project template (%d).';
+  SUnknownFeature = 'Unknown feature "%s" in the project template.';
+  SUnexpectedMarker = 'Unexpected TFeature marker in %s at line %d.';
+  SUnclosedMarker = 'Unclosed TFeature marker in %s.';
+  SJSonNotValid = 'File "%s" is not a valid JSON object.';
+  SRulesNotValid = 'The rules of the project template are not valid.';
+  STenantFolderNotValid = 'The project template must have one tenant folder.';
+  STargetNotEmpty = 'Directory "%s" is not empty.';
 
   SDeleteEntity = 'Delete "%s" entity?';
   SDeleteColumn = 'Delete "%s" column?';

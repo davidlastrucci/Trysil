@@ -47,6 +47,8 @@ type
 
 resourcestring
   SWizardTitle = 'Trysil - Delphi ORM';
+  SWizardVersion = '2.1';
+  SWizardLicense = 'BSD 3-Clause License';
   SWizardCopyright = 'Copyright © by David Lastrucci';
   SWizardDescription = 'Trysil - Delphi ORM is an open source Object-relational mapping (ORM) for Delphi';
 
@@ -85,7 +87,7 @@ begin
       LBitmap.Handle,
       False,
       SWizardCopyright,
-      '');
+      SWizardVersion);
   finally
     LBitmap.Free;
   end;
@@ -103,11 +105,11 @@ begin
       LProductImage := LoadBitmap(
         FindResourceHInstance(HInstance), 'TRYSIL_ABOUTBOX');
       FAboutBoxIndex := FAboutBoxServices.AddPluginInfo(
-        SWizardTitle,
+        Format('%s %s', [SWizardTitle, SWizardVersion]),
         SWizardDescription,
         LProductImage,
         False,
-        '',
+        SWizardLicense,
         SWizardCopyright);
     end;
   end;

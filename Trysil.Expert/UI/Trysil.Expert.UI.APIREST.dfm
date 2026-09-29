@@ -1,8 +1,6 @@
 inherited TAPIRestForm: TTAPIRestForm
-  StyleElements = [seFont, seClient, seBorder]
   TextHeight = 15
   inherited ContentPanel: TPanel
-    StyleElements = [seFont, seBorder]
     object APIPagePanel: TPanel
       AlignWithMargins = True
       Left = 72
@@ -68,23 +66,41 @@ inherited TAPIRestForm: TTAPIRestForm
           Text = '4450'
           OnChange = CalculateUrlLabel
         end
-        object APIAuthorizationCheckbox: TCheckBox
+        object APIMultiTenantCheckbox: TCheckBox
           Left = 24
           Top = 153
-          Width = 97
+          Width = 250
+          Height = 17
+          Caption = 'Multi-tenant'
+          TabOrder = 2
+          OnClick = APIMultiTenantCheckboxClick
+        end
+        object APIAuthorizationCheckbox: TCheckBox
+          Left = 24
+          Top = 176
+          Width = 250
           Height = 17
           Caption = 'Authorization'
           Checked = True
           State = cbChecked
-          TabOrder = 2
+          TabOrder = 3
+          OnClick = APIAuthorizationCheckboxClick
+        end
+        object APIRS256Checkbox: TCheckBox
+          Left = 44
+          Top = 199
+          Width = 250
+          Height = 17
+          Caption = 'RS256 (sign tokens with RSA keys)'
+          TabOrder = 4
         end
         object APILogCheckbox: TCheckBox
           Left = 24
-          Top = 176
-          Width = 97
+          Top = 222
+          Width = 250
           Height = 17
           Caption = 'Log'
-          TabOrder = 3
+          TabOrder = 5
         end
       end
     end
@@ -121,16 +137,9 @@ inherited TAPIRestForm: TTAPIRestForm
           Height = 15
           Caption = 'Name:'
         end
-        object ServiceDisplayNameLabel: TLabel
-          Left = 24
-          Top = 78
-          Width = 74
-          Height = 15
-          Caption = 'Display name:'
-        end
         object ServiceDescriptionLabel: TLabel
           Left = 24
-          Top = 128
+          Top = 78
           Width = 63
           Height = 15
           Caption = 'Description:'
@@ -142,19 +151,12 @@ inherited TAPIRestForm: TTAPIRestForm
           Height = 23
           TabOrder = 0
         end
-        object ServiceDisplayNameTextbox: TEdit
+        object ServiceDescriptionTextbox: TEdit
           Left = 24
-          Top = 99
+          Top = 98
           Width = 497
           Height = 23
           TabOrder = 1
-        end
-        object ServiceDescriptionTextbox: TEdit
-          Left = 24
-          Top = 148
-          Width = 497
-          Height = 23
-          TabOrder = 2
         end
       end
     end
@@ -280,19 +282,9 @@ inherited TAPIRestForm: TTAPIRestForm
           Height = 23
           TabOrder = 1
         end
-        object ProjectModelFromHttpCheckbox: TCheckBox
-          Left = 24
-          Top = 136
-          Width = 165
-          Height = 17
-          Caption = 'Load model from HTTP'
-          Checked = True
-          State = cbChecked
-          TabOrder = 2
-        end
       end
     end
-    object TenantDatabasePagePanel: TPanel
+    object DatabasePagePanel: TPanel
       AlignWithMargins = True
       Left = 358
       Top = 161
@@ -305,7 +297,7 @@ inherited TAPIRestForm: TTAPIRestForm
       BevelOuter = bvNone
       ShowCaption = False
       TabOrder = 4
-      object TenantDatabasePageGroupBox: TGroupBox
+      object DatabasePageGroupBox: TGroupBox
         AlignWithMargins = True
         Left = 2
         Top = 4
@@ -316,95 +308,80 @@ inherited TAPIRestForm: TTAPIRestForm
         Margins.Right = 2
         Margins.Bottom = 4
         Align = alClient
-        Caption = 'Tenant (localhost) database  '
+        Caption = 'Database  '
         TabOrder = 0
-        object TenantConnectionNameLabel: TLabel
-          Left = 24
-          Top = 78
-          Width = 98
-          Height = 15
-          Caption = 'Connection name:'
-        end
-        object TenantHostLabel: TLabel
+        object DatabaseHostLabel: TLabel
           Left = 23
-          Top = 128
+          Top = 78
           Width = 28
           Height = 15
           Caption = 'Host:'
         end
-        object TenantUsernameLabel: TLabel
+        object DatabaseUsernameLabel: TLabel
           Left = 24
-          Top = 178
+          Top = 128
           Width = 56
           Height = 15
           Caption = 'Username:'
         end
-        object TenantPasswordLabel: TLabel
+        object DatabasePasswordLabel: TLabel
           Left = 24
-          Top = 228
+          Top = 178
           Width = 53
           Height = 15
           Caption = 'Password:'
         end
-        object TenantDatabaseNameLabel: TLabel
+        object DatabaseNameLabel: TLabel
           Left = 24
-          Top = 278
+          Top = 228
           Width = 84
           Height = 15
           Caption = 'Database name:'
         end
-        object TenantDriverLabel: TLabel
+        object DatabaseDriverLabel: TLabel
           Left = 24
           Top = 28
           Width = 77
           Height = 15
           Caption = 'Database type:'
         end
-        object TenantPortLabel: TLabel
+        object DatabasePortLabel: TLabel
           Left = 452
-          Top = 128
+          Top = 78
           Width = 25
           Height = 15
           Caption = 'Port:'
         end
-        object TenantConnectionNameTextbox: TEdit
-          Left = 24
-          Top = 99
-          Width = 497
-          Height = 23
-          TabOrder = 1
-          Text = 'api_localhost'
-        end
-        object TenantHostTextbox: TEdit
+        object DatabaseHostTextbox: TEdit
           Left = 23
-          Top = 149
+          Top = 99
           Width = 423
           Height = 23
-          TabOrder = 2
+          TabOrder = 1
         end
-        object TenantUsernameTextbox: TEdit
+        object DatabaseUsernameTextbox: TEdit
+          Left = 24
+          Top = 149
+          Width = 497
+          Height = 23
+          TabOrder = 3
+        end
+        object DatabasePasswordTextbox: TEdit
           Left = 24
           Top = 199
           Width = 497
           Height = 23
+          PasswordChar = '*'
           TabOrder = 4
         end
-        object TenantPasswordTextbox: TEdit
-          Left = 24
+        object DatabaseNameTextbox: TEdit
+          Left = 23
           Top = 249
           Width = 497
           Height = 23
-          PasswordChar = '*'
           TabOrder = 5
         end
-        object TenantDatabaseNameTextbox: TEdit
-          Left = 23
-          Top = 299
-          Width = 497
-          Height = 23
-          TabOrder = 6
-        end
-        object TenantDriverCombobox: TComboBox
+        object DatabaseDriverCombobox: TComboBox
           Left = 24
           Top = 49
           Width = 497
@@ -413,23 +390,25 @@ inherited TAPIRestForm: TTAPIRestForm
           ItemIndex = 0
           TabOrder = 0
           Text = 'Firebird'
-          OnClick = TenantDriverComboboxClick
+          OnClick = DatabaseDriverComboboxClick
           Items.Strings = (
             'Firebird'
-            'Microsoft SQL Server'
+            'InterBase'
+            'MariaDB'
+            'Oracle'
             'PostgreSQL'
+            'Microsoft SQL Server'
             'SQLite')
         end
-        object TenantPortTextbox: TEdit
+        object DatabasePortTextbox: TEdit
           Left = 452
-          Top = 149
+          Top = 99
           Width = 69
           Height = 23
           Enabled = False
           NumbersOnly = True
-          TabOrder = 3
-          Text = '4450'
-          OnChange = CalculateUrlLabel
+          TabOrder = 2
+          Text = '0'
         end
       end
     end
@@ -459,37 +438,30 @@ inherited TAPIRestForm: TTAPIRestForm
         Align = alClient
         Caption = 'HTTP Log database  '
         TabOrder = 0
-        object LogConnectionNameLabel: TLabel
-          Left = 25
-          Top = 78
-          Width = 98
-          Height = 15
-          Caption = 'Connection name:'
-        end
         object LogHostLabel: TLabel
           Left = 25
-          Top = 128
+          Top = 78
           Width = 28
           Height = 15
           Caption = 'Host:'
         end
         object LogUsernameLabel: TLabel
           Left = 24
-          Top = 177
+          Top = 127
           Width = 56
           Height = 15
           Caption = 'Username:'
         end
         object LogPasswordLabel: TLabel
           Left = 24
-          Top = 227
+          Top = 177
           Width = 53
           Height = 15
           Caption = 'Password:'
         end
         object LogDatabaseNameLabel: TLabel
           Left = 24
-          Top = 277
+          Top = 227
           Width = 84
           Height = 15
           Caption = 'Database name:'
@@ -503,47 +475,39 @@ inherited TAPIRestForm: TTAPIRestForm
         end
         object LogPortLabel: TLabel
           Left = 452
-          Top = 127
+          Top = 77
           Width = 25
           Height = 15
           Caption = 'Port:'
         end
-        object LogConnectionNameTextbox: TEdit
-          Left = 24
-          Top = 99
-          Width = 497
-          Height = 23
-          TabOrder = 1
-          Text = 'api_http_log'
-        end
         object LogHostTextbox: TEdit
           Left = 25
-          Top = 148
+          Top = 98
           Width = 421
           Height = 23
-          TabOrder = 2
+          TabOrder = 1
         end
         object LogUsernameTextbox: TEdit
+          Left = 24
+          Top = 148
+          Width = 497
+          Height = 23
+          TabOrder = 3
+        end
+        object LogPasswordTextbox: TEdit
           Left = 24
           Top = 198
           Width = 497
           Height = 23
+          PasswordChar = '*'
           TabOrder = 4
         end
-        object LogPasswordTextbox: TEdit
+        object LogDatabaseNameTextbox: TEdit
           Left = 24
           Top = 248
           Width = 497
           Height = 23
-          PasswordChar = '*'
           TabOrder = 5
-        end
-        object LogDatabaseNameTextbox: TEdit
-          Left = 24
-          Top = 298
-          Width = 497
-          Height = 23
-          TabOrder = 6
         end
         object LogDriverCombobox: TComboBox
           Left = 24
@@ -557,40 +521,27 @@ inherited TAPIRestForm: TTAPIRestForm
           OnClick = LogDriverComboboxClick
           Items.Strings = (
             'Firebird'
-            'Microsoft SQL Server'
+            'InterBase'
+            'MariaDB'
+            'Oracle'
             'PostgreSQL'
+            'Microsoft SQL Server'
             'SQLite')
         end
         object LogPortTextbox: TEdit
           Left = 452
-          Top = 148
+          Top = 98
           Width = 69
           Height = 23
           Enabled = False
           NumbersOnly = True
-          TabOrder = 3
+          TabOrder = 2
           Text = '0'
-          OnChange = CalculateUrlLabel
         end
       end
     end
-    object DBDriverListbox: TListBox
-      Left = 13
-      Top = 116
-      Width = 47
-      Height = 67
-      ItemHeight = 15
-      Items.Strings = (
-        'FB'
-        'MSSQL'
-        'PG'
-        'SQLite')
-      TabOrder = 5
-      Visible = False
-    end
   end
   inherited ButtonsPanel: TPanel
-    StyleElements = [seFont, seBorder]
     object CancelButton: TButton
       Left = 537
       Top = 12

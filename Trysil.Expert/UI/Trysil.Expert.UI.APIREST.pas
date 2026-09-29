@@ -31,6 +31,7 @@ uses
 
   Trysil.Expert.Validator,
   Trysil.Expert.UI.Themed,
+  Trysil.Expert.APIRest.Parameters,
   Trysil.Expert.APIRestCreator;
 
 type
@@ -96,7 +97,6 @@ type
 
   TTAPIRestForm = class(TTThemedForm)
     SaveDialog: TSaveDialog;
-    DBDriverListbox: TListBox;
     ProjectPagePanel: TPanel;
     ProjectPageGroupBox: TGroupBox;
     ProjectDirectoryLabel: TLabel;
@@ -104,7 +104,6 @@ type
     ProjectNameLabel: TLabel;
     ProjectNameTextBox: TEdit;
     ProjectNameButton: TSpeedButton;
-    ProjectModelFromHttpCheckbox: TCheckBox;
     APIPagePanel: TPanel;
     APIPageGroupbox: TGroupBox;
     APIBaseUriLabel: TLabel;
@@ -112,14 +111,28 @@ type
     APIPortLabel: TLabel;
     APIPortTextbox: TEdit;
     APIUrlLabel: TLabel;
+    APIMultiTenantCheckbox: TCheckBox;
     APIAuthorizationCheckbox: TCheckBox;
+    APIRS256Checkbox: TCheckBox;
     APILogCheckbox: TCheckBox;
+    DatabasePagePanel: TPanel;
+    DatabasePageGroupBox: TGroupBox;
+    DatabaseDriverLabel: TLabel;
+    DatabaseDriverCombobox: TComboBox;
+    DatabaseHostLabel: TLabel;
+    DatabaseHostTextbox: TEdit;
+    DatabasePortLabel: TLabel;
+    DatabasePortTextbox: TEdit;
+    DatabaseUsernameLabel: TLabel;
+    DatabaseUsernameTextbox: TEdit;
+    DatabasePasswordLabel: TLabel;
+    DatabasePasswordTextbox: TEdit;
+    DatabaseNameLabel: TLabel;
+    DatabaseNameTextbox: TEdit;
     LogDatabasePagePanel: TPanel;
     LogDatabasePageGroupBox: TGroupBox;
     LogDriverLabel: TLabel;
     LogDriverCombobox: TComboBox;
-    LogConnectionNameLabel: TLabel;
-    LogConnectionNameTextbox: TEdit;
     LogHostLabel: TLabel;
     LogHostTextbox: TEdit;
     LogPortLabel: TLabel;
@@ -134,26 +147,8 @@ type
     ServicePageGroupBox: TGroupBox;
     ServiceNameLabel: TLabel;
     ServiceNameTextbox: TEdit;
-    ServiceDisplayNameLabel: TLabel;
-    ServiceDisplayNameTextbox: TEdit;
     ServiceDescriptionLabel: TLabel;
     ServiceDescriptionTextbox: TEdit;
-    TenantDatabasePagePanel: TPanel;
-    TenantDatabasePageGroupBox: TGroupBox;
-    TenantDriverLabel: TLabel;
-    TenantDriverCombobox: TComboBox;
-    TenantConnectionNameLabel: TLabel;
-    TenantConnectionNameTextbox: TEdit;
-    TenantHostLabel: TLabel;
-    TenantHostTextbox: TEdit;
-    TenantPortLabel: TLabel;
-    TenantPortTextbox: TEdit;
-    TenantUsernameLabel: TLabel;
-    TenantUsernameTextbox: TEdit;
-    TenantPasswordLabel: TLabel;
-    TenantPasswordTextbox: TEdit;
-    TenantDatabaseNameLabel: TLabel;
-    TenantDatabaseNameTextbox: TEdit;
     BackButton: TButton;
     NextButton: TButton;
     FinishButton: TButton;
@@ -163,20 +158,43 @@ type
     procedure BackButtonClick(Sender: TObject);
     procedure FinishButtonClick(Sender: TObject);
     procedure CalculateUrlLabel(Sender: TObject);
+    procedure APIMultiTenantCheckboxClick(Sender: TObject);
+    procedure APIAuthorizationCheckboxClick(Sender: TObject);
+    procedure DatabaseDriverComboboxClick(Sender: TObject);
     procedure LogDriverComboboxClick(Sender: TObject);
-    procedure TenantDriverComboboxClick(Sender: TObject);
+  strict private
+    const MariaDBIndex = 2;
+    const OracleIndex = 3;
+    const PostgreSQLIndex = 4;
+    const SQLiteIndex = 6;
   strict private
     FWizard: TTWizard;
 
     procedure EnableDisableButtons;
+    procedure EnableServer(
+      const ADriver: TComboBox;
+      const AHost: TEdit;
+      const APort: TEdit);
+    procedure ShowErrors(const AValidator: TTValidator);
 
     function CheckProject: Boolean;
     function CheckAPI: Boolean;
+    function CheckDatabase(
+      const ADriver: TComboBox;
+      const AHost: TEdit;
+      const AUsername: TEdit;
+      const ADatabaseName: TEdit): Boolean;
+    function CheckMainDatabase: Boolean;
     function LogDatabaseEnabled: Boolean;
     function CheckLogDatabase: Boolean;
     function CheckService: Boolean;
-    function TenantDatabaseEnabled: Boolean;
-    function CheckTenantDatabase: Boolean;
+
+    function GetFeatures: TTApiRestFeatures;
+    function GetDescription: String;
+    procedure FillDatabase(const AParameters: TTApiRestParameters);
+    procedure FillLogDatabase(const AParameters: TTApiRestParameters);
+    procedure FillParameters(const AParameters: TTApiRestParameters);
+    procedure CreateProject(const AParameters: TTApiRestParameters);
   public
     constructor Create; reintroduce;
     destructor Destroy; override;
@@ -336,31 +354,19 @@ end;
 procedure TTAPIRestForm.AfterConstruction;
 begin
   inherited AfterConstruction;
-  // Project
   FWizard.AddPage(TTWizardPage.Create(
     ProjectPagePanel, ProjectDirectoryTextbox, nil, CheckProject));
-
-  // API
   FWizard.AddPage(TTWizardPage.Create(
     APIPagePanel, APIBaseUriTextbox, nil, CheckAPI));
-
-  // Log Database
+  FWizard.AddPage(TTWizardPage.Create(
+    DatabasePagePanel, DatabaseDriverCombobox, nil, CheckMainDatabase));
   FWizard.AddPage(TTWizardPage.Create(
     LogDatabasePagePanel,
     LogDriverCombobox,
     LogDatabaseEnabled,
     CheckLogDatabase));
-
-  // Service
   FWizard.AddPage(TTWizardPage.Create(
     ServicePagePanel, ServiceNameTextbox, nil, CheckService));
-
-  // Tenant Database
-  FWizard.AddPage(TTWizardPage.Create(
-    TenantDatabasePagePanel,
-    TenantDriverCombobox,
-    TenantDatabaseEnabled,
-    CheckTenantDatabase));
 
   FWizard.Start;
   EnableDisableButtons;
@@ -386,26 +392,51 @@ begin
     Format(LFormat, [APIPortTextbox.Text, APIBaseUriTextbox.Text]);
 end;
 
-procedure TTAPIRestForm.LogDriverComboboxClick(Sender: TObject);
+procedure TTAPIRestForm.APIMultiTenantCheckboxClick(Sender: TObject);
 begin
-  LogHostTextbox.Enabled := LogDriverCombobox.ItemIndex <> 3;
-  if not LogHostTextbox.Enabled then
-    LogHostTextbox.Text := String.Empty;
-
-  LogPortTextbox.Enabled := LogDriverCombobox.ItemIndex = 2;
-  if not LogPortTextbox.Enabled then
-    LogPortTextbox.Text := '0';
+  if APIMultiTenantCheckbox.Checked then
+    DatabasePageGroupBox.Caption := 'Tenant (localhost) database  '
+  else
+    DatabasePageGroupBox.Caption := 'Database  ';
 end;
 
-procedure TTAPIRestForm.TenantDriverComboboxClick(Sender: TObject);
+procedure TTAPIRestForm.APIAuthorizationCheckboxClick(Sender: TObject);
 begin
-  TenantHostTextbox.Enabled := TenantDriverCombobox.ItemIndex <> 3;
-  if not TenantHostTextbox.Enabled then
-    TenantHostTextbox.Text := String.Empty;
+  APIRS256Checkbox.Enabled := APIAuthorizationCheckbox.Checked;
+  if not APIRS256Checkbox.Enabled then
+    APIRS256Checkbox.Checked := False;
+end;
 
-  TenantPortTextbox.Enabled := TenantDriverCombobox.ItemIndex = 2;
-  if not TenantPortTextbox.Enabled then
-    TenantPortTextbox.Text := '0';
+procedure TTAPIRestForm.EnableServer(
+  const ADriver: TComboBox;
+  const AHost: TEdit;
+  const APort: TEdit);
+begin
+  AHost.Enabled := ADriver.ItemIndex <> SQLiteIndex;
+  APort.Enabled := ADriver.ItemIndex in [
+    MariaDBIndex, OracleIndex, PostgreSQLIndex];
+  if not AHost.Enabled then
+    AHost.Text := String.Empty;
+  if not APort.Enabled then
+    APort.Text := '0';
+end;
+
+procedure TTAPIRestForm.DatabaseDriverComboboxClick(Sender: TObject);
+begin
+  EnableServer(
+    DatabaseDriverCombobox, DatabaseHostTextbox, DatabasePortTextbox);
+end;
+
+procedure TTAPIRestForm.LogDriverComboboxClick(Sender: TObject);
+begin
+  EnableServer(LogDriverCombobox, LogHostTextbox, LogPortTextbox);
+end;
+
+procedure TTAPIRestForm.ShowErrors(const AValidator: TTValidator);
+begin
+  if not AValidator.IsValid then
+    MessageDlg(
+      AValidator.Messages, TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0);
 end;
 
 function TTAPIRestForm.CheckProject: Boolean;
@@ -428,9 +459,7 @@ begin
       'Project name cannot be empty.');
 
     result := LValidator.IsValid;
-    if not result then
-      MessageDlg(
-        LValidator.Messages, TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0);
+    ShowErrors(LValidator);
   finally
     LValidator.Free;
   end;
@@ -447,84 +476,62 @@ begin
       not Integer.TryParse(APIPortTextbox.Text, LPort),
       'Port must be a number.');
     result := LValidator.IsValid;
-    if not result then
-      MessageDlg(
-        LValidator.Messages, TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0);
+    ShowErrors(LValidator);
   finally
     LValidator.Free;
   end;
+end;
+
+function TTAPIRestForm.CheckDatabase(
+  const ADriver: TComboBox;
+  const AHost: TEdit;
+  const AUsername: TEdit;
+  const ADatabaseName: TEdit): Boolean;
+var
+  LValidator: TTValidator;
+  LServer: Boolean;
+begin
+  LServer := ADriver.ItemIndex <> SQLiteIndex;
+  LValidator := TTValidator.Create;
+  try
+    LValidator.Check(
+      LServer and String(AHost.Text).IsEmpty,
+      'Host cannot be empty.');
+    LValidator.Check(
+      LServer and String(AUsername.Text).IsEmpty,
+      'Username cannot be empty.');
+    LValidator.Check(
+      String(ADatabaseName.Text).IsEmpty,
+      'Database name cannot be empty.');
+
+    result := LValidator.IsValid;
+    ShowErrors(LValidator);
+  finally
+    LValidator.Free;
+  end;
+end;
+
+function TTAPIRestForm.CheckMainDatabase: Boolean;
+begin
+  result := CheckDatabase(
+    DatabaseDriverCombobox,
+    DatabaseHostTextbox,
+    DatabaseUsernameTextbox,
+    DatabaseNameTextbox);
 end;
 
 function TTAPIRestForm.LogDatabaseEnabled: Boolean;
 begin
   result := APILogCheckbox.Checked;
-  if result then
-    LogConnectionNameTextbox.Text :=
-      Format('%s_log', [String(ProjectNameTextBox.Text).ToLower()]);
 end;
 
 function TTAPIRestForm.CheckLogDatabase: Boolean;
-var
-  LValidator: TTValidator;
 begin
-  LValidator := TTValidator.Create;
-  try
-    LValidator.Check(
-      String(LogConnectionNameTextbox.Text).IsEmpty,
-      'Connection name cannot be empty.');
-    LValidator.Check(
-      String(LogHostTextbox.Text).IsEmpty,
-      'Host cannot be empty.');
-    LValidator.Check(
-      String(LogUsernameTextbox.Text).IsEmpty,
-      'Username cannot be empty.');
-    LValidator.Check(
-      String(LogDatabaseNameTextbox.Text).IsEmpty,
-      'Database name cannot be empty.');
-
-    result := LValidator.IsValid;
-    if not result then
-      MessageDlg(
-        LValidator.Messages, TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0);
-  finally
-    LValidator.Free;
-  end;
-end;
-
-function TTAPIRestForm.TenantDatabaseEnabled: Boolean;
-begin
-  result := True;
-  if result then
-    TenantConnectionNameTextbox.Text :=
-      Format('%s_localhost', [String(ProjectNameTextBox.Text).ToLower()]);
-end;
-
-function TTAPIRestForm.CheckTenantDatabase: Boolean;
-var
-  LValidator: TTValidator;
-begin
-  LValidator := TTValidator.Create;
-  try
-    LValidator.Check(
-      String(TenantConnectionNameTextbox.Text).IsEmpty,
-      'Connection name cannot be empty.');
-    LValidator.Check(
-      String(TenantHostTextbox.Text).IsEmpty,
-      'Host cannot be empty.');
-    LValidator.Check(
-      String(TenantUsernameTextbox.Text).IsEmpty,
-      'Username cannot be empty.');
-    LValidator.Check(
-      String(TenantDatabaseNameTextbox.Text).IsEmpty,
-      'Database name cannot be empty.');
-
-    result := LValidator.IsValid;
-    if not result then
-      MessageDlg(
-        LValidator.Messages, TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0);
-  finally
-    LValidator.Free;
-  end;
+  result := CheckDatabase(
+    LogDriverCombobox,
+    LogHostTextbox,
+    LogUsernameTextbox,
+    LogDatabaseNameTextbox);
 end;
 
 function TTAPIRestForm.CheckService: Boolean;
@@ -540,14 +547,9 @@ begin
       String(ServiceNameTextbox.Text).ToLower().Equals(
         String(ProjectNameTextBox.Text).ToLower()),
       'Service name cannot be the same as project name.');
-    LValidator.Check(
-      String(ServiceDisplayNameTextbox.Text).IsEmpty,
-      'Display name cannot be empty.');
 
     result := LValidator.IsValid;
-    if not result then
-      MessageDlg(
-        LValidator.Messages, TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0);
+    ShowErrors(LValidator);
   finally
     LValidator.Free;
   end;
@@ -576,61 +578,92 @@ begin
   EnableDisableButtons;
 end;
 
+function TTAPIRestForm.GetFeatures: TTApiRestFeatures;
+begin
+  result := [];
+  if APIMultiTenantCheckbox.Checked then
+    Include(result, TTApiRestFeature.MultiTenant);
+  if APIAuthorizationCheckbox.Checked then
+    Include(result, TTApiRestFeature.Auth);
+  if APIRS256Checkbox.Checked then
+    Include(result, TTApiRestFeature.RS256);
+  if APILogCheckbox.Checked then
+    Include(result, TTApiRestFeature.Log);
+end;
+
+function TTAPIRestForm.GetDescription: String;
+begin
+  result := String(ServiceDescriptionTextbox.Text).Trim;
+  if result.IsEmpty then
+    result := Format('%s - API REST', [ProjectNameTextBox.Text]);
+end;
+
+procedure TTAPIRestForm.FillDatabase(
+  const AParameters: TTApiRestParameters);
+begin
+  AParameters.Database.DriverIndex := DatabaseDriverCombobox.ItemIndex;
+  AParameters.Database.Host := DatabaseHostTextbox.Text;
+  AParameters.Database.Port := StrToIntDef(DatabasePortTextbox.Text, 0);
+  AParameters.Database.Username := DatabaseUsernameTextbox.Text;
+  AParameters.Database.Password := DatabasePasswordTextbox.Text;
+  AParameters.Database.DatabaseName := DatabaseNameTextbox.Text;
+end;
+
+procedure TTAPIRestForm.FillLogDatabase(
+  const AParameters: TTApiRestParameters);
+begin
+  AParameters.LogDatabase.DriverIndex := LogDriverCombobox.ItemIndex;
+  AParameters.LogDatabase.Host := LogHostTextbox.Text;
+  AParameters.LogDatabase.Port := StrToIntDef(LogPortTextbox.Text, 0);
+  AParameters.LogDatabase.Username := LogUsernameTextbox.Text;
+  AParameters.LogDatabase.Password := LogPasswordTextbox.Text;
+  AParameters.LogDatabase.DatabaseName := LogDatabaseNameTextbox.Text;
+end;
+
+procedure TTAPIRestForm.FillParameters(
+  const AParameters: TTApiRestParameters);
+begin
+  AParameters.Directory := ProjectDirectoryTextbox.Text;
+  AParameters.ProjectName := ProjectNameTextBox.Text;
+  AParameters.ServiceName := ServiceNameTextbox.Text;
+  AParameters.Description := GetDescription;
+  AParameters.BaseUri := APIBaseUriTextbox.Text;
+  AParameters.Port := Integer.Parse(APIPortTextbox.Text);
+  AParameters.Features := GetFeatures;
+  FillDatabase(AParameters);
+  if AParameters.Has(TTApiRestFeature.Log) then
+    FillLogDatabase(AParameters);
+end;
+
+procedure TTAPIRestForm.CreateProject(
+  const AParameters: TTApiRestParameters);
+var
+  LCreator: TTAPIRestCreator;
+begin
+  Screen.Cursor := crHourGlass;
+  try
+    LCreator := TTAPIRestCreator.Create(AParameters);
+    try
+      LCreator.CreateProject;
+      LCreator.OpenProject;
+    finally
+      LCreator.Free;
+    end;
+  finally
+    Screen.Cursor := crDefault;
+  end;
+end;
+
 procedure TTAPIRestForm.FinishButtonClick(Sender: TObject);
 var
   LParameters: TTApiRestParameters;
-  LCreator: TTAPIRestCreator;
 begin
-  if CheckTenantDatabase then
+  if CheckService then
   begin
     LParameters := TTApiRestParameters.Create;
     try
-      LParameters.Project.Directory := ProjectDirectoryTextbox.Text;
-      LParameters.Project.ProjectName := ProjectNameTextBox.Text;
-      LParameters.Project.ModelFromHttp := ProjectModelFromHttpCheckbox.Checked;
-
-      LParameters.API.BaseUri := APIBaseUriTextbox.Text;
-      LParameters.API.Port := Integer.Parse(APIPortTextbox.Text);
-      LParameters.API.Authorization := APIAuthorizationCheckbox.Checked;
-      LParameters.API.Log := APILogCheckbox.Checked;
-
-      LParameters.LogDatabase.Driver :=
-        DBDriverListbox.Items[LogDriverCombobox.ItemIndex];
-      LParameters.LogDatabase.DriverIndex := LogDriverCombobox.ItemIndex;
-      LParameters.LogDatabase.ConnectionName := LogConnectionNameTextbox.Text;
-      LParameters.LogDatabase.Host :=
-        String(LogHostTextbox.Text).Replace('\', '\\');
-      LParameters.LogDatabase.Username := LogUsernameTextbox.Text;
-      LParameters.LogDatabase.Password := LogPasswordTextbox.Text;
-      LParameters.LogDatabase.DatabaseName := LogDatabaseNameTextbox.Text;
-
-      LParameters.Service.Name := ServiceNameTextbox.Text;
-      LParameters.Service.DisplayName := ServiceDisplayNameTextbox.Text;
-      LParameters.Service.Description := ServiceDescriptionTextbox.Text;
-
-      // TODO
-      LParameters.TenantDatabase.Driver :=
-        DBDriverListbox.Items[TenantDriverCombobox.ItemIndex];
-      LParameters.TenantDatabase.DriverIndex := TenantDriverCombobox.ItemIndex;
-      LParameters.TenantDatabase.ConnectionName := TenantConnectionNameTextbox.Text;
-      LParameters.TenantDatabase.Host :=
-        String(TenantHostTextbox.Text).Replace('\', '\\');
-      LParameters.TenantDatabase.Username := TenantUsernameTextbox.Text;
-      LParameters.TenantDatabase.Password := TenantPasswordTextbox.Text;
-      LParameters.TenantDatabase.DatabaseName := TenantDatabaseNameTextbox.Text;
-
-      Screen.Cursor := crHourGlass;
-      try
-        LCreator := TTAPIRestCreator.Create(LParameters);
-        try
-          LCreator.CreateProject(LParameters.Project.ModelFromHttp);
-          LCreator.OpenProject;
-        finally
-          LCreator.Free;
-        end;
-      finally
-        Screen.Cursor := crDefault;
-      end;
+      FillParameters(LParameters);
+      CreateProject(LParameters);
     finally
       LParameters.Free;
     end;

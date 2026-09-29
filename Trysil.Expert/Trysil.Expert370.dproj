@@ -1,7 +1,7 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{50C79095-4519-40F4-93FC-057BE13BAE17}</ProjectGuid>
-        <ProjectVersion>20.4</ProjectVersion>
+        <ProjectVersion>20.5</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>
@@ -201,6 +201,11 @@
         <DCCReference Include="Classes\Trysil.Expert.ModelCreator.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.ControllerCreator.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.APIHttpModifier.pas"/>
+        <DCCReference Include="Classes\Trysil.Expert.APIRest.Parameters.pas"/>
+        <DCCReference Include="Classes\Trysil.Expert.APIRest.Template.pas"/>
+        <DCCReference Include="Classes\Trysil.Expert.APIRest.Features.pas"/>
+        <DCCReference Include="Classes\Trysil.Expert.APIRest.Configuration.pas"/>
+        <DCCReference Include="Classes\Trysil.Expert.APIRest.Project.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.APIRestCreator.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.SkillsInstaller.pas"/>
         <DCCReference Include="Model\Trysil.Expert.Config.pas"/>

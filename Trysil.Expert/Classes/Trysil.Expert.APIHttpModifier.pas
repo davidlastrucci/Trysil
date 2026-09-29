@@ -107,14 +107,15 @@ begin
   begin
     LRow := FSource[LIndex].ToUpper().Trim();
 
-    if LRow.Equals('PROCEDURE THTTP.REGISTERCONTROLLERS;') then
+    if LRow.StartsWith('PROCEDURE ') and
+      LRow.EndsWith('.REGISTERENTITYCONTROLLERS;') then
       LInRegister := True;
 
     if LInRegister and (LRow.EndsWith('END;')) then
     begin
       for LEntity in FEntities do
         FDestination.Add(Format(
-          '  FServer.RegisterController<T%sController>();', [
+          '  Server.RegisterController<T%sController>();', [
           LEntity.Name]));
       FDestination.Add(FSource[LIndex]);
       LInRegister := False;
@@ -130,7 +131,7 @@ var
   LIndex: Integer;
 begin
   LSourceEditor := TTIOTA.ShowSourceEditor(
-    Format('API\%s.Http', [FProjectName]));
+    Format('%s.Http', [FProjectName]));
   if Assigned(LSourceEditor) then
   begin
     FSource.Text := TTIOTA.GetSourceFile(LSourceEditor);

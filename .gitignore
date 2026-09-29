@@ -31,7 +31,6 @@ Lib/
 # Generated resource files (keep hand-built Expert resources)
 *.res
 !Trysil.Expert/Trysil.Expert.Images.res
-!Trysil.Expert/Trysil.Expert.Resources.res
 
 # Trysil Expert local settings
 **/__trysil/__settings/settings.json
