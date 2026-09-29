@@ -43,5 +43,3 @@ EXIT /B 1
 ECHO Usage  : MainBuild.bat ^<studio-ver^> ^<pkg-ver^> ^<platforms^>
 ECHO Example: MainBuild.bat 37.0 370 "Win32 Win64"
 EXIT /B 1
-
-PAUSE
