@@ -42,6 +42,13 @@ resourcestring
   SRulesNotValid = 'The rules of the project template are not valid.';
   STenantFolderNotValid = 'The project template must have one tenant folder.';
   STargetNotEmpty = 'Directory "%s" is not empty.';
+  SDatabaseFileNotFound = 'Database file "%s" not found.';
+  SDriverNotAvailable = 'The %s driver is not included in this build of Trysil Expert.';
+  SHostEmpty = 'Host cannot be empty.';
+  SDatabaseEmpty = 'Database cannot be empty.';
+  SUsernameEmpty = 'Username cannot be empty.';
+  SDatabaseAligned = 'The database is already aligned with the model.';
+  SDatabaseDifferences = 'Differences not aligned by this script:';
 
   SDeleteEntity = 'Delete "%s" entity?';
   SDeleteColumn = 'Delete "%s" column?';

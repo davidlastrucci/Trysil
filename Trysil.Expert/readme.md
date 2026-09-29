@@ -12,3 +12,6 @@
 ### Build
 Open **Trysil.Expert[Version].dproj** in this directory and Build the project in Release.<br><br>
 Alternatively, run **Build[Version].bat** from a command prompt &mdash; it builds the matching project in Release for the platforms shipped with that Delphi version (Win32 only on 260/270/280, Win32 and Win64 on 290/370).
+
+### Community and Professional editions
+The ALTER option of **Generate SQL** connects to a reference database with FireDAC. The SQL Server and Oracle drivers ship only with the Enterprise and Architect editions, so they are compiled only when **TRYSIL_EXPERT_ENTERPRISE** is defined in **Classes\Trysil.Expert.inc** (the default). On Community or Professional, remove that define before building.

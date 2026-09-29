@@ -38,7 +38,11 @@ uses
   Trysil.Expert.UI.Themed,
   Trysil.Expert.UI.Images,
   Trysil.Expert.UI.Classes,
-  Trysil.Expert.SQLCreator;
+  Trysil.Expert.UI.ReferenceDatabase,
+  Trysil.Expert.SQLCreator,
+  Trysil.Expert.Schema,
+  Trysil.Expert.SchemaReader,
+  Trysil.Expert.SQLUpdateCreator;
 
 type
 
@@ -55,6 +59,7 @@ type
     SelectAllEntitiesMenuItem: TMenuItem;
     UnselectAllEntitiesMenuItem: TMenuItem;
     SaveButton: TButton;
+    AlterCheckbox: TCheckBox;
     procedure FormShow(Sender: TObject);
     procedure EntitiesListViewCreateItemClass(
       Sender: TCustomListView; var ItemClass: TListItemClass);
@@ -71,6 +76,17 @@ type
 
     procedure AddSelectedEntities(const AEntities: TList<TTEntity>);
     procedure SelectAllEntities(const ASelect: Boolean);
+
+    function DatabaseType: TTSQLCreatorType;
+    procedure SaveCreateScript(const AEntities: TList<TTEntity>);
+    procedure ReadSchema(
+      const AParameters: TTDatabaseParameters;
+      const AEntities: TList<TTEntity>;
+      const ASchema: TTSchema);
+    function CreateUpdateScript(
+      const AParameters: TTDatabaseParameters;
+      const AEntities: TList<TTEntity>): String;
+    procedure SaveUpdateScript(const AEntities: TList<TTEntity>);
   public
     constructor Create(const AProject: TTProject); reintroduce;
     destructor Destroy; override;
@@ -176,36 +192,118 @@ begin
   SelectAllEntities(False);
 end;
 
-procedure TTGenerateSQL.SaveButtonClick(Sender: TObject);
+function TTGenerateSQL.DatabaseType: TTSQLCreatorType;
+begin
+  result := TTSQLCreatorType(DatabaseTypeCombobox.ItemIndex);
+end;
+
+procedure TTGenerateSQL.SaveCreateScript(const AEntities: TList<TTEntity>);
 var
-  LEntities: TList<TTEntity>;
   LSQLCreator: TTSQLCreator;
 begin
-  Screen.Cursor := crHourGlass;
-  try
-    LEntities := TList<TTEntity>.Create;
+  if SaveDialog.Execute then
+  begin
+    Screen.Cursor := crHourGlass;
     try
-      AddSelectedEntities(LEntities);
-      if SaveDialog.Execute then
-      begin
-        LSQLCreator := TTSQLCreator.Create(
-          TTSQLCreatorType(DatabaseTypeCombobox.ItemIndex));
-        try
-          LSQLCreator.CreateEntities(LEntities);
-          TFile.WriteAllText(SaveDialog.FileName, LSQLCreator.ToString);
-        finally
-          LSQLCreator.Free;
-        end;
+      LSQLCreator := TTSQLCreator.Create(DatabaseType);
+      try
+        LSQLCreator.CreateEntities(AEntities);
+        TFile.WriteAllText(SaveDialog.FileName, LSQLCreator.ToString);
+      finally
+        LSQLCreator.Free;
       end;
     finally
-      LEntities.Free;
+      Screen.Cursor := crDefault;
     end;
-  finally
-    Screen.Cursor := crDefault;
   end;
 
   ControlsToConfig;
   ModalResult := mrOk;
+end;
+
+procedure TTGenerateSQL.ReadSchema(
+  const AParameters: TTDatabaseParameters;
+  const AEntities: TList<TTEntity>;
+  const ASchema: TTSchema);
+var
+  LTableNames: TList<String>;
+  LReader: TTSchemaReader;
+begin
+  LTableNames := TList<String>.Create;
+  try
+    TTSQLUpdateCreator.AddTableNames(AEntities, LTableNames);
+    LReader := TTSchemaReader.Create(AParameters);
+    try
+      LReader.Read(ASchema, LTableNames);
+    finally
+      LReader.Free;
+    end;
+  finally
+    LTableNames.Free;
+  end;
+end;
+
+function TTGenerateSQL.CreateUpdateScript(
+  const AParameters: TTDatabaseParameters;
+  const AEntities: TList<TTEntity>): String;
+var
+  LSchema: TTSchema;
+  LCreator: TTSQLUpdateCreator;
+begin
+  LSchema := TTSchema.Create;
+  try
+    ReadSchema(AParameters, AEntities, LSchema);
+    LCreator := TTSQLUpdateCreator.Create(DatabaseType, LSchema);
+    try
+      LCreator.AlignEntities(AEntities);
+      result := LCreator.ToString;
+    finally
+      LCreator.Free;
+    end;
+  finally
+    LSchema.Free;
+  end;
+end;
+
+procedure TTGenerateSQL.SaveUpdateScript(const AEntities: TList<TTEntity>);
+var
+  LEntities: TList<TTEntity>;
+  LScript: String;
+begin
+  if not TTSchemaReader.DriverAvailable(DatabaseType) then
+    raise ETExpertException.CreateFmt(
+      SDriverNotAvailable, [DatabaseTypeCombobox.Text]);
+
+  LEntities := AEntities;
+  if TTReferenceDatabaseForm.ShowDialog(
+    FConfig,
+    DatabaseType,
+    function(const AParameters: TTDatabaseParameters): String
+    begin
+      result := CreateUpdateScript(AParameters, LEntities);
+    end,
+    LScript) and SaveDialog.Execute then
+  begin
+    TFile.WriteAllText(SaveDialog.FileName, LScript);
+    ControlsToConfig;
+    ModalResult := mrOk;
+  end;
+end;
+
+procedure TTGenerateSQL.SaveButtonClick(Sender: TObject);
+var
+  LEntities: TList<TTEntity>;
+begin
+  LEntities := TList<TTEntity>.Create;
+  try
+    AddSelectedEntities(LEntities);
+    if AlterCheckbox.Checked then
+      SaveUpdateScript(LEntities)
+    else
+      SaveCreateScript(LEntities);
+  finally
+    LEntities.Free;
+  end;
 end;
 
 class procedure TTGenerateSQL.ShowDialog(const AProject: TTProject);

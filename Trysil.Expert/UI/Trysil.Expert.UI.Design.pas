@@ -58,6 +58,8 @@ type
     AddNewPropertyAction: TAction;
     EditPropertyAction: TAction;
     DeletePropertyAction: TAction;
+    MovePropertyUpAction: TAction;
+    MovePropertyDownAction: TAction;
     TreeViewPanel: TPanel;
     TreeViewTitlePanel: TPanel;
     TreeViewToolBarPanel: TPanel;
@@ -71,6 +73,8 @@ type
     AddNewPropertyButton: TSpeedButton;
     EditPropertyButton: TSpeedButton;
     DeletePropertyButton: TSpeedButton;
+    MovePropertyUpButton: TSpeedButton;
+    MovePropertyDownButton: TSpeedButton;
     ListView: TListView;
     SaveButton: TButton;
     CancelButton: TButton;
@@ -86,6 +90,8 @@ type
     procedure AddNewProperty(Sender: TObject);
     procedure EditProperty(Sender: TObject);
     procedure DeleteProperty(Sender: TObject);
+    procedure MovePropertyUp(Sender: TObject);
+    procedure MovePropertyDown(Sender: TObject);
     procedure TreeViewChange(Sender: TObject; Node: TTreeNode);
     procedure SaveButtonClick(Sender: TObject);
   strict private
@@ -95,6 +101,10 @@ type
     FEntities: TTEntities;
 
     procedure SetImages;
+    function SelectedEntity: TTEntity;
+    function SelectedColumn: TTAbstractColumn;
+    procedure SelectColumn(const AColumn: TTAbstractColumn);
+    procedure UpdateMoveActions;
 
     procedure ShowEntities;
     procedure ShowColumns;
@@ -157,8 +167,84 @@ begin
     (not (TTColumn(LColumnItem.Value).DataType in [dtPrimaryKey, dtVersion])));
   EditPropertyAction.Enabled := LEnabled;
   DeletePropertyAction.Enabled := LEnabled;
+  UpdateMoveActions;
 
   Handled := True;
+end;
+
+function TTDesignForm.SelectedEntity: TTEntity;
+var
+  LNode: TTreeNode;
+  LEntityNode: TTEntityTreeNode absolute LNode;
+begin
+  result := nil;
+  LNode := TreeView.Selected;
+  if Assigned(LNode) then
+    result := LEntityNode.Value;
+end;
+
+function TTDesignForm.SelectedColumn: TTAbstractColumn;
+var
+  LEntity: TTEntity;
+  LItem: TListItem;
+  LColumnItem: TTColumnListItem absolute LItem;
+begin
+  result := nil;
+  LEntity := SelectedEntity;
+  LItem := ListView.Selected;
+  if Assigned(LEntity) and Assigned(LItem) then
+    result := LColumnItem.Value;
+end;
+
+procedure TTDesignForm.SelectColumn(const AColumn: TTAbstractColumn);
+var
+  LItem: TListItem;
+  LColumnItem: TTColumnListItem absolute LItem;
+begin
+  for LItem in ListView.Items do
+    if LColumnItem.Value = AColumn then
+    begin
+      ListView.Selected := LItem;
+      ListView.ItemFocused := LItem;
+      LItem.MakeVisible(False);
+    end;
+end;
+
+procedure TTDesignForm.UpdateMoveActions;
+var
+  LColumn: TTAbstractColumn;
+begin
+  LColumn := SelectedColumn;
+  MovePropertyUpAction.Enabled := Assigned(LColumn) and
+    SelectedEntity.Columns.CanMoveUp(LColumn);
+  MovePropertyDownAction.Enabled := Assigned(LColumn) and
+    SelectedEntity.Columns.CanMoveDown(LColumn);
+end;
+
+procedure TTDesignForm.MovePropertyUp(Sender: TObject);
+var
+  LColumn: TTAbstractColumn;
+begin
+  LColumn := SelectedColumn;
+  if Assigned(LColumn) then
+  begin
+    SelectedEntity.Columns.MoveUp(LColumn);
+    ShowColumns;
+    SelectColumn(LColumn);
+  end;
+end;
+
+procedure TTDesignForm.MovePropertyDown(Sender: TObject);
+var
+  LColumn: TTAbstractColumn;
+begin
+  LColumn := SelectedColumn;
+  if Assigned(LColumn) then
+  begin
+    SelectedEntity.Columns.MoveDown(LColumn);
+    ShowColumns;
+    SelectColumn(LColumn);
+  end;
 end;
 
 procedure TTDesignForm.ShowEntities;

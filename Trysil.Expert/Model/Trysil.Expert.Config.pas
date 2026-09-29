@@ -65,6 +65,10 @@ type
     FControllers: Boolean;
     FFilterProperties: Boolean;
     FDatabaseType: Integer;
+    FReferenceHost: String;
+    FReferencePort: Integer;
+    FReferenceDatabase: String;
+    FReferenceUsername: String;
 
     function GetConfigFileName: String;
     procedure LoadFromFile;
@@ -80,6 +84,12 @@ type
     property FilterProperties: Boolean
       read FFilterProperties write FFilterProperties;
     property DatabaseType: Integer read FDatabaseType write FDatabaseType;
+    property ReferenceHost: String read FReferenceHost write FReferenceHost;
+    property ReferencePort: Integer read FReferencePort write FReferencePort;
+    property ReferenceDatabase: String
+      read FReferenceDatabase write FReferenceDatabase;
+    property ReferenceUsername: String
+      read FReferenceUsername write FReferenceUsername;
   end;
 
 { TTUtils }
@@ -200,6 +210,10 @@ begin
     FControllers := LJSon.GetValue<Boolean>('controllers', True);
     FFilterProperties := LJSon.GetValue<Boolean>('filterProperties', True);
     FDatabaseType := LJSon.GetValue<Integer>('databaseType', 0);
+    FReferenceHost := LJSon.GetValue<String>('referenceHost', '');
+    FReferencePort := LJSon.GetValue<Integer>('referencePort', 0);
+    FReferenceDatabase := LJSon.GetValue<String>('referenceDatabase', '');
+    FReferenceUsername := LJSon.GetValue<String>('referenceUsername', '');
   finally
     LJSon.Free;
   end;
@@ -212,6 +226,10 @@ begin
   FControllers := True;
   FFilterProperties := True;
   FDatabaseType := 0;
+  FReferenceHost := String.Empty;
+  FReferencePort := 0;
+  FReferenceDatabase := String.Empty;
+  FReferenceUsername := String.Empty;
 end;
 
 procedure TTLocalConfig.Save;
@@ -225,6 +243,10 @@ begin
     LJSon.AddPair('controllers', TJSonBool.Create(FControllers));
     LJSon.AddPair('filterProperties', TJSonBool.Create(FFilterProperties));
     LJSon.AddPair('databaseType', TJSonNumber.Create(FDatabaseType));
+    LJSon.AddPair('referenceHost', FReferenceHost);
+    LJSon.AddPair('referencePort', TJSonNumber.Create(FReferencePort));
+    LJSon.AddPair('referenceDatabase', FReferenceDatabase);
+    LJSon.AddPair('referenceUsername', FReferenceUsername);
 
     TDirectory.CreateDirectory(TPath.GetDirectoryName(FFilename));
     TFile.WriteAllText(FFilename, LJSon.Format(2));

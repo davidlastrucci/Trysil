@@ -30,6 +30,7 @@ type
   ITEntities = interface
     ['{2026E425-5956-4637-B48C-BF9E8D754EEC}']
     function GetObjectName(const AID: String): String;
+    function GetTableName(const AID: String): String;
   end;
 
 { ITEntity }
@@ -118,7 +119,9 @@ type
     FDataType: String;
 
     procedure SetDataType(const AValue: String);
+    function GetObjectID: String;
     function GetObjectName: String;
+    function GetTableName: String;
   strict protected
     function GetColumnType: String; override;
   public
@@ -127,6 +130,7 @@ type
 
     property DataType: String read FDataType write SetDatatype;
     property ObjectName: String read GetObjectName;
+    property TableName: String read GetTableName;
   end;
 
 { TTLazyColumn }
@@ -148,12 +152,19 @@ type
 
     procedure NotifyChanged;
     function GetColumns: TList<TTAbstractColumn>;
+    function IsFixed(const AColumn: TTAbstractColumn): Boolean;
+    function CanExchange(const AIndex: Integer; const AOther: Integer): Boolean;
+    procedure Exchange(const AIndex: Integer; const AOther: Integer);
   public
     constructor Create(const AEntities: ITEntities; const AEntity: ITEntity);
     destructor Destroy; override;
 
     procedure AddColumn(const AColumn: TTAbstractColumn);
     procedure DeleteColumn(const AColumn: TTAbstractColumn);
+    function CanMoveUp(const AColumn: TTAbstractColumn): Boolean;
+    function CanMoveDown(const AColumn: TTAbstractColumn): Boolean;
+    procedure MoveUp(const AColumn: TTAbstractColumn);
+    procedure MoveDown(const AColumn: TTAbstractColumn);
 
     procedure FromJSon(const AJSon: TJSonArray);
     procedure ToJSon(const AJSon: TJSonArray);
@@ -259,6 +270,7 @@ type
 
     // ITEntities
     function GetObjectName(const AID: String): String;
+    function GetTableName(const AID: String): String;
   public
     constructor Create;
     destructor Destroy; override;
@@ -449,7 +461,7 @@ begin
   result := FDataType;
 end;
 
-function TTObjectColumn.GetObjectName: String;
+function TTObjectColumn.GetObjectID: String;
 var
   LIndex: Integer;
   LResult: String;
@@ -461,11 +473,28 @@ begin
     LResult := FDataType.Substring(LIndex + 1);
     LIndex := LResult.IndexOf('}');
     if LIndex >= 0 then
-    begin
-      LResult := LResult.Substring(0, LIndex);
-      result := FEntities.GetObjectName(LResult);
-    end;
+      result := LResult.Substring(0, LIndex);
   end;
+end;
+
+function TTObjectColumn.GetObjectName: String;
+var
+  LID: String;
+begin
+  result := String.Empty;
+  LID := GetObjectID;
+  if not LID.IsEmpty then
+    result := FEntities.GetObjectName(LID);
+end;
+
+function TTObjectColumn.GetTableName: String;
+var
+  LID: String;
+begin
+  result := String.Empty;
+  LID := GetObjectID;
+  if not LID.IsEmpty then
+    result := FEntities.GetTableName(LID);
 end;
 
 procedure TTObjectColumn.SetDataType(const AValue: String);
@@ -532,6 +561,62 @@ procedure TTColumns.DeleteColumn(const AColumn: TTAbstractColumn);
 begin
   FColumns.Remove(AColumn);
   NotifyChanged;
+end;
+
+function TTColumns.IsFixed(const AColumn: TTAbstractColumn): Boolean;
+begin
+  result := (AColumn is TTColumn) and
+    (TTColumn(AColumn).DataType in [dtPrimaryKey, dtVersion]);
+end;
+
+function TTColumns.CanExchange(
+  const AIndex: Integer; const AOther: Integer): Boolean;
+begin
+  result := (AIndex >= 0) and (AOther >= 0) and (AOther < FColumns.Count);
+  if result then
+    result := not IsFixed(FColumns[AIndex]) and
+      not IsFixed(FColumns[AOther]);
+end;
+
+procedure TTColumns.Exchange(const AIndex: Integer; const AOther: Integer);
+begin
+  if CanExchange(AIndex, AOther) then
+  begin
+    FColumns.Exchange(AIndex, AOther);
+    NotifyChanged;
+  end;
+end;
+
+function TTColumns.CanMoveUp(const AColumn: TTAbstractColumn): Boolean;
+var
+  LIndex: Integer;
+begin
+  LIndex := FColumns.IndexOf(AColumn);
+  result := CanExchange(LIndex, LIndex - 1);
+end;
+
+function TTColumns.CanMoveDown(const AColumn: TTAbstractColumn): Boolean;
+var
+  LIndex: Integer;
+begin
+  LIndex := FColumns.IndexOf(AColumn);
+  result := CanExchange(LIndex, LIndex + 1);
+end;
+
+procedure TTColumns.MoveUp(const AColumn: TTAbstractColumn);
+var
+  LIndex: Integer;
+begin
+  LIndex := FColumns.IndexOf(AColumn);
+  Exchange(LIndex, LIndex - 1);
+end;
+
+procedure TTColumns.MoveDown(const AColumn: TTAbstractColumn);
+var
+  LIndex: Integer;
+begin
+  LIndex := FColumns.IndexOf(AColumn);
+  Exchange(LIndex, LIndex + 1);
 end;
 
 procedure TTColumns.FromJSon(const AJSon: TJSonArray);
@@ -908,6 +993,19 @@ begin
     if String.Compare(LEntity.ID, AID) = 0 then
     begin
       result := LEntity.Name;
+      Break;
+    end;
+end;
+
+function TTEntities.GetTableName(const AID: String): String;
+var
+  LEntity: TTEntity;
+begin
+  result := String.Empty;
+  for LEntity in FEntities do
+    if String.Compare(LEntity.ID, AID) = 0 then
+    begin
+      result := LEntity.TableName;
       Break;
     end;
 end;

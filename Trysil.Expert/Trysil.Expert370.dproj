@@ -198,6 +198,9 @@
         </DCCReference>
         <DCCReference Include="Classes\Trysil.Expert.SourceWriter.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.SQLCreator.pas"/>
+        <DCCReference Include="Classes\Trysil.Expert.Schema.pas"/>
+        <DCCReference Include="Classes\Trysil.Expert.SchemaReader.pas"/>
+        <DCCReference Include="Classes\Trysil.Expert.SQLUpdateCreator.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.ModelCreator.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.ControllerCreator.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.APIHttpModifier.pas"/>
@@ -244,6 +247,9 @@
         </DCCReference>
         <DCCReference Include="UI\Trysil.Expert.UI.GenerateSQL.pas">
             <Form>TGenerateSQL</Form>
+        </DCCReference>
+        <DCCReference Include="UI\Trysil.Expert.UI.ReferenceDatabase.pas">
+            <Form>TReferenceDatabaseForm</Form>
         </DCCReference>
         <DCCReference Include="UI\Trysil.Expert.UI.GenerateModel.pas">
             <Form>TGenerateModel</Form>

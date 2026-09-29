@@ -1,18 +1,18 @@
 inherited TGenerateSQL: TTGenerateSQL
-  ClientHeight = 340
+  ClientHeight = 365
   ClientWidth = 554
   Color = clWhite
   StyleElements = [seFont, seClient, seBorder]
   OnShow = FormShow
   ExplicitWidth = 570
-  ExplicitHeight = 379
+  ExplicitHeight = 404
   TextHeight = 15
   inherited ContentPanel: TPanel
     Width = 554
-    Height = 291
+    Height = 316
     StyleElements = [seFont, seBorder]
     ExplicitWidth = 554
-    ExplicitHeight = 291
+    ExplicitHeight = 316
     object DatabaseTypeLabel: TLabel
       Left = 72
       Top = 16
@@ -56,12 +56,20 @@ inherited TGenerateSQL: TTGenerateSQL
       ViewStyle = vsList
       OnCreateItemClass = EntitiesListViewCreateItemClass
     end
+    object AlterCheckbox: TCheckBox
+      Left = 72
+      Top = 287
+      Width = 470
+      Height = 17
+      Caption = 'ALTER (align a reference database)'
+      TabOrder = 2
+    end
   end
   inherited ButtonsPanel: TPanel
-    Top = 291
+    Top = 316
     Width = 554
     StyleElements = [seFont, seBorder]
-    ExplicitTop = 291
+    ExplicitTop = 316
     ExplicitWidth = 554
     object CancelButton: TButton
       Left = 467

@@ -42,6 +42,8 @@ type
 
   TTAbstractSQLCreator = class abstract
   strict private
+    FIndexes: TList<TTIndex>;
+
     procedure AddCreateTable(
       const ASource: TTSourceWriter; const AEntity: TTEntity);
     procedure AddColumns(
@@ -51,8 +53,6 @@ type
     function GetNull(
       const AColumn: TTAbstractColumn): String;
   strict protected
-    FIndexes: TList<TTIndex>;
-
     procedure AddCreateSequence(
       const ASource: TTSourceWriter;
       const AEntity: TTEntity); virtual; abstract;
@@ -63,13 +63,31 @@ type
     function GetPrimaryKeySyntax(
       const AColumnName: String;
       const AEntity: TTEntity): String; virtual; abstract;
+    function GetAddColumnSyntax(
+      const AColumnName: String;
+      const AType: String;
+      const ANull: String): String; virtual;
   public
     constructor Create;
     destructor Destroy; override;
 
     procedure CreateSQL(
       const ASource: TTSourceWriter; const AEntity: TTEntity);
+    procedure CreateSequence(
+      const ASource: TTSourceWriter; const AEntity: TTEntity);
+    procedure AddColumn(
+      const ASource: TTSourceWriter;
+      const AEntity: TTEntity;
+      const AColumn: TTAbstractColumn);
+    procedure CollectIndexes(const AEntity: TTEntity);
+    procedure CreateIndex(
+      const ASource: TTSourceWriter; const AIndex: TTIndex);
     procedure CreateIndexes(const ASource: TTSourceWriter);
+
+    function ColumnType(const AColumn: TTAbstractColumn): String;
+    function IsRequired(const AColumn: TTAbstractColumn): Boolean;
+
+    property Indexes: TList<TTIndex> read FIndexes;
   end;
 
 { TTAbstractSQLCreatorClass }
@@ -108,6 +126,10 @@ type
 
   TTMariaDBCreator = class(TTAbstractSQLCreator)
   strict protected
+    function GetAddColumnSyntax(
+      const AColumnName: String;
+      const AType: String;
+      const ANull: String): String; override;
     procedure AddCreateSequence(
       const ASource: TTSourceWriter; const AEntity: TTEntity); override;
 
@@ -122,6 +144,10 @@ type
 
   TTOracleCreator = class(TTAbstractSQLCreator)
   strict protected
+    function GetAddColumnSyntax(
+      const AColumnName: String;
+      const AType: String;
+      const ANull: String): String; override;
     procedure AddCreateSequence(
       const ASource: TTSourceWriter; const AEntity: TTEntity); override;
 
@@ -136,6 +162,10 @@ type
 
   TTPostgreSQLCreator = class(TTAbstractSQLCreator)
   strict protected
+    function GetAddColumnSyntax(
+      const AColumnName: String;
+      const AType: String;
+      const ANull: String): String; override;
     procedure
       AddCreateSequence(
         const ASource: TTSourceWriter; const AEntity: TTEntity); override;
@@ -151,6 +181,10 @@ type
 
   TTSQLiteCreator = class(TTAbstractSQLCreator)
   strict protected
+    function GetAddColumnSyntax(
+      const AColumnName: String;
+      const AType: String;
+      const ANull: String): String; override;
     procedure
       AddCreateSequence(const ASource: TTSourceWriter; const AEntity: TTEntity); override;
 
@@ -193,6 +227,9 @@ type
     FCreatorType: TTSQLCreatorType;
     FSource: TTSourceWriter;
   public
+    class function CreatorClass(
+      const ACreatorType: TTSQLCreatorType): TTAbstractSQLCreatorClass;
+
     constructor Create(const ACreatorType: TTSQLCreatorType);
     destructor Destroy; override;
 
@@ -233,13 +270,82 @@ begin
   AddCreateTable(ASource, AEntity);
 end;
 
+procedure TTAbstractSQLCreator.CreateSequence(
+  const ASource: TTSourceWriter; const AEntity: TTEntity);
+begin
+  AddCreateSequence(ASource, AEntity);
+end;
+
+procedure TTAbstractSQLCreator.AddColumn(
+  const ASource: TTSourceWriter;
+  const AEntity: TTEntity;
+  const AColumn: TTAbstractColumn);
+var
+  LNull: String;
+begin
+  LNull := 'NULL';
+  if not IsRequired(AColumn) then
+    LNull := GetNull(AColumn);
+  ASource.Append('ALTER TABLE %s %s;', [
+    AEntity.TableName,
+    GetAddColumnSyntax(AColumn.ColumnName, ColumnType(AColumn), LNull)]);
+  if IsRequired(AColumn) then
+    ASource.Append(
+      '-- %0:s.%1:s is required: fill it, then make it NOT NULL', [
+      AEntity.TableName, AColumn.ColumnName]);
+end;
+
+function TTAbstractSQLCreator.GetAddColumnSyntax(
+  const AColumnName: String;
+  const AType: String;
+  const ANull: String): String;
+begin
+  result := Format('ADD %s %s %s', [AColumnName, AType, ANull]);
+end;
+
+procedure TTAbstractSQLCreator.CollectIndexes(const AEntity: TTEntity);
+var
+  LColumn: TTAbstractColumn;
+begin
+  for LColumn in AEntity.Columns.Columns do
+    if LColumn is TTLazyListColumn then
+      FIndexes.Add(TTIndex.Create(
+        TTLazyListColumn(LColumn).TableName,
+        TTLazyListColumn(LColumn).ColumnName));
+end;
+
+procedure TTAbstractSQLCreator.CreateIndex(
+  const ASource: TTSourceWriter; const AIndex: TTIndex);
+begin
+  ASource.Append('CREATE INDEX IDX_%0:s_%1:s ON %0:s (%1:s);', [
+    AIndex.TableName, AIndex.ColumnName]);
+end;
+
 procedure TTAbstractSQLCreator.CreateIndexes(const ASource: TTSourceWriter);
 var
   LIndex: TTIndex;
 begin
   for LIndex in FIndexes do
-    ASource.Append('CREATE INDEX %0:s_%1:s_Index ON %0:s (%1:s);', [
-      LIndex.TableName, LIndex.ColumnName]);
+    CreateIndex(ASource, LIndex);
+end;
+
+function TTAbstractSQLCreator.ColumnType(
+  const AColumn: TTAbstractColumn): String;
+begin
+  if AColumn is TTColumn then
+    result := GetType(TTColumn(AColumn).DataType, TTColumn(AColumn).Size)
+  else
+    result := GetType(TTDataType.dtInteger, 0);
+end;
+
+function TTAbstractSQLCreator.IsRequired(
+  const AColumn: TTAbstractColumn): Boolean;
+begin
+  result := (AColumn is TTColumn) and
+    (TTColumn(AColumn).DataType in [
+      TTDataType.dtPrimaryKey, TTDataType.dtVersion]);
+  if not result then
+    result := AColumn.Required;
 end;
 
 function TTAbstractSQLCreator.GetNull(const AColumn: TTAbstractColumn): String;
@@ -248,10 +354,7 @@ var
   LRequired: Boolean;
   LAllowEmpty: Boolean;
 begin
-  LRequired := (AColumn is TTColumn) and
-    (TTColumn(AColumn).DataType in [TTDataType.dtPrimaryKey, TTDataType.dtVersion]);
-  if not LRequired then
-    LRequired := AColumn.Required;
+  LRequired := IsRequired(AColumn);
 
   LAllowEmpty := False;
   if (not LRequired) and (AColumn is TTColumn) then
@@ -282,25 +385,11 @@ procedure TTAbstractSQLCreator.AddColumns(
   const ASource: TTSourceWriter; const AEntity: TTEntity);
 var
   LColumn: TTAbstractColumn;
-  LType, LNull: String;
 begin
   for LColumn in AEntity.Columns.Columns do
-  begin
-    if LColumn is TTColumn then
-      LType := GetType(TTColumn(LColumn).DataType, TTColumn(LColumn).Size)
-    else if LColumn is TTLazyColumn then
-      LType := GetType(TTDataType.dtInteger, 0)
-    else if LColumn is TTLazyListColumn then
-    begin
-      FIndexes.Add(TTIndex.Create(
-        TTLazyListColumn(LColumn).ObjectName,
-        TTLazyListColumn(LColumn).ColumnName));
-      Continue;
-    end;
-
-    LNull := GetNull(LColumn);
-    ASource.Append('  %s %s %s,', [LColumn.ColumnName, LType, LNull]);
-  end;
+    if not (LColumn is TTLazyListColumn) then
+      ASource.Append('  %s %s %s,', [
+        LColumn.ColumnName, ColumnType(LColumn), GetNull(LColumn)]);
 end;
 
 procedure TTAbstractSQLCreator.AddPrimaryKey(
@@ -423,6 +512,14 @@ end;
 
 { TTMariaDBCreator }
 
+function TTMariaDBCreator.GetAddColumnSyntax(
+  const AColumnName: String;
+  const AType: String;
+  const ANull: String): String;
+begin
+  result := Format('ADD COLUMN %s %s %s', [AColumnName, AType, ANull]);
+end;
+
 procedure TTMariaDBCreator.AddCreateSequence(
   const ASource: TTSourceWriter; const AEntity: TTEntity);
 begin
@@ -473,6 +570,14 @@ begin
 end;
 
 { TTOracleCreator }
+
+function TTOracleCreator.GetAddColumnSyntax(
+  const AColumnName: String;
+  const AType: String;
+  const ANull: String): String;
+begin
+  result := Format('ADD (%s %s %s)', [AColumnName, AType, ANull]);
+end;
 
 procedure TTOracleCreator.AddCreateSequence(
   const ASource: TTSourceWriter; const AEntity: TTEntity);
@@ -525,6 +630,14 @@ end;
 
 { TTPostgreSQLCreator }
 
+function TTPostgreSQLCreator.GetAddColumnSyntax(
+  const AColumnName: String;
+  const AType: String;
+  const ANull: String): String;
+begin
+  result := Format('ADD COLUMN %s %s %s', [AColumnName, AType, ANull]);
+end;
+
 procedure TTPostgreSQLCreator.AddCreateSequence(
   const ASource: TTSourceWriter; const AEntity: TTEntity);
 begin
@@ -575,6 +688,14 @@ begin
 end;
 
 { TTSQLiteCreator }
+
+function TTSQLiteCreator.GetAddColumnSyntax(
+  const AColumnName: String;
+  const AType: String;
+  const ANull: String): String;
+begin
+  result := Format('ADD COLUMN %s %s %s', [AColumnName, AType, ANull]);
+end;
 
 procedure TTSQLiteCreator.AddCreateSequence;
 begin
@@ -693,20 +814,29 @@ begin
   inherited Destroy;
 end;
 
-procedure TTSQLCreator.CreateEntities(const AEntities: TList<TTEntity>);
+class function TTSQLCreator.CreatorClass(
+  const ACreatorType: TTSQLCreatorType): TTAbstractSQLCreatorClass;
 const
   CreatorClasses: array [TTSQLCreatorType] of TTAbstractSQLCreatorClass = (
     TTFirebirdSQLCreator, TTInterBaseCreator, TTMariaDBCreator, TTOracleCreator,
     TTPostgreSQLCreator, TTMSSQLCreator, TTSQLiteCreator);
+begin
+  result := CreatorClasses[ACreatorType];
+end;
+
+procedure TTSQLCreator.CreateEntities(const AEntities: TList<TTEntity>);
 var
   LCreator: TTAbstractSQLCreator;
   LEntity: TTEntity;
 begin
   FSource.Clear;
-  LCreator := CreatorClasses[FCreatorType].Create;
+  LCreator := CreatorClass(FCreatorType).Create;
   try
     for LEntity in AEntities do
+    begin
       LCreator.CreateSQL(FSource, LEntity);
+      LCreator.CollectIndexes(LEntity);
+    end;
     LCreator.CreateIndexes(FSource);
   finally
     LCreator.Free;
