@@ -59,6 +59,8 @@ type
     procedure CheckColumn;
     procedure CheckNames;
     procedure ControlsToColumn;
+  strict protected
+    function HelpPage: String; override;
   public
     constructor Create(
       const AEntities: TTEntities;
@@ -203,6 +205,11 @@ begin
     ControlsToColumn;
     ModalResult := mrOk;
   end;
+end;
+
+function TTDesignEntityListTypeColumnForm.HelpPage: String;
+begin
+  result := 'design/#entity-list-column';
 end;
 
 class function TTDesignEntityListTypeColumnForm.ShowDialog(

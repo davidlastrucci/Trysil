@@ -58,6 +58,8 @@ type
     procedure CheckEntity;
     procedure CheckNames;
     procedure ControlsToEntity;
+  strict protected
+    function HelpPage: String; override;
   public
     constructor Create(
       const AEntities: TTEntities; const AEntity: TTEntity); reintroduce;
@@ -180,6 +182,11 @@ begin
     ControlsToEntity;
     ModalResult := mrOk;
   end;
+end;
+
+function TTDesignEntityForm.HelpPage: String;
+begin
+  result := 'design/#entities';
 end;
 
 class function TTDesignEntityForm.ShowDialog(

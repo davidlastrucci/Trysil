@@ -195,6 +195,8 @@ type
     procedure FillLogDatabase(const AParameters: TTApiRestParameters);
     procedure FillParameters(const AParameters: TTApiRestParameters);
     procedure CreateProject(const AParameters: TTApiRestParameters);
+  strict protected
+    function HelpPage: String; override;
   public
     constructor Create; reintroduce;
     destructor Destroy; override;
@@ -670,6 +672,11 @@ begin
 
     ModalResult := mrOk;
   end;
+end;
+
+function TTAPIRestForm.HelpPage: String;
+begin
+  result := 'api-rest/';
 end;
 
 class procedure TTAPIRestForm.ShowDialog;

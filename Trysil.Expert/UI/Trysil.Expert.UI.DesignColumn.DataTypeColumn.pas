@@ -64,6 +64,8 @@ type
     procedure CheckColumn;
     procedure CheckNames;
     procedure ControlsToColumn;
+  strict protected
+    function HelpPage: String; override;
   public
     constructor Create(
       const AEntity: TTEntity; const AColumn: TTColumn); reintroduce;
@@ -203,6 +205,11 @@ begin
     ControlsToColumn;
     ModalResult := mrOk;
   end;
+end;
+
+function TTDesignDataTypeColumnForm.HelpPage: String;
+begin
+  result := 'design/#data-column';
 end;
 
 class function TTDesignDataTypeColumnForm.ShowDialog(

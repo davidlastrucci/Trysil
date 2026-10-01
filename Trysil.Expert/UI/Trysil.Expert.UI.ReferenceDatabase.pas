@@ -78,6 +78,8 @@ type
     procedure CheckControls;
     function GetParameters: TTDatabaseParameters;
     procedure CreateScript;
+  strict protected
+    function HelpPage: String; override;
   public
     constructor Create(
       const AConfig: TTLocalConfig;
@@ -212,6 +214,11 @@ begin
     CreateScript;
     ModalResult := mrOk;
   end;
+end;
+
+function TTReferenceDatabaseForm.HelpPage: String;
+begin
+  result := 'generate-sql/#alter-script';
 end;
 
 class function TTReferenceDatabaseForm.ShowDialog(

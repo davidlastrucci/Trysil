@@ -50,6 +50,8 @@ type
     function CreateDataColumn: Boolean;
     function CreateEntityColumn: Boolean;
     function CreateEntityListColumn: Boolean;
+  strict protected
+    function HelpPage: String; override;
   public
     constructor Create(
       const AEntities: TTEntities; const AEntity: TTEntity); reintroduce;
@@ -162,6 +164,11 @@ begin
     if not result then
       LColumn.Free;
   end;
+end;
+
+function TTDesignColumnForm.HelpPage: String;
+begin
+  result := 'design/#properties';
 end;
 
 class function TTDesignColumnForm.ShowDialog(

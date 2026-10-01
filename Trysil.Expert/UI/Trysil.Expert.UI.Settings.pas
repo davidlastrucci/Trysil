@@ -47,6 +47,8 @@ type
   strict private
     procedure ConfigToControls;
     procedure ControlsToConfig;
+  strict protected
+    function HelpPage: String; override;
   public
     procedure AfterConstruction; override;
 
@@ -84,6 +86,11 @@ begin
   ControlsToConfig;
   TTConfig.Instance.Save;
   ModalResult := mrOk;
+end;
+
+function TTSettingsForm.HelpPage: String;
+begin
+  result := 'settings/';
 end;
 
 class procedure TTSettingsForm.ShowDialog;

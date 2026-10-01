@@ -87,6 +87,8 @@ type
       const AParameters: TTDatabaseParameters;
       const AEntities: TList<TTEntity>): String;
     procedure SaveUpdateScript(const AEntities: TList<TTEntity>);
+  strict protected
+    function HelpPage: String; override;
   public
     constructor Create(const AProject: TTProject); reintroduce;
     destructor Destroy; override;
@@ -304,6 +306,11 @@ begin
   finally
     LEntities.Free;
   end;
+end;
+
+function TTGenerateSQL.HelpPage: String;
+begin
+  result := 'generate-sql/';
 end;
 
 class procedure TTGenerateSQL.ShowDialog(const AProject: TTProject);

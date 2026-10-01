@@ -108,6 +108,8 @@ type
 
     procedure ShowEntities;
     procedure ShowColumns;
+  strict protected
+    function HelpPage: String; override;
   public
     constructor Create(const ADirectory: String); reintroduce;
     destructor Destroy; override;
@@ -459,6 +461,11 @@ procedure TTDesignForm.SaveButtonClick(Sender: TObject);
 begin
   FEntities.SaveToDirectory(FDirectory);
   ModalResult := mrOk;
+end;
+
+function TTDesignForm.HelpPage: String;
+begin
+  result := 'design/';
 end;
 
 class procedure TTDesignForm.ShowDialog(const AProject: TTProject);

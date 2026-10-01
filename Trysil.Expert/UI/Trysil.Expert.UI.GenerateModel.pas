@@ -82,6 +82,8 @@ type
     procedure CreateModels(const AEntities: TList<TTEntity>);
     procedure CreateControllers(const AEntities: TList<TTEntity>);
     procedure ModifyAPIHttp(const AEntities: TList<TTEntity>);
+  strict protected
+    function HelpPage: String; override;
   public
     constructor Create(const AProject: TTProject); reintroduce;
     destructor Destroy; override;
@@ -333,6 +335,11 @@ begin
   finally
     LEntities.Free;
   end;
+end;
+
+function TTGenerateModel.HelpPage: String;
+begin
+  result := 'generate-model/';
 end;
 
 class procedure TTGenerateModel.ShowDialog(const AProject: TTProject);

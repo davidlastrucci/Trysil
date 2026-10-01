@@ -53,6 +53,8 @@ resourcestring
   SDeleteEntity = 'Delete "%s" entity?';
   SDeleteColumn = 'Delete "%s" column?';
 
+  SHelpUrl = 'https://davidlastrucci.github.io/Trysil/tooling/expert/';
+
 implementation
 
 end.

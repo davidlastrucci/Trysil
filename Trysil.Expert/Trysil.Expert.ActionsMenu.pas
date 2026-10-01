@@ -196,6 +196,8 @@ begin
   AddToolbarButton(AServices, TTEDesignAction);
   AddToolbarButton(AServices, TTEGenerateSQLAction);
   AddToolbarButton(AServices, TTEGenerateModelAction);
+  AddToolbarButton(AServices, TTEInstallSkillsAction);
+  AddToolbarButton(AServices, TTENewAPIRESTAction);
   AddToolbarButton(AServices, TTESettingsAction);
   AddToolbarButton(AServices, TTEAboutAction);
 end;

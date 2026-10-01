@@ -68,6 +68,8 @@ type
     function SelectedTools: TArray<TTSkillTool>;
     function CheckOverwrite(const AInstaller: TTSkillsInstaller): Boolean;
     procedure DoInstall(const ATools: TArray<TTSkillTool>);
+  strict protected
+    function HelpPage: String; override;
   public
     constructor Create(const AProject: TTProject); reintroduce;
 
@@ -239,6 +241,11 @@ begin
     raise ETExpertException.Create(SSelectOneTool)
   else
     DoInstall(LTools);
+end;
+
+function TTInstallSkillsForm.HelpPage: String;
+begin
+  result := '../ai-skills/';
 end;
 
 class procedure TTInstallSkillsForm.ShowDialog(const AProject: TTProject);
