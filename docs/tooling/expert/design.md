@@ -124,7 +124,10 @@ An entity list column is the other side of a reference: the rows of an order.
 It is generated as a `TTLazyList<T>` field, with a read-only property of type `TTList<T>`. It has no column of its own in the database: the list is read through the column of the other entity, and the Expert adds an index on that column to the DDL script.
 
 !!! tip
-    Create the entities first, then the reference columns: the entity type lists only entities that already exist. For an entity list column, the column name lists the properties of the chosen entity, so the column on the other side must already be there.
+    Create the entities first, then the reference columns: the entity type lists only entities that already exist. For an entity list column, the column name lists the Integer data columns of the chosen entity, so the column on the other side must already be there.
+
+!!! warning "No entity column back to the master"
+    In the detail entity, the column that refers to the master is a plain **Integer** data column, like `OrderID` in `OrderDetail`. Do not add to the detail an entity column that points back to the master: the unit of the master uses the unit of the detail for the list, the unit of the detail would use the unit of the master for the reference, and Delphi does not compile two units that use each other in their interface.
 
 ## Relations
 

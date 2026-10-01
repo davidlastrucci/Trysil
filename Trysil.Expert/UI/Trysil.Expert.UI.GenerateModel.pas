@@ -198,8 +198,8 @@ begin
           APIControllersCheckbox.Checked then
         begin
           LModuleName := TPath.Combine(
-            TPath.Combine('API', 'Controllers'),
-              Format('%s.Controller.%s', [LProjectName, LEntity.Name]));
+            'Controllers',
+            Format('%s.Controller.%s', [LProjectName, LEntity.Name]));
           LModuleInfo := TTIOTA.SearchModule(LModuleName);
           LValidator.Check(Assigned(LModuleInfo), LModuleName);
         end;

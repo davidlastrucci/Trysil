@@ -54,7 +54,10 @@ type
     FValidator: TTValidator;
 
     procedure ShowEntities;
+    function IsForeignKeyColumn(const AColumn: TTAbstractColumn): Boolean;
     procedure ShowColumns;
+    function SelectedColumnName: String;
+    function IndexOfColumnName(const AColumnName: String): Integer;
     procedure ColumnToControls;
     procedure CheckColumn;
     procedure CheckNames;
@@ -125,6 +128,13 @@ begin
   end;
 end;
 
+function TTDesignEntityListTypeColumnForm.IsForeignKeyColumn(
+  const AColumn: TTAbstractColumn): Boolean;
+begin
+  result := (AColumn is TTColumn) and
+    (TTColumn(AColumn).DataType = TTDataType.dtInteger);
+end;
+
 procedure TTDesignEntityListTypeColumnForm.ShowColumns;
 var
   LColumn: TTAbstractColumn;
@@ -135,9 +145,31 @@ begin
     if EntityTypeCombobox.ItemIndex > -1 then
       for LColumn in FEntities.Entities[
         EntityTypeCombobox.ItemIndex].Columns.Columns do
-        ColumnNameCombobox.Items.Add(LColumn.Name);
+        if IsForeignKeyColumn(LColumn) then
+          ColumnNameCombobox.Items.AddObject(LColumn.Name, LColumn);
   finally
     ColumnNameCombobox.Items.EndUpdate;
+  end;
+end;
+
+function TTDesignEntityListTypeColumnForm.SelectedColumnName: String;
+begin
+  result := TTAbstractColumn(
+    ColumnNameCombobox.Items.Objects[ColumnNameCombobox.ItemIndex]).ColumnName;
+end;
+
+function TTDesignEntityListTypeColumnForm.IndexOfColumnName(
+  const AColumnName: String): Integer;
+var
+  LIndex: Integer;
+  LColumn: TTAbstractColumn;
+begin
+  result := -1;
+  for LIndex := 0 to ColumnNameCombobox.Items.Count - 1 do
+  begin
+    LColumn := TTAbstractColumn(ColumnNameCombobox.Items.Objects[LIndex]);
+    if String.Compare(LColumn.ColumnName, AColumnName, True) = 0 then
+      result := LIndex;
   end;
 end;
 
@@ -153,8 +185,7 @@ begin
   EntityTypeCombobox.ItemIndex :=
     EntityTypeListbox.Items.IndexOf(FColumn.DataType);
   ShowColumns;
-  ColumnNameCombobox.ItemIndex :=
-    ColumnNameCombobox.Items.IndexOf(FColumn.ColumnName);
+  ColumnNameCombobox.ItemIndex := IndexOfColumnName(FColumn.ColumnName);
 end;
 
 procedure TTDesignEntityListTypeColumnForm.CheckColumn;
@@ -176,12 +207,10 @@ begin
           String.Compare(LColumn.Name, NameTextbox.Text, True) = 0,
           SDuplicateColumnName);
 
-        FValidator.Check(
-          String.Compare(
-            LColumn.ColumnName,
-            ColumnNameCombobox.Items[ColumnNameCombobox.ItemIndex],
-            True) = 0,
-          Format(SDuplicateColumnColumnName, [LColumn.ColumnName]));
+        if ColumnNameCombobox.ItemIndex >= 0 then
+          FValidator.Check(
+            String.Compare(LColumn.ColumnName, SelectedColumnName, True) = 0,
+            Format(SDuplicateColumnColumnName, [LColumn.ColumnName]));
       end;
 end;
 
@@ -189,7 +218,7 @@ procedure TTDesignEntityListTypeColumnForm.ControlsToColumn;
 begin
   FColumn.Name := NameTextbox.Text;
   FColumn.DataType := EntityTypeListbox.Items[EntityTypeCombobox.ItemIndex];
-  FColumn.ColumnName := ColumnNameCombobox.Items[ColumnNameCombobox.ItemIndex];
+  FColumn.ColumnName := SelectedColumnName;
   FColumn.Required := False;
 end;
 

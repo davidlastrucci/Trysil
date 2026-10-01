@@ -136,7 +136,4 @@ In a project created by the [API REST wizard](api-rest.md) the option **Generate
 
     The URI is the entity name in lower case;
 
-2. opens `<Project>.Http` and registers the controllers: it adds the units to its `uses` clause and a `Server.RegisterController<TOrderController>();` line to `RegisterEntityControllers`.
-
-!!! warning "Generate each controller once"
-    Running the generation again for an entity that already has its controller adds its unit and its registration to `<Project>.Http` a second time. When you regenerate the model only, untick the option; otherwise remove the duplicate lines from `<Project>.Http`.
+2. opens `<Project>.Http` and registers the controllers: it adds the units to its `uses` clause and a `Server.RegisterController<TOrderController>();` line to `RegisterEntityControllers`. Units and registrations already there are not added again, so the model can be regenerated with the option ticked.

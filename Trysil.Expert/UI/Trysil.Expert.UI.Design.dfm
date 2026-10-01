@@ -31,11 +31,11 @@ inherited TDesignForm: TTDesignForm
         Align = alClient
         Columns = <
           item
-            Caption = 'Name'
+            Caption = 'Property name'
             Width = 200
           end
           item
-            Caption = 'Name'
+            Caption = 'Column name'
             Width = 200
           end
           item

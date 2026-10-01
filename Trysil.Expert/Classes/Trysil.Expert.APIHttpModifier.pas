@@ -32,6 +32,10 @@ type
     FSource: TStrings;
     FDestination: TStrings;
 
+    function ControllerUnit(const AEntity: TTEntity): String;
+    function HasUnit(const AEntity: TTEntity): Boolean;
+    function HasRegistration(const AEntity: TTEntity): Boolean;
+    procedure AddUses(const ARow: String);
     function ModifyUses: Integer;
     procedure ModifyRegister(const AIndex: Integer);
   public
@@ -63,12 +67,61 @@ begin
   inherited Destroy;
 end;
 
+function TTAPIHttpModifier.ControllerUnit(const AEntity: TTEntity): String;
+begin
+  result := Format('%s.Controller.%s', [FProjectName, AEntity.Name]);
+end;
+
+function TTAPIHttpModifier.HasUnit(const AEntity: TTEntity): Boolean;
+var
+  LUnit: String;
+  LRow: String;
+begin
+  result := False;
+  LUnit := ControllerUnit(AEntity).ToUpper();
+  for LRow in FSource do
+    result := result or
+      LRow.ToUpper().Trim().Equals(Format('%s,', [LUnit])) or
+      LRow.ToUpper().Trim().Equals(Format('%s;', [LUnit]));
+end;
+
+function TTAPIHttpModifier.HasRegistration(const AEntity: TTEntity): Boolean;
+begin
+  result := FSource.Text.ToUpper().Contains(
+    Format('REGISTERCONTROLLER<T%sCONTROLLER>', [AEntity.Name.ToUpper()]));
+end;
+
+procedure TTAPIHttpModifier.AddUses(const ARow: String);
+var
+  LUnits: TStrings;
+  LEntity: TTEntity;
+  LIndex: Integer;
+begin
+  LUnits := TStringList.Create;
+  try
+    for LEntity in FEntities do
+      if not HasUnit(LEntity) then
+        LUnits.Add(ControllerUnit(LEntity));
+
+    if LUnits.Count = 0 then
+      FDestination.Add(ARow)
+    else
+    begin
+      FDestination.Add(ARow.Replace(';', ','));
+      for LIndex := 0 to LUnits.Count - 2 do
+        FDestination.Add(Format('  %s,', [LUnits[LIndex]]));
+      FDestination.Add(Format('  %s;', [LUnits[LUnits.Count - 1]]));
+    end;
+  finally
+    LUnits.Free;
+  end;
+end;
+
 function TTAPIHttpModifier.ModifyUses: Integer;
 var
   LInUses: Boolean;
   LIndex: Integer;
   LRow: String;
-  LEntity: TTEntity;
 begin
   LInUses := False;
   result := 0;
@@ -83,11 +136,7 @@ begin
 
     if LInUses and (LRow.EndsWith(';')) then
     begin
-      FDestination.Add(FSource[LIndex].Replace(';', ','));
-      for LEntity in FEntities do
-        FDestination.Add(Format('  %s.Controller.%s,', [FProjectName, LEntity.Name]));
-      FDestination[FDestination.Count - 1] :=
-        FDestination[FDestination.Count - 1].Replace(',', ';');
+      AddUses(FSource[LIndex]);
       Break;
     end
     else
@@ -114,9 +163,10 @@ begin
     if LInRegister and (LRow.EndsWith('END;')) then
     begin
       for LEntity in FEntities do
-        FDestination.Add(Format(
-          '  Server.RegisterController<T%sController>();', [
-          LEntity.Name]));
+        if not HasRegistration(LEntity) then
+          FDestination.Add(Format(
+            '  Server.RegisterController<T%sController>();', [
+            LEntity.Name]));
       FDestination.Add(FSource[LIndex]);
       LInRegister := False;
     end
