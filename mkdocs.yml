@@ -73,6 +73,13 @@ nav:
     - Cookbook: guide/cookbook.md
     - Upgrading from 1.0.0: guide/upgrading.md
   - Tooling:
+    - Trysil Expert:
+      - Overview: tooling/expert/index.md
+      - Design Entity Model: tooling/expert/design.md
+      - Generate Entity Model: tooling/expert/generate-model.md
+      - Generate DDL Script: tooling/expert/generate-sql.md
+      - Create API REST: tooling/expert/api-rest.md
+      - Settings: tooling/expert/settings.md
     - AI Assistant Skills: tooling/ai-skills.md
   - Database Drivers:
     - Overview: database-drivers/index.md

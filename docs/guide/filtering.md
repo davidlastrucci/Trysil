@@ -208,7 +208,7 @@ LBuilder
 
 ### Generated companion record
 
-Instead of declaring `TTProperty` locals by hand, let the Trysil Expert generate a companion record next to each entity (enabled by default). For `TCustomer` it emits `TCustomerProperties` with one `TTProperty` per column, so column names are checked by the compiler at the call site:
+Instead of declaring `TTProperty` locals by hand, let the [Trysil Expert](../tooling/expert/generate-model.md#filter-properties-companion) generate a companion record next to each entity (enabled by default). For `TCustomer` it emits `TCustomerProperties` with one `TTProperty` per column, so column names are checked by the compiler at the call site:
 
 ```pascal
 var C := TCustomerProperties.Create;

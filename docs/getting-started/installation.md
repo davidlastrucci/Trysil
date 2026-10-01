@@ -148,4 +148,4 @@ Trysil includes an optional IDE Expert that integrates with the Delphi IDE.
 
 3. Restart Delphi. The splash screen names Trysil, and a **Trysil** entry appears in the main menu.
 
-Once registered, the **Trysil** menu offers a visual entity designer, model and DDL generators, a REST API scaffolder, and an **Install AI assistant skills** command — see [AI Assistant Skills](../tooling/ai-skills.md).
+Once registered, the **Trysil** menu offers a visual entity designer, model and DDL generators, a REST API scaffolder, and an **Install AI assistant skills** command - see [Trysil Expert](../tooling/expert/index.md) for the user guide and [AI Assistant Skills](../tooling/ai-skills.md).
