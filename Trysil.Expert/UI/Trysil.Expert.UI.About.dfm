@@ -1,43 +1,35 @@
 inherited TAboutForm: TTAboutForm
-  Margins.Top = 12
-  ClientHeight = 463
-  ClientWidth = 492
+  ClientHeight = 612
+  ClientWidth = 488
   Color = clWhite
-  StyleElements = [seFont, seClient, seBorder]
-  ExplicitWidth = 508
-  ExplicitHeight = 502
   TextHeight = 15
   inherited ContentPanel: TPanel
-    Width = 492
-    Height = 414
-    TabOrder = 1
-    StyleElements = [seFont, seBorder]
-    ExplicitWidth = 492
-    ExplicitHeight = 414
+    Width = 488
+    Height = 563
     object Bevel01: TBevel
       Left = 68
-      Top = 76
+      Top = 129
       Width = 408
       Height = 5
       Shape = bsTopLine
     end
     object CopyrightLabel: TLabel
       Left = 72
-      Top = 50
-      Width = 166
+      Top = 68
+      Width = 209
       Height = 15
-      Caption = 'Copyright '#169' by David Lastrucci'
+      Caption = 'Copyright '#169' 2019-2026, David Lastrucci'
     end
     object DescriptionLabel: TLabel
       Left = 72
-      Top = 33
+      Top = 48
       Width = 303
       Height = 15
       Caption = 'Open source Object-relational mapping (ORM) for Delphi'
     end
     object EmailLabel: TLabel
-      Left = 124
-      Top = 355
+      Left = 125
+      Top = 463
       Width = 144
       Height = 15
       Cursor = crHandPoint
@@ -56,18 +48,18 @@ inherited TAboutForm: TTAboutForm
     end
     object EmailLabelLabel: TLabel
       Left = 72
-      Top = 355
+      Top = 463
       Width = 32
       Height = 15
       Caption = 'Email:'
     end
     object GitHubLabel: TLabel
-      Left = 124
-      Top = 376
-      Width = 215
+      Left = 125
+      Top = 505
+      Width = 172
       Height = 15
       Cursor = crHandPoint
-      Caption = 'https://github.com/davidlastrucci/trysil/'
+      Caption = 'github.com/davidlastrucci/Trysil'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clNavy
       Font.Height = -12
@@ -82,7 +74,7 @@ inherited TAboutForm: TTAboutForm
     end
     object GitHubLabelLabel: TLabel
       Left = 72
-      Top = 376
+      Top = 505
       Width = 41
       Height = 15
       Caption = 'GitHub:'
@@ -101,12 +93,12 @@ inherited TAboutForm: TTAboutForm
       ParentFont = False
     end
     object WebLabel: TLabel
-      Left = 124
-      Top = 334
-      Width = 139
+      Left = 125
+      Top = 442
+      Width = 94
       Height = 15
       Cursor = crHandPoint
-      Caption = 'https://www.lastrucci.net/'
+      Caption = 'www.lastrucci.net'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clNavy
       Font.Height = -12
@@ -121,21 +113,21 @@ inherited TAboutForm: TTAboutForm
     end
     object WebLabelLabel: TLabel
       Left = 72
-      Top = 334
+      Top = 442
       Width = 27
       Height = 15
-      Caption = 'WEB:'
+      Caption = 'Web:'
     end
     object Bevel02: TBevel
       Left = 68
-      Top = 212
+      Top = 262
       Width = 408
       Height = 5
       Shape = bsTopLine
     end
     object Trysil01Label: TLabel
       Left = 84
-      Top = 107
+      Top = 160
       Width = 380
       Height = 30
       Caption = 
@@ -146,14 +138,14 @@ inherited TAboutForm: TTAboutForm
     end
     object Trysil02Label: TLabel
       Left = 84
-      Top = 142
+      Top = 195
       Width = 180
       Height = 15
       Caption = 'That'#39's why I called Trysil my ORM!'
     end
     object Trysil03Label: TLabel
       Left = 84
-      Top = 163
+      Top = 216
       Width = 118
       Height = 15
       Caption = 'Trysil Operation ORM'
@@ -166,11 +158,11 @@ inherited TAboutForm: TTAboutForm
     end
     object Trysil04Label: TLabel
       Left = 84
-      Top = 184
-      Width = 208
+      Top = 237
+      Width = 168
       Height = 15
       Cursor = crHandPoint
-      Caption = 'https://codenames.info/operation/orm'
+      Caption = 'codenames.info/operation/orm'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clNavy
       Font.Height = -12
@@ -185,14 +177,14 @@ inherited TAboutForm: TTAboutForm
     end
     object Bevel03: TBevel
       Left = 68
-      Top = 323
+      Top = 431
       Width = 408
       Height = 5
       Shape = bsTopLine
     end
     object SupportedDatabaseLabel: TLabel
       Left = 72
-      Top = 223
+      Top = 273
       Width = 119
       Height = 15
       Caption = 'Supported databases:'
@@ -205,35 +197,35 @@ inherited TAboutForm: TTAboutForm
     end
     object FirebirdLabel: TLabel
       Left = 84
-      Top = 242
+      Top = 292
       Width = 72
       Height = 15
       Caption = '- Firebird SQL'
     end
     object MSSQLLabel: TLabel
       Left = 84
-      Top = 261
-      Width = 118
+      Top = 387
+      Width = 64
       Height = 15
-      Caption = '- Microsoft SQL Server'
+      Caption = '- SQL Server'
     end
     object PostgreSQLLabel: TLabel
       Left = 84
-      Top = 280
+      Top = 368
       Width = 69
       Height = 15
       Caption = '- PostgreSQL'
     end
     object SQLiteLabel: TLabel
       Left = 84
-      Top = 299
+      Top = 406
       Width = 42
       Height = 15
       Caption = '- SQLite'
     end
     object Trysil00Label: TLabel
       Left = 72
-      Top = 87
+      Top = 140
       Width = 61
       Height = 15
       Caption = 'Why Trysil?'
@@ -244,16 +236,131 @@ inherited TAboutForm: TTAboutForm
       Font.Style = [fsBold]
       ParentFont = False
     end
+    object VersionLabel: TLabel
+      Left = 72
+      Top = 32
+      Width = 61
+      Height = 15
+      Caption = 'Version 2.1'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -12
+      Font.Name = 'Segoe UI'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object OracleLabel: TLabel
+      Left = 84
+      Top = 349
+      Width = 42
+      Height = 15
+      Caption = '- Oracle'
+    end
+    object InterbaseLabel: TLabel
+      Left = 84
+      Top = 311
+      Width = 56
+      Height = 15
+      Caption = '- InterBase'
+    end
+    object MariaDBLabel: TLabel
+      Left = 84
+      Top = 330
+      Width = 53
+      Height = 15
+      Caption = '- MariaDB'
+    end
+    object BLogLabelLabel: TLabel
+      Left = 72
+      Top = 526
+      Width = 27
+      Height = 15
+      Caption = 'Blog:'
+    end
+    object BlogLabel: TLabel
+      Left = 125
+      Top = 526
+      Width = 92
+      Height = 15
+      Cursor = crHandPoint
+      Caption = 'trysil.lastrucci.net'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clNavy
+      Font.Height = -12
+      Font.Name = 'Segoe UI'
+      Font.Style = []
+      ParentFont = False
+      ParentShowHint = False
+      ShowHint = False
+      OnClick = BlogLabelClick
+      OnMouseEnter = HyperLinkOn
+      OnMouseLeave = HyperLinkOff
+    end
+    object LicenceLabelLabel: TLabel
+      Left = 72
+      Top = 104
+      Width = 42
+      Height = 15
+      Caption = 'License:'
+    end
+    object LicenceLabel: TLabel
+      Left = 125
+      Top = 104
+      Width = 111
+      Height = 15
+      Cursor = crHandPoint
+      Caption = 'BSD-3-Clause license'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clNavy
+      Font.Height = -12
+      Font.Name = 'Segoe UI'
+      Font.Style = []
+      ParentFont = False
+      ParentShowHint = False
+      ShowHint = False
+      OnClick = LicenceLabelClick
+      OnMouseEnter = HyperLinkOn
+      OnMouseLeave = HyperLinkOff
+    end
+    object DocsLabelLabel: TLabel
+      Left = 72
+      Top = 484
+      Width = 29
+      Height = 15
+      Caption = 'Docs:'
+    end
+    object DocsLabel: TLabel
+      Left = 125
+      Top = 484
+      Width = 156
+      Height = 15
+      Cursor = crHandPoint
+      Caption = 'davidlastrucci.github.io/Trysil'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clNavy
+      Font.Height = -12
+      Font.Name = 'Segoe UI'
+      Font.Style = []
+      ParentFont = False
+      ParentShowHint = False
+      ShowHint = False
+      OnClick = DocsLabelClick
+      OnMouseEnter = HyperLinkOn
+      OnMouseLeave = HyperLinkOff
+    end
+    object AllRightsLabel: TLabel
+      Left = 72
+      Top = 84
+      Width = 97
+      Height = 15
+      Caption = 'All rights reserved.'
+    end
   end
   inherited ButtonsPanel: TPanel
-    Top = 414
-    Width = 492
-    TabOrder = 0
-    StyleElements = [seFont, seBorder]
-    ExplicitTop = 414
-    ExplicitWidth = 492
+    Top = 563
+    Width = 488
     object CloseButton: TButton
-      Left = 405
+      Left = 401
       Top = 12
       Width = 75
       Height = 25
