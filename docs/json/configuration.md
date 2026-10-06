@@ -103,11 +103,11 @@ Given an entity hierarchy `Company -> Department -> Employee`:
 ```pascal
 // Only Company fields
 LConfig := TTJSonSerializerConfig.Create(0, False);
-// {"ID":1,"Name":"Acme"}
+// {"id":1,"name":"Acme"}
 
 // Company + Departments
 LConfig := TTJSonSerializerConfig.Create(1, True);
-// {"ID":1,"Name":"Acme","Departments":[{"ID":1,"Name":"Engineering"},...]}
+// {"id":1,"name":"Acme","departments":[{"id":1,"name":"Engineering"},...]}
 
 // Company + Departments + Employees
 LConfig := TTJSonSerializerConfig.Create(2, True);

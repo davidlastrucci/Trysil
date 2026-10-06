@@ -11,7 +11,7 @@ Serialize Trysil entities and lists to JSON strings or Delphi JSON objects.
 ```pascal
 var LConfig := TTJSonSerializerConfig.Create(-1, False);
 var LJson := LContext.EntityToJSon<TPerson>(LPerson, LConfig);
-// Returns: {"ID":1,"Firstname":"David","Lastname":"Lastrucci","VersionID":1}
+// Returns: {"id":1,"firstname":"David","lastname":"Lastrucci","versionID":1}
 ```
 
 ## Entity to TJSonObject
@@ -33,7 +33,7 @@ end;
 
 ```pascal
 var LJson := LContext.ListToJSon<TPerson>(LPersons, LConfig);
-// Returns: [{"ID":1,...},{"ID":2,...}]
+// Returns: [{"id":1,...},{"id":2,...}]
 ```
 
 ## List to TJSonArray
