@@ -35,6 +35,12 @@ Not released yet: what this section describes is on `master` and in no tag.
 
 - **`TTHttpServer<C>.AddBindAddress` chooses the addresses the server listens on.** `Start` created a single binding with the port alone, so the server listened on every IPv4 interface and nothing in the API could narrow it: the documentation recommended binding to loopback behind a reverse proxy, and there was no way to do it, so anyone who could reach the port from the network walked past the proxy - no TLS, no path filtering. `AddBindAddress` takes an IPv4 or IPv6 literal (`'127.0.0.1'`, `'::1'`) and can be called once per address; `Start` binds each of them on `Port`, with the IP version the address carries. A host name, an address with a port or brackets, anything that is not an IP literal, an address added twice, and a call after `Start` raise `ETHttpServerException`, with the new messages `SNotValidBindAddress` and `SDuplicateBindAddress` - a host that translates the framework messages has two strings to add. With no address added the server binds as before, on every IPv4 interface: nothing changes for code that does not call it
 
+### Expert
+
+- **The "Generate entity model" dialog is a wizard and writes the event units too.** Its pages are Entities, Models, Events and Controllers, the last shown only in a project created by the API REST wizard. **Generate & register events** writes, for each selected entity that has none yet, a unit with an empty `TTEntityEvents<T>` and its `TTEventRegistration.RegisterEvents<T, E>` in the `initialization`, and adds it to the project: it is never overwritten, so the business rules written in it survive the regeneration of the model. Models, events and controllers can each be generated on its own, and at least one is asked for.
+- **Folders and unit names of events and controllers are settings.** Like the models, each has a directory and a unit filename pattern, `Events` / `{ProjectName}.Event.{EntityName}` and `Controllers` / `{ProjectName}.Controller.{EntityName}` by default: in **Settings** for every project, in the wizard for the current one. The controllers had both written in the code. The Settings dialog chooses its page from a tree on the left.
+- **The panels of the Expert dialogs take the colours they were designed with.** The content area had the colour of the buttons bar and the buttons bar that of the content area.
+
 ## 2.0.0 - Audit Integrity, Directional JSon Attributes & Fail-Safe Startup
 
 *2026-09-20*

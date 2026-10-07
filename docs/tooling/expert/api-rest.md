@@ -91,4 +91,4 @@ The generated project already has the entity model of its own tables (for exampl
 
 1. [Design entity model](design.md) to add them;
 2. [Generate DDL script](generate-sql.md) to create the tables;
-3. [Generate entity model](generate-model.md) with **Generate & register API REST controllers** ticked: each entity gets a read/write controller, registered in the server.
+3. [Generate entity model](generate-model.md) with **Generate & register controllers** ticked on the Controllers page: each entity gets a read/write controller, registered in the server.

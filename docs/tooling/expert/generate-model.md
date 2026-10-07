@@ -1,24 +1,59 @@
 # Generate entity model
 
-**Trysil > Generate entity model** writes a Delphi unit for each entity of the model and adds it to the active project.
+**Trysil > Generate entity model** writes Delphi units for the entities of the model and adds them to the active project: the entity classes, the [event units](#event-units) and, in an API REST project, the [controllers](#api-rest-controllers).
 
-## The dialog
+## The wizard
 
-![Generate entity model](images/generate-model.png)
+The dialog is a wizard of four pages: **Back** and **Next** move between them, **Finish** generates. What you choose is remembered for the project in `__trysil\__settings\settings.json`; the defaults come from [Settings](settings.md).
 
-| Field | Meaning |
-|---|---|
-| Model directory | Folder of the units, relative to the project folder. Default `Model` |
-| Unit filenames | Pattern of the unit names. Default `{ProjectName}.Model.{EntityName}` |
-| Entities | The entities to generate, all ticked by default. Right click for **Select all entities** / **Unselect all entities** |
-| Generate filter properties companion | Adds a `T<Entity>Properties` record to each unit |
-| Generate & register API REST controllers | Only for projects created by the [API REST wizard](api-rest.md) |
+### Entities
 
-The unit name pattern accepts two placeholders, ignoring case: `{ProjectName}`, the name of the `.dproj` without extension, and `{EntityName}`. For the project `OrdersAPI` and the entity `Order` the default gives `OrdersAPI.Model.Order`. Nested folders are allowed in **Model directory**, for example `Source/Model`, and are created when missing.
+![Entities page](images/generate-model.png)
 
-The defaults come from [Settings](settings.md). What you choose here is remembered for the project in `__trysil\__settings\settings.json`.
+The entities to generate, all ticked by default. Right click for **Select all entities** / **Unselect all entities**. **Next** asks for at least one.
 
-If a unit with the same name is already in the project, the Expert lists the units that would be overwritten and asks before continuing.
+### Models
+
+![Models page](images/generate-model-models.png)
+
+| Field | Default | Meaning |
+|---|---|---|
+| Generate models | Ticked | Writes the entity units |
+| Directory | `Model` | Folder of the units, relative to the project folder |
+| Unit filenames | `{ProjectName}.Model.{EntityName}` | Pattern of the unit names |
+| Generate filter properties companion | Ticked | Adds a `T<Entity>Properties` record to each unit |
+
+**Unit filenames** is used even with **Generate models** not ticked: the event and controller units name the model unit in their `uses` clause.
+
+### Events
+
+![Events page](images/generate-model-events.png)
+
+| Field | Default | Meaning |
+|---|---|---|
+| Generate & register events | Not ticked | Writes an [event unit](#event-units) for each entity that has none yet |
+| Directory | `Events` | Folder of the units, relative to the project folder |
+| Unit filenames | `{ProjectName}.Event.{EntityName}` | Pattern of the unit names |
+
+### Controllers
+
+![Controllers page](images/generate-model-controllers.png)
+
+Shown only in a project created by the [API REST wizard](api-rest.md); in any other project the wizard skips it and **Finish** is on the Events page.
+
+| Field | Default | Meaning |
+|---|---|---|
+| Generate & register controllers | Ticked | Writes and registers the [controllers](#api-rest-controllers) |
+| Directory | `Controllers` | Folder of the units, relative to the project folder |
+| Unit filenames | `{ProjectName}.Controller.{EntityName}` | Pattern of the unit names |
+
+### Finish
+
+At least one of models, events and controllers has to be ticked. Each can be generated on its own: the events or the controllers of entities whose model units are already there, for instance.
+
+The unit name patterns accept two placeholders, ignoring case: `{ProjectName}`, the name of the `.dproj` without extension, and `{EntityName}`. For the project `OrdersAPI` and the entity `Order` the default gives `OrdersAPI.Model.Order`. Nested folders are allowed in the directories, for example `Source/Model`, and are created when missing.
+
+If a model or controller unit with the same name is already in the project, the Expert lists the units that would be overwritten and asks before continuing. Event units are never overwritten.
 
 ## What is generated
 
@@ -96,7 +131,45 @@ When the database changes, regenerate the units of the entities that changed: th
 - calculated properties and helper methods;
 - an event class tied to the entity with `[TInsertEvent]`, `[TUpdateEvent]` or `[TDeleteEvent]`, which has to live in the unit of the entity.
 
-Keep the model units as the Expert writes them, and put the code you write in units of your own. Business rules go in a `TTEntityEvents<T>` registered with `TTEventRegistration.RegisterEvents<T, E>` from the unit that holds them: the entity knows nothing of it, so regenerating the entity leaves it untouched. See [Registering events without attributes](../../guide/events.md#registering-events-without-attributes).
+Keep the model units as the Expert writes them, and put the code you write in units of your own. Business rules go in a `TTEntityEvents<T>` registered with `TTEventRegistration.RegisterEvents<T, E>` from the unit that holds them: the entity knows nothing of it, so regenerating the entity leaves it untouched. See [Registering events without attributes](../../guide/events.md#registering-events-without-attributes). The **Events** page of the wizard writes that unit for you.
+
+## Event units
+
+With **Generate & register events** ticked, the Expert writes for each selected entity a unit with an empty `TTEntityEvents<T>` and its registration:
+
+```delphi
+unit OrdersAPI.Event.Order;
+
+interface
+
+uses
+  System.Classes,
+  System.SysUtils,
+  Trysil.Exceptions,
+  Trysil.Events,
+
+  OrdersAPI.Model.Order;
+
+type
+
+{ TOrderEvents }
+
+  TOrderEvents = class(TTEntityEvents<TOrder>)
+  end;
+
+implementation
+
+initialization
+  TTEventRegistration.RegisterEvents<TOrder, TOrderEvents>;
+
+end.
+```
+
+Override `BeforeInsert`, `AfterInsert`, `BeforeUpdate`, `AfterUpdate`, `BeforeDelete` or `AfterDelete` in it to write the rules.
+
+- **An event unit is written once.** If the file is already on disk, or the unit is already in the project, the entity is skipped without a question: the unit is yours from the moment it is created.
+- **The unit is added to the project.** The registration runs in its `initialization`, and a unit outside the project would never run it: its events would silently not fire. Do not remove it from the project.
+- **Generate it only where there are rules.** An entity with registered events creates an event object at every insert, update and delete, even when the class is empty.
 
 ## Filter properties companion
 
@@ -135,9 +208,9 @@ Entity and entity list columns have no entry in the record.
 
 ## API REST controllers
 
-In a project created by the [API REST wizard](api-rest.md) the option **Generate & register API REST controllers** is enabled; in any other project it is greyed out. When ticked, for each selected entity the Expert also:
+In a project created by the [API REST wizard](api-rest.md) the **Controllers** page is shown; in any other project it is skipped. With **Generate & register controllers** ticked, for each selected entity the Expert:
 
-1. writes a controller unit `<Project>.Controller.<Entity>` in the `Controllers` folder of the project:
+1. writes a controller unit, named and placed as the **Controllers** page says (by default `<Project>.Controller.<Entity>` in the `Controllers` folder):
 
     ```delphi
     [TUri('/order')]
@@ -147,4 +220,4 @@ In a project created by the [API REST wizard](api-rest.md) the option **Generate
 
     The URI is the entity name in lower case;
 
-2. opens `<Project>.Http` and registers the controllers: it adds the units to its `uses` clause and a `Server.RegisterController<TOrderController>();` line to `RegisterEntityControllers`. Units and registrations already there are not added again, so the model can be regenerated with the option ticked.
+2. opens `<Project>.Http` and registers the controllers: it adds the units to its `uses` clause and a `Server.RegisterController<TOrderController>();` line to `RegisterEntityControllers`. Units and registrations already there are not added again, so the controllers can be regenerated.
