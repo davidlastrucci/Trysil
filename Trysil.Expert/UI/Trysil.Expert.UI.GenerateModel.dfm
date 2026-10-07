@@ -1,93 +1,266 @@
 inherited TGenerateModel: TTGenerateModel
-  ClientHeight = 435
-  ClientWidth = 555
+  ClientWidth = 545
   Color = clWhite
-  StyleElements = [seFont, seClient, seBorder]
   OnShow = FormShow
-  ExplicitWidth = 571
-  ExplicitHeight = 474
   TextHeight = 15
   inherited ContentPanel: TPanel
-    Width = 555
-    Height = 386
-    StyleElements = [seFont, seBorder]
-    ExplicitWidth = 555
-    ExplicitHeight = 365
-    object EntitiesLabel: TLabel
-      Left = 72
-      Top = 120
-      Width = 41
-      Height = 15
-      Caption = 'Entities:'
-    end
-    object ModelDirectoryLabel: TLabel
-      Left = 72
-      Top = 16
-      Width = 87
-      Height = 15
-      Caption = 'Model directory:'
-    end
-    object UnitFilenamesLabel: TLabel
-      Left = 72
-      Top = 66
-      Width = 79
-      Height = 15
-      Caption = 'Unit filenames:'
-    end
-    object EntitiesListView: TListView
-      Left = 72
-      Top = 141
-      Width = 470
-      Height = 188
-      Checkboxes = True
-      Columns = <>
-      ReadOnly = True
-      PopupMenu = EntitiesPopupMenu
-      TabOrder = 2
-      ViewStyle = vsList
-      OnCreateItemClass = EntitiesListViewCreateItemClass
-    end
-    object ModelDirectoryTextbox: TEdit
-      Left = 72
-      Top = 37
-      Width = 470
-      Height = 23
-      TabOrder = 0
-      Text = 'Model'
-    end
-    object UnitFilenamesTextbox: TEdit
-      Left = 72
-      Top = 87
-      Width = 470
-      Height = 23
-      TabOrder = 1
-      Text = '{ProjectName}.Model.{EntityName}'
-    end
-    object APIControllersCheckbox: TCheckBox
-      Left = 72
-      Top = 355
-      Width = 237
-      Height = 17
-      Caption = 'Generate && register API REST controllers'
-      TabOrder = 4
-    end
-    object FilterPropertiesCheckbox: TCheckBox
-      Left = 72
-      Top = 335
-      Width = 227
-      Height = 17
-      Caption = 'Generate filter properties companion'
+    Width = 545
+    object ControllersPagePanel: TPanel
+      AlignWithMargins = True
+      Left = 70
+      Top = 8
+      Width = 477
+      Height = 370
+      Margins.Left = 70
+      Margins.Top = 8
+      Margins.Right = 8
+      Margins.Bottom = 8
+      BevelOuter = bvNone
+      ShowCaption = False
       TabOrder = 3
+      object ControllersPageGroupbox: TGroupBox
+        AlignWithMargins = True
+        Left = 2
+        Top = 4
+        Width = 473
+        Height = 362
+        Margins.Left = 2
+        Margins.Top = 4
+        Margins.Right = 2
+        Margins.Bottom = 4
+        Align = alClient
+        Caption = 'Controllers  '
+        TabOrder = 0
+        object ControllersDirectoryLabel: TLabel
+          Left = 24
+          Top = 60
+          Width = 51
+          Height = 15
+          Caption = 'Directory:'
+        end
+        object ControllerFilenamesLabel: TLabel
+          Left = 24
+          Top = 110
+          Width = 79
+          Height = 15
+          Caption = 'Unit filenames:'
+        end
+        object APIControllersCheckbox: TCheckBox
+          Left = 24
+          Top = 28
+          Width = 300
+          Height = 17
+          Caption = 'Generate && register controllers'
+          TabOrder = 0
+        end
+        object ControllersDirectoryTextbox: TEdit
+          Left = 24
+          Top = 81
+          Width = 437
+          Height = 23
+          TabOrder = 1
+          Text = 'Controllers'
+        end
+        object ControllerFilenamesTextbox: TEdit
+          Left = 24
+          Top = 131
+          Width = 437
+          Height = 23
+          TabOrder = 2
+          Text = '{ProjectName}.Controller.{EntityName}'
+        end
+      end
+    end
+    object EventsPagePanel: TPanel
+      AlignWithMargins = True
+      Left = 70
+      Top = 8
+      Width = 477
+      Height = 370
+      Margins.Left = 70
+      Margins.Top = 8
+      Margins.Right = 8
+      Margins.Bottom = 8
+      BevelOuter = bvNone
+      ShowCaption = False
+      TabOrder = 2
+      object EventsPageGroupbox: TGroupBox
+        AlignWithMargins = True
+        Left = 2
+        Top = 4
+        Width = 473
+        Height = 362
+        Margins.Left = 2
+        Margins.Top = 4
+        Margins.Right = 2
+        Margins.Bottom = 4
+        Align = alClient
+        Caption = 'Events  '
+        TabOrder = 0
+        object EventsDirectoryLabel: TLabel
+          Left = 24
+          Top = 60
+          Width = 51
+          Height = 15
+          Caption = 'Directory:'
+        end
+        object EventFilenamesLabel: TLabel
+          Left = 24
+          Top = 110
+          Width = 79
+          Height = 15
+          Caption = 'Unit filenames:'
+        end
+        object EventsCheckbox: TCheckBox
+          Left = 24
+          Top = 28
+          Width = 200
+          Height = 17
+          Caption = 'Generate && register events'
+          TabOrder = 0
+        end
+        object EventsDirectoryTextbox: TEdit
+          Left = 24
+          Top = 81
+          Width = 437
+          Height = 23
+          TabOrder = 1
+          Text = 'Events'
+        end
+        object EventFilenamesTextbox: TEdit
+          Left = 24
+          Top = 131
+          Width = 437
+          Height = 23
+          TabOrder = 2
+          Text = '{ProjectName}.Event.{EntityName}'
+        end
+      end
+    end
+    object ModelsPagePanel: TPanel
+      AlignWithMargins = True
+      Left = 70
+      Top = 8
+      Width = 477
+      Height = 370
+      Margins.Left = 70
+      Margins.Top = 8
+      Margins.Right = 8
+      Margins.Bottom = 8
+      BevelOuter = bvNone
+      ShowCaption = False
+      TabOrder = 1
+      object ModelsPageGroupbox: TGroupBox
+        AlignWithMargins = True
+        Left = 2
+        Top = 4
+        Width = 473
+        Height = 362
+        Margins.Left = 2
+        Margins.Top = 4
+        Margins.Right = 2
+        Margins.Bottom = 4
+        Align = alClient
+        Caption = 'Models  '
+        TabOrder = 0
+        object ModelDirectoryLabel: TLabel
+          Left = 24
+          Top = 60
+          Width = 51
+          Height = 15
+          Caption = 'Directory:'
+        end
+        object UnitFilenamesLabel: TLabel
+          Left = 24
+          Top = 110
+          Width = 79
+          Height = 15
+          Caption = 'Unit filenames:'
+        end
+        object ModelsCheckbox: TCheckBox
+          Left = 24
+          Top = 28
+          Width = 200
+          Height = 17
+          Caption = 'Generate models'
+          TabOrder = 0
+        end
+        object ModelDirectoryTextbox: TEdit
+          Left = 24
+          Top = 81
+          Width = 437
+          Height = 23
+          TabOrder = 1
+          Text = 'Model'
+        end
+        object UnitFilenamesTextbox: TEdit
+          Left = 24
+          Top = 131
+          Width = 437
+          Height = 23
+          TabOrder = 2
+          Text = '{ProjectName}.Model.{EntityName}'
+        end
+        object FilterPropertiesCheckbox: TCheckBox
+          Left = 24
+          Top = 166
+          Width = 260
+          Height = 17
+          Caption = 'Generate filter properties companion'
+          TabOrder = 3
+        end
+      end
+    end
+    object EntitiesPagePanel: TPanel
+      AlignWithMargins = True
+      Left = 70
+      Top = 8
+      Width = 477
+      Height = 370
+      Margins.Left = 70
+      Margins.Top = 8
+      Margins.Right = 8
+      Margins.Bottom = 8
+      BevelOuter = bvNone
+      ShowCaption = False
+      TabOrder = 0
+      object EntitiesPageGroupbox: TGroupBox
+        AlignWithMargins = True
+        Left = 2
+        Top = 4
+        Width = 473
+        Height = 362
+        Margins.Left = 2
+        Margins.Top = 4
+        Margins.Right = 2
+        Margins.Bottom = 4
+        Align = alClient
+        Caption = 'Entities  '
+        TabOrder = 0
+        DesignSize = (
+          473
+          362)
+        object EntitiesListView: TListView
+          Left = 24
+          Top = 28
+          Width = 437
+          Height = 321
+          Anchors = [akLeft, akTop, akRight, akBottom]
+          Checkboxes = True
+          Columns = <>
+          ReadOnly = True
+          PopupMenu = EntitiesPopupMenu
+          TabOrder = 0
+          ViewStyle = vsList
+          OnCreateItemClass = EntitiesListViewCreateItemClass
+        end
+      end
     end
   end
   inherited ButtonsPanel: TPanel
-    Top = 386
-    Width = 555
-    StyleElements = [seFont, seBorder]
-    ExplicitTop = 365
-    ExplicitWidth = 555
+    Width = 545
     object CancelButton: TButton
-      Left = 468
+      Left = 458
       Top = 12
       Width = 75
       Height = 25
@@ -95,11 +268,12 @@ inherited TGenerateModel: TTGenerateModel
       Cancel = True
       Caption = '&Cancel'
       ModalResult = 2
-      TabOrder = 1
+      TabOrder = 3
+      ExplicitLeft = 537
     end
-    object SaveButton: TButton
+    object FinishButton: TButton
       AlignWithMargins = True
-      Left = 389
+      Left = 379
       Top = 12
       Width = 75
       Height = 25
@@ -108,10 +282,46 @@ inherited TGenerateModel: TTGenerateModel
       Margins.Right = 4
       Margins.Bottom = 0
       Align = alRight
-      Caption = '&OK'
+      Caption = '&Finish'
       Default = True
+      Enabled = False
+      TabOrder = 2
+      OnClick = FinishButtonClick
+      ExplicitLeft = 458
+    end
+    object BackButton: TButton
+      AlignWithMargins = True
+      Left = 221
+      Top = 12
+      Width = 75
+      Height = 25
+      Margins.Left = 0
+      Margins.Top = 0
+      Margins.Right = 4
+      Margins.Bottom = 0
+      Align = alRight
+      Caption = '&Back'
+      Enabled = False
       TabOrder = 0
-      OnClick = SaveButtonClick
+      OnClick = BackButtonClick
+      ExplicitLeft = 300
+    end
+    object NextButton: TButton
+      AlignWithMargins = True
+      Left = 300
+      Top = 12
+      Width = 75
+      Height = 25
+      Margins.Left = 0
+      Margins.Top = 0
+      Margins.Right = 4
+      Margins.Bottom = 0
+      Align = alRight
+      Caption = '&Next'
+      Default = True
+      TabOrder = 1
+      OnClick = NextButtonClick
+      ExplicitLeft = 379
     end
   end
   object EntitiesPopupMenu: TPopupMenu

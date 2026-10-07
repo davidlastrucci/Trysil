@@ -24,6 +24,8 @@ uses
   Vcl.Dialogs,
   Vcl.ExtCtrls,
   Vcl.StdCtrls,
+  Vcl.ComCtrls,
+  Vcl.Imaging.PngImage,
 
   Trysil.Expert.Config,
   Trysil.Expert.UI.Themed;
@@ -33,18 +35,33 @@ type
 { TTSettingsForm }
 
   TTSettingsForm = class(TTThemedForm)
-    TrysilGroupbox: TGroupBox;
+    SettingsTreeView: TTreeView;
+    TrysilPanel: TPanel;
     TrysilDirectoryLabel: TLabel;
     TrysilDirectoryTextbox: TEdit;
-    EntitiesGroupbox: TGroupBox;
+    ModelsPanel: TPanel;
     ModelDirectoryLabel: TLabel;
     ModelDirectoryTextbox: TEdit;
     UnitFilenamesLabel: TLabel;
     UnitFilenamesTextbox: TEdit;
+    EventsPanel: TPanel;
+    EventsDirectoryLabel: TLabel;
+    EventsDirectoryTextbox: TEdit;
+    EventFilenamesLabel: TLabel;
+    EventFilenamesTextbox: TEdit;
+    ControllersPanel: TPanel;
+    ControllersDirectoryLabel: TLabel;
+    ControllersDirectoryTextbox: TEdit;
+    ControllerFilenamesLabel: TLabel;
+    ControllerFilenamesTextbox: TEdit;
     SaveButton: TButton;
     CancelButton: TButton;
+    procedure SettingsTreeViewChange(Sender: TObject; Node: TTreeNode);
     procedure SaveButtonClick(Sender: TObject);
   strict private
+    procedure AddNode(const ACaption: String; const APanel: TPanel);
+    procedure CreateNodes;
+    procedure ShowPanel(const APanel: TPanel);
     procedure ConfigToControls;
     procedure ControlsToConfig;
   strict protected
@@ -64,7 +81,44 @@ implementation
 procedure TTSettingsForm.AfterConstruction;
 begin
   inherited AfterConstruction;
+  CreateNodes;
   ConfigToControls;
+end;
+
+procedure TTSettingsForm.AddNode(
+  const ACaption: String; const APanel: TPanel);
+begin
+  SettingsTreeView.Items.AddObject(nil, ACaption, APanel);
+end;
+
+procedure TTSettingsForm.CreateNodes;
+begin
+  SettingsTreeView.Items.BeginUpdate;
+  try
+    AddNode('Trysil', TrysilPanel);
+    AddNode('Models', ModelsPanel);
+    AddNode('Events', EventsPanel);
+    AddNode('Controllers', ControllersPanel);
+  finally
+    SettingsTreeView.Items.EndUpdate;
+  end;
+  SettingsTreeView.Selected := SettingsTreeView.Items[0];
+  ShowPanel(TrysilPanel);
+end;
+
+procedure TTSettingsForm.ShowPanel(const APanel: TPanel);
+var
+  LNode: TTreeNode;
+begin
+  for LNode in SettingsTreeView.Items do
+    TPanel(LNode.Data).Visible := LNode.Data = APanel;
+end;
+
+procedure TTSettingsForm.SettingsTreeViewChange(
+  Sender: TObject; Node: TTreeNode);
+begin
+  if Assigned(Node) then
+    ShowPanel(TPanel(Node.Data));
 end;
 
 procedure TTSettingsForm.ConfigToControls;
@@ -72,6 +126,10 @@ begin
   TrysilDirectoryTextbox.Text := TTConfig.Instance.TrysilDirectory;
   ModelDirectoryTextbox.Text := TTConfig.Instance.ModelDirectory;
   UnitFilenamesTextbox.Text := TTConfig.Instance.UnitFilenames;
+  EventsDirectoryTextbox.Text := TTConfig.Instance.EventsDirectory;
+  EventFilenamesTextbox.Text := TTConfig.Instance.EventFilenames;
+  ControllersDirectoryTextbox.Text := TTConfig.Instance.ControllersDirectory;
+  ControllerFilenamesTextbox.Text := TTConfig.Instance.ControllerFilenames;
 end;
 
 procedure TTSettingsForm.ControlsToConfig;
@@ -79,6 +137,10 @@ begin
   TTConfig.Instance.TrysilDirectory := TrysilDirectoryTextbox.Text;
   TTConfig.Instance.ModelDirectory := ModelDirectoryTextbox.Text;
   TTConfig.Instance.UnitFilenames := UnitFilenamesTextbox.Text;
+  TTConfig.Instance.EventsDirectory := EventsDirectoryTextbox.Text;
+  TTConfig.Instance.EventFilenames := EventFilenamesTextbox.Text;
+  TTConfig.Instance.ControllersDirectory := ControllersDirectoryTextbox.Text;
+  TTConfig.Instance.ControllerFilenames := ControllerFilenamesTextbox.Text;
 end;
 
 procedure TTSettingsForm.SaveButtonClick(Sender: TObject);

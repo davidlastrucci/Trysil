@@ -1,0 +1,179 @@
+(*
+
+  Trysil
+  Copyright © David Lastrucci
+  All rights reserved
+
+  Trysil - Operation ORM (World War II)
+  http://codenames.info/operation/orm/
+
+*)
+unit Trysil.Expert.EventCreator;
+
+interface
+
+uses
+  System.SysUtils,
+  System.Classes,
+  System.Generics.Collections,
+  System.IOUtils,
+  ToolsAPI,
+  Trysil.Expert.IOTA,
+  Trysil.Expert.Config,
+  Trysil.Expert.SourceWriter,
+  Trysil.Expert.Model,
+  Trysil.Expert.IOTA.ModuleCreator;
+
+type
+
+{ TTEventCreator }
+
+  TTEventCreator = class
+  strict private
+    FProjectName: String;
+    FUnitNames: String;
+    FEventNames: String;
+    FPascalDirectory: String;
+
+    function Exists(const AUnitName: String): Boolean;
+    procedure AddUses(
+      const ASource: TTSourceWriter; const AEntity: TTEntity);
+    procedure AddType(
+      const ASource: TTSourceWriter; const AEntity: TTEntity);
+    procedure AddImplementation(
+      const ASource: TTSourceWriter; const AEntity: TTEntity);
+    procedure CreateEvent(const AEntity: TTEntity; const AUnitName: String);
+    procedure CreateUnit(
+      const AName: String; const ASource: TTSourceWriter);
+  public
+    constructor Create(
+      const AProjectName: String;
+      const AUnitNames: String;
+      const AEventNames: String;
+      const APascalDirectory: String);
+
+    procedure CreateEvents(const ASelected: TList<TTEntity>);
+  end;
+
+implementation
+
+{ TTEventCreator }
+
+constructor TTEventCreator.Create(
+  const AProjectName: String;
+  const AUnitNames: String;
+  const AEventNames: String;
+  const APascalDirectory: String);
+begin
+  inherited Create;
+  FProjectName := AProjectName;
+  FUnitNames := AUnitNames;
+  FEventNames := AEventNames;
+  FPascalDirectory := APascalDirectory;
+end;
+
+procedure TTEventCreator.CreateEvents(const ASelected: TList<TTEntity>);
+var
+  LEntity: TTEntity;
+  LUnitName: String;
+begin
+  for LEntity in ASelected do
+  begin
+    LUnitName := TTUtils.UnitName(FEventNames, FProjectName, LEntity.Name);
+    if not Exists(LUnitName) then
+      CreateEvent(LEntity, LUnitName);
+  end;
+end;
+
+function TTEventCreator.Exists(const AUnitName: String): Boolean;
+var
+  LFileName: String;
+begin
+  LFileName := TPath.Combine(FPascalDirectory, AUnitName);
+  result :=
+    TFile.Exists(Format('%s.pas', [LFileName])) or
+    Assigned(TTIOTA.SearchModule(LFileName));
+end;
+
+procedure TTEventCreator.AddUses(
+  const ASource: TTSourceWriter; const AEntity: TTEntity);
+begin
+  ASource.Append('uses');
+  ASource.Append('  System.Classes,');
+  ASource.Append('  System.SysUtils,');
+  ASource.Append('  Trysil.Exceptions,');
+  ASource.Append('  Trysil.Events,');
+  ASource.AppendLine;
+  ASource.Append('  %s;', [
+    TTUtils.UnitName(FUnitNames, FProjectName, AEntity.Name)]);
+  ASource.AppendLine;
+end;
+
+procedure TTEventCreator.AddType(
+  const ASource: TTSourceWriter; const AEntity: TTEntity);
+begin
+  ASource.Append('type');
+  ASource.AppendLine;
+  ASource.Append('{ T%sEvents }', [AEntity.Name]);
+  ASource.AppendLine;
+  ASource.Append(
+    '  T%0:sEvents = class(TTEntityEvents<T%0:s>)', [AEntity.Name]);
+  ASource.Append('  end;');
+  ASource.AppendLine;
+end;
+
+procedure TTEventCreator.AddImplementation(
+  const ASource: TTSourceWriter; const AEntity: TTEntity);
+begin
+  ASource.Append('implementation');
+  ASource.AppendLine;
+  ASource.Append('initialization');
+  ASource.Append(
+    '  TTEventRegistration.RegisterEvents<T%0:s, T%0:sEvents>;', [
+      AEntity.Name]);
+  ASource.AppendLine;
+  ASource.Append('end.');
+end;
+
+procedure TTEventCreator.CreateEvent(
+  const AEntity: TTEntity; const AUnitName: String);
+var
+  LSource: TTSourceWriter;
+begin
+  LSource := TTSourceWriter.Create;
+  try
+    LSource.Append('unit %s;', [AUnitName]);
+    LSource.AppendLine;
+    LSource.Append('interface');
+    LSource.AppendLine;
+    AddUses(LSource, AEntity);
+    AddType(LSource, AEntity);
+    AddImplementation(LSource, AEntity);
+    CreateUnit(TPath.Combine(FPascalDirectory, AUnitName), LSource);
+  finally
+    LSource.Free;
+  end;
+end;
+
+procedure TTEventCreator.CreateUnit(
+  const AName: String; const ASource: TTSourceWriter);
+var
+  LModuleServices: IOTAModuleServices;
+  LProject: IOTAProject;
+  LModule: IOTAModule;
+begin
+  if BorlandIDEServices.SupportsService(IOTAModuleServices) then
+  begin
+    LModuleServices := (BorlandIDEServices as IOTAModuleServices);
+    LProject := LModuleServices.GetActiveProject;
+    if Assigned(LProject) then
+    begin
+      LModule := LModuleServices.CreateModule(
+        TTModuleCreator.Create(AName, ASource.ToString));
+      if Assigned(LModule) then
+        LProject.AddFile(LModule.FileName, True);
+    end;
+  end;
+end;
+
+end.

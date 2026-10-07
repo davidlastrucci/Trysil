@@ -116,9 +116,9 @@ procedure TTThemedForm.ApplyThemes;
 begin
   TTThemingServices.Instance.ApplyTheme(Self);
   ContentPanel.Color :=
-    TTThemingServices.Instance.GetSystemColor(clBtnFace);
-  ButtonsPanel.Color :=
     TTThemingServices.Instance.GetSystemColor(clWindow);
+  ButtonsPanel.Color :=
+    TTThemingServices.Instance.GetSystemColor(clBtnFace);
 end;
 
 end.

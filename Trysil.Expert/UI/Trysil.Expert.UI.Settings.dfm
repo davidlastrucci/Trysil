@@ -1,86 +1,183 @@
 inherited TSettingsForm: TTSettingsForm
-  ClientHeight = 302
-  ClientWidth = 509
+  ClientHeight = 255
+  ClientWidth = 529
   Color = clWhite
-  ExplicitWidth = 525
-  ExplicitHeight = 341
   TextHeight = 15
   inherited ContentPanel: TPanel
-    Width = 509
-    Height = 253
-    ExplicitLeft = 0
-    ExplicitTop = 0
-    ExplicitWidth = 509
-    ExplicitHeight = 248
-    object TrysilGroupbox: TGroupBox
+    Width = 529
+    Height = 206
+    object SettingsTreeView: TTreeView
       Left = 72
       Top = 12
-      Width = 425
-      Height = 89
-      Caption = 'Trysil  '
+      Width = 145
+      Height = 185
+      HideSelection = False
+      Indent = 19
+      ReadOnly = True
+      ShowButtons = False
+      ShowLines = False
+      ShowRoot = False
       TabOrder = 0
+      OnChange = SettingsTreeViewChange
+    end
+    object TrysilPanel: TPanel
+      Left = 227
+      Top = 12
+      Width = 292
+      Height = 130
+      BevelOuter = bvNone
+      ParentColor = True
+      ShowCaption = False
+      TabOrder = 1
+      StyleElements = [seFont, seBorder]
       object TrysilDirectoryLabel: TLabel
-        Left = 24
-        Top = 28
+        Left = 0
+        Top = 0
         Width = 51
         Height = 15
         Caption = 'Directory:'
       end
       object TrysilDirectoryTextbox: TEdit
-        Left = 24
-        Top = 49
-        Width = 380
+        Left = 0
+        Top = 21
+        Width = 292
         Height = 23
         TabOrder = 0
         Text = '__trysil'
       end
     end
-    object EntitiesGroupbox: TGroupBox
-      Left = 72
-      Top = 107
-      Width = 425
-      Height = 138
-      Caption = 'Entities  '
-      TabOrder = 1
+    object ModelsPanel: TPanel
+      Left = 227
+      Top = 12
+      Width = 292
+      Height = 130
+      BevelOuter = bvNone
+      ParentColor = True
+      ShowCaption = False
+      TabOrder = 2
+      Visible = False
+      StyleElements = [seFont, seBorder]
       object ModelDirectoryLabel: TLabel
-        Left = 24
-        Top = 28
+        Left = 0
+        Top = 0
         Width = 51
         Height = 15
         Caption = 'Directory:'
       end
       object UnitFilenamesLabel: TLabel
-        Left = 24
-        Top = 78
+        Left = 0
+        Top = 50
         Width = 79
         Height = 15
         Caption = 'Unit filenames:'
       end
       object ModelDirectoryTextbox: TEdit
-        Left = 24
-        Top = 49
-        Width = 380
+        Left = 0
+        Top = 21
+        Width = 292
         Height = 23
         TabOrder = 0
         Text = 'Model'
       end
       object UnitFilenamesTextbox: TEdit
-        Left = 24
-        Top = 99
-        Width = 380
+        Left = 0
+        Top = 71
+        Width = 292
         Height = 23
         TabOrder = 1
         Text = '{ProjectName}.Model.{EntityName}'
       end
     end
+    object EventsPanel: TPanel
+      Left = 227
+      Top = 12
+      Width = 292
+      Height = 130
+      BevelOuter = bvNone
+      ParentColor = True
+      ShowCaption = False
+      TabOrder = 3
+      Visible = False
+      StyleElements = [seFont, seBorder]
+      object EventsDirectoryLabel: TLabel
+        Left = 0
+        Top = 0
+        Width = 51
+        Height = 15
+        Caption = 'Directory:'
+      end
+      object EventFilenamesLabel: TLabel
+        Left = 0
+        Top = 50
+        Width = 79
+        Height = 15
+        Caption = 'Unit filenames:'
+      end
+      object EventsDirectoryTextbox: TEdit
+        Left = 0
+        Top = 21
+        Width = 292
+        Height = 23
+        TabOrder = 0
+        Text = 'Events'
+      end
+      object EventFilenamesTextbox: TEdit
+        Left = 0
+        Top = 71
+        Width = 292
+        Height = 23
+        TabOrder = 1
+        Text = '{ProjectName}.Event.{EntityName}'
+      end
+    end
+    object ControllersPanel: TPanel
+      Left = 227
+      Top = 12
+      Width = 292
+      Height = 130
+      BevelOuter = bvNone
+      ParentColor = True
+      ShowCaption = False
+      TabOrder = 4
+      Visible = False
+      StyleElements = [seFont, seBorder]
+      object ControllersDirectoryLabel: TLabel
+        Left = 0
+        Top = 0
+        Width = 51
+        Height = 15
+        Caption = 'Directory:'
+      end
+      object ControllerFilenamesLabel: TLabel
+        Left = 0
+        Top = 50
+        Width = 79
+        Height = 15
+        Caption = 'Unit filenames:'
+      end
+      object ControllersDirectoryTextbox: TEdit
+        Left = 0
+        Top = 21
+        Width = 292
+        Height = 23
+        TabOrder = 0
+        Text = 'Controllers'
+      end
+      object ControllerFilenamesTextbox: TEdit
+        Left = 0
+        Top = 71
+        Width = 292
+        Height = 23
+        TabOrder = 1
+        Text = '{ProjectName}.Controller.{EntityName}'
+      end
+    end
   end
   inherited ButtonsPanel: TPanel
-    Top = 253
-    Width = 509
-    ExplicitTop = 248
-    ExplicitWidth = 509
+    Top = 206
+    Width = 529
     object CancelButton: TButton
-      Left = 422
+      Left = 442
       Top = 12
       Width = 75
       Height = 25
@@ -92,7 +189,7 @@ inherited TSettingsForm: TTSettingsForm
     end
     object SaveButton: TButton
       AlignWithMargins = True
-      Left = 343
+      Left = 363
       Top = 12
       Width = 75
       Height = 25

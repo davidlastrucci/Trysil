@@ -19,6 +19,7 @@ uses
   ToolsAPI,
 
   Trysil.Expert.IOTA,
+  Trysil.Expert.Config,
   Trysil.Expert.Model;
 
 type
@@ -28,6 +29,7 @@ type
   TTAPIHttpModifier = class
   strict private
     FProjectName: String;
+    FControllerNames: String;
     FEntities: TList<TTEntity>;
     FSource: TStrings;
     FDestination: TStrings;
@@ -40,7 +42,9 @@ type
     procedure ModifyRegister(const AIndex: Integer);
   public
     constructor Create(
-      const AProjectName: String; const AEntities: TList<TTEntity>);
+      const AProjectName: String;
+      const AControllerNames: String;
+      const AEntities: TList<TTEntity>);
     destructor Destroy; override;
 
     procedure Modify;
@@ -51,10 +55,13 @@ implementation
 { TTAPIHttpModifier }
 
 constructor TTAPIHttpModifier.Create(
-  const AProjectName: String; const AEntities: TList<TTEntity>);
+  const AProjectName: String;
+  const AControllerNames: String;
+  const AEntities: TList<TTEntity>);
 begin
   inherited Create;
   FProjectName := AProjectName;
+  FControllerNames := AControllerNames;
   FEntities := AEntities;
   FSource := TStringList.Create;
   FDestination := TStringList.Create;
@@ -69,7 +76,7 @@ end;
 
 function TTAPIHttpModifier.ControllerUnit(const AEntity: TTEntity): String;
 begin
-  result := Format('%s.Controller.%s', [FProjectName, AEntity.Name]);
+  result := TTUtils.UnitName(FControllerNames, FProjectName, AEntity.Name);
 end;
 
 function TTAPIHttpModifier.HasUnit(const AEntity: TTEntity): Boolean;

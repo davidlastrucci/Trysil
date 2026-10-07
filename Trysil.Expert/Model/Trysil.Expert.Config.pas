@@ -39,6 +39,10 @@ type
     FTrysilDirectory: String;
     FModelDirectory: String;
     FUnitFilenames: String;
+    FEventsDirectory: String;
+    FEventFilenames: String;
+    FControllersDirectory: String;
+    FControllerFilenames: String;
 
     procedure Load;
   public
@@ -50,6 +54,14 @@ type
       read FTrysilDirectory write FTrysilDirectory;
     property ModelDirectory: String read FModelDirectory write FModelDirectory;
     property UnitFilenames: String read FUnitFilenames write FUnitFilenames;
+    property EventsDirectory: String
+      read FEventsDirectory write FEventsDirectory;
+    property EventFilenames: String
+      read FEventFilenames write FEventFilenames;
+    property ControllersDirectory: String
+      read FControllersDirectory write FControllersDirectory;
+    property ControllerFilenames: String
+      read FControllerFilenames write FControllerFilenames;
 
     class property Instance: TTConfig read FInstance;
   end;
@@ -62,6 +74,12 @@ type
 
     FModelDirectory: String;
     FUnitFilenames: String;
+    FEventsDirectory: String;
+    FEventFilenames: String;
+    FControllersDirectory: String;
+    FControllerFilenames: String;
+    FModels: Boolean;
+    FEvents: Boolean;
     FControllers: Boolean;
     FFilterProperties: Boolean;
     FDatabaseType: Integer;
@@ -80,6 +98,16 @@ type
 
     property ModelDirectory: String read FModelDirectory write FModelDirectory;
     property UnitFilenames: String read FUnitFilenames write FUnitFilenames;
+    property EventsDirectory: String
+      read FEventsDirectory write FEventsDirectory;
+    property EventFilenames: String
+      read FEventFilenames write FEventFilenames;
+    property ControllersDirectory: String
+      read FControllersDirectory write FControllersDirectory;
+    property ControllerFilenames: String
+      read FControllerFilenames write FControllerFilenames;
+    property Models: Boolean read FModels write FModels;
+    property Events: Boolean read FEvents write FEvents;
     property Controllers: Boolean read FControllers write FControllers;
     property FilterProperties: Boolean
       read FFilterProperties write FFilterProperties;
@@ -100,10 +128,8 @@ type
       const AFolder1: String; const AFolder2: String): String;
   public
     class function TrysilFolder(const AProjectDirectory: String): String;
-    class function ModelFolder(
+    class function ProjectFolder(
       const AProjectDirectory: String; const ASubFolder: String): String;
-    class function ControllersFolder(
-      const AProjectDirectory: String): String;
 
     class function UnitName(
       const AUnitNames: String;
@@ -122,6 +148,11 @@ type
     const TrysilDirectory: String = '__trysil';
     const ModelDirectory: String = 'Model';
     const UnitFilenames: String = '{ProjectName}.Model.{EntityName}';
+    const EventsDirectory: String = 'Events';
+    const EventFilenames: String = '{ProjectName}.Event.{EntityName}';
+    const ControllersDirectory: String = 'Controllers';
+    const ControllerFilenames: String =
+      '{ProjectName}.Controller.{EntityName}';
   end;
 
 { TTConfig }
@@ -153,6 +184,10 @@ begin
     FTrysilDirectory := LRegistry.ReadString(RegistryPath, 'TrysilDirectory', TTConfigDefaults.TrysilDirectory);
     FModelDirectory := LRegistry.ReadString(RegistryPath, 'ModelDirectory', TTConfigDefaults.ModelDirectory);
     FUnitFilenames := LRegistry.ReadString(RegistryPath, 'UnitFilenames', TTConfigDefaults.UnitFilenames);
+    FEventsDirectory := LRegistry.ReadString(RegistryPath, 'EventsDirectory', TTConfigDefaults.EventsDirectory);
+    FEventFilenames := LRegistry.ReadString(RegistryPath, 'EventFilenames', TTConfigDefaults.EventFilenames);
+    FControllersDirectory := LRegistry.ReadString(RegistryPath, 'ControllersDirectory', TTConfigDefaults.ControllersDirectory);
+    FControllerFilenames := LRegistry.ReadString(RegistryPath, 'ControllerFilenames', TTConfigDefaults.ControllerFilenames);
   finally
     LRegistry.Free;
   end;
@@ -169,6 +204,10 @@ begin
     LRegistry.WriteString(RegistryPath, 'TrysilDirectory', FTrysilDirectory);
     LRegistry.WriteString(RegistryPath, 'ModelDirectory', FModelDirectory);
     LRegistry.WriteString(RegistryPath, 'UnitFilenames', FUnitFilenames);
+    LRegistry.WriteString(RegistryPath, 'EventsDirectory', FEventsDirectory);
+    LRegistry.WriteString(RegistryPath, 'EventFilenames', FEventFilenames);
+    LRegistry.WriteString(RegistryPath, 'ControllersDirectory', FControllersDirectory);
+    LRegistry.WriteString(RegistryPath, 'ControllerFilenames', FControllerFilenames);
   finally
     LRegistry.Free;
   end;
@@ -207,6 +246,12 @@ begin
   try
     FModelDirectory := LJSon.GetValue<String>('modelDirectory', TTConfig.Instance.ModelDirectory);
     FUnitFilenames := LJSon.GetValue<String>('unitFilenames', TTConfig.Instance.UnitFilenames);
+    FEventsDirectory := LJSon.GetValue<String>('eventsDirectory', TTConfig.Instance.EventsDirectory);
+    FEventFilenames := LJSon.GetValue<String>('eventFilenames', TTConfig.Instance.EventFilenames);
+    FControllersDirectory := LJSon.GetValue<String>('controllersDirectory', TTConfig.Instance.ControllersDirectory);
+    FControllerFilenames := LJSon.GetValue<String>('controllerFilenames', TTConfig.Instance.ControllerFilenames);
+    FModels := LJSon.GetValue<Boolean>('models', True);
+    FEvents := LJSon.GetValue<Boolean>('events', False);
     FControllers := LJSon.GetValue<Boolean>('controllers', True);
     FFilterProperties := LJSon.GetValue<Boolean>('filterProperties', True);
     FDatabaseType := LJSon.GetValue<Integer>('databaseType', 0);
@@ -223,6 +268,12 @@ procedure TTLocalConfig.LoadFromConfig;
 begin
   FModelDirectory := TTConfig.Instance.ModelDirectory;
   FUnitFilenames := TTConfig.Instance.UnitFilenames;
+  FEventsDirectory := TTConfig.Instance.EventsDirectory;
+  FEventFilenames := TTConfig.Instance.EventFilenames;
+  FControllersDirectory := TTConfig.Instance.ControllersDirectory;
+  FControllerFilenames := TTConfig.Instance.ControllerFilenames;
+  FModels := True;
+  FEvents := False;
   FControllers := True;
   FFilterProperties := True;
   FDatabaseType := 0;
@@ -240,6 +291,12 @@ begin
   try
     LJSon.AddPair('modelDirectory', FModelDirectory);
     LJSon.AddPair('unitFilenames', FUnitFilenames);
+    LJSon.AddPair('eventsDirectory', FEventsDirectory);
+    LJSon.AddPair('eventFilenames', FEventFilenames);
+    LJSon.AddPair('controllersDirectory', FControllersDirectory);
+    LJSon.AddPair('controllerFilenames', FControllerFilenames);
+    LJSon.AddPair('models', TJSonBool.Create(FModels));
+    LJSon.AddPair('events', TJSonBool.Create(FEvents));
     LJSon.AddPair('controllers', TJSonBool.Create(FControllers));
     LJSon.AddPair('filterProperties', TJSonBool.Create(FFilterProperties));
     LJSon.AddPair('databaseType', TJSonNumber.Create(FDatabaseType));
@@ -277,16 +334,10 @@ begin
   result := GetFolder(AProjectDirectory, TTConfig.Instance.TrysilDirectory);
 end;
 
-class function TTUtils.ModelFolder(
+class function TTUtils.ProjectFolder(
   const AProjectDirectory: String; const ASubFolder: String): String;
 begin
-  result := GetFolder(AProjectDirectory, ASubfolder);
-end;
-
-class function TTUtils.ControllersFolder(
-  const AProjectDirectory: String): String;
-begin
-  result := GetFolder(AProjectDirectory, 'Controllers');
+  result := GetFolder(AProjectDirectory, ASubFolder);
 end;
 
 class function TTUtils.UnitName(

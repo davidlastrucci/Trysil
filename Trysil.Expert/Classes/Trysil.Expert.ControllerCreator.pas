@@ -31,7 +31,9 @@ type
   strict private
     FProjectName: String;
     FUnitNames: String;
+    FControllerNames: String;
     FPascalDirectory: String;
+
     procedure CreateController(const AEntity: TTEntity);
     procedure CreateUnit(
       const AName: String; const ASource: TTSourceWriter);
@@ -39,6 +41,7 @@ type
     constructor Create(
       const AProjectName: String;
       const AUnitNames: String;
+      const AControllerNames: String;
       const APascalDirectory: String);
 
     procedure CreateControllers(const ASelected: TList<TTEntity>);
@@ -51,11 +54,13 @@ implementation
 constructor TTControllerCreator.Create(
   const AProjectName: String;
   const AUnitNames: String;
+  const AControllerNames: String;
   const APascalDirectory: String);
 begin
   inherited Create;
   FProjectName := AProjectName;
   FUnitNames := AUnitNames;
+  FControllerNames := AControllerNames;
   FPascalDirectory := APascalDirectory;
 end;
 
@@ -75,7 +80,8 @@ var
 begin
   LSource := TTSourceWriter.Create;
   try
-    LUnitName := Format('%s.Controller.%s', [FProjectName, AEntity.Name]);
+    LUnitName := TTUtils.UnitName(
+      FControllerNames, FProjectName, AEntity.Name);
     LSource.Append('unit %s;', [LUnitName]);
     LSource.AppendLine;
     LSource.Append('{$WARN UNKNOWN_CUSTOM_ATTRIBUTE ERROR}');

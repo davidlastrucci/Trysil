@@ -37,10 +37,12 @@ uses
   Trysil.Expert.Config,
   Trysil.Expert.Model,
   Trysil.Expert.UI.Themed,
+  Trysil.Expert.UI.Wizard,
   Trysil.Expert.UI.Images,
   Trysil.Expert.UI.Classes,
   Trysil.Expert.Validator,
   Trysil.Expert.ModelCreator,
+  Trysil.Expert.EventCreator,
   Trysil.Expert.ControllerCreator,
   Trysil.Expert.APIHttpModifier, Vcl.Imaging.pngimage;
 
@@ -52,36 +54,72 @@ type
     EntitiesPopupMenu: TPopupMenu;
     SelectAllEntitiesMenuItem: TMenuItem;
     UnselectAllEntitiesMenuItem: TMenuItem;
+    EntitiesPagePanel: TPanel;
+    EntitiesPageGroupbox: TGroupBox;
+    EntitiesListView: TListView;
+    ModelsPagePanel: TPanel;
+    ModelsPageGroupbox: TGroupBox;
+    ModelsCheckbox: TCheckBox;
     ModelDirectoryLabel: TLabel;
     ModelDirectoryTextbox: TEdit;
     UnitFilenamesLabel: TLabel;
     UnitFilenamesTextbox: TEdit;
-    EntitiesLabel: TLabel;
-    EntitiesListView: TListView;
-    APIControllersCheckbox: TCheckBox;
     FilterPropertiesCheckbox: TCheckBox;
-    SaveButton: TButton;
+    EventsPagePanel: TPanel;
+    EventsPageGroupbox: TGroupBox;
+    EventsCheckbox: TCheckBox;
+    EventsDirectoryLabel: TLabel;
+    EventsDirectoryTextbox: TEdit;
+    EventFilenamesLabel: TLabel;
+    EventFilenamesTextbox: TEdit;
+    ControllersPagePanel: TPanel;
+    ControllersPageGroupbox: TGroupBox;
+    APIControllersCheckbox: TCheckBox;
+    ControllersDirectoryLabel: TLabel;
+    ControllersDirectoryTextbox: TEdit;
+    ControllerFilenamesLabel: TLabel;
+    ControllerFilenamesTextbox: TEdit;
+    BackButton: TButton;
+    NextButton: TButton;
+    FinishButton: TButton;
     CancelButton: TButton;
     procedure FormShow(Sender: TObject);
     procedure EntitiesListViewCreateItemClass(
       Sender: TCustomListView; var ItemClass: TListItemClass);
     procedure SelectAllEntitiesMenuItemClick(Sender: TObject);
     procedure UnselectallEntitiesMenuItemClick(Sender: TObject);
-    procedure SaveButtonClick(Sender: TObject);
+    procedure BackButtonClick(Sender: TObject);
+    procedure NextButtonClick(Sender: TObject);
+    procedure FinishButtonClick(Sender: TObject);
   strict private
     FProject: TTProject;
     FConfig: TTLocalConfig;
     FEntities: TTEntities;
+    FWizard: TTWizard;
 
     procedure CheckIsAPIRestApplication;
+    function IsAPIRestApplication: Boolean;
+    function CheckEntities: Boolean;
+    procedure AddPages;
+    procedure EnableDisableButtons;
+    function IsControllersChecked: Boolean;
     procedure ConfigToControls;
     procedure ControlsToConfig;
     procedure AddSelectedEntities(const AEntities: TList<TTEntity>);
+    procedure CheckGeneration;
+    procedure CheckModule(
+      const AValidator: TTValidator;
+      const AProjectName: String;
+      const ADirectory: String;
+      const AUnitNames: String;
+      const AEntity: TTEntity);
     function CheckOverwrite(const AEntities: TList<TTEntity>): Boolean;
     procedure SelectAllEntities(const ASelect: Boolean);
     procedure CreateModels(const AEntities: TList<TTEntity>);
+    procedure CreateEvents(const AEntities: TList<TTEntity>);
     procedure CreateControllers(const AEntities: TList<TTEntity>);
     procedure ModifyAPIHttp(const AEntities: TList<TTEntity>);
+    procedure Generate(const AEntities: TList<TTEntity>);
   strict protected
     function HelpPage: String; override;
   public
@@ -104,10 +142,12 @@ begin
 
   FConfig := TTLocalConfig.Create;
   FEntities := TTEntities.Create;
+  FWizard := TTWizard.Create(Handle);
 end;
 
 destructor TTGenerateModel.Destroy;
 begin
+  FWizard.Free;
   FEntities.Free;
   FConfig.Free;
   inherited Destroy;
@@ -120,6 +160,46 @@ begin
   CheckIsAPIRestApplication;
   ConfigToControls;
   FEntities.LoadFromDirectory(TTUtils.TrysilFolder(FProject.Directory));
+  AddPages;
+  FWizard.Start;
+  EnableDisableButtons;
+end;
+
+procedure TTGenerateModel.AddPages;
+begin
+  FWizard.AddPage(TTWizardPage.Create(
+    EntitiesPagePanel, EntitiesListView, nil, CheckEntities));
+  FWizard.AddPage(TTWizardPage.Create(
+    ModelsPagePanel, ModelsCheckbox, nil, nil));
+  FWizard.AddPage(TTWizardPage.Create(
+    EventsPagePanel, EventsCheckbox, nil, nil));
+  FWizard.AddPage(TTWizardPage.Create(
+    ControllersPagePanel, APIControllersCheckbox, IsAPIRestApplication, nil));
+end;
+
+procedure TTGenerateModel.EnableDisableButtons;
+begin
+  BackButton.Enabled := not FWizard.IsFirst;
+  NextButton.Enabled := not FWizard.IsLast;
+  FinishButton.Enabled := FWizard.IsLast;
+end;
+
+function TTGenerateModel.IsAPIRestApplication: Boolean;
+begin
+  result := APIControllersCheckbox.Enabled;
+end;
+
+function TTGenerateModel.CheckEntities: Boolean;
+var
+  LItem: TListItem;
+begin
+  result := False;
+  for LItem in EntitiesListView.Items do
+    if LItem.Checked then
+      result := True;
+
+  if not result then
+    MessageDlg(SSelectOneEntity, TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0);
 end;
 
 procedure TTGenerateModel.CheckIsAPIRestApplication;
@@ -138,21 +218,37 @@ begin
     Assigned(LHttpModule) and Assigned(LControllerModule);
 end;
 
+function TTGenerateModel.IsControllersChecked: Boolean;
+begin
+  result := APIControllersCheckbox.Enabled and APIControllersCheckbox.Checked;
+end;
+
 procedure TTGenerateModel.ConfigToControls;
 begin
+  ModelsCheckbox.Checked := FConfig.Models;
   ModelDirectoryTextbox.Text := FConfig.ModelDirectory;
   UnitFilenamesTextbox.Text := FConfig.UnitFilenames;
+  EventsCheckbox.Checked := FConfig.Events;
+  EventsDirectoryTextbox.Text := FConfig.EventsDirectory;
+  EventFilenamesTextbox.Text := FConfig.EventFilenames;
   APIControllersCheckbox.Checked :=
     APIControllersCheckbox.Enabled and FConfig.Controllers;
+  ControllersDirectoryTextbox.Text := FConfig.ControllersDirectory;
+  ControllerFilenamesTextbox.Text := FConfig.ControllerFilenames;
   FilterPropertiesCheckbox.Checked := FConfig.FilterProperties;
 end;
 
 procedure TTGenerateModel.ControlsToConfig;
 begin
+  FConfig.Models := ModelsCheckbox.Checked;
   FConfig.ModelDirectory := ModelDirectoryTextbox.Text;
   FConfig.UnitFilenames := UnitFilenamesTextbox.Text;
-  FConfig.Controllers :=
-    APIControllersCheckbox.Enabled and APIControllersCheckbox.Checked;
+  FConfig.Events := EventsCheckbox.Checked;
+  FConfig.EventsDirectory := EventsDirectoryTextbox.Text;
+  FConfig.EventFilenames := EventFilenamesTextbox.Text;
+  FConfig.Controllers := IsControllersChecked;
+  FConfig.ControllersDirectory := ControllersDirectoryTextbox.Text;
+  FConfig.ControllerFilenames := ControllerFilenamesTextbox.Text;
   FConfig.FilterProperties := FilterPropertiesCheckbox.Checked;
   FConfig.Save;
 end;
@@ -171,13 +267,35 @@ begin
     raise ETExpertException.Create(SSelectOneEntity);
 end;
 
+procedure TTGenerateModel.CheckGeneration;
+begin
+  if not (ModelsCheckbox.Checked or
+    EventsCheckbox.Checked or
+    IsControllersChecked) then
+    raise ETExpertException.Create(SSelectOneGeneration);
+end;
+
+procedure TTGenerateModel.CheckModule(
+  const AValidator: TTValidator;
+  const AProjectName: String;
+  const ADirectory: String;
+  const AUnitNames: String;
+  const AEntity: TTEntity);
+var
+  LModuleName: String;
+begin
+  LModuleName := TPath.Combine(
+    ADirectory, TTUtils.UnitName(AUnitNames, AProjectName, AEntity.Name));
+  AValidator.Check(
+    Assigned(TTIOTA.SearchModule(LModuleName)), LModuleName);
+end;
+
 function TTGenerateModel.CheckOverwrite(
   const AEntities: TList<TTEntity>): Boolean;
 var
   LValidator: TTValidator;
-  LProjectName, LModuleName: String;
+  LProjectName: String;
   LEntity: TTEntity;
-  LModuleInfo: IOTAModuleInfo;
 begin
   result := True;
   LValidator := TTValidator.Create('These units will be overwritten:');
@@ -187,22 +305,21 @@ begin
     begin
       for LEntity in AEntities do
       begin
-        LModuleName := TPath.Combine(
-          ModelDirectoryTextbox.Text,
-          TTUtils.UnitName(
-            UnitFilenamesTextbox.Text, LProjectName, LEntity.Name));
-        LModuleInfo := TTIOTA.SearchModule(LModuleName);
-        LValidator.Check(Assigned(LModuleInfo), LModuleName);
+        if ModelsCheckbox.Checked then
+          CheckModule(
+            LValidator,
+            LProjectName,
+            ModelDirectoryTextbox.Text,
+            UnitFilenamesTextbox.Text,
+            LEntity);
 
-        if APIControllersCheckbox.Enabled and
-          APIControllersCheckbox.Checked then
-        begin
-          LModuleName := TPath.Combine(
-            'Controllers',
-            Format('%s.Controller.%s', [LProjectName, LEntity.Name]));
-          LModuleInfo := TTIOTA.SearchModule(LModuleName);
-          LValidator.Check(Assigned(LModuleInfo), LModuleName);
-        end;
+        if IsControllersChecked then
+          CheckModule(
+            LValidator,
+            LProjectName,
+            ControllersDirectoryTextbox.Text,
+            ControllerFilenamesTextbox.Text,
+            LEntity);
       end;
 
       result := LValidator.IsValid;
@@ -269,7 +386,7 @@ begin
   LCreator := TTModelCreator.Create(
     FProject.Name,
     UnitFilenamesTextbox.Text,
-    TTUtils.ModelFolder(FProject.Directory, ModelDirectoryTextbox.Text),
+    TTUtils.ProjectFolder(FProject.Directory, ModelDirectoryTextbox.Text),
     FilterPropertiesCheckbox.Checked);
   try
     LCreator.CreateModels(FEntities, AEntities);
@@ -278,15 +395,32 @@ begin
   end;
 end;
 
+procedure TTGenerateModel.CreateEvents(const AEntities: TList<TTEntity>);
+var
+  LCreator: TTEventCreator;
+begin
+  LCreator := TTEventCreator.Create(
+    FProject.Name,
+    UnitFilenamesTextbox.Text,
+    EventFilenamesTextbox.Text,
+    TTUtils.ProjectFolder(FProject.Directory, EventsDirectoryTextbox.Text));
+  try
+    LCreator.CreateEvents(AEntities);
+  finally
+    LCreator.Free;
+  end;
+end;
+
 procedure TTGenerateModel.CreateControllers(const AEntities: TList<TTEntity>);
 var
-  LDirectory: String;
   LCreator: TTControllerCreator;
 begin
-  LDirectory := TTUtils.ControllersFolder(FProject.Directory);
-
   LCreator := TTControllerCreator.Create(
-    FProject.Name, UnitFilenamesTextbox.Text, LDirectory);
+    FProject.Name,
+    UnitFilenamesTextbox.Text,
+    ControllerFilenamesTextbox.Text,
+    TTUtils.ProjectFolder(
+      FProject.Directory, ControllersDirectoryTextbox.Text));
   try
     LCreator.CreateControllers(AEntities);
   finally
@@ -298,7 +432,8 @@ procedure TTGenerateModel.ModifyAPIHttp(const AEntities: TList<TTEntity>);
 var
   LModifier: TTAPIHttpModifier;
 begin
-  LModifier := TTAPIHttpModifier.Create(TTIOTA.ActiveProjectName, AEntities);
+  LModifier := TTAPIHttpModifier.Create(
+    TTIOTA.ActiveProjectName, ControllerFilenamesTextbox.Text, AEntities);
   try
     LModifier.Modify;
   finally
@@ -306,29 +441,48 @@ begin
   end;
 end;
 
-procedure TTGenerateModel.SaveButtonClick(Sender: TObject);
+procedure TTGenerateModel.Generate(const AEntities: TList<TTEntity>);
+begin
+  Screen.Cursor := crHourglass;
+  try
+    FEntities.CalculateUsesAndRelations;
+    if ModelsCheckbox.Checked then
+      CreateModels(AEntities);
+    if EventsCheckbox.Checked then
+      CreateEvents(AEntities);
+    if IsControllersChecked then
+    begin
+      CreateControllers(AEntities);
+      ModifyAPIHttp(AEntities);
+    end;
+  finally
+    Screen.Cursor := crDefault;
+  end;
+end;
+
+procedure TTGenerateModel.BackButtonClick(Sender: TObject);
+begin
+  FWizard.PreviousPage;
+  EnableDisableButtons;
+end;
+
+procedure TTGenerateModel.NextButtonClick(Sender: TObject);
+begin
+  FWizard.NextPage;
+  EnableDisableButtons;
+end;
+
+procedure TTGenerateModel.FinishButtonClick(Sender: TObject);
 var
   LEntities: TList<TTEntity>;
 begin
   LEntities := TList<TTEntity>.Create;
   try
+    CheckGeneration;
     AddSelectedEntities(LEntities);
     if CheckOverwrite(LEntities) then
     begin
-      Screen.Cursor := crHourglass;
-      try
-        FEntities.CalculateUsesAndRelations;
-        CreateModels(LEntities);
-        if APIControllersCheckbox.Enabled and
-          APIControllersCheckbox.Checked then
-        begin
-          CreateControllers(LEntities);
-          ModifyAPIHttp(LEntities);
-        end;
-      finally
-        Screen.Cursor := crDefault;
-      end;
-
+      Generate(LEntities);
       ControlsToConfig;
       ModalResult := mrOk;
     end;

@@ -48,6 +48,14 @@ inherited TAPIRestForm: TTAPIRestForm
           Height = 15
           Caption = 'http://127.0.0.1:4450/'
         end
+        object APISqidsNotSupportedLabel: TLabel
+          Left = 44
+          Top = 266
+          Width = 239
+          Height = 15
+          Caption = 'Feature not supported by this Delphi version'
+          Visible = False
+        end
         object APIBaseUriTextbox: TEdit
           Left = 24
           Top = 49
@@ -109,14 +117,6 @@ inherited TAPIRestForm: TTAPIRestForm
           Height = 17
           Caption = 'Sqids (encode IDs in JSON and URLs)'
           TabOrder = 6
-        end
-        object APISqidsNotSupportedLabel: TLabel
-          Left = 44
-          Top = 266
-          Width = 239
-          Height = 15
-          Caption = 'Feature not supported by this Delphi version'
-          Visible = False
         end
       end
     end
@@ -588,35 +588,37 @@ inherited TAPIRestForm: TTAPIRestForm
     end
     object BackButton: TButton
       AlignWithMargins = True
-      Left = 72
+      Left = 300
       Top = 12
       Width = 75
       Height = 25
-      Margins.Left = 60
+      Margins.Left = 0
       Margins.Top = 0
-      Margins.Right = 0
+      Margins.Right = 4
       Margins.Bottom = 0
-      Align = alLeft
+      Align = alRight
       Caption = '&Back'
       Enabled = False
       TabOrder = 0
       OnClick = BackButtonClick
+      ExplicitLeft = 72
     end
     object NextButton: TButton
       AlignWithMargins = True
-      Left = 151
+      Left = 379
       Top = 12
       Width = 75
       Height = 25
-      Margins.Left = 4
+      Margins.Left = 0
       Margins.Top = 0
-      Margins.Right = 0
+      Margins.Right = 4
       Margins.Bottom = 0
-      Align = alLeft
+      Align = alRight
       Caption = '&Next'
       Default = True
       TabOrder = 1
       OnClick = NextButtonClick
+      ExplicitLeft = 151
     end
   end
   object SaveDialog: TSaveDialog
