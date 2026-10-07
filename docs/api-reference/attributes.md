@@ -316,6 +316,12 @@ Register an event class for an entity:
 TPerson = class
 ```
 
+The attribute puts the event class in the unit of the entity. To keep the rules
+in a unit of their own, register a `TTEntityEvents<T>` with
+`TTEventRegistration.RegisterEvents<T, E>` instead, and do not mix the two on
+the same entity hierarchy: see [Registering events without
+attributes](../guide/events.md#registering-events-without-attributes).
+
 ### Method-Level Event Attributes
 
 Declare event methods directly on the entity:
