@@ -115,6 +115,8 @@ type
     APIAuthorizationCheckbox: TCheckBox;
     APIRS256Checkbox: TCheckBox;
     APILogCheckbox: TCheckBox;
+    APISqidsCheckbox: TCheckBox;
+    APISqidsNotSupportedLabel: TLabel;
     DatabasePagePanel: TPanel;
     DatabasePageGroupBox: TGroupBox;
     DatabaseDriverLabel: TLabel;
@@ -167,9 +169,11 @@ type
     const OracleIndex = 3;
     const PostgreSQLIndex = 4;
     const SQLiteIndex = 6;
+    const SqidsSupported = CompilerVersion >= 36;
   strict private
     FWizard: TTWizard;
 
+    procedure EnableSqids;
     procedure EnableDisableButtons;
     procedure EnableServer(
       const ADriver: TComboBox;
@@ -177,6 +181,7 @@ type
       const APort: TEdit);
     procedure ShowErrors(const AValidator: TTValidator);
 
+    procedure CheckProjectDirectory(const AValidator: TTValidator);
     function CheckProject: Boolean;
     function CheckAPI: Boolean;
     function CheckDatabase(
@@ -371,7 +376,14 @@ begin
     ServicePagePanel, ServiceNameTextbox, nil, CheckService));
 
   FWizard.Start;
+  EnableSqids;
   EnableDisableButtons;
+end;
+
+procedure TTAPIRestForm.EnableSqids;
+begin
+  APISqidsCheckbox.Enabled := SqidsSupported;
+  APISqidsNotSupportedLabel.Visible := not SqidsSupported;
 end;
 
 procedure TTAPIRestForm.EnableDisableButtons;
@@ -441,20 +453,32 @@ begin
       AValidator.Messages, TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], 0);
 end;
 
+procedure TTAPIRestForm.CheckProjectDirectory(const AValidator: TTValidator);
+var
+  LDirectory: String;
+begin
+  LDirectory := ProjectDirectoryTextbox.Text;
+  AValidator.Check(
+    LDirectory.IsEmpty,
+    'Directory name cannot be empty.');
+
+  AValidator.Check(
+    (not LDirectory.IsEmpty) and (not TPath.IsPathRooted(LDirectory)),
+    'Directory must be an absolute path.');
+
+  AValidator.Check(
+    (TDirectory.Exists(LDirectory) and
+      (Length(TDirectory.GetFiles(LDirectory)) > 0)),
+    'Directory contain files.');
+end;
+
 function TTAPIRestForm.CheckProject: Boolean;
 var
   LValidator: TTValidator;
 begin
   LValidator := TTValidator.Create;
   try
-    LValidator.Check(
-      String(ProjectDirectoryTextbox.Text).IsEmpty,
-      'Directory name cannot be empty.');
-
-    LValidator.Check(
-      (TDirectory.Exists(ProjectDirectoryTextbox.Text) and
-        (Length(TDirectory.GetFiles(ProjectDirectoryTextbox.Text)) > 0)),
-      'Directory contain files.');
+    CheckProjectDirectory(LValidator);
 
     LValidator.Check(
       String(ProjectNameTextBox.Text).IsEmpty,
@@ -591,6 +615,8 @@ begin
     Include(result, TTApiRestFeature.RS256);
   if APILogCheckbox.Checked then
     Include(result, TTApiRestFeature.Log);
+  if APISqidsCheckbox.Checked then
+    Include(result, TTApiRestFeature.Sqids);
 end;
 
 function TTAPIRestForm.GetDescription: String;

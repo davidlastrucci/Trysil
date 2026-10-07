@@ -102,6 +102,22 @@ inherited TAPIRestForm: TTAPIRestForm
           Caption = 'Log'
           TabOrder = 5
         end
+        object APISqidsCheckbox: TCheckBox
+          Left = 24
+          Top = 245
+          Width = 250
+          Height = 17
+          Caption = 'Sqids (encode IDs in JSON and URLs)'
+          TabOrder = 6
+        end
+        object APISqidsNotSupportedLabel: TLabel
+          Left = 44
+          Top = 266
+          Width = 239
+          Height = 15
+          Caption = 'Feature not supported by this Delphi version'
+          Visible = False
+        end
       end
     end
     object ServicePagePanel: TPanel
