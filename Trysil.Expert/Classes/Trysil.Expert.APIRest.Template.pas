@@ -29,7 +29,7 @@ type
   TTApiRestTemplate = class
   strict private
     const ArchiveUrl =
-      'https://github.com/TTContext/TApiRest/archive/refs/heads/2.1.zip';
+      'https://github.com/TTContext/TApiRest/archive/refs/heads/2.1.1.zip';
     const TemplateFolder = 'Template/';
     const RulesFileName = 'TFeatures.json';
   strict private
