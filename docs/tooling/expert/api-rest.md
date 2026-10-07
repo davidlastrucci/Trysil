@@ -16,7 +16,7 @@ The wizard has five pages; **Next** checks the current page before moving on.
 
 | Field | Meaning |
 |---|---|
-| Directory | Folder of the new project. It must be empty or not exist yet |
+| Directory | Folder of the new project, as a full path (for example `C:\Dev\MyApi`). It must be empty or not exist yet |
 | Project name | Name of the `.dproj` and prefix of the project units |
 
 The button next to **Project name** picks both with a save dialog.
@@ -33,6 +33,7 @@ The button next to **Project name** picks both with a save dialog.
 | Authorization | Login, JWT tokens and the `/auth` endpoints |
 | RS256 (sign tokens with RSA keys) | Signs the tokens with an RSA key pair instead of a shared secret. Available with **Authorization** only |
 | Log | Logs requests, responses and actions to a log database |
+| Sqids (encode IDs in JSON and URLs) | Primary and foreign keys travel as short opaque strings, in the JSON and in the route parameters, instead of sequential numbers. The database keeps the integer IDs. Requires Delphi 12 Athens or later: on older versions the box is disabled and the note *Feature not supported by this Delphi version* appears below it |
 
 See [Multi-Tenant](../../http/multi-tenant.md) and [Authentication](../../http/authentication.md) for what these features do at runtime.
 
