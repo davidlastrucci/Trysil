@@ -95,6 +95,7 @@ nav:
     - Serialization: json/serialization.md
     - Deserialization: json/deserialization.md
     - Configuration: json/configuration.md
+    - Sqids: json/sqids.md
     - Events: json/events.md
   - HTTP Module:
     - Overview: http/index.md
