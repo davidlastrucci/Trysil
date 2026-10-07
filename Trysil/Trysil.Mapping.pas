@@ -371,6 +371,12 @@ type
   TTTableEventMethodsMap = class
   strict private
     FMethods: TTObjectList<TTTableEventMethodMap>;
+
+    function IsSameSlot(
+      const AFirst: TRttiMethod; const ASecond: TRttiMethod): Boolean;
+    function Contains(
+      const AEventMethodType: TTEventMethodType;
+      const AMethod: TRttiMethod): Boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -1102,17 +1108,42 @@ begin
   inherited Destroy;
 end;
 
+function TTTableEventMethodsMap.IsSameSlot(
+  const AFirst: TRttiMethod; const ASecond: TRttiMethod): Boolean;
+begin
+  result :=
+    (AFirst.DispatchKind = TDispatchKind.dkVtable) and
+    (ASecond.DispatchKind = TDispatchKind.dkVtable) and
+    (AFirst.VirtualIndex = ASecond.VirtualIndex);
+end;
+
+function TTTableEventMethodsMap.Contains(
+  const AEventMethodType: TTEventMethodType;
+  const AMethod: TRttiMethod): Boolean;
+var
+  LMethod: TTTableEventMethodMap;
+begin
+  result := False;
+  for LMethod in FMethods do
+    if (LMethod.EventMethodType = AEventMethodType) and
+      IsSameSlot(LMethod.Method, AMethod) then
+      result := True;
+end;
+
 procedure TTTableEventMethodsMap.Add(
   const AEventMethodType: TTEventMethodType; const AMethod: TRttiMethod);
 var
   LMethod: TTTableEventMethodMap;
 begin
-  LMethod := TTTableEventMethodMap.Create(AEventMethodType, AMethod);
-  try
-    FMethods.Add(LMethod);
-  except
-    LMethod.Free;
-    raise;
+  if not Contains(AEventMethodType, AMethod) then
+  begin
+    LMethod := TTTableEventMethodMap.Create(AEventMethodType, AMethod);
+    try
+      FMethods.Add(LMethod);
+    except
+      LMethod.Free;
+      raise;
+    end;
   end;
 end;
 

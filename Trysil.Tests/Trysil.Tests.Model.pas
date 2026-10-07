@@ -947,6 +947,67 @@ type
     procedure OnAfterDelete;
   end;
 
+{ TTestVirtualEventCustomer - base class with a virtual event method }
+
+  TTestVirtualEventCustomer = class
+  strict private
+    [TPrimaryKey]
+    [TColumn('ID')]
+    FID: TTPrimaryKey;
+
+    [TColumn('Name')]
+    FName: String;
+
+    [TColumn('Email')]
+    FEmail: String;
+
+    [TVersionColumn]
+    [TColumn('VersionID')]
+    FVersion: TTVersion;
+
+    FEventLog: String;
+  protected
+    procedure AppendEvent(const AEvent: String);
+  public
+    property ID: TTPrimaryKey read FID;
+    property Name: String read FName write FName;
+    property Email: String read FEmail write FEmail;
+    property Version: TTVersion read FVersion;
+    property EventLog: String read FEventLog;
+
+    [TBeforeInsertEvent]
+    procedure OnBeforeInsert; virtual;
+  end;
+
+{ TTestOverrideEventCustomer - override without the event attribute }
+
+  [TTable('Customers')]
+  [TSequence('CustomersID')]
+  TTestOverrideEventCustomer = class(TTestVirtualEventCustomer)
+  public
+    procedure OnBeforeInsert; override;
+  end;
+
+{ TTestOverrideAttributeEventCustomer - override with the event attribute }
+
+  [TTable('Customers')]
+  [TSequence('CustomersID')]
+  TTestOverrideAttributeEventCustomer = class(TTestVirtualEventCustomer)
+  public
+    [TBeforeInsertEvent]
+    procedure OnBeforeInsert; override;
+  end;
+
+{ TTestDistinctEventCustomer - another event method in the derived class }
+
+  [TTable('Customers')]
+  [TSequence('CustomersID')]
+  TTestDistinctEventCustomer = class(TTestVirtualEventCustomer)
+  public
+    [TBeforeInsertEvent]
+    procedure OnBeforeInsertDerived; virtual;
+  end;
+
 { TTestActiveCustomer - entity with WhereClause }
 
   [TTable('Customers')]
@@ -1505,6 +1566,41 @@ end;
 procedure TTestEventCustomer.OnAfterDelete;
 begin
   FEventLog := Format('%sAD;', [FEventLog]);
+end;
+
+{ TTestVirtualEventCustomer }
+
+procedure TTestVirtualEventCustomer.AppendEvent(const AEvent: String);
+begin
+  FEventLog := Format('%s%s;', [FEventLog, AEvent]);
+end;
+
+procedure TTestVirtualEventCustomer.OnBeforeInsert;
+begin
+  AppendEvent('BI-base');
+end;
+
+{ TTestOverrideEventCustomer }
+
+procedure TTestOverrideEventCustomer.OnBeforeInsert;
+begin
+  inherited OnBeforeInsert;
+  AppendEvent('BI-override');
+end;
+
+{ TTestOverrideAttributeEventCustomer }
+
+procedure TTestOverrideAttributeEventCustomer.OnBeforeInsert;
+begin
+  inherited OnBeforeInsert;
+  AppendEvent('BI-override');
+end;
+
+{ TTestDistinctEventCustomer }
+
+procedure TTestDistinctEventCustomer.OnBeforeInsertDerived;
+begin
+  AppendEvent('BI-derived');
 end;
 
 end.

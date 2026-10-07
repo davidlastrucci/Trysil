@@ -39,6 +39,15 @@ type
 
     [Test]
     procedure FullLifecycleFiresAllEventsInOrder;
+
+    [Test]
+    procedure OverrideWithoutAttributeFiresOnce;
+
+    [Test]
+    procedure OverrideWithAttributeFiresOnce;
+
+    [Test]
+    procedure DistinctMethodsForTheSameEventBothFire;
   end;
 
 implementation
@@ -105,6 +114,47 @@ begin
 
   Assert.AreEqual('BI;AI;BU;AU;BD;AD;', LCustomer.EventLog,
     'Full lifecycle must fire all 6 events in order');
+end;
+
+procedure TTAbstractEventsTests.OverrideWithoutAttributeFiresOnce;
+var
+  LCustomer: TTestOverrideEventCustomer;
+begin
+  LCustomer := FContext.CreateEntity<TTestOverrideEventCustomer>();
+  LCustomer.Name := 'OverrideTest';
+  FContext.Insert<TTestOverrideEventCustomer>(LCustomer);
+
+  Assert.AreEqual('BI-base;BI-override;', LCustomer.EventLog,
+    'An overridden event method must fire once');
+end;
+
+procedure TTAbstractEventsTests.OverrideWithAttributeFiresOnce;
+var
+  LCustomer: TTestOverrideAttributeEventCustomer;
+begin
+  LCustomer := FContext.CreateEntity<TTestOverrideAttributeEventCustomer>();
+  LCustomer.Name := 'OverrideAttributeTest';
+  FContext.Insert<TTestOverrideAttributeEventCustomer>(LCustomer);
+
+  Assert.AreEqual('BI-base;BI-override;', LCustomer.EventLog,
+    'An overridden event method with the attribute must fire once');
+end;
+
+procedure TTAbstractEventsTests.DistinctMethodsForTheSameEventBothFire;
+var
+  LCustomer: TTestDistinctEventCustomer;
+begin
+  LCustomer := FContext.CreateEntity<TTestDistinctEventCustomer>();
+  LCustomer.Name := 'DistinctTest';
+  FContext.Insert<TTestDistinctEventCustomer>(LCustomer);
+
+  Assert.IsTrue(LCustomer.EventLog.Contains('BI-base;'),
+    'The event method of the base class must fire');
+  Assert.IsTrue(LCustomer.EventLog.Contains('BI-derived;'),
+    'The event method of the derived class must fire');
+  Assert.AreEqual<Integer>(
+    Length('BI-base;BI-derived;'), Length(LCustomer.EventLog),
+    'Each event method must fire once');
 end;
 
 end.
