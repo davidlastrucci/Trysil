@@ -87,6 +87,17 @@ type
 
 `{$WARN UNKNOWN_CUSTOM_ATTRIBUTE ERROR}` turns a misspelled attribute into a compile error instead of an attribute silently ignored.
 
+## Regenerating the model
+
+When the database changes, regenerate the units of the entities that changed: the Expert rewrites each unit whole, after asking. Whatever was written by hand in a model unit is lost with it:
+
+- event methods on the entity (`[TBeforeInsertEvent]` and the other five) and `[TValidator]` methods;
+- validation attributes added to the fields after generation;
+- calculated properties and helper methods;
+- an event class tied to the entity with `[TInsertEvent]`, `[TUpdateEvent]` or `[TDeleteEvent]`, which has to live in the unit of the entity.
+
+Keep the model units as the Expert writes them, and put the code you write in units of your own. Business rules go in a `TTEntityEvents<T>` registered with `TTEventRegistration.RegisterEvents<T, E>` from the unit that holds them: the entity knows nothing of it, so regenerating the entity leaves it untouched. See [Registering events without attributes](../../guide/events.md#registering-events-without-attributes).
+
 ## Filter properties companion
 
 With **Generate filter properties companion** ticked, each unit also declares a record with one `TTProperty` per data column, the primary key included and the version column excluded:
