@@ -43,6 +43,9 @@ begin
   TTLanguage.Instance.Add(SInsertEventAttribute, 'Attributo TInsertEventAttribute duplicato.');
   TTLanguage.Instance.Add(SUpdateEventAttribute, 'Attributo TUpdateEventAttribute duplicato.');
   TTLanguage.Instance.Add(SDeleteEventAttribute, 'Attributo TDeleteEventAttribute duplicato.');
+  TTLanguage.Instance.Add(SEventsAlreadyRegistered, 'Gli eventi di %0:s sono già registrati.');
+  TTLanguage.Instance.Add(SEventClassNotAssigned, 'Impossibile registrare gli eventi di %0:s: la classe evento è nil.');
+  TTLanguage.Instance.Add(SEventsAttributeAndRegistration, 'Gli eventi di %0:s sono dichiarati sia con un attributo sia con una registrazione: tenerne solo uno.');
   TTLanguage.Instance.Add(SNotDefinedPrimaryKey, 'Chiave primaria: non definita.');
   TTLanguage.Instance.Add(SNotValidPrimaryKeyType, 'Chiave primaria: tipo non valido.');
   TTLanguage.Instance.Add(SNotDefinedSequence, 'Sequenza: non definita.');

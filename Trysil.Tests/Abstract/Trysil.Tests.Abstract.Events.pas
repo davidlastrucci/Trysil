@@ -17,12 +17,34 @@ uses
   DUnitX.TestFramework,
 
   Trysil.Types,
+  Trysil.Exceptions,
   Trysil.Context,
+  Trysil.Events.Factory,
+  Trysil.Events,
 
   Trysil.Tests.Abstract.Base,
   Trysil.Tests.Model;
 
 type
+
+{ TTestRegisteredEvents }
+
+  TTestRegisteredEvents = class(
+    TTEntityEvents<TTestRegisteredEventCustomer>)
+  strict private
+    function OldEntityState(const AOperation: String): String;
+  strict protected
+    procedure BeforeInsert; override;
+    procedure AfterInsert; override;
+    procedure BeforeUpdate; override;
+    procedure AfterUpdate; override;
+    procedure BeforeDelete; override;
+    procedure AfterDelete; override;
+  end;
+
+{ TTestConflictEvents }
+
+  TTestConflictEvents = class(TTEntityEvents<TTestConflictEventCustomer>);
 
 { TTAbstractEventsTests }
 
@@ -48,9 +70,68 @@ type
 
     [Test]
     procedure DistinctMethodsForTheSameEventBothFire;
+
+    [Test]
+    procedure RegisteredEventsFireAllEventsInOrder;
+
+    [Test]
+    procedure RegisteredEventsOldEntityIsNilOnInsert;
+
+    [Test]
+    procedure RegisteredEventsAreInherited;
+
+    [Test]
+    procedure RegisteringEventsTwiceRaises;
+
+    [Test]
+    procedure RegisteringANilEventClassRaises;
+
+    [Test]
+    procedure AttributeAndRegistrationTogetherRaise;
   end;
 
 implementation
+
+{ TTestRegisteredEvents }
+
+function TTestRegisteredEvents.OldEntityState(
+  const AOperation: String): String;
+begin
+  result := Format('%s:%s', [
+    AOperation, BoolToStr(Assigned(OldEntity), True)]);
+end;
+
+procedure TTestRegisteredEvents.BeforeInsert;
+begin
+  Entity.AppendEvent('BI');
+  Entity.AppendOldEntity(OldEntityState('I'));
+end;
+
+procedure TTestRegisteredEvents.AfterInsert;
+begin
+  Entity.AppendEvent('AI');
+end;
+
+procedure TTestRegisteredEvents.BeforeUpdate;
+begin
+  Entity.AppendEvent('BU');
+  Entity.AppendOldEntity(OldEntityState('U'));
+end;
+
+procedure TTestRegisteredEvents.AfterUpdate;
+begin
+  Entity.AppendEvent('AU');
+end;
+
+procedure TTestRegisteredEvents.BeforeDelete;
+begin
+  Entity.AppendEvent('BD');
+end;
+
+procedure TTestRegisteredEvents.AfterDelete;
+begin
+  Entity.AppendEvent('AD');
+end;
 
 { TTAbstractEventsTests }
 
@@ -156,5 +237,109 @@ begin
     Length('BI-base;BI-derived;'), Length(LCustomer.EventLog),
     'Each event method must fire once');
 end;
+
+procedure TTAbstractEventsTests.RegisteredEventsFireAllEventsInOrder;
+var
+  LCustomer: TTestRegisteredEventCustomer;
+begin
+  LCustomer := FContext.CreateEntity<TTestRegisteredEventCustomer>();
+  LCustomer.Name := 'Registered';
+  FContext.Insert<TTestRegisteredEventCustomer>(LCustomer);
+
+  LCustomer.Name := 'Changed';
+  FContext.Update<TTestRegisteredEventCustomer>(LCustomer);
+
+  FContext.Delete<TTestRegisteredEventCustomer>(LCustomer);
+
+  Assert.AreEqual('BI;AI;BU;AU;BD;AD;', LCustomer.EventLog,
+    'Registered events must fire all 6 events in order');
+end;
+
+procedure TTAbstractEventsTests.RegisteredEventsOldEntityIsNilOnInsert;
+var
+  LCustomer: TTestRegisteredEventCustomer;
+begin
+  LCustomer := FContext.CreateEntity<TTestRegisteredEventCustomer>();
+  LCustomer.Name := 'OldEntity';
+  FContext.Insert<TTestRegisteredEventCustomer>(LCustomer);
+
+  LCustomer.Name := 'Changed';
+  FContext.Update<TTestRegisteredEventCustomer>(LCustomer);
+
+  Assert.AreEqual('I:False;U:True;', LCustomer.OldEntityLog,
+    'OldEntity must be nil on insert and assigned on update');
+end;
+
+procedure TTAbstractEventsTests.RegisteredEventsAreInherited;
+var
+  LCustomer: TTestRegisteredDerivedCustomer;
+begin
+  LCustomer := FContext.CreateEntity<TTestRegisteredDerivedCustomer>();
+  LCustomer.Name := 'Derived';
+  FContext.Insert<TTestRegisteredDerivedCustomer>(LCustomer);
+
+  LCustomer.Name := 'Changed';
+  FContext.Update<TTestRegisteredDerivedCustomer>(LCustomer);
+
+  Assert.AreEqual('BI;AI;BU;AU;', LCustomer.EventLog,
+    'A derived entity must fire the events registered for its ancestor');
+end;
+
+procedure TTAbstractEventsTests.RegisteringEventsTwiceRaises;
+var
+  LRaised: Boolean;
+begin
+  LRaised := False;
+  try
+    TTEventRegistration.RegisterEvents<
+      TTestRegisteredEventCustomer, TTestRegisteredEvents>;
+  except
+    on ETException do
+      LRaised := True;
+  end;
+
+  Assert.IsTrue(LRaised,
+    'Registering the events of an entity twice must raise');
+end;
+
+procedure TTAbstractEventsTests.RegisteringANilEventClassRaises;
+var
+  LRaised: Boolean;
+begin
+  LRaised := False;
+  try
+    TTEventRegistry.Instance.RegisterEvents(TypeInfo(TTestCustomer), nil);
+  except
+    on ETException do
+      LRaised := True;
+  end;
+
+  Assert.IsTrue(LRaised, 'Registering a nil event class must raise');
+end;
+
+procedure TTAbstractEventsTests.AttributeAndRegistrationTogetherRaise;
+var
+  LCustomer: TTestConflictEventCustomer;
+  LRaised: Boolean;
+begin
+  LCustomer := FContext.CreateEntity<TTestConflictEventCustomer>();
+  LCustomer.Name := 'Conflict';
+  LRaised := False;
+  try
+    FContext.Insert<TTestConflictEventCustomer>(LCustomer);
+  except
+    on ETException do
+      LRaised := True;
+  end;
+
+  Assert.IsTrue(LRaised,
+    'An event attribute and a registration together must raise');
+end;
+
+initialization
+  TTEventRegistration.RegisterEvents<
+    TTestRegisteredEventCustomer, TTestRegisteredEvents>;
+  TTEventRegistration.RegisterEvents<
+    TTestConflictEventCustomer, TTestConflictEvents>;
 
 end.

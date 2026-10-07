@@ -110,6 +110,11 @@ resourcestring
   SInsertEventAttribute = 'Duplicate TInsertEventAttribute Attribute.';
   SUpdateEventAttribute = 'Duplicate TUpdateEventAttribute Attribute.';
   SDeleteEventAttribute = 'Duplicate TDeleteEventAttribute Attribute.';
+  SEventsAlreadyRegistered = 'Events for %0:s are already registered.';
+  SEventClassNotAssigned =
+    'Events for %0:s cannot be registered: the event class is nil.';
+  SEventsAttributeAndRegistration = 'Events for %0:s are declared both ' +
+    'with an event attribute and with a registration: keep only one.';
   SOldEntityAfterCommand = 'OldEntity was read for the first time after ' +
     'the command had run, and by then the row in the database is the new ' +
     'one. Read it in DoBefore, where it means what its name says: the ' +

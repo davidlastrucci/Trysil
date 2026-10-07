@@ -20,6 +20,7 @@ uses
   Trysil.Exceptions,
   Trysil.Generics.Collections,
   Trysil.Context,
+  Trysil.Events.Abstract,
   Trysil.Events,
   Trysil.Session,
   Trysil.Lazy,
@@ -495,7 +496,8 @@ begin
   try
     LLoaded := LFreshContext.Get<TTestLazyOrder>(LOrder.ID);
     try
-      LEvent := TTestLazyOldEntityEvent.Create(LFreshContext, LLoaded);
+      LEvent := TTestLazyOldEntityEvent.Create(
+        LFreshContext, LLoaded, TTEventOperation.Update);
       try
         LEvent.ReadOldEntity;
         Assert.AreEqual<Integer>(

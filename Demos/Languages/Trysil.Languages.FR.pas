@@ -43,6 +43,9 @@ begin
   TTLanguage.Instance.Add(SInsertEventAttribute, 'Attribut TInsertEventAttribute en double.');
   TTLanguage.Instance.Add(SUpdateEventAttribute, 'Attribut TUpdateEventAttribute en double.');
   TTLanguage.Instance.Add(SDeleteEventAttribute, 'Attribut TDeleteEventAttribute en double.');
+  TTLanguage.Instance.Add(SEventsAlreadyRegistered, 'Les événements de %0:s sont déjà enregistrés.');
+  TTLanguage.Instance.Add(SEventClassNotAssigned, 'Impossible d''enregistrer les événements de %0:s : la classe d''événement est nil.');
+  TTLanguage.Instance.Add(SEventsAttributeAndRegistration, 'Les événements de %0:s sont déclarés à la fois par un attribut et par un enregistrement : n''en garder qu''un.');
   TTLanguage.Instance.Add(SNotDefinedPrimaryKey, 'Clé primaire : non définie.');
   TTLanguage.Instance.Add(SNotValidPrimaryKeyType, 'Clé primaire : type non valide.');
   TTLanguage.Instance.Add(SNotDefinedSequence, 'Séquence : non définie.');

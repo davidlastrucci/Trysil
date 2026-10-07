@@ -18,10 +18,22 @@ uses
 
 type
 
+{$SCOPEDENUMS ON}
+
+{ TTEventOperation }
+
+  TTEventOperation = (Insert, Update, Delete);
+
 { TTEvent }
 
   TTEvent = class abstract
+  strict private
+    FOperation: TTEventOperation;
+  strict protected
+    property Operation: TTEventOperation read FOperation;
   public
+    constructor Create(const AOperation: TTEventOperation);
+
     procedure CommandExecuted; virtual;
 
     procedure DoBefore; virtual;
@@ -35,6 +47,12 @@ type
 implementation
 
 { TTEvent }
+
+constructor TTEvent.Create(const AOperation: TTEventOperation);
+begin
+  inherited Create;
+  FOperation := AOperation;
+end;
 
 procedure TTEvent.CommandExecuted;
 begin

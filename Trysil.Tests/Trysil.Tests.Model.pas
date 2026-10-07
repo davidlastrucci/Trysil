@@ -23,6 +23,7 @@ uses
   Trysil.Attributes,
   Trysil.Validation,
   Trysil.Validation.Attributes,
+  Trysil.Events.Abstract,
   Trysil.Events.Attributes,
   Trysil.Lazy,
   Trysil.JSon.Attributes;
@@ -1008,6 +1009,75 @@ type
     procedure OnBeforeInsertDerived; virtual;
   end;
 
+{ TTestRegisteredEventCustomer - entity whose events are registered }
+
+  [TTable('Customers')]
+  [TSequence('CustomersID')]
+  TTestRegisteredEventCustomer = class
+  strict private
+    [TPrimaryKey]
+    [TColumn('ID')]
+    FID: TTPrimaryKey;
+
+    [TColumn('Name')]
+    FName: String;
+
+    [TColumn('Email')]
+    FEmail: String;
+
+    [TVersionColumn]
+    [TColumn('VersionID')]
+    FVersion: TTVersion;
+
+    FEventLog: String;
+    FOldEntityLog: String;
+  public
+    procedure AppendEvent(const AEvent: String);
+    procedure AppendOldEntity(const AState: String);
+
+    property ID: TTPrimaryKey read FID;
+    property Name: String read FName write FName;
+    property Email: String read FEmail write FEmail;
+    property Version: TTVersion read FVersion;
+    property EventLog: String read FEventLog;
+    property OldEntityLog: String read FOldEntityLog;
+  end;
+
+{ TTestRegisteredDerivedCustomer - inherits the registered events }
+
+  TTestRegisteredDerivedCustomer = class(TTestRegisteredEventCustomer);
+
+{ TTestNoopEvent - event class used only as an attribute argument }
+
+  TTestNoopEvent = class(TTEvent);
+
+{ TTestConflictEventCustomer - event attribute and registration together }
+
+  [TTable('Customers')]
+  [TSequence('CustomersID')]
+  [TInsertEvent(TTestNoopEvent)]
+  TTestConflictEventCustomer = class
+  strict private
+    [TPrimaryKey]
+    [TColumn('ID')]
+    FID: TTPrimaryKey;
+
+    [TColumn('Name')]
+    FName: String;
+
+    [TColumn('Email')]
+    FEmail: String;
+
+    [TVersionColumn]
+    [TColumn('VersionID')]
+    FVersion: TTVersion;
+  public
+    property ID: TTPrimaryKey read FID;
+    property Name: String read FName write FName;
+    property Email: String read FEmail write FEmail;
+    property Version: TTVersion read FVersion;
+  end;
+
 { TTestActiveCustomer - entity with WhereClause }
 
   [TTable('Customers')]
@@ -1601,6 +1671,18 @@ end;
 procedure TTestDistinctEventCustomer.OnBeforeInsertDerived;
 begin
   AppendEvent('BI-derived');
+end;
+
+{ TTestRegisteredEventCustomer }
+
+procedure TTestRegisteredEventCustomer.AppendEvent(const AEvent: String);
+begin
+  FEventLog := Format('%s%s;', [FEventLog, AEvent]);
+end;
+
+procedure TTestRegisteredEventCustomer.AppendOldEntity(const AState: String);
+begin
+  FOldEntityLog := Format('%s%s;', [FOldEntityLog, AState]);
 end;
 
 end.

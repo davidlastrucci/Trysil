@@ -23,6 +23,7 @@ uses
   Trysil.Filter.Expression,
   Trysil.Transaction,
   Trysil.Context,
+  Trysil.Events.Abstract,
   Trysil.Events,
 
   Trysil.Tests.Abstract.Base,
@@ -1213,7 +1214,8 @@ begin
   FContext.Insert<TTestCustomer>(LCustomer);
 
   LRaised := False;
-  LEvent := TTestOldEntityEvent.Create(FContext, LCustomer);
+  LEvent := TTestOldEntityEvent.Create(
+    FContext, LCustomer, TTEventOperation.Update);
   try
     LEvent.CommandExecuted;
     try

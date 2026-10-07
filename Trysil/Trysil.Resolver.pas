@@ -525,7 +525,10 @@ begin
   LCommand := FConnection.CreateInsertCommand(LTableMap, LTableMetadata);
   try
     LEvent := TTEventFactory.Instance.CreateEvent<T>(
-      LTableMap.Events.InsertEventClass, FContext, AEntity);
+      LTableMap.Events.InsertEventClass,
+      TTEventOperation.Insert,
+      FContext,
+      AEntity);
     try
       LCommand.Execute(AEntity, LEvent);
     finally
@@ -571,7 +574,10 @@ var
   LEvent: TTEvent;
 begin
   LEvent := TTEventFactory.Instance.CreateEvent<T>(
-    ATableMap.Events.UpdateEventClass, FContext, AEntity);
+    ATableMap.Events.UpdateEventClass,
+    TTEventOperation.Update,
+    FContext,
+    AEntity);
   try
     ACommand.Execute(AEntity, LEvent);
   finally
@@ -643,7 +649,10 @@ begin
 
   try
     LEvent := TTEventFactory.Instance.CreateEvent<T>(
-      LTableMap.Events.DeleteEventClass, FContext, AEntity);
+      LTableMap.Events.DeleteEventClass,
+      TTEventOperation.Delete,
+      FContext,
+      AEntity);
     try
       LCommand.Execute(AEntity, LEvent);
     finally
