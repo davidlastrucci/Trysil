@@ -135,7 +135,7 @@ Keep the model units as the Expert writes them, and put the code you write in un
 
 ## Rules units
 
-With **Generate & register rules** ticked, the Expert writes for each selected entity a unit with an empty `TTEntityEvents<T>` and its registration:
+With **Generate & register rules** ticked, the Expert writes for each selected entity a unit with a `TTEntityEvents<T>` and its registration. The six methods you can override are listed as comments:
 
 ```delphi
 unit OrdersAPI.Rule.Order;
@@ -155,6 +155,13 @@ type
 { TOrderRules }
 
   TOrderRules = class(TTEntityEvents<TOrder>)
+  strict protected
+    // procedure BeforeInsert; override;
+    // procedure AfterInsert; override;
+    // procedure BeforeUpdate; override;
+    // procedure AfterUpdate; override;
+    // procedure BeforeDelete; override;
+    // procedure AfterDelete; override;
   end;
 
 implementation
@@ -165,7 +172,7 @@ initialization
 end.
 ```
 
-Override `BeforeInsert`, `AfterInsert`, `BeforeUpdate`, `AfterUpdate`, `BeforeDelete` or `AfterDelete` in it to write the rules.
+To write a rule, uncomment the method and press **Ctrl+Shift+C**: class completion adds its empty body in the `implementation`.
 
 - **A rules unit is written once.** If the file is already on disk, or the unit is already in the project, the entity is skipped without a question: the unit is yours from the moment it is created.
 - **The unit is added to the project.** The registration runs in its `initialization`, and a unit outside the project would never run it: its events would silently not fire. Do not remove it from the project.
