@@ -194,6 +194,9 @@ begin
   TTLanguage.Instance.Add(SDifferentNotSqid,
     'La route %0:s est servie par des méthodes qui marquent avec [TNotSqid] des paramètres différents. La route lit ses espaces réservés avant de connaître la méthode, ' +
     'donc toutes les méthodes d''une même route doivent marquer les mêmes positions.');
+  TTLanguage.Instance.Add(SNotValidRouteParameters,
+    'La méthode %0:s.%1:s a un attribut de route mais ne peut pas la servir : ses paramètres doivent être aussi nombreux que les "?" de la route, et tous entiers. ' +
+    'Elle était auparavant écartée des routes sans un mot. Une chaîne ou toute autre valeur passe par la query string ou par le corps.');
   TTLanguage.Instance.Add(SNotValidSqid, 'La valeur de "%s" n''est pas un sqid valide.');
   TTLanguage.Instance.Add(SNotValidJSon, 'Le JSon n''est pas valide : %s');
   TTLanguage.Instance.Add(SNotValidJSonValue, 'La valeur de "%s" n''est pas valide pour son type.');

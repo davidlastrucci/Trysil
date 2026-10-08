@@ -126,6 +126,10 @@ type
       const AMethod: TRttiMethod;
       const AUriAttribute: TUriAttribute;
       const AMethodAttribute: THttpMethodAttribute): Boolean;
+    procedure ValidateParameters(
+      const AMethod: TRttiMethod;
+      const AUriAttribute: TUriAttribute;
+      const AMethodAttribute: THttpMethodAttribute);
 
     procedure SearchHttpMethodAttribute(
       const AUriAttribute: TUriAttribute;
@@ -448,6 +452,17 @@ begin
     end;
 end;
 
+procedure TTHttpRttiController<C>.ValidateParameters(
+  const AMethod: TRttiMethod;
+  const AUriAttribute: TUriAttribute;
+  const AMethodAttribute: THttpMethodAttribute);
+begin
+  if not CheckParameters(AMethod, AUriAttribute, AMethodAttribute) then
+    raise ETHttpServerException.CreateFmt(
+      TTLanguage.Instance.Translate(SNotValidRouteParameters), [
+        FControllerName, AMethod.Name]);
+end;
+
 procedure TTHttpRttiController<C>.SearchHttpMethodAttribute(
   const AUriAttribute: TUriAttribute;
   const AAuthAttribute: TAuthorizationTypeAttribute;
@@ -460,25 +475,25 @@ var
 begin
   LMethodAttribute := AMethod.GetAttribute<THttpMethodAttribute>();
   if Assigned(LMethodAttribute) then
-    if CheckParameters(AMethod, AUriAttribute, LMethodAttribute) then
-    begin
-      LAuthAttribute := AMethod.GetAttribute<TAuthorizationTypeAttribute>();
-      if not Assigned(LAuthAttribute) then
-        LAuthAttribute := AAuthAttribute;
+  begin
+    ValidateParameters(AMethod, AUriAttribute, LMethodAttribute);
+    LAuthAttribute := AMethod.GetAttribute<TAuthorizationTypeAttribute>();
+    if not Assigned(LAuthAttribute) then
+      LAuthAttribute := AAuthAttribute;
 
-      LRttiMethod := TTHttpRttiMethod.Create(
-        AMethod, FBaseUri, AUriAttribute, LMethodAttribute, AAreas);
-      try
-        begin
-          if Assigned(LAuthAttribute) then
-            LRttiMethod.SetAuthorizationType(LAuthAttribute);
-          FMethods.Add(LRttiMethod);
-        end;
-      except
-        LRttiMethod.Free;
-        raise;
+    LRttiMethod := TTHttpRttiMethod.Create(
+      AMethod, FBaseUri, AUriAttribute, LMethodAttribute, AAreas);
+    try
+      begin
+        if Assigned(LAuthAttribute) then
+          LRttiMethod.SetAuthorizationType(LAuthAttribute);
+        FMethods.Add(LRttiMethod);
       end;
+    except
+      LRttiMethod.Free;
+      raise;
     end;
+  end;
 end;
 
 procedure TTHttpRttiController<C>.SearchMethods;

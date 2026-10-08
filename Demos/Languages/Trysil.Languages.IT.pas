@@ -193,6 +193,9 @@ begin
   TTLanguage.Instance.Add(SDifferentNotSqid,
     'La rotta %0:s è servita da metodi che marcano con [TNotSqid] parametri diversi. La rotta legge i segnaposto prima di sapere quale metodo chiamare, ' +
     'quindi tutti i metodi sulla stessa rotta devono marcare le stesse posizioni.');
+  TTLanguage.Instance.Add(SNotValidRouteParameters,
+    'Il metodo %0:s.%1:s ha un attributo di rotta ma non può servirla: i suoi parametri devono essere tanti quanti i "?" della rotta, e tutti interi. ' +
+    'Prima veniva escluso dalle rotte senza dire niente. Una stringa o un altro valore viaggia nella query string o nel body.');
   TTLanguage.Instance.Add(SNotValidSqid, 'Il valore di "%s" non è uno sqid valido.');
   TTLanguage.Instance.Add(SNotValidJSon, 'Il JSon non è valido: %s');
   TTLanguage.Instance.Add(SNotValidJSonValue, 'Il valore di "%s" non è valido per il suo tipo.');

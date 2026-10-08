@@ -190,6 +190,24 @@ type
     procedure Detail(const AID: Integer);
   end;
 
+{ TTestStringParamController }
+
+  TTestStringParamController = class(TTHttpController<TTestHttpContext>)
+  public
+    [TGet('/?')]
+    procedure ByName(const AName: String);
+  end;
+
+{ TTestParamCountController }
+
+  TTestParamCountController = class(TTHttpController<TTestHttpContext>)
+  public
+    [TGet('/?')]
+    procedure Detail(
+      const AID: Integer;
+      const ARow: Integer);
+  end;
+
 { TTestConflictController }
 
   TTestConflictController = class(TTHttpController<TTestHttpContext>)
@@ -434,6 +452,12 @@ type
 
     [Test]
     procedure APlaceholderBeforeAFixedSegmentIsRefused;
+
+    [Test]
+    procedure AStringRouteParameterIsRefused;
+
+    [Test]
+    procedure MoreParametersThanPlaceholdersAreRefused;
 
     [Test]
     procedure AnAddressThatDoesNotAnswerFallsBackToAPattern;
@@ -754,6 +778,20 @@ procedure TTestDenyingAuthentication.Check(
   const AResponse: TTHttpResponse);
 begin
   ResponseUnauthorizedError(ARequest, AResponse);
+end;
+
+{ TTestStringParamController }
+
+procedure TTestStringParamController.ByName(const AName: String);
+begin
+end;
+
+{ TTestParamCountController }
+
+procedure TTestParamCountController.Detail(
+  const AID: Integer;
+  const ARow: Integer);
+begin
 end;
 
 { TTestMisplacedParamController }
@@ -1440,6 +1478,43 @@ begin
     'every three-segment address under /misplaced: the router assumes ' +
     'placeholders sit at the end, and a route that breaks the assumption ' +
     'has to be refused where it is written, not answered at random');
+end;
+
+procedure TTHttpListenerTests.AStringRouteParameterIsRefused;
+var
+  LRefused: Boolean;
+begin
+  LRefused := False;
+  try
+    RegisterController(TypeInfo(TTestStringParamController), '/byname');
+  except
+    on E: ETHttpServerException do
+      LRefused := True;
+  end;
+
+  Assert.IsTrue(
+    LRefused,
+    'A placeholder binds an integer only. A method with a String parameter ' +
+    'was left out of the routes without a word, and its address answered ' +
+    '404 as if it had never been written');
+end;
+
+procedure TTHttpListenerTests.MoreParametersThanPlaceholdersAreRefused;
+var
+  LRefused: Boolean;
+begin
+  LRefused := False;
+  try
+    RegisterController(TypeInfo(TTestParamCountController), '/count');
+  except
+    on E: ETHttpServerException do
+      LRefused := True;
+  end;
+
+  Assert.IsTrue(
+    LRefused,
+    'A method needs one parameter per placeholder: with two parameters on ' +
+    'a route with one "?" it was dropped in silence, like the String one');
 end;
 
 procedure TTHttpListenerTests.APercentEncodedPathReachesItsRoute;

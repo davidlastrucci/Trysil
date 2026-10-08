@@ -165,6 +165,11 @@ resourcestring
     'different parameters with [TNotSqid]. The route reads its ' +
     'placeholders before it knows the method, so every method on it must ' +
     'mark the same positions.';
+  SNotValidRouteParameters = 'Method %0:s.%1:s has a route attribute ' +
+    'but cannot serve it: its parameters must be as many as the "?" of ' +
+    'the route, and all of them integers. It used to be left out of the ' +
+    'routes without a word. A string or any other value travels in the ' +
+    'query string or in the body.';
   SNotValidBaseUri = 'BaseUri %0:s is a path prefix, not an address: it ' +
     'is prepended to every route, so a value carrying a scheme registers ' +
     'routes nobody can reach. The address the server listens on comes ' +
