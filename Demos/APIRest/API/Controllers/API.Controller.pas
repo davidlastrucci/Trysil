@@ -92,7 +92,9 @@ type
 
     [TDelete('/?/?')]
     [TArea('write')]
-    procedure Delete(const AID: TTPrimaryKey; const AVersionID: TTVersion);
+    procedure Delete(
+      const AID: TTPrimaryKey;
+      [TNotSqid] const AVersionID: TTVersion);
 
     [TGet('/createnew')]
     [TArea('write')]
