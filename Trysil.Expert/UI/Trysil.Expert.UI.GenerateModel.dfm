@@ -51,6 +51,8 @@ inherited TGenerateModel: TTGenerateModel
           Width = 300
           Height = 17
           Caption = 'Generate && register controllers'
+          Checked = True
+          State = cbChecked
           TabOrder = 0
         end
         object ControllersDirectoryTextbox: TEdit
@@ -71,7 +73,7 @@ inherited TGenerateModel: TTGenerateModel
         end
       end
     end
-    object EventsPagePanel: TPanel
+    object RulesPagePanel: TPanel
       AlignWithMargins = True
       Left = 70
       Top = 8
@@ -84,7 +86,7 @@ inherited TGenerateModel: TTGenerateModel
       BevelOuter = bvNone
       ShowCaption = False
       TabOrder = 2
-      object EventsPageGroupbox: TGroupBox
+      object RulesPageGroupbox: TGroupBox
         AlignWithMargins = True
         Left = 2
         Top = 4
@@ -95,45 +97,45 @@ inherited TGenerateModel: TTGenerateModel
         Margins.Right = 2
         Margins.Bottom = 4
         Align = alClient
-        Caption = 'Events  '
+        Caption = 'Rules  '
         TabOrder = 0
-        object EventsDirectoryLabel: TLabel
+        object RulesDirectoryLabel: TLabel
           Left = 24
           Top = 60
           Width = 51
           Height = 15
           Caption = 'Directory:'
         end
-        object EventFilenamesLabel: TLabel
+        object RuleFilenamesLabel: TLabel
           Left = 24
           Top = 110
           Width = 79
           Height = 15
           Caption = 'Unit filenames:'
         end
-        object EventsCheckbox: TCheckBox
+        object RulesCheckbox: TCheckBox
           Left = 24
           Top = 28
           Width = 200
           Height = 17
-          Caption = 'Generate && register events'
+          Caption = 'Generate && register rules'
           TabOrder = 0
         end
-        object EventsDirectoryTextbox: TEdit
+        object RulesDirectoryTextbox: TEdit
           Left = 24
           Top = 81
           Width = 437
           Height = 23
           TabOrder = 1
-          Text = 'Events'
+          Text = 'Rules'
         end
-        object EventFilenamesTextbox: TEdit
+        object RuleFilenamesTextbox: TEdit
           Left = 24
           Top = 131
           Width = 437
           Height = 23
           TabOrder = 2
-          Text = '{ProjectName}.Event.{EntityName}'
+          Text = '{ProjectName}.Rule.{EntityName}'
         end
       end
     end
@@ -183,6 +185,8 @@ inherited TGenerateModel: TTGenerateModel
           Width = 200
           Height = 17
           Caption = 'Generate models'
+          Checked = True
+          State = cbChecked
           TabOrder = 0
         end
         object ModelDirectoryTextbox: TEdit
@@ -207,6 +211,8 @@ inherited TGenerateModel: TTGenerateModel
           Width = 260
           Height = 17
           Caption = 'Generate filter properties companion'
+          Checked = True
+          State = cbChecked
           TabOrder = 3
         end
       end

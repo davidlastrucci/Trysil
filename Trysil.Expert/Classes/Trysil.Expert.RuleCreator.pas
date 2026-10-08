@@ -8,7 +8,7 @@
   http://codenames.info/operation/orm/
 
 *)
-unit Trysil.Expert.EventCreator;
+unit Trysil.Expert.RuleCreator;
 
 interface
 
@@ -26,13 +26,13 @@ uses
 
 type
 
-{ TTEventCreator }
+{ TTRuleCreator }
 
-  TTEventCreator = class
+  TTRuleCreator = class
   strict private
     FProjectName: String;
     FUnitNames: String;
-    FEventNames: String;
+    FRuleNames: String;
     FPascalDirectory: String;
 
     function Exists(const AUnitName: String): Boolean;
@@ -42,50 +42,50 @@ type
       const ASource: TTSourceWriter; const AEntity: TTEntity);
     procedure AddImplementation(
       const ASource: TTSourceWriter; const AEntity: TTEntity);
-    procedure CreateEvent(const AEntity: TTEntity; const AUnitName: String);
+    procedure CreateRule(const AEntity: TTEntity; const AUnitName: String);
     procedure CreateUnit(
       const AName: String; const ASource: TTSourceWriter);
   public
     constructor Create(
       const AProjectName: String;
       const AUnitNames: String;
-      const AEventNames: String;
+      const ARuleNames: String;
       const APascalDirectory: String);
 
-    procedure CreateEvents(const ASelected: TList<TTEntity>);
+    procedure CreateRules(const ASelected: TList<TTEntity>);
   end;
 
 implementation
 
-{ TTEventCreator }
+{ TTRuleCreator }
 
-constructor TTEventCreator.Create(
+constructor TTRuleCreator.Create(
   const AProjectName: String;
   const AUnitNames: String;
-  const AEventNames: String;
+  const ARuleNames: String;
   const APascalDirectory: String);
 begin
   inherited Create;
   FProjectName := AProjectName;
   FUnitNames := AUnitNames;
-  FEventNames := AEventNames;
+  FRuleNames := ARuleNames;
   FPascalDirectory := APascalDirectory;
 end;
 
-procedure TTEventCreator.CreateEvents(const ASelected: TList<TTEntity>);
+procedure TTRuleCreator.CreateRules(const ASelected: TList<TTEntity>);
 var
   LEntity: TTEntity;
   LUnitName: String;
 begin
   for LEntity in ASelected do
   begin
-    LUnitName := TTUtils.UnitName(FEventNames, FProjectName, LEntity.Name);
+    LUnitName := TTUtils.UnitName(FRuleNames, FProjectName, LEntity.Name);
     if not Exists(LUnitName) then
-      CreateEvent(LEntity, LUnitName);
+      CreateRule(LEntity, LUnitName);
   end;
 end;
 
-function TTEventCreator.Exists(const AUnitName: String): Boolean;
+function TTRuleCreator.Exists(const AUnitName: String): Boolean;
 var
   LFileName: String;
 begin
@@ -95,7 +95,7 @@ begin
     Assigned(TTIOTA.SearchModule(LFileName));
 end;
 
-procedure TTEventCreator.AddUses(
+procedure TTRuleCreator.AddUses(
   const ASource: TTSourceWriter; const AEntity: TTEntity);
 begin
   ASource.Append('uses');
@@ -109,33 +109,33 @@ begin
   ASource.AppendLine;
 end;
 
-procedure TTEventCreator.AddType(
+procedure TTRuleCreator.AddType(
   const ASource: TTSourceWriter; const AEntity: TTEntity);
 begin
   ASource.Append('type');
   ASource.AppendLine;
-  ASource.Append('{ T%sEvents }', [AEntity.Name]);
+  ASource.Append('{ T%sRules }', [AEntity.Name]);
   ASource.AppendLine;
   ASource.Append(
-    '  T%0:sEvents = class(TTEntityEvents<T%0:s>)', [AEntity.Name]);
+    '  T%0:sRules = class(TTEntityEvents<T%0:s>)', [AEntity.Name]);
   ASource.Append('  end;');
   ASource.AppendLine;
 end;
 
-procedure TTEventCreator.AddImplementation(
+procedure TTRuleCreator.AddImplementation(
   const ASource: TTSourceWriter; const AEntity: TTEntity);
 begin
   ASource.Append('implementation');
   ASource.AppendLine;
   ASource.Append('initialization');
   ASource.Append(
-    '  TTEventRegistration.RegisterEvents<T%0:s, T%0:sEvents>;', [
+    '  TTEventRegistration.RegisterEvents<T%0:s, T%0:sRules>;', [
       AEntity.Name]);
   ASource.AppendLine;
   ASource.Append('end.');
 end;
 
-procedure TTEventCreator.CreateEvent(
+procedure TTRuleCreator.CreateRule(
   const AEntity: TTEntity; const AUnitName: String);
 var
   LSource: TTSourceWriter;
@@ -155,7 +155,7 @@ begin
   end;
 end;
 
-procedure TTEventCreator.CreateUnit(
+procedure TTRuleCreator.CreateUnit(
   const AName: String; const ASource: TTSourceWriter);
 var
   LModuleServices: IOTAModuleServices;

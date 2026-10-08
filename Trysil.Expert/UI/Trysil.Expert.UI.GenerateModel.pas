@@ -42,7 +42,7 @@ uses
   Trysil.Expert.UI.Classes,
   Trysil.Expert.Validator,
   Trysil.Expert.ModelCreator,
-  Trysil.Expert.EventCreator,
+  Trysil.Expert.RuleCreator,
   Trysil.Expert.ControllerCreator,
   Trysil.Expert.APIHttpModifier, Vcl.Imaging.pngimage;
 
@@ -65,13 +65,13 @@ type
     UnitFilenamesLabel: TLabel;
     UnitFilenamesTextbox: TEdit;
     FilterPropertiesCheckbox: TCheckBox;
-    EventsPagePanel: TPanel;
-    EventsPageGroupbox: TGroupBox;
-    EventsCheckbox: TCheckBox;
-    EventsDirectoryLabel: TLabel;
-    EventsDirectoryTextbox: TEdit;
-    EventFilenamesLabel: TLabel;
-    EventFilenamesTextbox: TEdit;
+    RulesPagePanel: TPanel;
+    RulesPageGroupbox: TGroupBox;
+    RulesCheckbox: TCheckBox;
+    RulesDirectoryLabel: TLabel;
+    RulesDirectoryTextbox: TEdit;
+    RuleFilenamesLabel: TLabel;
+    RuleFilenamesTextbox: TEdit;
     ControllersPagePanel: TPanel;
     ControllersPageGroupbox: TGroupBox;
     APIControllersCheckbox: TCheckBox;
@@ -116,7 +116,7 @@ type
     function CheckOverwrite(const AEntities: TList<TTEntity>): Boolean;
     procedure SelectAllEntities(const ASelect: Boolean);
     procedure CreateModels(const AEntities: TList<TTEntity>);
-    procedure CreateEvents(const AEntities: TList<TTEntity>);
+    procedure CreateRules(const AEntities: TList<TTEntity>);
     procedure CreateControllers(const AEntities: TList<TTEntity>);
     procedure ModifyAPIHttp(const AEntities: TList<TTEntity>);
     procedure Generate(const AEntities: TList<TTEntity>);
@@ -172,7 +172,7 @@ begin
   FWizard.AddPage(TTWizardPage.Create(
     ModelsPagePanel, ModelsCheckbox, nil, nil));
   FWizard.AddPage(TTWizardPage.Create(
-    EventsPagePanel, EventsCheckbox, nil, nil));
+    RulesPagePanel, RulesCheckbox, nil, nil));
   FWizard.AddPage(TTWizardPage.Create(
     ControllersPagePanel, APIControllersCheckbox, IsAPIRestApplication, nil));
 end;
@@ -225,31 +225,22 @@ end;
 
 procedure TTGenerateModel.ConfigToControls;
 begin
-  ModelsCheckbox.Checked := FConfig.Models;
   ModelDirectoryTextbox.Text := FConfig.ModelDirectory;
   UnitFilenamesTextbox.Text := FConfig.UnitFilenames;
-  EventsCheckbox.Checked := FConfig.Events;
-  EventsDirectoryTextbox.Text := FConfig.EventsDirectory;
-  EventFilenamesTextbox.Text := FConfig.EventFilenames;
-  APIControllersCheckbox.Checked :=
-    APIControllersCheckbox.Enabled and FConfig.Controllers;
+  RulesDirectoryTextbox.Text := FConfig.RulesDirectory;
+  RuleFilenamesTextbox.Text := FConfig.RuleFilenames;
   ControllersDirectoryTextbox.Text := FConfig.ControllersDirectory;
   ControllerFilenamesTextbox.Text := FConfig.ControllerFilenames;
-  FilterPropertiesCheckbox.Checked := FConfig.FilterProperties;
 end;
 
 procedure TTGenerateModel.ControlsToConfig;
 begin
-  FConfig.Models := ModelsCheckbox.Checked;
   FConfig.ModelDirectory := ModelDirectoryTextbox.Text;
   FConfig.UnitFilenames := UnitFilenamesTextbox.Text;
-  FConfig.Events := EventsCheckbox.Checked;
-  FConfig.EventsDirectory := EventsDirectoryTextbox.Text;
-  FConfig.EventFilenames := EventFilenamesTextbox.Text;
-  FConfig.Controllers := IsControllersChecked;
+  FConfig.RulesDirectory := RulesDirectoryTextbox.Text;
+  FConfig.RuleFilenames := RuleFilenamesTextbox.Text;
   FConfig.ControllersDirectory := ControllersDirectoryTextbox.Text;
   FConfig.ControllerFilenames := ControllerFilenamesTextbox.Text;
-  FConfig.FilterProperties := FilterPropertiesCheckbox.Checked;
   FConfig.Save;
 end;
 
@@ -270,7 +261,7 @@ end;
 procedure TTGenerateModel.CheckGeneration;
 begin
   if not (ModelsCheckbox.Checked or
-    EventsCheckbox.Checked or
+    RulesCheckbox.Checked or
     IsControllersChecked) then
     raise ETExpertException.Create(SSelectOneGeneration);
 end;
@@ -395,17 +386,17 @@ begin
   end;
 end;
 
-procedure TTGenerateModel.CreateEvents(const AEntities: TList<TTEntity>);
+procedure TTGenerateModel.CreateRules(const AEntities: TList<TTEntity>);
 var
-  LCreator: TTEventCreator;
+  LCreator: TTRuleCreator;
 begin
-  LCreator := TTEventCreator.Create(
+  LCreator := TTRuleCreator.Create(
     FProject.Name,
     UnitFilenamesTextbox.Text,
-    EventFilenamesTextbox.Text,
-    TTUtils.ProjectFolder(FProject.Directory, EventsDirectoryTextbox.Text));
+    RuleFilenamesTextbox.Text,
+    TTUtils.ProjectFolder(FProject.Directory, RulesDirectoryTextbox.Text));
   try
-    LCreator.CreateEvents(AEntities);
+    LCreator.CreateRules(AEntities);
   finally
     LCreator.Free;
   end;
@@ -448,8 +439,8 @@ begin
     FEntities.CalculateUsesAndRelations;
     if ModelsCheckbox.Checked then
       CreateModels(AEntities);
-    if EventsCheckbox.Checked then
-      CreateEvents(AEntities);
+    if RulesCheckbox.Checked then
+      CreateRules(AEntities);
     if IsControllersChecked then
     begin
       CreateControllers(AEntities);

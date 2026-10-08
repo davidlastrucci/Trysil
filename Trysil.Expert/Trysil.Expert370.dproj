@@ -203,7 +203,7 @@
         <DCCReference Include="Classes\Trysil.Expert.SQLUpdateCreator.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.ModelCreator.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.ControllerCreator.pas"/>
-        <DCCReference Include="Classes\Trysil.Expert.EventCreator.pas"/>
+        <DCCReference Include="Classes\Trysil.Expert.RuleCreator.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.APIHttpModifier.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.APIRest.Parameters.pas"/>
         <DCCReference Include="Classes\Trysil.Expert.APIRest.Template.pas"/>

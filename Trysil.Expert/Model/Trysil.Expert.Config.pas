@@ -39,8 +39,8 @@ type
     FTrysilDirectory: String;
     FModelDirectory: String;
     FUnitFilenames: String;
-    FEventsDirectory: String;
-    FEventFilenames: String;
+    FRulesDirectory: String;
+    FRuleFilenames: String;
     FControllersDirectory: String;
     FControllerFilenames: String;
 
@@ -54,10 +54,10 @@ type
       read FTrysilDirectory write FTrysilDirectory;
     property ModelDirectory: String read FModelDirectory write FModelDirectory;
     property UnitFilenames: String read FUnitFilenames write FUnitFilenames;
-    property EventsDirectory: String
-      read FEventsDirectory write FEventsDirectory;
-    property EventFilenames: String
-      read FEventFilenames write FEventFilenames;
+    property RulesDirectory: String
+      read FRulesDirectory write FRulesDirectory;
+    property RuleFilenames: String
+      read FRuleFilenames write FRuleFilenames;
     property ControllersDirectory: String
       read FControllersDirectory write FControllersDirectory;
     property ControllerFilenames: String
@@ -74,14 +74,10 @@ type
 
     FModelDirectory: String;
     FUnitFilenames: String;
-    FEventsDirectory: String;
-    FEventFilenames: String;
+    FRulesDirectory: String;
+    FRuleFilenames: String;
     FControllersDirectory: String;
     FControllerFilenames: String;
-    FModels: Boolean;
-    FEvents: Boolean;
-    FControllers: Boolean;
-    FFilterProperties: Boolean;
     FDatabaseType: Integer;
     FReferenceHost: String;
     FReferencePort: Integer;
@@ -98,19 +94,14 @@ type
 
     property ModelDirectory: String read FModelDirectory write FModelDirectory;
     property UnitFilenames: String read FUnitFilenames write FUnitFilenames;
-    property EventsDirectory: String
-      read FEventsDirectory write FEventsDirectory;
-    property EventFilenames: String
-      read FEventFilenames write FEventFilenames;
+    property RulesDirectory: String
+      read FRulesDirectory write FRulesDirectory;
+    property RuleFilenames: String
+      read FRuleFilenames write FRuleFilenames;
     property ControllersDirectory: String
       read FControllersDirectory write FControllersDirectory;
     property ControllerFilenames: String
       read FControllerFilenames write FControllerFilenames;
-    property Models: Boolean read FModels write FModels;
-    property Events: Boolean read FEvents write FEvents;
-    property Controllers: Boolean read FControllers write FControllers;
-    property FilterProperties: Boolean
-      read FFilterProperties write FFilterProperties;
     property DatabaseType: Integer read FDatabaseType write FDatabaseType;
     property ReferenceHost: String read FReferenceHost write FReferenceHost;
     property ReferencePort: Integer read FReferencePort write FReferencePort;
@@ -148,8 +139,8 @@ type
     const TrysilDirectory: String = '__trysil';
     const ModelDirectory: String = 'Model';
     const UnitFilenames: String = '{ProjectName}.Model.{EntityName}';
-    const EventsDirectory: String = 'Events';
-    const EventFilenames: String = '{ProjectName}.Event.{EntityName}';
+    const RulesDirectory: String = 'Rules';
+    const RuleFilenames: String = '{ProjectName}.Rule.{EntityName}';
     const ControllersDirectory: String = 'Controllers';
     const ControllerFilenames: String =
       '{ProjectName}.Controller.{EntityName}';
@@ -184,8 +175,8 @@ begin
     FTrysilDirectory := LRegistry.ReadString(RegistryPath, 'TrysilDirectory', TTConfigDefaults.TrysilDirectory);
     FModelDirectory := LRegistry.ReadString(RegistryPath, 'ModelDirectory', TTConfigDefaults.ModelDirectory);
     FUnitFilenames := LRegistry.ReadString(RegistryPath, 'UnitFilenames', TTConfigDefaults.UnitFilenames);
-    FEventsDirectory := LRegistry.ReadString(RegistryPath, 'EventsDirectory', TTConfigDefaults.EventsDirectory);
-    FEventFilenames := LRegistry.ReadString(RegistryPath, 'EventFilenames', TTConfigDefaults.EventFilenames);
+    FRulesDirectory := LRegistry.ReadString(RegistryPath, 'RulesDirectory', TTConfigDefaults.RulesDirectory);
+    FRuleFilenames := LRegistry.ReadString(RegistryPath, 'RuleFilenames', TTConfigDefaults.RuleFilenames);
     FControllersDirectory := LRegistry.ReadString(RegistryPath, 'ControllersDirectory', TTConfigDefaults.ControllersDirectory);
     FControllerFilenames := LRegistry.ReadString(RegistryPath, 'ControllerFilenames', TTConfigDefaults.ControllerFilenames);
   finally
@@ -204,8 +195,8 @@ begin
     LRegistry.WriteString(RegistryPath, 'TrysilDirectory', FTrysilDirectory);
     LRegistry.WriteString(RegistryPath, 'ModelDirectory', FModelDirectory);
     LRegistry.WriteString(RegistryPath, 'UnitFilenames', FUnitFilenames);
-    LRegistry.WriteString(RegistryPath, 'EventsDirectory', FEventsDirectory);
-    LRegistry.WriteString(RegistryPath, 'EventFilenames', FEventFilenames);
+    LRegistry.WriteString(RegistryPath, 'RulesDirectory', FRulesDirectory);
+    LRegistry.WriteString(RegistryPath, 'RuleFilenames', FRuleFilenames);
     LRegistry.WriteString(RegistryPath, 'ControllersDirectory', FControllersDirectory);
     LRegistry.WriteString(RegistryPath, 'ControllerFilenames', FControllerFilenames);
   finally
@@ -246,14 +237,10 @@ begin
   try
     FModelDirectory := LJSon.GetValue<String>('modelDirectory', TTConfig.Instance.ModelDirectory);
     FUnitFilenames := LJSon.GetValue<String>('unitFilenames', TTConfig.Instance.UnitFilenames);
-    FEventsDirectory := LJSon.GetValue<String>('eventsDirectory', TTConfig.Instance.EventsDirectory);
-    FEventFilenames := LJSon.GetValue<String>('eventFilenames', TTConfig.Instance.EventFilenames);
+    FRulesDirectory := LJSon.GetValue<String>('rulesDirectory', TTConfig.Instance.RulesDirectory);
+    FRuleFilenames := LJSon.GetValue<String>('ruleFilenames', TTConfig.Instance.RuleFilenames);
     FControllersDirectory := LJSon.GetValue<String>('controllersDirectory', TTConfig.Instance.ControllersDirectory);
     FControllerFilenames := LJSon.GetValue<String>('controllerFilenames', TTConfig.Instance.ControllerFilenames);
-    FModels := LJSon.GetValue<Boolean>('models', True);
-    FEvents := LJSon.GetValue<Boolean>('events', False);
-    FControllers := LJSon.GetValue<Boolean>('controllers', True);
-    FFilterProperties := LJSon.GetValue<Boolean>('filterProperties', True);
     FDatabaseType := LJSon.GetValue<Integer>('databaseType', 0);
     FReferenceHost := LJSon.GetValue<String>('referenceHost', '');
     FReferencePort := LJSon.GetValue<Integer>('referencePort', 0);
@@ -268,14 +255,10 @@ procedure TTLocalConfig.LoadFromConfig;
 begin
   FModelDirectory := TTConfig.Instance.ModelDirectory;
   FUnitFilenames := TTConfig.Instance.UnitFilenames;
-  FEventsDirectory := TTConfig.Instance.EventsDirectory;
-  FEventFilenames := TTConfig.Instance.EventFilenames;
+  FRulesDirectory := TTConfig.Instance.RulesDirectory;
+  FRuleFilenames := TTConfig.Instance.RuleFilenames;
   FControllersDirectory := TTConfig.Instance.ControllersDirectory;
   FControllerFilenames := TTConfig.Instance.ControllerFilenames;
-  FModels := True;
-  FEvents := False;
-  FControllers := True;
-  FFilterProperties := True;
   FDatabaseType := 0;
   FReferenceHost := String.Empty;
   FReferencePort := 0;
@@ -291,14 +274,10 @@ begin
   try
     LJSon.AddPair('modelDirectory', FModelDirectory);
     LJSon.AddPair('unitFilenames', FUnitFilenames);
-    LJSon.AddPair('eventsDirectory', FEventsDirectory);
-    LJSon.AddPair('eventFilenames', FEventFilenames);
+    LJSon.AddPair('rulesDirectory', FRulesDirectory);
+    LJSon.AddPair('ruleFilenames', FRuleFilenames);
     LJSon.AddPair('controllersDirectory', FControllersDirectory);
     LJSon.AddPair('controllerFilenames', FControllerFilenames);
-    LJSon.AddPair('models', TJSonBool.Create(FModels));
-    LJSon.AddPair('events', TJSonBool.Create(FEvents));
-    LJSon.AddPair('controllers', TJSonBool.Create(FControllers));
-    LJSon.AddPair('filterProperties', TJSonBool.Create(FFilterProperties));
     LJSon.AddPair('databaseType', TJSonNumber.Create(FDatabaseType));
     LJSon.AddPair('referenceHost', FReferenceHost);
     LJSon.AddPair('referencePort', TJSonNumber.Create(FReferencePort));

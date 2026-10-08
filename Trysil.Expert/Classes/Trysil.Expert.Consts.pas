@@ -16,7 +16,7 @@ resourcestring
   SInvalidColumnType = 'Invalid column type.';
   SEntityNotFound = 'Entity %s not found.';
   SSelectOneEntity = 'Select at least one entity.';
-  SSelectOneGeneration = 'Select at least one of models, events and controllers.';
+  SSelectOneGeneration = 'Select at least one of models, rules and controllers.';
   SErrors = 'There are errors:';
   SEntityNameEmpty = 'Entity name cannot be empty.';
   STableNameEmpty = 'Table name cannot be empty.';

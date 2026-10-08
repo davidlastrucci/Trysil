@@ -44,11 +44,11 @@ type
     ModelDirectoryTextbox: TEdit;
     UnitFilenamesLabel: TLabel;
     UnitFilenamesTextbox: TEdit;
-    EventsPanel: TPanel;
-    EventsDirectoryLabel: TLabel;
-    EventsDirectoryTextbox: TEdit;
-    EventFilenamesLabel: TLabel;
-    EventFilenamesTextbox: TEdit;
+    RulesPanel: TPanel;
+    RulesDirectoryLabel: TLabel;
+    RulesDirectoryTextbox: TEdit;
+    RuleFilenamesLabel: TLabel;
+    RuleFilenamesTextbox: TEdit;
     ControllersPanel: TPanel;
     ControllersDirectoryLabel: TLabel;
     ControllersDirectoryTextbox: TEdit;
@@ -97,7 +97,7 @@ begin
   try
     AddNode('Trysil', TrysilPanel);
     AddNode('Models', ModelsPanel);
-    AddNode('Events', EventsPanel);
+    AddNode('Rules', RulesPanel);
     AddNode('Controllers', ControllersPanel);
   finally
     SettingsTreeView.Items.EndUpdate;
@@ -126,8 +126,8 @@ begin
   TrysilDirectoryTextbox.Text := TTConfig.Instance.TrysilDirectory;
   ModelDirectoryTextbox.Text := TTConfig.Instance.ModelDirectory;
   UnitFilenamesTextbox.Text := TTConfig.Instance.UnitFilenames;
-  EventsDirectoryTextbox.Text := TTConfig.Instance.EventsDirectory;
-  EventFilenamesTextbox.Text := TTConfig.Instance.EventFilenames;
+  RulesDirectoryTextbox.Text := TTConfig.Instance.RulesDirectory;
+  RuleFilenamesTextbox.Text := TTConfig.Instance.RuleFilenames;
   ControllersDirectoryTextbox.Text := TTConfig.Instance.ControllersDirectory;
   ControllerFilenamesTextbox.Text := TTConfig.Instance.ControllerFilenames;
 end;
@@ -137,8 +137,8 @@ begin
   TTConfig.Instance.TrysilDirectory := TrysilDirectoryTextbox.Text;
   TTConfig.Instance.ModelDirectory := ModelDirectoryTextbox.Text;
   TTConfig.Instance.UnitFilenames := UnitFilenamesTextbox.Text;
-  TTConfig.Instance.EventsDirectory := EventsDirectoryTextbox.Text;
-  TTConfig.Instance.EventFilenames := EventFilenamesTextbox.Text;
+  TTConfig.Instance.RulesDirectory := RulesDirectoryTextbox.Text;
+  TTConfig.Instance.RuleFilenames := RuleFilenamesTextbox.Text;
   TTConfig.Instance.ControllersDirectory := ControllersDirectoryTextbox.Text;
   TTConfig.Instance.ControllerFilenames := ControllerFilenamesTextbox.Text;
 end;

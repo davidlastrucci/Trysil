@@ -88,7 +88,7 @@ inherited TSettingsForm: TTSettingsForm
         Text = '{ProjectName}.Model.{EntityName}'
       end
     end
-    object EventsPanel: TPanel
+    object RulesPanel: TPanel
       Left = 227
       Top = 12
       Width = 292
@@ -99,35 +99,35 @@ inherited TSettingsForm: TTSettingsForm
       TabOrder = 3
       Visible = False
       StyleElements = [seFont, seBorder]
-      object EventsDirectoryLabel: TLabel
+      object RulesDirectoryLabel: TLabel
         Left = 0
         Top = 0
         Width = 51
         Height = 15
         Caption = 'Directory:'
       end
-      object EventFilenamesLabel: TLabel
+      object RuleFilenamesLabel: TLabel
         Left = 0
         Top = 50
         Width = 79
         Height = 15
         Caption = 'Unit filenames:'
       end
-      object EventsDirectoryTextbox: TEdit
+      object RulesDirectoryTextbox: TEdit
         Left = 0
         Top = 21
         Width = 292
         Height = 23
         TabOrder = 0
-        Text = 'Events'
+        Text = 'Rules'
       end
-      object EventFilenamesTextbox: TEdit
+      object RuleFilenamesTextbox: TEdit
         Left = 0
         Top = 71
         Width = 292
         Height = 23
         TabOrder = 1
-        Text = '{ProjectName}.Event.{EntityName}'
+        Text = '{ProjectName}.Rule.{EntityName}'
       end
     end
     object ControllersPanel: TPanel

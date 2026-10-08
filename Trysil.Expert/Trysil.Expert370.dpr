@@ -31,7 +31,7 @@ uses
   Trysil.Expert.SQLUpdateCreator in 'Classes\Trysil.Expert.SQLUpdateCreator.pas',
   Trysil.Expert.ModelCreator in 'Classes\Trysil.Expert.ModelCreator.pas',
   Trysil.Expert.ControllerCreator in 'Classes\Trysil.Expert.ControllerCreator.pas',
-  Trysil.Expert.EventCreator in 'Classes\Trysil.Expert.EventCreator.pas',
+  Trysil.Expert.RuleCreator in 'Classes\Trysil.Expert.RuleCreator.pas',
   Trysil.Expert.APIHttpModifier in 'Classes\Trysil.Expert.APIHttpModifier.pas',
   Trysil.Expert.APIRest.Parameters in 'Classes\Trysil.Expert.APIRest.Parameters.pas',
   Trysil.Expert.APIRest.Template in 'Classes\Trysil.Expert.APIRest.Template.pas',
