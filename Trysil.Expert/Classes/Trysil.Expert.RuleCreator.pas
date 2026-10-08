@@ -118,6 +118,13 @@ begin
   ASource.AppendLine;
   ASource.Append(
     '  T%0:sRules = class(TTEntityEvents<T%0:s>)', [AEntity.Name]);
+  ASource.Append('  strict protected');
+  ASource.Append('    // procedure BeforeInsert; override;');
+  ASource.Append('    // procedure AfterInsert; override;');
+  ASource.Append('    // procedure BeforeUpdate; override;');
+  ASource.Append('    // procedure AfterUpdate; override;');
+  ASource.Append('    // procedure BeforeDelete; override;');
+  ASource.Append('    // procedure AfterDelete; override;');
   ASource.Append('  end;');
   ASource.AppendLine;
 end;
