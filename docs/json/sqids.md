@@ -37,7 +37,8 @@ It is off by default.
 | Primary key, serialization | emitted as a JSON string |
 | Primary key, deserialization | read as a sqid. An absent or `null` key is left alone; a value that is not a valid sqid raises `ETJSonException` naming the field |
 | `TTLazy<T>` relation | its `<name>ID` member is emitted and read as a sqid |
-| HTTP route parameters | every `?` placeholder is decoded before the route is matched |
+| HTTP route parameters | every `?` placeholder is read as a sqid, except those of a parameter marked [`[TNotSqid]`](#plain-numbers-in-a-route) |
+| HTTP filter | a condition on the primary key or on a `TTLazy<T>` relation takes a sqid; a plain number is refused with `400` |
 
 The same applies to related entities and to detail collections: every
 serialized entity has its own primary key encoded.
@@ -47,6 +48,15 @@ serialized entity has its own primary key encoded.
     key mapped as a plain `Integer` column goes out as a number, so it shows
     the id Sqids was meant to hide. Map relations as `TTLazy<T>` to keep every
     id opaque.
+
+## Only canonical sqids are ids
+
+A string is read as an id only if it is the very sqid `Encode` produces for
+that number. `TSqidsEncoding` decodes more than it produces: `2026`, a number and
+not a sqid, decodes to 24471 without an error. Trysil encodes the
+number back and compares it with the string it received, so those values are
+refused instead of reaching the application as another id: a route answers
+`404`, the JSON raises `ETJSonException`, the filter answers `400`.
 
 ## HTTP routes
 
@@ -59,11 +69,55 @@ procedure Get(const AID: Integer);
 ```
 
 `GET /api/order/k8j2ld03` calls `Get(42)`. Every placeholder of the route is
-decoded, so `/orders/?/rows/?` takes two sqids. A segment that does not decode
-does not match the placeholder.
+read as a sqid, so `/orders/?/rows/?` takes two sqids. A segment that is not a
+sqid does not match the placeholder, and the route answers `404`: with Sqids on,
+`GET /api/order/42` reaches no method at all.
 
-A plain number is decoded as a sqid like any other string: with Sqids on,
-`/api/order/42` does not reach the method as `42`.
+### Plain numbers in a route
+
+A placeholder that carries a number which is not an id, a version or a year,
+marks its parameter with `[TNotSqid]` (`Trysil.Http.Attributes`). The client
+sends that value as the number it is, and the placeholder reads it as one:
+
+```pascal
+[TDelete('/?/?')]
+procedure Delete(
+  const AID: TTPrimaryKey;
+  [TNotSqid] const AVersionID: TTVersion);
+
+[TGet('/report/?/?')]
+procedure Report(
+  [TNotSqid] const AYear: Integer;
+  [TNotSqid] const AMonth: Integer);
+```
+
+`DELETE /api/order/k8j2ld03/3` calls `Delete(42, 3)`: the version goes out in
+the JSON as a number, because only ids are encoded, and comes back as one.
+
+- **With Sqids off the attribute changes nothing**: every placeholder reads an
+  integer anyway.
+- **Every placeholder is a sqid unless marked.** A forgotten `[TNotSqid]` makes
+  the route answer `404`, which shows at the first call; it never lets a plain
+  id through.
+- **Methods that share a route mark the same positions.** The router reads the
+  placeholders before it knows which method answers, so a `GET` and a `DELETE`
+  on the same route that disagree stop the server at registration.
+- **An override inherits the reading.** The route and `[TNotSqid]` are read
+  from the method that declares the route attribute: an override of `Delete`
+  repeats neither.
+
+## HTTP filters
+
+`TTHttpFilter<T>`, and so `TTHttpEntityReader<T>.Select`, reads the value of a
+condition on the primary key or on a `TTLazy<T>` relation as a sqid:
+
+```json
+{ "where": [ { "columnName": "customerID", "condition": "=", "value": "k8j2ld03" } ] }
+```
+
+A plain number on those columns is refused with `400`. Without that, a filter
+like `ID > 0` would list every row by its sequential id and go round what Sqids
+hides everywhere else. The other integer columns keep taking numbers.
 
 ## Encoding by hand
 
@@ -73,8 +127,8 @@ the singleton exposes the conversion directly:
 | Method | Sqids on | Sqids off |
 |---|---|---|
 | `Encode(AValue): TJSonValue` | a `TJSonString` with the sqid | a `TJSonNumber` |
-| `Decode(AValue): Integer` | decodes the sqid | `Integer.Parse` |
-| `TryDecode(AValue, out AResult): Boolean` | decodes the sqid, `False` if it is not valid | `Integer.TryParse` |
+| `Decode(AValue): Integer` | decodes the sqid, raises `EConvertError` if it is not a canonical one | parses the integer, raises `EConvertError` if it is not one |
+| `TryDecode(AValue, out AResult): Boolean` | decodes the sqid, `False` if it is not a canonical one | `Integer.TryParse` |
 
 `Encode` returns a new `TJSonValue`: free it, or hand it to a `TJSonObject`
 that owns it.

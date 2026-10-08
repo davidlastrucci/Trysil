@@ -49,6 +49,10 @@ URL parameters use the `?` placeholder. Parameters are mapped to method argument
 | `[TGet('/?')]` | `GET /api/persons/123` | `AID = 123` |
 | `[TDelete('/?/?')]` | `DELETE /api/persons/123/1` | `AID = 123, AVersionID = 1` |
 
+Every parameter of a routed method is an integer, one per placeholder. A method that has a route attribute and parameters that cannot serve it, a `String` or one parameter too many, is refused when the controller is registered: it used to be left out of the routes without a word, and its address answered `404`. A string or any other value travels in the query string, read with `FRequest.Parameters`, or in the body, read with `FRequest.JSonContent`.
+
+With [Sqids](../json/sqids.md) on, a placeholder reads a sqid. A parameter that is a plain number, a version or a year, carries `[TNotSqid]`: see [Plain numbers in a route](../json/sqids.md#plain-numbers-in-a-route).
+
 A placeholder stands for the last segments of the route, never for one in the middle. `[TGet('/?/detail')]` is refused when the controller is registered: a placeholder matches any value, so a fixed segment written after one turns the route into a pattern that overlaps addresses it was never meant to serve.
 
 The router resolves a request by trying the exact address first, then the parametrized routes, then the catch-all, and at every step it looks for a route that answers the request method. The exact address wins when it answers the method and steps aside when it does not, and among the parametrized routes the search keeps going until one carries the method. So `[TGet('/2024/?')]` on one controller and `[TDelete('/?/?')]` on another can share a base URI and both stay reachable, and a literal `[TGet('/2024')]` does not turn `DELETE /reports/2024` into a `405` while `[TDelete('/?')]` is there to serve it. A `405` means no route that matches the address answers the method, and its `Allow` header lists what the address does answer.
