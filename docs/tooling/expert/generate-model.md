@@ -1,10 +1,10 @@
 # Generate entity model
 
-**Trysil > Generate entity model** writes Delphi units for the entities of the model and adds them to the active project: the entity classes, the [event units](#event-units) and, in an API REST project, the [controllers](#api-rest-controllers).
+**Trysil > Generate entity model** writes Delphi units for the entities of the model and adds them to the active project: the entity classes, the [rules units](#rules-units) and, in an API REST project, the [controllers](#api-rest-controllers).
 
 ## The wizard
 
-The dialog is a wizard of four pages: **Back** and **Next** move between them, **Finish** generates. What you choose is remembered for the project in `__trysil\__settings\settings.json`; the defaults come from [Settings](settings.md).
+The dialog is a wizard of four pages: **Back** and **Next** move between them, **Finish** generates. The directories and unit filenames you choose are remembered for the project in `__trysil\__settings\settings.json`, and their defaults come from [Settings](settings.md). The check boxes are not remembered: every time the wizard opens, models, filter properties and controllers are ticked and rules are not.
 
 ### Entities
 
@@ -23,23 +23,23 @@ The entities to generate, all ticked by default. Right click for **Select all en
 | Unit filenames | `{ProjectName}.Model.{EntityName}` | Pattern of the unit names |
 | Generate filter properties companion | Ticked | Adds a `T<Entity>Properties` record to each unit |
 
-**Unit filenames** is used even with **Generate models** not ticked: the event and controller units name the model unit in their `uses` clause.
+**Unit filenames** is used even with **Generate models** not ticked: the rules and controller units name the model unit in their `uses` clause.
 
-### Events
+### Rules
 
-![Events page](images/generate-model-events.png)
+![Rules page](images/generate-model-rules.png)
 
 | Field | Default | Meaning |
 |---|---|---|
-| Generate & register events | Not ticked | Writes an [event unit](#event-units) for each entity that has none yet |
-| Directory | `Events` | Folder of the units, relative to the project folder |
-| Unit filenames | `{ProjectName}.Event.{EntityName}` | Pattern of the unit names |
+| Generate & register rules | Not ticked | Writes a [rules unit](#rules-units) for each entity that has none yet |
+| Directory | `Rules` | Folder of the units, relative to the project folder |
+| Unit filenames | `{ProjectName}.Rule.{EntityName}` | Pattern of the unit names |
 
 ### Controllers
 
 ![Controllers page](images/generate-model-controllers.png)
 
-Shown only in a project created by the [API REST wizard](api-rest.md); in any other project the wizard skips it and **Finish** is on the Events page.
+Shown only in a project created by the [API REST wizard](api-rest.md); in any other project the wizard skips it and **Finish** is on the Rules page.
 
 | Field | Default | Meaning |
 |---|---|---|
@@ -49,11 +49,11 @@ Shown only in a project created by the [API REST wizard](api-rest.md); in any ot
 
 ### Finish
 
-At least one of models, events and controllers has to be ticked. Each can be generated on its own: the events or the controllers of entities whose model units are already there, for instance.
+At least one of models, rules and controllers has to be ticked. Each can be generated on its own: the rules or the controllers of entities whose model units are already there, for instance.
 
 The unit name patterns accept two placeholders, ignoring case: `{ProjectName}`, the name of the `.dproj` without extension, and `{EntityName}`. For the project `OrdersAPI` and the entity `Order` the default gives `OrdersAPI.Model.Order`. Nested folders are allowed in the directories, for example `Source/Model`, and are created when missing.
 
-If a model or controller unit with the same name is already in the project, the Expert lists the units that would be overwritten and asks before continuing. Event units are never overwritten.
+If a model or controller unit with the same name is already in the project, the Expert lists the units that would be overwritten and asks before continuing. Rules units are never overwritten.
 
 ## What is generated
 
@@ -131,14 +131,14 @@ When the database changes, regenerate the units of the entities that changed: th
 - calculated properties and helper methods;
 - an event class tied to the entity with `[TInsertEvent]`, `[TUpdateEvent]` or `[TDeleteEvent]`, which has to live in the unit of the entity.
 
-Keep the model units as the Expert writes them, and put the code you write in units of your own. Business rules go in a `TTEntityEvents<T>` registered with `TTEventRegistration.RegisterEvents<T, E>` from the unit that holds them: the entity knows nothing of it, so regenerating the entity leaves it untouched. See [Registering events without attributes](../../guide/events.md#registering-events-without-attributes). The **Events** page of the wizard writes that unit for you.
+Keep the model units as the Expert writes them, and put the code you write in units of your own. Business rules go in a `TTEntityEvents<T>` registered with `TTEventRegistration.RegisterEvents<T, E>` from the unit that holds them: the entity knows nothing of it, so regenerating the entity leaves it untouched. See [Registering events without attributes](../../guide/events.md#registering-events-without-attributes). The **Rules** page of the wizard writes that unit for you.
 
-## Event units
+## Rules units
 
-With **Generate & register events** ticked, the Expert writes for each selected entity a unit with an empty `TTEntityEvents<T>` and its registration:
+With **Generate & register rules** ticked, the Expert writes for each selected entity a unit with an empty `TTEntityEvents<T>` and its registration:
 
 ```delphi
-unit OrdersAPI.Event.Order;
+unit OrdersAPI.Rule.Order;
 
 interface
 
@@ -152,22 +152,22 @@ uses
 
 type
 
-{ TOrderEvents }
+{ TOrderRules }
 
-  TOrderEvents = class(TTEntityEvents<TOrder>)
+  TOrderRules = class(TTEntityEvents<TOrder>)
   end;
 
 implementation
 
 initialization
-  TTEventRegistration.RegisterEvents<TOrder, TOrderEvents>;
+  TTEventRegistration.RegisterEvents<TOrder, TOrderRules>;
 
 end.
 ```
 
 Override `BeforeInsert`, `AfterInsert`, `BeforeUpdate`, `AfterUpdate`, `BeforeDelete` or `AfterDelete` in it to write the rules.
 
-- **An event unit is written once.** If the file is already on disk, or the unit is already in the project, the entity is skipped without a question: the unit is yours from the moment it is created.
+- **A rules unit is written once.** If the file is already on disk, or the unit is already in the project, the entity is skipped without a question: the unit is yours from the moment it is created.
 - **The unit is added to the project.** The registration runs in its `initialization`, and a unit outside the project would never run it: its events would silently not fire. Do not remove it from the project.
 - **Generate it only where there are rules.** An entity with registered events creates an event object at every insert, update and delete, even when the class is empty.
 

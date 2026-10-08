@@ -22,7 +22,7 @@ Once installed, the Expert adds a **Trysil** menu to the IDE main menu, just bef
 |---|---|---|
 | [Design entity model](design.md) | Opens the visual designer for entities and columns | Yes |
 | [Generate DDL script](generate-sql.md) | Writes the CREATE script, or the ALTER script from a reference database | Yes |
-| [Generate entity model](generate-model.md) | Writes the entity units, and optionally their event units and the API REST controllers | Yes |
+| [Generate entity model](generate-model.md) | Writes the entity units, and optionally their rules units and the API REST controllers | Yes |
 | [Install AI assistant skills](../ai-skills.md) | Writes the AI assistant skills into the project | Yes |
 | [Create new Trysil API REST](api-rest.md) | Creates a new API REST project from the template | No, only when **no** project is open |
 | [Settings](settings.md) | Default folders and unit names | Yes |
