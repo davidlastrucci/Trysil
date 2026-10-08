@@ -20,6 +20,8 @@ uses
 
   IdCustomHTTPServer,
 
+  System.JSon,
+  Trysil.JSon.Sqids,
   Trysil.Http.Consts,
   Trysil.Http.Types,
   Trysil.Http.Classes,
@@ -31,6 +33,13 @@ type
 
   [TestFixture]
   TTHttpUriTests = class
+  strict private
+    function EncodeID(const AValue: Integer): String;
+    function MatchWithSqids(
+      const APattern: String;
+      const ANotSqids: TArray<Boolean>;
+      const AUri: String;
+      const AParams: TList<Integer>): Boolean;
   public
     [Test]
     procedure AnUnsupportedMethodIsNotAllowedRatherThanAServerError;
@@ -55,6 +64,15 @@ type
 
     [Test]
     procedure UriPartsWildcardExtractsEveryParam;
+
+    [Test]
+    procedure WithSqidsAVersionAfterAnIdMatchesItsPlaceholder;
+
+    [Test]
+    procedure WithSqidsPlainNumbersMatchTheirPlaceholders;
+
+    [Test]
+    procedure WithSqidsANumberIsNotTakenForAnId;
 
     [Test]
     procedure UriPartsLeavesNoParamsBehindOnAFailedMatch;
@@ -183,6 +201,141 @@ begin
   finally
     LParams.Free;
   end;
+end;
+
+function TTHttpUriTests.EncodeID(const AValue: Integer): String;
+var
+  LValue: TJSonValue;
+begin
+  LValue := TTJSonSqids.Instance.Encode(AValue);
+  try
+    result := LValue.Value;
+  finally
+    LValue.Free;
+  end;
+end;
+
+function TTHttpUriTests.MatchWithSqids(
+  const APattern: String;
+  const ANotSqids: TArray<Boolean>;
+  const AUri: String;
+  const AParams: TList<Integer>): Boolean;
+var
+  LPattern: TTHttpUriParts;
+  LActual: TTHttpUriParts;
+begin
+  LPattern := TTHttpUriParts.Create(APattern, ANotSqids);
+  LActual := TTHttpUriParts.Create(AUri);
+  result := LPattern.Equals(LActual, AParams);
+end;
+
+procedure TTHttpUriTests.WithSqidsAVersionAfterAnIdMatchesItsPlaceholder;
+{$IF CompilerVersion >= 36} // Delphi 12 Athens
+var
+  LWasUsingSqids: Boolean;
+  LParams: TList<Integer>;
+  LMatched: Boolean;
+{$ENDIF}
+begin
+{$IF CompilerVersion >= 36} // Delphi 12 Athens
+  LParams := TList<Integer>.Create;
+  try
+    LWasUsingSqids := TTJSonSqids.Instance.UseSqids;
+    try
+      TTJSonSqids.Instance.UseSqids := True;
+      LMatched := MatchWithSqids(
+        '/api/order/?/?',
+        [False, True],
+        Format('/api/order/%s/3', [EncodeID(42)]),
+        LParams);
+    finally
+      TTJSonSqids.Instance.UseSqids := LWasUsingSqids;
+    end;
+
+    Assert.IsTrue(
+      LMatched,
+      'The delete route of the API REST template is /?/?, id and version. '
+      + 'With Sqids on the id goes out as a sqid and the version as a '
+      + 'number, and the client sends them back as they came: the version '
+      + 'carries [TNotSqid], so its placeholder reads a plain number');
+    Assert.AreEqual<Integer>(42, LParams[0]);
+    Assert.AreEqual<Integer>(3, LParams[1]);
+  finally
+    LParams.Free;
+  end;
+{$ELSE}
+  Assert.Pass('Sqids needs TSqidsEncoding, an RTL 12 type');
+{$ENDIF}
+end;
+
+procedure TTHttpUriTests.WithSqidsPlainNumbersMatchTheirPlaceholders;
+{$IF CompilerVersion >= 36} // Delphi 12 Athens
+var
+  LWasUsingSqids: Boolean;
+  LParams: TList<Integer>;
+  LMatched: Boolean;
+{$ENDIF}
+begin
+{$IF CompilerVersion >= 36} // Delphi 12 Athens
+  LParams := TList<Integer>.Create;
+  try
+    LWasUsingSqids := TTJSonSqids.Instance.UseSqids;
+    try
+      TTJSonSqids.Instance.UseSqids := True;
+      LMatched := MatchWithSqids(
+        '/api/report/?/?', [True, True], '/api/report/2026/10', LParams);
+    finally
+      TTJSonSqids.Instance.UseSqids := LWasUsingSqids;
+    end;
+
+    Assert.IsTrue(
+      LMatched,
+      'A route of the application whose placeholders are not ids, a year '
+      + 'and a month here, keeps working when Sqids is turned on once its '
+      + 'parameters carry [TNotSqid]');
+    Assert.AreEqual<Integer>(2026, LParams[0]);
+    Assert.AreEqual<Integer>(10, LParams[1]);
+  finally
+    LParams.Free;
+  end;
+{$ELSE}
+  Assert.Pass('Sqids needs TSqidsEncoding, an RTL 12 type');
+{$ENDIF}
+end;
+
+procedure TTHttpUriTests.WithSqidsANumberIsNotTakenForAnId;
+{$IF CompilerVersion >= 36} // Delphi 12 Athens
+var
+  LWasUsingSqids: Boolean;
+  LParams: TList<Integer>;
+  LMatched: Boolean;
+{$ENDIF}
+begin
+{$IF CompilerVersion >= 36} // Delphi 12 Athens
+  LParams := TList<Integer>.Create;
+  try
+    LWasUsingSqids := TTJSonSqids.Instance.UseSqids;
+    try
+      TTJSonSqids.Instance.UseSqids := True;
+      LMatched := MatchWithSqids(
+        '/api/order/?', [False], '/api/order/2026', LParams);
+    finally
+      TTJSonSqids.Instance.UseSqids := LWasUsingSqids;
+    end;
+
+    Assert.IsFalse(
+      LMatched,
+      'With Sqids on, 2026 is not a sqid Encode could have produced, but '
+      + 'TSqidsEncoding decoded it all the same, as 24471: the route '
+      + 'matched and Get read another row. Only a canonical sqid, one that '
+      + 'encodes back to the same string, is an id');
+    Assert.AreEqual<Integer>(0, LParams.Count);
+  finally
+    LParams.Free;
+  end;
+{$ELSE}
+  Assert.Pass('Sqids needs TSqidsEncoding, an RTL 12 type');
+{$ENDIF}
 end;
 
 procedure TTHttpUriTests.UriPartsLeavesNoParamsBehindOnAFailedMatch;

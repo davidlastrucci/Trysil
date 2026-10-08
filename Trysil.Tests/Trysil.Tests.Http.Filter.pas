@@ -25,6 +25,8 @@ uses
   Trysil.Metadata,
   Trysil.Filter,
 
+  Trysil.JSon.Sqids,
+
   Trysil.Http.Filter,
   Trysil.Http.Exceptions,
 
@@ -67,6 +69,15 @@ type
     function TryBuildFilter(
       const AColumnName: String;
       const ACondition: String;
+      const AValue: String;
+      out AFilter: TTFilter): Boolean;
+    function EncodeID(const AValue: Integer): String;
+    function TryBuildFilterWithSqids(
+      const AColumnName: String;
+      const AValue: String;
+      out AFilter: TTFilter): Boolean;
+    function TryBuildNamesWithSqids(
+      const AColumnName: String;
       const AValue: String;
       out AFilter: TTFilter): Boolean;
   public
@@ -183,6 +194,18 @@ type
 
     [Test]
     procedure ARefusalNamesTheColumnTheClientSent;
+
+    [Test]
+    procedure WithSqidsAnIdIsFilteredByItsSqid;
+
+    [Test]
+    procedure WithSqidsAnIdRefusesAPlainNumber;
+
+    [Test]
+    procedure WithSqidsANumberColumnTakesANumber;
+
+    [Test]
+    procedure WithSqidsALazyMemberIsFilteredByItsSqid;
   end;
 
 implementation
@@ -1069,6 +1092,143 @@ begin
     LRefusal.Contains('CUST_REF'),
     'and not the database name behind it, which the payload stopped '
     + 'publishing in this release');
+end;
+
+function TTHttpFilterTests.EncodeID(const AValue: Integer): String;
+var
+  LWasUsingSqids: Boolean;
+  LValue: TJSonValue;
+begin
+  LWasUsingSqids := TTJSonSqids.Instance.UseSqids;
+  try
+    TTJSonSqids.Instance.UseSqids := True;
+    LValue := TTJSonSqids.Instance.Encode(AValue);
+    try
+      result := LValue.Value;
+    finally
+      LValue.Free;
+    end;
+  finally
+    TTJSonSqids.Instance.UseSqids := LWasUsingSqids;
+  end;
+end;
+
+function TTHttpFilterTests.TryBuildFilterWithSqids(
+  const AColumnName: String;
+  const AValue: String;
+  out AFilter: TTFilter): Boolean;
+var
+  LWasUsingSqids: Boolean;
+begin
+  LWasUsingSqids := TTJSonSqids.Instance.UseSqids;
+  try
+    TTJSonSqids.Instance.UseSqids := True;
+    result := TryBuildFilter(AColumnName, '=', AValue, AFilter);
+  finally
+    TTJSonSqids.Instance.UseSqids := LWasUsingSqids;
+  end;
+end;
+
+function TTHttpFilterTests.TryBuildNamesWithSqids(
+  const AColumnName: String;
+  const AValue: String;
+  out AFilter: TTFilter): Boolean;
+var
+  LMetadata: TTTableMetadata;
+  LJSon: TJSonObject;
+  LWhere: TTHttpFilterWhere;
+  LWasUsingSqids: Boolean;
+begin
+  result := True;
+  AFilter := TTFilter.Create(String.Empty);
+  LMetadata := CreateNamesMetadata;
+  LJSon := CreateWhereJSon(AColumnName, '=', AValue);
+  LWasUsingSqids := TTJSonSqids.Instance.UseSqids;
+  try
+    TTJSonSqids.Instance.UseSqids := True;
+    try
+      LWhere := TTHttpFilterWhere.Create(LJSon, LMetadata, 0);
+      LWhere.AddParameter(AFilter);
+    except
+      on E: ETHttpBadRequest do
+        result := False;
+    end;
+  finally
+    TTJSonSqids.Instance.UseSqids := LWasUsingSqids;
+    LJSon.Free;
+    LMetadata.Free;
+  end;
+end;
+
+procedure TTHttpFilterTests.WithSqidsAnIdIsFilteredByItsSqid;
+{$IF CompilerVersion >= 36} // Delphi 12 Athens
+var
+  LFilter: TTFilter;
+{$ENDIF}
+begin
+{$IF CompilerVersion >= 36} // Delphi 12 Athens
+  Assert.IsTrue(
+    TryBuildFilterWithSqids('ID', EncodeID(42), LFilter),
+    'With Sqids on the client holds the id only as a sqid, and a filter on '
+    + 'the primary key with that sqid was a bad request');
+  Assert.AreEqual<Integer>(42, LFilter.Parameters[0].Value.AsType<Integer>());
+{$ELSE}
+  Assert.Pass('Sqids needs TSqidsEncoding, an RTL 12 type');
+{$ENDIF}
+end;
+
+procedure TTHttpFilterTests.WithSqidsAnIdRefusesAPlainNumber;
+{$IF CompilerVersion >= 36} // Delphi 12 Athens
+var
+  LFilter: TTFilter;
+{$ENDIF}
+begin
+{$IF CompilerVersion >= 36} // Delphi 12 Athens
+  Assert.IsFalse(
+    TryBuildFilterWithSqids('ID', '42', LFilter),
+    'With Sqids on a filter on the primary key with a plain number read '
+    + 'row 42, and ID > 0 listed them all: the filter went round the ids '
+    + 'Sqids hides everywhere else');
+{$ELSE}
+  Assert.Pass('Sqids needs TSqidsEncoding, an RTL 12 type');
+{$ENDIF}
+end;
+
+procedure TTHttpFilterTests.WithSqidsANumberColumnTakesANumber;
+{$IF CompilerVersion >= 36} // Delphi 12 Athens
+var
+  LFilter: TTFilter;
+{$ENDIF}
+begin
+{$IF CompilerVersion >= 36} // Delphi 12 Athens
+  Assert.IsTrue(
+    TryBuildFilterWithSqids('VersionID', '3', LFilter),
+    'Only ids are sqids: an integer column that is neither the primary '
+    + 'key nor a lazy relation keeps taking a number');
+  Assert.AreEqual<Integer>(3, LFilter.Parameters[0].Value.AsType<Integer>());
+{$ELSE}
+  Assert.Pass('Sqids needs TSqidsEncoding, an RTL 12 type');
+{$ENDIF}
+end;
+
+procedure TTHttpFilterTests.WithSqidsALazyMemberIsFilteredByItsSqid;
+{$IF CompilerVersion >= 36} // Delphi 12 Athens
+var
+  LFilter: TTFilter;
+{$ENDIF}
+begin
+{$IF CompilerVersion >= 36} // Delphi 12 Athens
+  Assert.IsTrue(
+    TryBuildNamesWithSqids('customerID', EncodeID(7), LFilter),
+    'A lazy relation goes out as a sqid in its ID member, so the client '
+    + 'filters the rows of a customer with that sqid');
+  Assert.AreEqual<Integer>(7, LFilter.Parameters[0].Value.AsType<Integer>());
+  Assert.IsFalse(
+    TryBuildNamesWithSqids('customerID', '7', LFilter),
+    'and a plain number on the same column is refused, as on the key');
+{$ELSE}
+  Assert.Pass('Sqids needs TSqidsEncoding, an RTL 12 type');
+{$ENDIF}
 end;
 
 initialization

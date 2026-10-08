@@ -191,6 +191,9 @@ begin
   TTLanguage.Instance.Add(SNotValidParametrizedUri,
     'La route %0:s porte un "?" qui n''est pas dans les derniers segments. Un espace réservé correspond à n''importe quelle valeur, ' +
     'un espace placé avant un segment fixe fait donc chevaucher la route avec des adresses qu''elle ne devait pas servir. Déplacez les espaces réservés à la fin de la route.');
+  TTLanguage.Instance.Add(SDifferentNotSqid,
+    'La route %0:s est servie par des méthodes qui marquent avec [TNotSqid] des paramètres différents. La route lit ses espaces réservés avant de connaître la méthode, ' +
+    'donc toutes les méthodes d''une même route doivent marquer les mêmes positions.');
   TTLanguage.Instance.Add(SNotValidSqid, 'La valeur de "%s" n''est pas un sqid valide.');
   TTLanguage.Instance.Add(SNotValidJSon, 'Le JSon n''est pas valide : %s');
   TTLanguage.Instance.Add(SNotValidJSonValue, 'La valeur de "%s" n''est pas valide pour son type.');

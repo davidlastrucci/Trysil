@@ -47,6 +47,8 @@ type
     FLock: TObject;
 
     function GetSqids: TSqidsEncoding;
+    function TryDecodeSqid(
+      const AValue: String; out AResult: Integer): Boolean;
     procedure CheckAlphabet(const AValue: String);
     function GetAlphabet: String;
     procedure SetAlphabet(const AValue: String);
@@ -126,6 +128,14 @@ begin
   end;
 end;
 
+function TTJSonSqids.TryDecodeSqid(
+  const AValue: String; out AResult: Integer): Boolean;
+begin
+  result :=
+    GetSqids().TryDecodeSingle(AValue, AResult) and
+    GetSqids().Encode(AResult).Equals(AValue);
+end;
+
 procedure TTJSonSqids.CheckAlphabet(const AValue: String);
 var
   LIndex: Integer;
@@ -167,14 +177,9 @@ end;
 
 function TTJSonSqids.Decode(const AValue: String): Integer;
 begin
-{$IF CompilerVersion >= 36} // Delphi 12 Athens
-  if FUseSqids then
-    result := GetSqids().DecodeSingle(AValue.ToLowerInvariant)
-  else
-    result := Integer.Parse(AValue);
-{$ELSE}
-  result := Integer.Parse(AValue);
-{$ENDIF}
+  if not TryDecode(AValue, result) then
+    raise EConvertError.CreateFmt(
+      TTLanguage.Instance.Translate(SNotValidSqid), [AValue]);
 end;
 
 function TTJSonSqids.TryDecode(
@@ -182,7 +187,7 @@ function TTJSonSqids.TryDecode(
 begin
 {$IF CompilerVersion >= 36} // Delphi 12 Athens
   if FUseSqids then
-    result := GetSqids().TryDecodeSingle(AValue.ToLowerInvariant, AResult)
+    result := TryDecodeSqid(AValue.ToLowerInvariant, AResult)
   else
     result := Integer.TryParse(AValue, AResult);
 {$ELSE}

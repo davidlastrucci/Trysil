@@ -98,6 +98,10 @@ type
     property Area: String read FArea;
   end;
 
+{ TNotSqidAttribute }
+
+  TNotSqidAttribute = class(TCustomAttribute);
+
 implementation
 
 { TUriAttribute }

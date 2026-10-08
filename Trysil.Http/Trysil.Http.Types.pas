@@ -42,18 +42,26 @@ type
   strict private
     FParts: TArray<String>;
     FParamsCount: Integer;
+    FNotSqids: TArray<Boolean>;
 
+    function IsNotSqid(const APlaceholder: Integer): Boolean;
     function GetIntegerParam(
-      const AParam: String; out AValue: Integer): Boolean;
+      const AParam: String;
+      const ANotSqid: Boolean;
+      out AValue: Integer): Boolean;
     function IsParamPartCompatible(
       const AIndex: Integer;
+      const APlaceholder: Integer;
       const AOther: TTHttpUriParts;
       const AParams: TList<Integer>): Boolean;
   public
-    constructor Create(const AUri: String);
+    constructor Create(const AUri: String); overload;
+    constructor Create(
+      const AUri: String; const ANotSqids: TArray<Boolean>); overload;
 
     function Equals(
       const AOther: TTHttpUriParts; const AParams: TList<Integer>): Boolean;
+    function SameNotSqids(const AOther: TTHttpUriParts): Boolean;
     function HasParamsOnlyAtTheEnd: Boolean;
 
     property Parts: TArray<String> read FParts;
@@ -141,14 +149,37 @@ implementation
 { TTHttpUriParts }
 
 constructor TTHttpUriParts.Create(const AUri: String);
+begin
+  Self := TTHttpUriParts.Create(AUri, nil);
+end;
+
+constructor TTHttpUriParts.Create(
+  const AUri: String; const ANotSqids: TArray<Boolean>);
 var
   LPart: String;
 begin
   FParts := AUri.Split(['/']);
+  FNotSqids := ANotSqids;
   FParamsCount := 0;
   for LPart in FParts do
     if LPart.Equals('?') then
       Inc(FParamsCount);
+end;
+
+function TTHttpUriParts.IsNotSqid(const APlaceholder: Integer): Boolean;
+begin
+  result :=
+    (APlaceholder < Length(FNotSqids)) and FNotSqids[APlaceholder];
+end;
+
+function TTHttpUriParts.SameNotSqids(const AOther: TTHttpUriParts): Boolean;
+var
+  LPlaceholder: Integer;
+begin
+  result := True;
+  for LPlaceholder := 0 to FParamsCount - 1 do
+    if IsNotSqid(LPlaceholder) <> AOther.IsNotSqid(LPlaceholder) then
+      result := False;
 end;
 
 function TTHttpUriParts.HasParamsOnlyAtTheEnd: Boolean;
@@ -163,6 +194,7 @@ end;
 
 function TTHttpUriParts.IsParamPartCompatible(
   const AIndex: Integer;
+  const APlaceholder: Integer;
   const AOther: TTHttpUriParts;
   const AParams: TList<Integer>): Boolean;
 var
@@ -170,9 +202,11 @@ var
 begin
   result := False;
   if Self.FParts[AIndex].Equals('?') then
-    result := GetIntegerParam(AOther.FParts[AIndex], LParam)
+    result := GetIntegerParam(
+      AOther.FParts[AIndex], Self.IsNotSqid(APlaceholder), LParam)
   else if AOther.FParts[AIndex].Equals('?') then
-    result := GetIntegerParam(Self.FParts[AIndex], LParam);
+    result := GetIntegerParam(
+      Self.FParts[AIndex], AOther.IsNotSqid(APlaceholder), LParam);
 
   if result and Assigned(AParams) then
     AParams.Add(LParam);
@@ -182,10 +216,12 @@ function TTHttpUriParts.Equals(
   const AOther: TTHttpUriParts; const AParams: TList<Integer>): Boolean;
 var
   LIndex: Integer;
+  LPlaceholder: Integer;
 begin
   if Assigned(AParams) then
     AParams.Clear;
 
+  LPlaceholder := 0;
   result := (Low(Self.FParts) = Low(AOther.FParts)) and
     (High(Self.FParts) = High(AOther.FParts));
   if result then
@@ -193,7 +229,12 @@ begin
     begin
       result := (Self.FParts[LIndex].Equals(AOther.FParts[LIndex]));
       if not result then
-        result := IsParamPartCompatible(LIndex, AOther, AParams);
+        result := IsParamPartCompatible(
+          LIndex, LPlaceholder, AOther, AParams);
+
+      if Self.FParts[LIndex].Equals('?') or
+        AOther.FParts[LIndex].Equals('?') then
+        Inc(LPlaceholder);
 
       if not result then
       begin
@@ -205,9 +246,14 @@ begin
 end;
 
 function TTHttpUriParts.GetIntegerParam(
-  const AParam: String; out AValue: Integer): Boolean;
+  const AParam: String;
+  const ANotSqid: Boolean;
+  out AValue: Integer): Boolean;
 begin
-  result := TTJSonSqids.Instance.TryDecode(AParam, AValue);
+  if ANotSqid then
+    result := Integer.TryParse(AParam, AValue)
+  else
+    result := TTJSonSqids.Instance.TryDecode(AParam, AValue);
 end;
 
 { TTHttpControllerID }

@@ -85,7 +85,9 @@ type
     FControllerID: TTHttpControllerID;
     FAuthorizationType: TTHttpAuthorizationType;
     FAreas: TList<String>;
+    FNotSqids: TArray<Boolean>;
 
+    function SearchNotSqids: TArray<Boolean>;
     function GetName: String;
   private // internal
     property Name: String read GetName;
@@ -109,6 +111,7 @@ type
     property ControllerID: TTHttpControllerID read FControllerID;
     property AuthorizationType: TTHttpAuthorizationType read FAuthorizationType;
     property Areas: TList<String> read FAreas;
+    property NotSqids: TArray<Boolean> read FNotSqids;
   end;
 
 { TTHttpRttiController<C> }
@@ -181,6 +184,8 @@ type
       TTHttpMethodType, TTHttpRttiControllerMethod<C>>>;
     FControllerUriParts: TDictionary<String, TTHttpUriParts>;
 
+    procedure CheckNotSqids(
+      const AUri: String; const AUriParts: TTHttpUriParts);
     function TrySearchParametrizedUri(
       const AUri: String;
       const AMethodType: TTHttpMethodType;
@@ -354,6 +359,19 @@ begin
   LUri := Format('%s%s%s', [FBaseUri, LAttributeUri, FMethodAttribute.Uri]);
   FControllerID := TTHttpControllerID.Create(
     LUri, FMethodAttribute.MethodType);
+  FNotSqids := SearchNotSqids;
+end;
+
+function TTHttpRttiMethod.SearchNotSqids: TArray<Boolean>;
+var
+  LParameters: TArray<TRttiParameter>;
+  LIndex: Integer;
+begin
+  LParameters := FMethod.GetParameters;
+  SetLength(result, Length(LParameters));
+  for LIndex := Low(LParameters) to High(LParameters) do
+    result[LIndex] := Assigned(
+      LParameters[LIndex].GetAttribute<TNotSqidAttribute>());
 end;
 
 function TTHttpRttiMethod.GetName: String;
@@ -579,6 +597,17 @@ begin
   inherited Destroy;
 end;
 
+procedure TTHttpRttiControllers<C>.CheckNotSqids(
+  const AUri: String; const AUriParts: TTHttpUriParts);
+var
+  LUriParts: TTHttpUriParts;
+begin
+  if FControllerUriParts.TryGetValue(AUri, LUriParts) and
+    (not LUriParts.SameNotSqids(AUriParts)) then
+    raise ETHttpServerException.CreateFmt(
+      TTLanguage.Instance.Translate(SDifferentNotSqid), [AUri]);
+end;
+
 procedure TTHttpRttiControllers<C>.Add(
   const ARttiController: TTHttpRttiController<C>;
   const AAddedEvent: TTHttpRttiControllerAddedEvent);
@@ -590,11 +619,13 @@ var
 begin
   for LMethod in ARttiController.Methods do
   begin
-    LUriParts := TTHttpUriParts.Create(LMethod.ControllerID.Uri);
+    LUriParts := TTHttpUriParts.Create(
+      LMethod.ControllerID.Uri, LMethod.NotSqids);
     if not LUriParts.HasParamsOnlyAtTheEnd then
       raise ETHttpServerException.CreateFmt(
         TTLanguage.Instance.Translate(SNotValidParametrizedUri), [
           LMethod.ControllerID.Uri]);
+    CheckNotSqids(LMethod.ControllerID.Uri, LUriParts);
 
     if not FControllerMethods.TryGetValue(
       LMethod.ControllerID.Uri, LDictionary) then

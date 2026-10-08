@@ -161,6 +161,10 @@ resourcestring
     'the last segments. A placeholder matches any value, so one placed ' +
     'before a fixed segment makes the route overlap addresses it was ' +
     'never meant to serve. Move the placeholders to the end of the route.';
+  SDifferentNotSqid = 'Route %0:s is served by methods that mark ' +
+    'different parameters with [TNotSqid]. The route reads its ' +
+    'placeholders before it knows the method, so every method on it must ' +
+    'mark the same positions.';
   SNotValidBaseUri = 'BaseUri %0:s is a path prefix, not an address: it ' +
     'is prepended to every route, so a value carrying a scheme registers ' +
     'routes nobody can reach. The address the server listens on comes ' +

@@ -59,6 +59,7 @@ type
     FIsGuid: Boolean;
     FIsCurrency: Boolean;
     FIsFilterable: Boolean;
+    FIsLazy: Boolean;
     FJSonName: String;
     FAttributes: TArray<String>;
 
@@ -82,6 +83,7 @@ type
     property IsGuid: Boolean read FIsGuid;
     property IsCurrency: Boolean read FIsCurrency;
     property IsFilterable: Boolean read FIsFilterable;
+    property IsLazy: Boolean read FIsLazy;
     property JSonName: String read FJSonName;
   end;
 
@@ -226,11 +228,13 @@ begin
   FIsGuid := Assigned(AColumnMap) and AColumnMap.IsGuid;
   FIsCurrency := Assigned(AColumnMap) and AColumnMap.IsCurrency;
   FIsFilterable := Assigned(AColumnMap) and AColumnMap.IsFilterable;
+  FIsLazy := False;
   if Assigned(AColumnMap) and Assigned(AColumnMap.Member) then
   begin
     FAttributes := AColumnMap.Member.AttributeNames;
     FJSonName := TTIdentifier.PublishedName(AColumnMap.Member.Name);
-    if TTRttiLazy.IsLazyType(AColumnMap.Member.RttiType) then
+    FIsLazy := TTRttiLazy.IsLazyType(AColumnMap.Member.RttiType);
+    if FIsLazy then
       FJSonName := Format('%sID', [FJSonName]);
   end;
 end;

@@ -20,6 +20,7 @@ uses
   Data.DB,
   Trysil.Consts,
   Trysil.Classes,
+  Trysil.Attributes,
   Trysil.Rtti,
   Trysil.Data.Parameters,
   Trysil.Metadata,
@@ -28,6 +29,7 @@ uses
 
   Trysil.JSon.Attributes,
   Trysil.JSon.Types,
+  Trysil.JSon.Sqids,
 
   Trysil.Http.Consts,
   Trysil.Http.Exceptions;
@@ -116,10 +118,12 @@ type
     FColumnMetadata: TTColumnMetadata;
 
     function IsStringColumn: Boolean;
+    function IsSqidColumn: Boolean;
     function IsLikeCondition: Boolean;
     procedure ValidateCondition;
     procedure ValidateConditionForColumn;
     procedure RaiseValueNotValid;
+    function DecodedValue: String;
     function GetParameterValue: TTValue;
   public
     constructor Create(
@@ -413,6 +417,12 @@ begin
     TFieldType.ftOraClob];
 end;
 
+function TTHttpFilterWhere.IsSqidColumn: Boolean;
+begin
+  result := FColumnMetadata.IsLazy or
+    FColumnMetadata.HasAttribute(TPrimaryKeyAttribute);
+end;
+
 function TTHttpFilterWhere.IsLikeCondition: Boolean;
 begin
   result := TTIdentifier.Same(FCondition, 'LIKE') or
@@ -433,13 +443,26 @@ begin
     TTLanguage.Instance.Translate(SValueNotValid), [FValue, FColumnName]);
 end;
 
+function TTHttpFilterWhere.DecodedValue: String;
+var
+  LID: Integer;
+begin
+  result := FValue;
+  if TTJSonSqids.Instance.UseSqids and IsSqidColumn then
+  begin
+    if not TTJSonSqids.Instance.TryDecode(FValue, LID) then
+      RaiseValueNotValid;
+    result := LID.ToString;
+  end;
+end;
+
 function TTHttpFilterWhere.GetParameterValue: TTValue;
 begin
   if not TTParameterFactory.Instance.TryValueFromString(
     FColumnMetadata.DataType,
     FColumnMetadata.IsGuid,
     FColumnMetadata.IsCurrency,
-    FValue,
+    DecodedValue,
     result) then
     RaiseValueNotValid;
 end;

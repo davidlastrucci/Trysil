@@ -190,6 +190,9 @@ begin
   TTLanguage.Instance.Add(SNotValidParametrizedUri,
     'La rotta %0:s porta un "?" che non sta negli ultimi segmenti. Un segnaposto combacia con qualunque valore, ' +
     'quindi uno messo prima di un segmento fisso fa sovrapporre la rotta a indirizzi che non doveva servire. Sposta i segnaposto in fondo alla rotta.');
+  TTLanguage.Instance.Add(SDifferentNotSqid,
+    'La rotta %0:s è servita da metodi che marcano con [TNotSqid] parametri diversi. La rotta legge i segnaposto prima di sapere quale metodo chiamare, ' +
+    'quindi tutti i metodi sulla stessa rotta devono marcare le stesse posizioni.');
   TTLanguage.Instance.Add(SNotValidSqid, 'Il valore di "%s" non è uno sqid valido.');
   TTLanguage.Instance.Add(SNotValidJSon, 'Il JSon non è valido: %s');
   TTLanguage.Instance.Add(SNotValidJSonValue, 'Il valore di "%s" non è valido per il suo tipo.');
