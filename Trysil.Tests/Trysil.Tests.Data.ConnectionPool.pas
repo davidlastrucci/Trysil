@@ -328,10 +328,8 @@ function TTConnectionPoolTests.TryRegisterDriver(
 var
   LParameters: TTFireDACConnectionParameters;
 begin
-  LParameters := Default(TTFireDACConnectionParameters);
-  LParameters.Driver := ADriver;
-  LParameters.Server := 'localhost';
-  LParameters.DatabaseName := 'trysil_alias_test';
+  LParameters := TTFireDACConnectionParameters.Create(
+    ADriver, 'localhost', String.Empty, String.Empty, 'trysil_alias_test');
 
   result := True;
   try

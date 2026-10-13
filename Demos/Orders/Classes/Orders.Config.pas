@@ -28,6 +28,8 @@ type
     FParameters: TTFireDACConnectionParameters;
 
     function CreateJSonConfig: TJSonValue;
+    function CreateParameters(
+      const AConfig: TJSonValue): TTFireDACConnectionParameters;
     procedure LoadConfig;
   public
     procedure AfterConstruction; override;
@@ -71,6 +73,17 @@ begin
   result := TJSonObject(LJSon);
 end;
 
+function TConfig.CreateParameters(
+  const AConfig: TJSonValue): TTFireDACConnectionParameters;
+begin
+  result := TTFireDACConnectionParameters.Create(
+    AConfig.GetValue<String>('driver', String.Empty),
+    AConfig.GetValue<String>('server', String.Empty),
+    AConfig.GetValue<String>('username', String.Empty),
+    AConfig.GetValue<String>('password', String.Empty),
+    AConfig.GetValue<String>('databasename', String.Empty));
+end;
+
 procedure TConfig.LoadConfig;
 var
   LJSon, LConfigurations, LActiveConfig: TJSonValue;
@@ -90,11 +103,7 @@ begin
     if not Assigned(LActiveConfig) then
       raise EJSonException.CreateFmt(SActiveConfigNotFound, [LActive]);
 
-    FParameters.Driver := LActiveConfig.GetValue<String>('driver', String.Empty);
-    FParameters.Server := LActiveConfig.GetValue<String>('server', String.Empty);
-    FParameters.Username := LActiveConfig.GetValue<String>('username', String.Empty);
-    FParameters.Password := LActiveConfig.GetValue<String>('password', String.Empty);
-    FParameters.DatabaseName := LActiveConfig.GetValue<String>('databasename', String.Empty);
+    FParameters := CreateParameters(LActiveConfig);
   finally
     LJSon.Free;
   end;

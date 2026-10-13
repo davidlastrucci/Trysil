@@ -103,6 +103,25 @@ type
     FCharacterSet: String;
     FPoolParameters: TTFireDACPoolParameters;
   public
+    constructor Create(
+      const ADriver: String;
+      const ADatabaseName: String); overload;
+
+    constructor Create(
+      const ADriver: String;
+      const AServer: String;
+      const AUsername: String;
+      const APassword: String;
+      const ADatabaseName: String); overload;
+
+    constructor Create(
+      const ADriver: String;
+      const AServer: String;
+      const APort: Integer;
+      const AUsername: String;
+      const APassword: String;
+      const ADatabaseName: String); overload;
+
     property Driver: String read FDriver write FDriver;
     property Server: String read FServer write FServer;
     property Port: Integer read FPort write FPort;
@@ -367,6 +386,43 @@ end;
 procedure TTFireDACDriver.SetVendorLib(const AValue: String);
 begin
   DriverLink.VendorLib := AValue;
+end;
+
+{ TTFireDACConnectionParameters }
+
+constructor TTFireDACConnectionParameters.Create(
+  const ADriver: String;
+  const ADatabaseName: String);
+begin
+  Create(ADriver, String.Empty, String.Empty, String.Empty, ADatabaseName);
+end;
+
+constructor TTFireDACConnectionParameters.Create(
+  const ADriver: String;
+  const AServer: String;
+  const AUsername: String;
+  const APassword: String;
+  const ADatabaseName: String);
+begin
+  Create(ADriver, AServer, 0, AUsername, APassword, ADatabaseName);
+end;
+
+constructor TTFireDACConnectionParameters.Create(
+  const ADriver: String;
+  const AServer: String;
+  const APort: Integer;
+  const AUsername: String;
+  const APassword: String;
+  const ADatabaseName: String);
+begin
+  FDriver := ADriver;
+  FServer := AServer;
+  FPort := APort;
+  FUsername := AUsername;
+  FPassword := APassword;
+  FDatabaseName := ADatabaseName;
+  FCharacterSet := String.Empty;
+  FPoolParameters := Default(TTFireDACPoolParameters);
 end;
 
 { TTFireDACConnection }

@@ -163,9 +163,8 @@ end;
 
 function TTestTenantConfig.GetParameters: TTFireDACConnectionParameters;
 begin
-  result := Default(TTFireDACConnectionParameters);
-  result.Driver := 'SQLite';
-  result.DatabaseName := Format('%s.db', [FName]);
+  result := TTFireDACConnectionParameters.Create(
+    'SQLite', Format('%s.db', [FName]));
 end;
 
 { TTestFailingTenantConfig }
@@ -178,9 +177,8 @@ end;
 function TTestFailingTenantConfig.GetParameters: TTFireDACConnectionParameters;
 begin
   Inc(FBuilt);
-  result := Default(TTFireDACConnectionParameters);
-  result.Driver := 'NoSuchDriver';
-  result.DatabaseName := Format('%s.db', [FName]);
+  result := TTFireDACConnectionParameters.Create(
+    'NoSuchDriver', Format('%s.db', [FName]));
 end;
 
 class procedure TTestFailingTenantConfig.ResetBuilt;
