@@ -36,12 +36,12 @@ function TMyTenantConfig.GetParameters: TTFireDACConnectionParameters;
 begin
   // Load connection parameters for this tenant
   // e.g., from a configuration file, database, or environment
-  Result.Server := 'db-server';
-  Result.DatabaseName := 'db_' + FName;
-  Result.Username := 'app_user';
-  Result.Password := 'secret';
+  Result := TTFireDACConnectionParameters.Create(
+    'SqlServer', 'db-server', 'app_user', 'secret', 'db_' + FName);
 end;
 ```
+
+Build the record with one of its constructors: `Create(Driver, DatabaseName)`, `Create(Driver, Server, Username, Password, DatabaseName)` or `Create(Driver, Server, Port, Username, Password, DatabaseName)`. Each one sets every field, so nothing is left with the garbage a function result or a local record starts with; `CharacterSet` and `PoolParameters` are assigned afterwards when needed.
 
 The `Create` constructor receives the tenant name. `GetConnectionName` must return a unique FireDAC connection name. `GetParameters` provides the database connection details. The constructor and `GetParameters` run outside any lock, and two requests for a new tenant can run them at once, twice for the same name: they have to be thread-safe, and `GetParameters` has to return the same parameters every time.
 

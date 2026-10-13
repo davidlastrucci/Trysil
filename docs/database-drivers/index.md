@@ -88,9 +88,7 @@ When pooling is enabled, calling `Create` on a connection class borrows a connec
 Pool parameters therefore travel inside `TTFireDACConnectionParameters`, the record you already build to register a connection:
 
 ```pascal
-LParameters := Default(TTFireDACConnectionParameters);
-LParameters.Driver := 'SQLite';
-LParameters.DatabaseName := 'log.db';
+LParameters := TTFireDACConnectionParameters.Create('SQLite', 'log.db');
 LParameters.PoolParameters := TTFireDACPoolParameters.Create(True, 2);
 
 TTFireDACConnectionFactory.Instance.RegisterConnection('Log', LParameters);
@@ -102,8 +100,8 @@ TTFireDACConnectionFactory.Instance.RegisterConnection('Log', LParameters);
 
 The driver-level `RegisterConnection` overloads that take a `TStrings` do not go through the record and keep using the global `Config`.
 
-!!! warning "Zero the record"
-    A **local** record variable in Delphi only initialises its managed fields: strings yes, integers and booleans no. Without `Default(...)`, `PoolParameters.IsAssigned` can come out `True` by accident and the connection picks up garbage pool settings.
+!!! warning "Build the record with a constructor"
+    A **local** record variable in Delphi only initialises its managed fields: strings yes, integers and booleans no. Filled field by field, `Port` and `PoolParameters.IsAssigned` keep whatever was in memory, and the connection can pick up a wrong port or garbage pool settings. The constructors - `Create(Driver, DatabaseName)`, `Create(Driver, Server, Username, Password, DatabaseName)` and `Create(Driver, Server, Port, Username, Password, DatabaseName)` - set every field: `Port` 0 means the driver's default port, `CharacterSet` is empty and `PoolParameters` is not assigned. The properties stay writable, so `Default(TTFireDACConnectionParameters)` followed by assignments still works.
 
 ## Update Mode
 
