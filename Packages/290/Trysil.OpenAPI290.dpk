@@ -40,6 +40,12 @@ requires
 
 contains
   Trysil.OpenAPI.Attributes in '..\..\Trysil.OpenAPI\Trysil.OpenAPI.Attributes.pas',
+  Trysil.OpenAPI.Consts in '..\..\Trysil.OpenAPI\Trysil.OpenAPI.Consts.pas',
+  Trysil.OpenAPI.Controller in '..\..\Trysil.OpenAPI\Trysil.OpenAPI.Controller.pas',
+  Trysil.OpenAPI.Exceptions in '..\..\Trysil.OpenAPI\Trysil.OpenAPI.Exceptions.pas',
+  Trysil.OpenAPI.Generator in '..\..\Trysil.OpenAPI\Trysil.OpenAPI.Generator.pas',
+  Trysil.OpenAPI in '..\..\Trysil.OpenAPI\Trysil.OpenAPI.pas',
+  Trysil.OpenAPI.Schema in '..\..\Trysil.OpenAPI\Trysil.OpenAPI.Schema.pas',
   Trysil.OpenAPI.Types in '..\..\Trysil.OpenAPI\Trysil.OpenAPI.Types.pas';
 
 end.

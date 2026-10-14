@@ -47,6 +47,7 @@ uses
   Trysil.Tests.Http.MultiTenant in 'Trysil.Tests.Http.MultiTenant.pas',
   Trysil.Tests.Http.Harness in 'Trysil.Tests.Http.Harness.pas',
   Trysil.Tests.Http.Server in 'Trysil.Tests.Http.Server.pas',
+  Trysil.Tests.OpenAPI in 'Trysil.Tests.OpenAPI.pas',
   Trysil.Tests.Logger in 'Trysil.Tests.Logger.pas',
   Trysil.Tests.SqlServerParams in 'Trysil.Tests.SqlServerParams.pas',
   Trysil.Tests.Abstract.JSon in 'Abstract\Trysil.Tests.Abstract.JSon.pas',

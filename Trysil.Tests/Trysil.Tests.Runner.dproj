@@ -111,7 +111,7 @@
         <Icns_MainIcns>$(BDS)\bin\delphi_PROJECTICNS.icns</Icns_MainIcns>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_DcuOutput>.\$(Platform)\$(Config)\Dcu</DCC_DcuOutput>
-        <DCC_UnitSearchPath>..\Trysil;..\Trysil\Data;..\Trysil\Data\FireDAC;..\Trysil\Data\SqlSyntax;..\Trysil.JSon;..\Trysil.Http;..\Trysil.Http\Authentication;..\Trysil.Http\Log;..\Trysil.Http\MultiTenant;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\Trysil;..\Trysil\Data;..\Trysil\Data\FireDAC;..\Trysil\Data\SqlSyntax;..\Trysil.JSon;..\Trysil.Http;..\Trysil.Http\Authentication;..\Trysil.Http\Log;..\Trysil.Http\MultiTenant;..\Trysil.OpenAPI;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_MapFile>3</DCC_MapFile>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android)'!=''">
@@ -249,6 +249,7 @@
         <DCCReference Include="Trysil.Tests.Http.MultiTenant.pas"/>
         <DCCReference Include="Trysil.Tests.Http.Harness.pas"/>
         <DCCReference Include="Trysil.Tests.Http.Server.pas"/>
+        <DCCReference Include="Trysil.Tests.OpenAPI.pas"/>
         <DCCReference Include="Trysil.Tests.Logger.pas"/>
         <DCCReference Include="Trysil.Tests.SqlServerParams.pas"/>
         <DCCReference Include="Abstract\Trysil.Tests.Abstract.JSon.pas"/>

@@ -157,6 +157,12 @@
         <DCCReference Include="Trysil.JSon280.dcp"/>
         <DCCReference Include="Trysil.Http280.dcp"/>
         <DCCReference Include="..\..\Trysil.OpenAPI\Trysil.OpenAPI.Attributes.pas"/>
+        <DCCReference Include="..\..\Trysil.OpenAPI\Trysil.OpenAPI.Consts.pas"/>
+        <DCCReference Include="..\..\Trysil.OpenAPI\Trysil.OpenAPI.Controller.pas"/>
+        <DCCReference Include="..\..\Trysil.OpenAPI\Trysil.OpenAPI.Exceptions.pas"/>
+        <DCCReference Include="..\..\Trysil.OpenAPI\Trysil.OpenAPI.Generator.pas"/>
+        <DCCReference Include="..\..\Trysil.OpenAPI\Trysil.OpenAPI.pas"/>
+        <DCCReference Include="..\..\Trysil.OpenAPI\Trysil.OpenAPI.Schema.pas"/>
         <DCCReference Include="..\..\Trysil.OpenAPI\Trysil.OpenAPI.Types.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
