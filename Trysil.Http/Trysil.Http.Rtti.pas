@@ -69,9 +69,13 @@ type
 { TTHttpRttiAuthentication<C> }
 
   TTHttpRttiAuthentication<C: class> = class(TTHttpAbstractRtti<C>)
+  strict private
+    function GetAuthenticationClass: TClass;
   public
     function CreateAuthentication(
       const AContext: C): TTHttpAbstractAuthentication<C>;
+
+    property AuthenticationClass: TClass read GetAuthenticationClass;
   end;
 
 { TTHttpRttiMethod }
@@ -351,6 +355,11 @@ begin
     result := LResult.AsType<TTHttpAbstractAuthentication<C>>
   else
     LResult.AsObject.Free;
+end;
+
+function TTHttpRttiAuthentication<C>.GetAuthenticationClass: TClass;
+begin
+  result := FInstanceType.MetaclassType;
 end;
 
 { TTHttpRttiMethod }

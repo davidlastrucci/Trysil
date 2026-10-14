@@ -627,6 +627,29 @@ type
     procedure AGenericBaseNamesTheEntityOfItsController;
   end;
 
+{ TTHttpServerAuthenticationClassTests }
+
+  [TestFixture]
+  TTHttpServerAuthenticationClassTests = class
+  strict private
+    FServer: TTHttpServer<TTestHttpContext>;
+  public
+    [Setup]
+    procedure Setup;
+
+    [TearDown]
+    procedure TearDown;
+
+    [Test]
+    procedure WithoutAuthenticationThereIsNoClass;
+
+    [Test]
+    procedure TheRegisteredAuthenticationIsTheClass;
+
+    [Test]
+    procedure AnAuthenticationNamesItsScheme;
+  end;
+
 implementation
 
 { TTestProtectedController }
@@ -2087,6 +2110,44 @@ begin
     'The override in the generic base answers for every concrete controller');
 end;
 
+{ TTHttpServerAuthenticationClassTests }
+
+procedure TTHttpServerAuthenticationClassTests.Setup;
+begin
+  FServer := TTHttpServer<TTestHttpContext>.Create;
+end;
+
+procedure TTHttpServerAuthenticationClassTests.TearDown;
+begin
+  FServer.Free;
+end;
+
+procedure
+  TTHttpServerAuthenticationClassTests.WithoutAuthenticationThereIsNoClass;
+begin
+  Assert.IsTrue(
+    FServer.AuthenticationClass = nil,
+    'A server without authentication has no class to describe');
+end;
+
+procedure
+  TTHttpServerAuthenticationClassTests.TheRegisteredAuthenticationIsTheClass;
+begin
+  FServer.RegisterAuthentication<TTestAuthentication>();
+
+  Assert.IsTrue(
+    FServer.AuthenticationClass = TTestAuthentication,
+    'The class is the one passed to RegisterAuthentication');
+end;
+
+procedure TTHttpServerAuthenticationClassTests.AnAuthenticationNamesItsScheme;
+begin
+  Assert.AreEqual(
+    'Bearer',
+    TTestAuthentication.SchemeName,
+    'The scheme is the prefix the authentication reads in the header');
+end;
+
 initialization
   TDUnitX.RegisterTestFixture(TTHttpServerStartTests);
   TDUnitX.RegisterTestFixture(TTHttpListenerTests);
@@ -2094,5 +2155,6 @@ initialization
   TDUnitX.RegisterTestFixture(TTHttpResponseHeaderTests);
   TDUnitX.RegisterTestFixture(TTHttpServerRoutesTests);
   TDUnitX.RegisterTestFixture(TTHttpControllerEntityClassTests);
+  TDUnitX.RegisterTestFixture(TTHttpServerAuthenticationClassTests);
 
 end.

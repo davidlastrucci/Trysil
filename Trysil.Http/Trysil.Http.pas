@@ -76,6 +76,7 @@ type
 
     function GetStarted: Boolean;
     function GetRoutes: TArray<TTHttpRoute>;
+    function GetAuthenticationClass: TClass;
     procedure SetBaseUri(const AValue: String);
     procedure SetPort(const AValue: Word);
     function GetCorsConfig: TTHttpCorsConfig;
@@ -157,6 +158,7 @@ type
 
     property Started: Boolean read GetStarted;
     property Routes: TArray<TTHttpRoute> read GetRoutes;
+    property AuthenticationClass: TClass read GetAuthenticationClass;
     property BaseUri: String read FBaseUri write SetBaseUri;
     property Port: Word read FPort write SetPort;
     property CorsConfig: TTHttpCorsConfig read GetCorsConfig;
@@ -569,6 +571,13 @@ begin
   finally
     LRoutes.Free;
   end;
+end;
+
+function TTHttpServer<C>.GetAuthenticationClass: TClass;
+begin
+  result := nil;
+  if Assigned(FRttiAuthentication) then
+    result := FRttiAuthentication.AuthenticationClass;
 end;
 
 procedure TTHttpServer<C>.SetBaseUri(const AValue: String);

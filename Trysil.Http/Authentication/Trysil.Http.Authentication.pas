@@ -44,6 +44,7 @@ type
     property Context: C read FContext;
   public
     constructor Create(const AContext: C); virtual;
+    class function SchemeName: String;
 
     procedure Check(
       const ARequest: TTHttpRequest;
@@ -59,6 +60,11 @@ constructor TTHttpAbstractAuthentication<C>.Create(
 begin
   inherited Create;
   FContext := AContext;
+end;
+
+class function TTHttpAbstractAuthentication<C>.SchemeName: String;
+begin
+  result := GetName;
 end;
 
 function TTHttpAbstractAuthentication<C>.GetValue(
