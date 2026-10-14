@@ -20,6 +20,7 @@ uses
   System.Generics.Collections,
   System.TypInfo,
   System.JSon,
+  IdCustomHTTPServer,
   DUnitX.TestFramework,
 
   Trysil.Types,
@@ -30,11 +31,15 @@ uses
   Trysil.JSon.Sqids,
 
   Trysil.Http,
+  Trysil.Http.Consts,
   Trysil.Http.Types,
   Trysil.Http.Classes,
   Trysil.Http.Attributes,
   Trysil.Http.Controller,
   Trysil.Http.Authentication,
+  Trysil.Http.Cors,
+  Trysil.Http.Log,
+  Trysil.Http.Listener,
   Trysil.Http.Rtti,
 
   Trysil.OpenAPI.Types,
@@ -44,6 +49,7 @@ uses
   Trysil.OpenAPI.Controller,
   Trysil.OpenAPI,
 
+  Trysil.Tests.Http.Harness,
   Trysil.Tests.OpenAPISamples;
 
 type
@@ -407,6 +413,40 @@ type
     procedure APageRequestBodyIsRefused;
   end;
 
+{ TTOpenApiServeTests }
+
+  [TestFixture]
+  TTOpenApiServeTests = class
+  strict private
+    FServer: TTHttpServer<TTestOpenApiContext>;
+    FCors: TTHttpCors;
+    FLog: TTHttpLog;
+    FRttiControllers: TTHttpRttiControllers<TTestOpenApiContext>;
+    FControllers: TObjectList<TTHttpRttiController<TTestOpenApiContext>>;
+    FRttiAuthentication: TTHttpRttiAuthentication<TTestOpenApiContext>;
+    FListener: TTHttpListener<TTestOpenApiContext>;
+    FStatusCode: Integer;
+    FContent: String;
+
+    procedure Serve(const ATypeInfo: PTypeInfo);
+    procedure Send(const AToken: String);
+  public
+    [Setup]
+    procedure Setup;
+
+    [TearDown]
+    procedure TearDown;
+
+    [Test]
+    procedure AnAnonymousDocumentIsServedToEveryone;
+
+    [Test]
+    procedure AProtectedDocumentRefusesAnAnonymousCaller;
+
+    [Test]
+    procedure AProtectedDocumentIsServedWithCredentials;
+  end;
+
 implementation
 
 { TTestOpenApiBaseController<T> }
@@ -496,6 +536,8 @@ procedure TTestOpenApiAuthentication.Check(
   const ARequest: TTHttpRequest;
   const AResponse: TTHttpResponse);
 begin
+  if GetValue(ARequest, AResponse) <> 'secret' then
+    ResponseUnauthorizedError(ARequest, AResponse);
 end;
 
 { TTOpenApiDocumentTests }
@@ -1195,8 +1237,115 @@ begin
   Assert.IsFalse(TryRegister, 'A request body is never a page');
 end;
 
+{ TTOpenApiServeTests }
+
+procedure TTOpenApiServeTests.Setup;
+begin
+  TTOpenApiController<TTestOpenApiContext>.Document := String.Empty;
+  FServer := TTHttpServer<TTestOpenApiContext>.Create;
+  FServer.RegisterAuthentication<TTestOpenApiAuthentication>();
+  FServer.RegisterController<TTestOpenApiPingController>('/ping');
+  TTOpenApi<TTestOpenApiContext>.Register(
+    FServer, TTOpenApiInfo.Create('Test API', '1.0'));
+  FCors := TTHttpCors.Create;
+  FLog := TTHttpLog.Create;
+  FRttiControllers := TTHttpRttiControllers<TTestOpenApiContext>.Create;
+  FControllers :=
+    TObjectList<TTHttpRttiController<TTestOpenApiContext>>.Create(True);
+  FListener := TTHttpListener<TTestOpenApiContext>.Create(
+    FCors, FRttiControllers, FLog);
+  FRttiAuthentication :=
+    TTHttpRttiAuthentication<TTestOpenApiContext>.Create(
+      TypeInfo(TTestOpenApiAuthentication));
+  FRttiAuthentication.CheckValid;
+  FListener.SetRttiAuthentication(FRttiAuthentication);
+end;
+
+procedure TTOpenApiServeTests.TearDown;
+begin
+  FListener.Free;
+  FRttiAuthentication.Free;
+  FRttiControllers.Free;
+  FControllers.Free;
+  FLog.Free;
+  FCors.Free;
+  FServer.Free;
+  TTOpenApiController<TTestOpenApiContext>.Document := String.Empty;
+end;
+
+procedure TTOpenApiServeTests.Serve(const ATypeInfo: PTypeInfo);
+var
+  LRttiController: TTHttpRttiController<TTestOpenApiContext>;
+begin
+  LRttiController := TTHttpRttiController<TTestOpenApiContext>.Create(
+    ATypeInfo, '/openapi.json');
+  FControllers.Add(LRttiController);
+  LRttiController.CheckValid;
+  FRttiControllers.Add(LRttiController, FCors.RegisterController);
+end;
+
+procedure TTOpenApiServeTests.Send(const AToken: String);
+var
+  LMessage: TTestHttpMessage;
+begin
+  LMessage := TTestHttpMessage.Create('/openapi.json', hcGET, String.Empty);
+  try
+    if not AToken.IsEmpty then
+      LMessage.SetRequestHeader(
+        'Authorization', Format('Bearer %s', [AToken]));
+    FListener.HandleRequest(LMessage.Request, LMessage.Response);
+    FStatusCode := LMessage.Response.StatusCode;
+    FContent := LMessage.Response.Content;
+  finally
+    LMessage.Free;
+  end;
+end;
+
+procedure TTOpenApiServeTests.AnAnonymousDocumentIsServedToEveryone;
+var
+  LDocument: TJSonValue;
+begin
+  Serve(TypeInfo(TTOpenApiAnonymousController<TTestOpenApiContext>));
+  Send(String.Empty);
+
+  Assert.AreEqual<Integer>(
+    TTHttpStatusCodeTypes.OK, FStatusCode, 'No credentials are needed');
+  LDocument := TJSonObject.ParseJSONValue(FContent);
+  try
+    Assert.IsTrue(
+      Assigned(LDocument) and
+        (LDocument.GetValue<String>('openapi') = '3.1.0'),
+      'The body is the generated document');
+  finally
+    LDocument.Free;
+  end;
+end;
+
+procedure TTOpenApiServeTests.AProtectedDocumentRefusesAnAnonymousCaller;
+begin
+  Serve(TypeInfo(TTOpenApiController<TTestOpenApiContext>));
+  Send(String.Empty);
+
+  Assert.AreEqual<Integer>(
+    TTHttpStatusCodeTypes.Unauthorized,
+    FStatusCode,
+    'The document describes every protected route, so it is protected too');
+end;
+
+procedure TTOpenApiServeTests.AProtectedDocumentIsServedWithCredentials;
+begin
+  Serve(TypeInfo(TTOpenApiController<TTestOpenApiContext>));
+  Send('secret');
+
+  Assert.AreEqual<Integer>(
+    TTHttpStatusCodeTypes.OK, FStatusCode, 'A valid caller reads it');
+  Assert.IsTrue(
+    FContent.Contains('/ping'), 'The body describes the registered routes');
+end;
+
 initialization
   TDUnitX.RegisterTestFixture(TTOpenApiDocumentTests);
   TDUnitX.RegisterTestFixture(TTOpenApiRegisterTests);
+  TDUnitX.RegisterTestFixture(TTOpenApiServeTests);
 
 end.
