@@ -30,7 +30,7 @@ LServer.Start;
 
 | Method | Document |
 |---|---|
-| `Register(AServer, AInfo)` | Protected like any other route: it requires the authentication the server registered. |
+| `Register(AServer, AInfo)` | Protected like any other route: it requires the authentication the server registered. On a server with no authentication use `RegisterAnonymous`: a protected document there makes `Start` raise, unless `AllowAnonymous` is `True`. |
 | `RegisterAnonymous(AServer, AInfo)` | Public: the controller that serves it is marked `[TAuthorizationType(None)]`. |
 
 `TTOpenApiInfo` (`Trysil.OpenAPI.Types`) is a record with two constructors, `Create(ATitle, AVersion)` and `Create(ATitle, AVersion, ADescription)`, and read-only `Title`, `Version` and `Description`: they become the `info` object of the document.
@@ -50,10 +50,10 @@ The document is generated **once**, inside `Register`, from the routes registere
 
 | Part of the document | Where it comes from |
 |---|---|
-| Paths and verbs | The registered routes, `BaseUri` included. |
+| Paths and verbs | The registered routes, lower-case, `BaseUri` included. |
 | Path parameters | Each `?` becomes `{name}`, from the name of the method parameter without its `A` prefix: `AID` is `{id}`, `AVersionID` is `{versionID}`. Always required. |
 | Path parameter type | `integer` (`int32`). With Sqids on - `TTJSonSqids.Instance.UseSqids`, read when the document is generated - `{type: string, minLength: 8}`, never a pattern, so the alphabet is not published; a `[TNotSqid]` parameter stays an integer. |
-| Security | With an authentication registered, one scheme in `components.securitySchemes`, `{type: http, scheme: <name>}`, where the name is the scheme the authentication reads (`bearer`, `basic`, `digest`). A protected route requires it; a route marked `[TAuthorizationType(None)]` says `security: []`. Without an authentication there is no security in the document. |
+| Security | With an authentication registered, one scheme in `components.securitySchemes`, `<name>: {type: http, scheme: <name>}`, where the name is the scheme the authentication reads, lower-case (`bearer`, `basic`, `digest`), and a protected route requires it. A route marked `[TAuthorizationType(None)]` always says `security: []`. Without an authentication there is no scheme, and the protected routes carry no `security`. |
 | Error responses | See [Implicit error responses](#implicit-error-responses). |
 | Schemas of the entities | See [Entity schemas](#entity-schemas). |
 
@@ -63,8 +63,8 @@ The attributes live in `Trysil.OpenAPI.Attributes`, the enumerations in `Trysil.
 
 | Attribute | Where | Effect |
 |---|---|---|
-| `[TTag('Name')]` | Controller class | Tag of every operation of the controller. |
-| `[TDescription('Text')]` | Controller class | Description of the tag. |
+| `[TTag('Name')]` | Controller class, inherited | Tag of every operation of the controller. |
+| `[TDescription('Text')]` | Controller class, inherited | Description of the tag. |
 | `[TSummary('Text')]` | Method | Summary of the operation. |
 | `[TDescription('Text')]` | Method | Description of the operation. |
 | `[TParameter('name', TTOpenApiParameterSource.Query, 'Text')]` | Method, repeatable | A query or header parameter (`Query` or `Header`). Always an optional string. |
@@ -119,6 +119,8 @@ public
   procedure Select; virtual;
 end;
 
+// [TTag] and [TDescription] are inherited: on the generic base they would
+// give every controller the same tag, so they go on the concrete one.
 [TUri('/customer')]
 [TTag('Customers')]
 [TDescription('The customer registry')]
