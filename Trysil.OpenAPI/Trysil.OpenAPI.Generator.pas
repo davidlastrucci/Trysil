@@ -111,6 +111,7 @@ type
     FBody: TTOpenApiBody;
     FRoute: TTHttpRoute;
     FHasRequestBody: Boolean;
+    FHasAuthentication: Boolean;
     FJSon: TJSonObject;
 
     procedure WriteResponse(const AAttribute: TResponseAttribute);
@@ -129,6 +130,7 @@ type
       const ABody: TTOpenApiBody;
       const ARoute: TTHttpRoute;
       const AHasRequestBody: Boolean;
+      const AHasAuthentication: Boolean;
       const AJSon: TJSonObject);
 
     procedure Write(const AAttributes: TArray<TResponseAttribute>);
@@ -452,6 +454,7 @@ constructor TTOpenApiResponses.Create(
   const ABody: TTOpenApiBody;
   const ARoute: TTHttpRoute;
   const AHasRequestBody: Boolean;
+  const AHasAuthentication: Boolean;
   const AJSon: TJSonObject);
 begin
   inherited Create;
@@ -459,6 +462,7 @@ begin
   FBody := ABody;
   FRoute := ARoute;
   FHasRequestBody := AHasRequestBody;
+  FHasAuthentication := AHasAuthentication;
   FJSon := AJSon;
 end;
 
@@ -499,7 +503,8 @@ end;
 procedure TTOpenApiResponses.WriteRouteErrors;
 begin
   WriteErrorWhen(
-    FRoute.AuthorizationType = TTHttpAuthorizationType.Authentication,
+    FHasAuthentication and
+      (FRoute.AuthorizationType = TTHttpAuthorizationType.Authentication),
     TTHttpStatusCodeTypes.Unauthorized,
     SOpenApiUnauthorized);
   WriteErrorWhen(
@@ -723,6 +728,7 @@ begin
     FBody,
     FRoute,
     FHasRequestBody,
+    not FSchemeName.IsEmpty,
     AddObject(AJSon, 'responses'));
   try
     LResponses.Write(FMethod.Find<TResponseAttribute>());

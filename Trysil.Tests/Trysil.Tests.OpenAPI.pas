@@ -308,6 +308,9 @@ type
     procedure TheSecurityFollowsTheAuthentication;
 
     [Test]
+    procedure WithoutAuthenticationThereIsNoUnauthorized;
+
+    [Test]
     procedure TheEntitySchemaNamesItsColumnsLikeTheSerializer;
 
     [Test]
@@ -770,6 +773,26 @@ begin
     0,
     (ValueAt(['paths', '/ping', 'get', 'security']) as TJSonArray).Count,
     'An anonymous route says that it requires nothing');
+end;
+
+procedure TTOpenApiDocumentTests.WithoutAuthenticationThereIsNoUnauthorized;
+begin
+  FreeAndNil(FDocument);
+  FServer.Free;
+  FServer := TTHttpServer<TTestOpenApiContext>.Create;
+  FServer.AllowAnonymous := True;
+  FServer.RegisterController<TTestOpenApiProductController>('/product');
+  FDocument := Generate;
+
+  Assert.IsFalse(
+    Exists(['paths', '/product/{id}', 'get', 'responses', '401']),
+    'A server that checks no login never answers 401');
+  Assert.IsFalse(
+    Exists(['paths', '/product/{id}', 'get', 'security']),
+    'Without authentication there is no scheme to require');
+  Assert.IsFalse(
+    Exists(['components', 'securitySchemes']),
+    'Without authentication there is no scheme to describe');
 end;
 
 procedure
