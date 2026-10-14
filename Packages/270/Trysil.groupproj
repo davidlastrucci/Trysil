@@ -33,6 +33,9 @@
         <Projects Include="Trysil.Http270.dproj">
             <Dependencies>Trysil270.dproj;Trysil.JSon270.dproj</Dependencies>
         </Projects>
+        <Projects Include="Trysil.OpenAPI270.dproj">
+            <Dependencies>Trysil270.dproj;Trysil.JSon270.dproj;Trysil.Http270.dproj</Dependencies>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -131,14 +134,23 @@
     <Target Name="Trysil_Http270:Make">
         <MSBuild Projects="Trysil.Http270.dproj" Targets="Make"/>
     </Target>
+    <Target Name="Trysil_OpenAPI270">
+        <MSBuild Projects="Trysil.OpenAPI270.dproj"/>
+    </Target>
+    <Target Name="Trysil_OpenAPI270:Clean">
+        <MSBuild Projects="Trysil.OpenAPI270.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil_OpenAPI270:Make">
+        <MSBuild Projects="Trysil.OpenAPI270.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="Trysil270;Trysil_FirebirdSQL270;Trysil_PostgreSQL270;Trysil_SQLite270;Trysil_SqlServer270;Trysil_InterBase270;Trysil_MariaDB270;Trysil_Oracle270;Trysil_JSon270;Trysil_Http270"/>
+        <CallTarget Targets="Trysil270;Trysil_FirebirdSQL270;Trysil_PostgreSQL270;Trysil_SQLite270;Trysil_SqlServer270;Trysil_InterBase270;Trysil_MariaDB270;Trysil_Oracle270;Trysil_JSon270;Trysil_Http270;Trysil_OpenAPI270"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Trysil270:Clean;Trysil_FirebirdSQL270:Clean;Trysil_PostgreSQL270:Clean;Trysil_SQLite270:Clean;Trysil_SqlServer270:Clean;Trysil_InterBase270:Clean;Trysil_MariaDB270:Clean;Trysil_Oracle270:Clean;Trysil_JSon270:Clean;Trysil_Http270:Clean"/>
+        <CallTarget Targets="Trysil270:Clean;Trysil_FirebirdSQL270:Clean;Trysil_PostgreSQL270:Clean;Trysil_SQLite270:Clean;Trysil_SqlServer270:Clean;Trysil_InterBase270:Clean;Trysil_MariaDB270:Clean;Trysil_Oracle270:Clean;Trysil_JSon270:Clean;Trysil_Http270:Clean;Trysil_OpenAPI270:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Trysil270:Make;Trysil_FirebirdSQL270:Make;Trysil_PostgreSQL270:Make;Trysil_SQLite270:Make;Trysil_SqlServer270:Make;Trysil_InterBase270:Make;Trysil_MariaDB270:Make;Trysil_Oracle270:Make;Trysil_JSon270:Make;Trysil_Http270:Make"/>
+        <CallTarget Targets="Trysil270:Make;Trysil_FirebirdSQL270:Make;Trysil_PostgreSQL270:Make;Trysil_SQLite270:Make;Trysil_SqlServer270:Make;Trysil_InterBase270:Make;Trysil_MariaDB270:Make;Trysil_Oracle270:Make;Trysil_JSon270:Make;Trysil_Http270:Make;Trysil_OpenAPI270:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='All target and configuration'">
@@ -198,6 +210,12 @@
         </BuildGroupProject>
         <BuildGroupProject Include="Trysil.Http270.dproj">
             <ProjectGuid>{1F3CD306-0A96-4D5A-B562-9E641619E333}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.OpenAPI270.dproj">
+            <ProjectGuid>{4C510030-4B1A-46FD-91F4-65510F0D82E4}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
