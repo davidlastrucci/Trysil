@@ -59,16 +59,34 @@ type
     function FindFirst<T: TCustomAttribute>(): T;
   end;
 
+{ TTOpenApiPathNames }
+
+  TTOpenApiPathNames = class
+  strict private
+    FNames: TDictionary<String, TArray<String>>;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    function Resolve(
+      const AUri: String; const ANames: TArray<String>): TArray<String>;
+  end;
+
 { TTOpenApiPath }
 
   TTOpenApiPath = class
   strict private
     FRoute: TTHttpRoute;
+    FPathNames: TTOpenApiPathNames;
     FParameters: TArray<TRttiParameter>;
+    FNames: TArray<String>;
 
     function GetCount: Integer;
+    function ParameterName(const AIndex: Integer): String;
+    function CreateNames: TArray<String>;
   public
-    constructor Create(const ARoute: TTHttpRoute);
+    constructor Create(
+      const ARoute: TTHttpRoute; const APathNames: TTOpenApiPathNames);
 
     procedure AfterConstruction; override;
 
@@ -169,7 +187,8 @@ type
       const ASchemas: TTOpenApiSchemas;
       const ARoute: TTHttpRoute;
       const AControllerType: TRttiType;
-      const ASchemeName: String);
+      const ASchemeName: String;
+      const APathNames: TTOpenApiPathNames);
     destructor Destroy; override;
 
     procedure AfterConstruction; override;
@@ -205,6 +224,7 @@ type
     FAuthenticationClass: TClass;
     FContext: TRttiContext;
     FSchemeName: String;
+    FPathNames: TTOpenApiPathNames;
 
     function IsSchemeNameMethod(const AMethod: TRttiMethod): Boolean;
     function SearchSchemeName: String;
@@ -335,16 +355,45 @@ end;
 
 { TTOpenApiPath }
 
-constructor TTOpenApiPath.Create(const ARoute: TTHttpRoute);
+{ TTOpenApiPathNames }
+
+constructor TTOpenApiPathNames.Create;
+begin
+  inherited Create;
+  FNames := TDictionary<String, TArray<String>>.Create;
+end;
+
+destructor TTOpenApiPathNames.Destroy;
+begin
+  FNames.Free;
+  inherited Destroy;
+end;
+
+function TTOpenApiPathNames.Resolve(
+  const AUri: String; const ANames: TArray<String>): TArray<String>;
+begin
+  if not FNames.TryGetValue(AUri, result) then
+  begin
+    result := ANames;
+    FNames.Add(AUri, result);
+  end;
+end;
+
+{ TTOpenApiPath }
+
+constructor TTOpenApiPath.Create(
+  const ARoute: TTHttpRoute; const APathNames: TTOpenApiPathNames);
 begin
   inherited Create;
   FRoute := ARoute;
+  FPathNames := APathNames;
 end;
 
 procedure TTOpenApiPath.AfterConstruction;
 begin
   inherited AfterConstruction;
   FParameters := FRoute.Method.GetParameters;
+  FNames := FPathNames.Resolve(FRoute.ControllerID.Uri, CreateNames);
 end;
 
 function TTOpenApiPath.GetCount: Integer;
@@ -352,7 +401,21 @@ begin
   result := Length(FParameters);
 end;
 
+function TTOpenApiPath.CreateNames: TArray<String>;
+var
+  LIndex: Integer;
+begin
+  SetLength(result, Length(FParameters));
+  for LIndex := 0 to High(FParameters) do
+    result[LIndex] := ParameterName(LIndex);
+end;
+
 function TTOpenApiPath.Name(const AIndex: Integer): String;
+begin
+  result := FNames[AIndex];
+end;
+
+function TTOpenApiPath.ParameterName(const AIndex: Integer): String;
 begin
   result := FParameters[AIndex].Name;
   if (result.Length > 1) and (result.Chars[0] = 'A') and
@@ -563,7 +626,8 @@ constructor TTOpenApiOperation.Create(
   const ASchemas: TTOpenApiSchemas;
   const ARoute: TTHttpRoute;
   const AControllerType: TRttiType;
-  const ASchemeName: String);
+  const ASchemeName: String;
+  const APathNames: TTOpenApiPathNames);
 begin
   inherited Create;
   FSchemas := ASchemas;
@@ -571,7 +635,7 @@ begin
   FControllerType := AControllerType;
   FSchemeName := ASchemeName;
   FMethod := TTOpenApiMethod.Create(AControllerType, ARoute.Method);
-  FPath := TTOpenApiPath.Create(ARoute);
+  FPath := TTOpenApiPath.Create(ARoute, APathNames);
   FBody := nil;
   FHasRequestBody := False;
 end;
@@ -832,10 +896,12 @@ begin
   FRoutes := ARoutes;
   FAuthenticationClass := AAuthenticationClass;
   FContext := TRttiContext.Create;
+  FPathNames := TTOpenApiPathNames.Create;
 end;
 
 destructor TTOpenApiGenerator.Destroy;
 begin
+  FPathNames.Free;
   FContext.Free;
   inherited Destroy;
 end;
@@ -941,7 +1007,11 @@ var
   LOperation: TTOpenApiOperation;
 begin
   LOperation := TTOpenApiOperation.Create(
-    ASchemas, ARoute, FContext.GetType(ARoute.ControllerClass), FSchemeName);
+    ASchemas,
+    ARoute,
+    FContext.GetType(ARoute.ControllerClass),
+    FSchemeName,
+    FPathNames);
   try
     LOperation.Write(
       AddObject(PathOf(APaths, LOperation.Template), VerbOf(ARoute)));

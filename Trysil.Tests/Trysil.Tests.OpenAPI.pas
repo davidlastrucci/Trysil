@@ -188,6 +188,15 @@ type
     procedure Get(const AID: Integer); override;
   end;
 
+{ TTestOpenApiRenameController }
+
+  TTestOpenApiRenameController = class(TTHttpController<TTestOpenApiContext>)
+  public
+    [TPut('/?')]
+    [TResponse(200, 'Renamed')]
+    procedure Rename(const AProductID: Integer);
+  end;
+
 { TTestOpenApiPingController }
 
   TTestOpenApiPingController = class(TTHttpController<TTestOpenApiContext>)
@@ -255,6 +264,9 @@ type
 
     [Test]
     procedure APlaceholderBecomesANamedPathParameter;
+
+    [Test]
+    procedure APathKeepsTheNamesOfItsFirstRoute;
 
     [Test]
     procedure EveryRouteIsAnOperationOfItsVerb;
@@ -417,6 +429,12 @@ procedure TTestOpenApiProductController.Get(const AID: Integer);
 begin
 end;
 
+{ TTestOpenApiRenameController }
+
+procedure TTestOpenApiRenameController.Rename(const AProductID: Integer);
+begin
+end;
+
 { TTestOpenApiPingController }
 
 procedure TTestOpenApiPingController.Ping;
@@ -462,6 +480,7 @@ begin
   FServer := TTHttpServer<TTestOpenApiContext>.Create;
   FServer.RegisterAuthentication<TTestOpenApiAuthentication>();
   FServer.RegisterController<TTestOpenApiProductController>('/product');
+  FServer.RegisterController<TTestOpenApiRenameController>('/product');
   FServer.RegisterController<TTestOpenApiPingController>('/ping');
   FDocument := Generate;
 end;
@@ -537,6 +556,21 @@ begin
   Assert.IsTrue(
     Exists(['paths', '/product/{id}/{versionID}']),
     'Every placeholder is named after its own parameter');
+end;
+
+procedure TTOpenApiDocumentTests.APathKeepsTheNamesOfItsFirstRoute;
+begin
+  Assert.IsFalse(
+    Exists(['paths', '/product/{productID}']),
+    'Two templates that differ only in a name are the same path for ' +
+    'OpenAPI, and a document that holds both is invalid');
+  Assert.IsTrue(
+    Exists(['paths', '/product/{id}', 'put']),
+    'The later route joins the path of the first one');
+  Assert.AreEqual(
+    'id',
+    TextAt(['paths', '/product/{id}', 'put', 'parameters', '0', 'name']),
+    'Its parameter takes the name of the template');
 end;
 
 procedure TTOpenApiDocumentTests.EveryRouteIsAnOperationOfItsVerb;
