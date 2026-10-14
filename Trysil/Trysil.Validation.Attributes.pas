@@ -99,6 +99,8 @@ type
       const AColumnName: String;
       const AValue: TValue;
       const AErrors: TTValidationErrors); override;
+
+    property Length: Integer read FLength;
   end;
 
 { TMaxLengthAttribute }
@@ -163,6 +165,8 @@ type
       const AColumnName: String;
       const AValue: TValue;
       const AErrors: TTValidationErrors); override;
+
+    property Value: TValue read FValue;
   end;
 
 { TMinValueAttibute }
@@ -268,6 +272,9 @@ type
       const AColumnName: String;
       const AValue: TValue;
       const AErrors: TTValidationErrors); override;
+
+    property MinValue: TValue read FMinValue;
+    property MaxValue: TValue read FMaxValue;
   end;
 
 { TRegexAttribute }
@@ -284,6 +291,8 @@ type
       const AColumnName: String;
       const AValue: TValue;
       const AErrors: TTValidationErrors); override;
+
+    property Regex: String read FRegex;
   end;
 
 { TEMailAttribute }
