@@ -225,10 +225,13 @@ type
     FContext: TRttiContext;
     FSchemeName: String;
     FPathNames: TTOpenApiPathNames;
+    FQualifiedNames: TArray<String>;
+    FCollisions: TArray<String>;
 
     function IsSchemeNameMethod(const AMethod: TRttiMethod): Boolean;
     function SearchSchemeName: String;
     function VerbOf(const ARoute: TTHttpRoute): String;
+    function CreateDocument: String;
     function PathOf(
       const APaths: TJSonObject; const ATemplate: String): TJSonObject;
     procedure WriteDocument(const AJSon: TJSonObject);
@@ -937,6 +940,17 @@ begin
 end;
 
 function TTOpenApiGenerator.Generate: String;
+begin
+  FQualifiedNames := nil;
+  result := CreateDocument;
+  if Length(FCollisions) > 0 then
+  begin
+    FQualifiedNames := FCollisions;
+    result := CreateDocument;
+  end;
+end;
+
+function TTOpenApiGenerator.CreateDocument: String;
 var
   LDocument: TJSonObject;
 begin
@@ -958,9 +972,11 @@ begin
   WriteInfo(AddObject(AJSon, 'info'));
   WriteTags(AJSon);
   LComponents := AddObject(AJSon, 'components');
-  LSchemas := TTOpenApiSchemas.Create(AddObject(LComponents, 'schemas'));
+  LSchemas := TTOpenApiSchemas.Create(
+    AddObject(LComponents, 'schemas'), FQualifiedNames);
   try
     WritePaths(AddObject(AJSon, 'paths'), LSchemas);
+    FCollisions := LSchemas.Collisions;
   finally
     LSchemas.Free;
   end;

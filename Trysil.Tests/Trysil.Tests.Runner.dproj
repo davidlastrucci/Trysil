@@ -250,6 +250,7 @@
         <DCCReference Include="Trysil.Tests.Http.Harness.pas"/>
         <DCCReference Include="Trysil.Tests.Http.Server.pas"/>
         <DCCReference Include="Trysil.Tests.OpenAPI.pas"/>
+        <DCCReference Include="Trysil.Tests.OpenAPISamples.pas"/>
         <DCCReference Include="Trysil.Tests.Logger.pas"/>
         <DCCReference Include="Trysil.Tests.SqlServerParams.pas"/>
         <DCCReference Include="Abstract\Trysil.Tests.Abstract.JSon.pas"/>

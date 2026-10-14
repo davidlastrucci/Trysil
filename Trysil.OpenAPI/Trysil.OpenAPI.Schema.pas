@@ -166,21 +166,30 @@ type
     const SqidMinLength = 8;
   strict private
     FSchemas: TJSonObject;
+    FQualifiedNames: TArray<String>;
     FPrimitives: TTOpenApiPrimitives;
     FFixedSchemas: TTOpenApiFixedSchemas;
+    FOwners: TDictionary<String, TClass>;
+    FCollisions: TList<String>;
 
     function IsComponentChar(const AChar: Char): Boolean;
+    function IsQualified(const AName: String): Boolean;
+    function Sanitize(const AName: String): String;
+    procedure TrackOwner(const AName: String; const AClass: TClass);
     function ComponentName(const AClass: TClass): String;
+    function GetCollisions: TArray<String>;
     procedure WriteSchema(const AClass: TClass; const AJSon: TJSonObject);
     procedure WriteEntity(const AClass: TClass; const AJSon: TJSonObject);
   public
-    constructor Create(const ASchemas: TJSonObject);
+    constructor Create(
+      const ASchemas: TJSonObject; const AQualifiedNames: TArray<String>);
     destructor Destroy; override;
 
     procedure WriteReference(const AClass: TClass; const AJSon: TJSonObject);
     procedure WriteId(const AJSon: TJSonObject);
 
     property Primitives: TTOpenApiPrimitives read FPrimitives;
+    property Collisions: TArray<String> read GetCollisions;
   end;
 
 implementation
@@ -672,16 +681,22 @@ end;
 
 { TTOpenApiSchemas }
 
-constructor TTOpenApiSchemas.Create(const ASchemas: TJSonObject);
+constructor TTOpenApiSchemas.Create(
+  const ASchemas: TJSonObject; const AQualifiedNames: TArray<String>);
 begin
   inherited Create;
   FSchemas := ASchemas;
+  FQualifiedNames := AQualifiedNames;
   FPrimitives := TTOpenApiPrimitives.Create;
   FFixedSchemas := TTOpenApiFixedSchemas.Create;
+  FOwners := TDictionary<String, TClass>.Create;
+  FCollisions := TList<String>.Create;
 end;
 
 destructor TTOpenApiSchemas.Destroy;
 begin
+  FCollisions.Free;
+  FOwners.Free;
   FFixedSchemas.Free;
   FPrimitives.Free;
   inherited Destroy;
@@ -693,16 +708,49 @@ begin
     AChar, ['A' .. 'Z', 'a' .. 'z', '0' .. '9', '.', '-', '_']);
 end;
 
-function TTOpenApiSchemas.ComponentName(const AClass: TClass): String;
+function TTOpenApiSchemas.IsQualified(const AName: String): Boolean;
+var
+  LName: String;
+begin
+  result := False;
+  for LName in FQualifiedNames do
+    result := result or (LName = AName);
+end;
+
+function TTOpenApiSchemas.Sanitize(const AName: String): String;
 var
   LChars: TArray<Char>;
   LIndex: Integer;
 begin
-  LChars := AClass.ClassName.ToCharArray;
+  LChars := AName.ToCharArray;
   for LIndex := Low(LChars) to High(LChars) do
     if not IsComponentChar(LChars[LIndex]) then
       LChars[LIndex] := '_';
   result := String.Create(LChars);
+end;
+
+procedure TTOpenApiSchemas.TrackOwner(
+  const AName: String; const AClass: TClass);
+var
+  LOwner: TClass;
+begin
+  if not FOwners.TryGetValue(AName, LOwner) then
+    FOwners.Add(AName, AClass)
+  else if (LOwner <> AClass) and not FCollisions.Contains(AName) then
+    FCollisions.Add(AName);
+end;
+
+function TTOpenApiSchemas.ComponentName(const AClass: TClass): String;
+begin
+  result := Sanitize(AClass.ClassName);
+  TrackOwner(result, AClass);
+  if IsQualified(result) then
+    result := Sanitize(AClass.QualifiedClassName);
+end;
+
+function TTOpenApiSchemas.GetCollisions: TArray<String>;
+begin
+  result := FCollisions.ToArray;
 end;
 
 procedure TTOpenApiSchemas.WriteReference(

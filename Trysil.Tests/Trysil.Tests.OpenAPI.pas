@@ -42,7 +42,9 @@ uses
   Trysil.OpenAPI.Exceptions,
   Trysil.OpenAPI.Generator,
   Trysil.OpenAPI.Controller,
-  Trysil.OpenAPI;
+  Trysil.OpenAPI,
+
+  Trysil.Tests.OpenAPISamples;
 
 type
 
@@ -197,6 +199,20 @@ type
     procedure Rename(const AProductID: Integer);
   end;
 
+{ TTestOpenApiOtherProductController }
+
+  TTestOpenApiOtherProductController = class(
+    TTHttpController<TTestOpenApiContext>)
+  public
+    [TGet]
+    [TResponse(
+      200,
+      Trysil.Tests.OpenAPISamples.TTestOpenApiProduct,
+      TTOpenApiShape.Single,
+      'A product of another unit')]
+    procedure Get;
+  end;
+
 { TTestOpenApiPingController }
 
   TTestOpenApiPingController = class(TTHttpController<TTestOpenApiContext>)
@@ -291,6 +307,9 @@ type
 
     [Test]
     procedure TheEntityOfTheControllerIsReferenced;
+
+    [Test]
+    procedure SameClassNamesAreBothQualified;
 
     [Test]
     procedure AListIsAnArrayOfTheEntity;
@@ -432,6 +451,14 @@ end;
 { TTestOpenApiRenameController }
 
 procedure TTestOpenApiRenameController.Rename(const AProductID: Integer);
+begin
+end;
+
+{ TTestOpenApiPingController }
+
+{ TTestOpenApiOtherProductController }
+
+procedure TTestOpenApiOtherProductController.Get;
 begin
 end;
 
@@ -676,6 +703,34 @@ begin
   Assert.IsTrue(
     Exists(['components', 'schemas', 'TTestOpenApiProduct']),
     'The referenced schema is in the components');
+end;
+
+procedure TTOpenApiDocumentTests.SameClassNamesAreBothQualified;
+const
+  First = 'Trysil.Tests.OpenAPI.TTestOpenApiProduct';
+  Second = 'Trysil.Tests.OpenAPISamples.TTestOpenApiProduct';
+begin
+  FServer.RegisterController<TTestOpenApiOtherProductController>('/other');
+  FreeAndNil(FDocument);
+  FDocument := Generate;
+
+  Assert.IsFalse(
+    Exists(['components', 'schemas', 'TTestOpenApiProduct']),
+    'A short name shared by two classes would describe both with the ' +
+    'fields of one of them');
+  Assert.AreEqual(
+    Format('#/components/schemas/%s', [First]),
+    TextAt(['paths', '/product/{id}', 'get', 'responses', '200', 'content',
+      'application/json', 'schema', '$ref']),
+    'The first class takes its qualified name');
+  Assert.AreEqual(
+    Format('#/components/schemas/%s', [Second]),
+    TextAt(['paths', '/other', 'get', 'responses', '200', 'content',
+      'application/json', 'schema', '$ref']),
+    'The second class takes its qualified name too');
+  Assert.IsTrue(
+    Exists(['components', 'schemas', Second, 'properties', 'code']),
+    'Each qualified schema describes its own class');
 end;
 
 procedure TTOpenApiDocumentTests.AListIsAnArrayOfTheEntity;
