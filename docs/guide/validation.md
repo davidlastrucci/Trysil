@@ -31,6 +31,8 @@ The attribute has both overloads, `Integer` and `Double`, and no `Currency`
 one, which is not needed. *Type not valid for validation* is what you get when
 the member holds something that is not a number at all.
 
+The values an attribute was declared with are readable, for tools that describe an entity - [`Trysil.OpenAPI`](../openapi/index.md) turns them into schema constraints: `Length` on `TMinLength` and `TMaxLength`, `Value` (a `TValue`) on `TMinValue`, `TMaxValue`, `TGreater` and `TLess`, `MinValue` and `MaxValue` on `TRange`, and `Regex` on `TRegex` and `TEmail`. They are read-only.
+
 ### Example
 
 ```pascal

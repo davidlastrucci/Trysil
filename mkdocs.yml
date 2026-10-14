@@ -104,6 +104,7 @@ nav:
     - Authentication: http/authentication.md
     - CORS: http/cors.md
     - Multi-Tenant: http/multi-tenant.md
+  - OpenAPI Module: openapi/index.md
   - API Reference:
     - Core Types: api-reference/types.md
     - Attributes: api-reference/attributes.md

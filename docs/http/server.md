@@ -179,10 +179,32 @@ Point the proxy at one of those addresses and the `Port`. Both are there because
 |---|---|
 | `RegisterController<T>()` | Register a controller using its `[TUri]` attribute |
 | `RegisterController<T>(AUri)` | Register a controller with a custom base URI |
+| `RegisterControllerClass(AClass, AUri)` | Register a controller by class reference, checked at run time |
 | `RegisterAuthentication<T>()` | Register an authentication handler |
 | `RegisterLogWriter<T>()` | Register a log writer with one log thread |
 | `RegisterLogWriter<T>(APoolSize)` | Register a log writer with `APoolSize` log threads |
 | `RegisterLogWriter<T>(AParameters)` | Register a log writer with a `TTHttpLogParameters` record |
+
+`RegisterControllerClass` is for code that registers a controller from **generic** code, such as a library that takes the context type as a type parameter. The Delphi compiler refuses `RegisterController<R>` there (E2515) even when `R` satisfies the constraint, so the class travels as a `TClass` and the check moves to run time: a class that does not descend from `TTHttpController<C>` - the controller of another context included - and `nil` raise `ETHttpServerException`, and the failure is logged like the one of the generic form. Application code keeps using `RegisterController<T>`, which the compiler checks.
+
+### Inspecting the registered routes
+
+`Routes` returns one `TTHttpRoute` (`Trysil.Http.Rtti`) for every routed method of every controller registered so far, in registration order. It is what [`Trysil.OpenAPI`](../openapi/index.md) reads, and it is there for any tool that wants to describe or check the server.
+
+| Property | Content |
+|---|---|
+| `ControllerClass` | The registered controller class. |
+| `Method` | The `TRttiMethod` the router invokes. |
+| `ControllerID` | `Uri` - lower-case, with the `BaseUri` and a `?` for every placeholder - and `MethodType`. |
+| `AuthorizationType` | The authorization of the route. |
+| `Areas` | The areas of the route, lower-case. |
+| `NotSqids` | One `Boolean` per placeholder, `True` where the parameter is `[TNotSqid]`. |
+
+!!! warning "The method is borrowed"
+    `Method` is owned by the server. Do not free it, and do not use it after
+    the server has been destroyed.
+
+`AuthenticationClass` returns the class registered with `RegisterAuthentication`, or `nil` when there is none.
 
 ### Log Writers
 

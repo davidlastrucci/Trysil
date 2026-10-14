@@ -70,6 +70,20 @@ FServer.RegisterController<TPersonController>();
 FServer.RegisterController<TPersonController>('/custom');
 ```
 
+## The Entity of a Controller
+
+`TTHttpController<C>.EntityClass` is a virtual class function that tells a tool which entity a controller serves. It returns `nil` by default, and nothing in the router reads it: [`Trysil.OpenAPI`](../openapi/index.md) does, to resolve the responses that name no class. A generic base controller overrides it once, for every entity:
+
+```pascal
+uses
+  System.TypInfo;
+
+class function TReadOnlyController<T>.EntityClass: TClass;
+begin
+  result := GetTypeData(TypeInfo(T))^.ClassType;
+end;
+```
+
 ## Authorization Areas
 
 Use the `[TArea]` attribute to restrict endpoint access based on authorization areas:

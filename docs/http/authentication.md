@@ -394,6 +394,8 @@ end;
 FServer.RegisterAuthentication<TMyAuth>();
 ```
 
+`TTHttpAbstractAuthentication<C>.SchemeName` is a public class function that returns the scheme the authentication reads in the `Authorization` header - `Bearer`, `Basic` or `Digest` for the classes of the framework, whatever `GetName` returns for one of your own. `TTHttpServer<C>.AuthenticationClass` returns the registered class, so a tool can name the scheme of a server without an instance; [`Trysil.OpenAPI`](../openapi/index.md) uses both to describe the security of the document.
+
 ## Areas (Authorization)
 
 Areas provide fine-grained access control. The flow is:

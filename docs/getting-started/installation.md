@@ -50,6 +50,7 @@ The group project builds all packages in the correct dependency order:
 2. **Trysil.SQLite** / **Trysil.SqlServer** / **Trysil.PostgreSQL** / **Trysil.FirebirdSQL** / **Trysil.InterBase** / **Trysil.MariaDB** / **Trysil.Oracle** -- database drivers (seven, and the build groups carry all of them)
 3. **Trysil.JSon** -- JSON serialization
 4. **Trysil.Http** -- HTTP REST server
+5. **Trysil.OpenAPI** -- OpenAPI document of the HTTP server
 
 ### From the Command Line
 
@@ -117,7 +118,7 @@ This resolves at build time to the correct platform (Win32/Win64) and configurat
 
 ## Edition Note
 
-`Trysil.SqlServer` and `Trysil.Oracle` require the **Enterprise** (or Architect) edition of Delphi — their FireDAC driver units (`FireDAC.Phys.MSSQL`, `FireDAC.Phys.Oracle`) ship only with those editions. The other packages (core, SQLite, InterBase, PostgreSQL, MariaDB, Firebird, JSON, HTTP) build on the **Community** edition.
+`Trysil.SqlServer` and `Trysil.Oracle` require the **Enterprise** (or Architect) edition of Delphi - their FireDAC driver units (`FireDAC.Phys.MSSQL`, `FireDAC.Phys.Oracle`) ship only with those editions. The other packages (core, SQLite, InterBase, PostgreSQL, MariaDB, Firebird, JSON, HTTP, OpenAPI) build on the **Community** edition.
 
 At runtime, FireDAC's edition matrix also applies: on Community/Professional, PostgreSQL, MySQL/MariaDB and Firebird connect to **localhost/embedded** only — connecting to a **remote** server requires Enterprise/Architect. See the [RAD Studio FireDAC page](https://www.embarcadero.com/products/rad-studio/firedac).
 
