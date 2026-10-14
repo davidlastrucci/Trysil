@@ -213,6 +213,24 @@ type
       [TNotSqid] const AVersionID: Integer);
   end;
 
+{ TTestCustomer }
+
+  TTestCustomer = class
+  end;
+
+{ TTestEntityController<T> }
+
+  TTestEntityController<T: class> = class(
+    TTHttpController<TTestHttpContext>)
+  public
+    class function EntityClass: TClass; override;
+  end;
+
+{ TTestCustomerController }
+
+  TTestCustomerController = class(TTestEntityController<TTestCustomer>)
+  end;
+
 { TTestParamCountController }
 
   TTestParamCountController = class(TTHttpController<TTestHttpContext>)
@@ -597,6 +615,18 @@ type
     procedure ARouteCarriesItsAuthorizationType;
   end;
 
+{ TTHttpControllerEntityClassTests }
+
+  [TestFixture]
+  TTHttpControllerEntityClassTests = class
+  public
+    [Test]
+    procedure AControllerHasNoEntityByDefault;
+
+    [Test]
+    procedure AGenericBaseNamesTheEntityOfItsController;
+  end;
+
 implementation
 
 { TTestProtectedController }
@@ -845,6 +875,13 @@ procedure TTestRoutesController.Remove(
   const AID: Integer;
   const AVersionID: Integer);
 begin
+end;
+
+{ TTestEntityController<T> }
+
+class function TTestEntityController<T>.EntityClass: TClass;
+begin
+  result := GetTypeData(TypeInfo(T)).ClassType;
 end;
 
 { TTestParamCountController }
@@ -2033,11 +2070,29 @@ begin
     'A route marked None says so');
 end;
 
+{ TTHttpControllerEntityClassTests }
+
+procedure TTHttpControllerEntityClassTests.AControllerHasNoEntityByDefault;
+begin
+  Assert.IsTrue(
+    TTestProtectedController.EntityClass = nil,
+    'A controller that serves no entity says nil');
+end;
+
+procedure
+  TTHttpControllerEntityClassTests.AGenericBaseNamesTheEntityOfItsController;
+begin
+  Assert.IsTrue(
+    TTestCustomerController.EntityClass = TTestCustomer,
+    'The override in the generic base answers for every concrete controller');
+end;
+
 initialization
   TDUnitX.RegisterTestFixture(TTHttpServerStartTests);
   TDUnitX.RegisterTestFixture(TTHttpListenerTests);
   TDUnitX.RegisterTestFixture(TTHttpCappedStreamTests);
   TDUnitX.RegisterTestFixture(TTHttpResponseHeaderTests);
   TDUnitX.RegisterTestFixture(TTHttpServerRoutesTests);
+  TDUnitX.RegisterTestFixture(TTHttpControllerEntityClassTests);
 
 end.

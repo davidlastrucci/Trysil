@@ -32,6 +32,7 @@ type
       const AContext: C;
       const ARequest: TTHttpRequest;
       const AResponse: TTHttpResponse); virtual;
+    class function EntityClass: TClass; virtual;
   end;
 
 implementation
@@ -47,6 +48,11 @@ begin
   FContext := AContext;
   FRequest := ARequest;
   FResponse := AResponse;
+end;
+
+class function TTHttpController<C>.EntityClass: TClass;
+begin
+  result := nil;
 end;
 
 end.
