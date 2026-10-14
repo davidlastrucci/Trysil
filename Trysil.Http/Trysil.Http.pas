@@ -133,6 +133,8 @@ type
       var AUsername, APassword: string;
       var AHandled: Boolean);
 
+    function IsControllerClass(const AControllerClass: TClass): Boolean;
+    procedure CheckControllerClass(const AControllerClass: TClass);
     procedure InternalRegisterController(
       const ATypeInfo: PTypeInfo; const AUri: String);
   public
@@ -150,6 +152,8 @@ type
     procedure RegisterController<R: TTHttpController<C>>(); overload;
     procedure RegisterController<R: TTHttpController<C>>(
       const AUri: String); overload;
+    procedure RegisterControllerClass(
+      const AControllerClass: TClass; const AUri: String);
 
     procedure AddBindAddress(const AAddress: String);
 
@@ -347,6 +351,37 @@ begin
   FCors.RegisterController(AControllerID, AAuthType);
 end;
 
+function TTHttpServer<C>.IsControllerClass(
+  const AControllerClass: TClass): Boolean;
+var
+  LName: String;
+  LClass: TClass;
+begin
+  LName := TTHttpController<C>.QualifiedClassName;
+  result := False;
+  LClass := AControllerClass;
+  while Assigned(LClass) and not result do
+  begin
+    result := LClass.QualifiedClassName = LName;
+    LClass := LClass.ClassParent;
+  end;
+end;
+
+procedure TTHttpServer<C>.CheckControllerClass(
+  const AControllerClass: TClass);
+var
+  LName: String;
+begin
+  if not IsControllerClass(AControllerClass) then
+  begin
+    LName := 'nil';
+    if Assigned(AControllerClass) then
+      LName := AControllerClass.ClassName;
+    raise ETHttpServerException.CreateFmt(
+      TTLanguage.Instance.Translate(SNotValidController), [LName]);
+  end;
+end;
+
 procedure TTHttpServer<C>.InternalRegisterController(
   const ATypeInfo: PTypeInfo; const AUri: String);
 var
@@ -387,6 +422,22 @@ end;
 procedure TTHttpServer<C>.RegisterController<R>(const AUri: String);
 begin
   InternalRegisterController(TypeInfo(R), AUri);
+end;
+
+procedure TTHttpServer<C>.RegisterControllerClass(
+  const AControllerClass: TClass; const AUri: String);
+begin
+  try
+    CheckNotStarted;
+    CheckControllerClass(AControllerClass);
+  except
+    on E: Exception do
+    begin
+      Log(Format(SRegisterControllerError, [E.Message]));
+      raise;
+    end;
+  end;
+  InternalRegisterController(AControllerClass.ClassInfo, AUri);
 end;
 
 procedure TTHttpServer<C>.CheckNotStarted;

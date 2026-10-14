@@ -650,6 +650,29 @@ type
     procedure AnAuthenticationNamesItsScheme;
   end;
 
+{ TTHttpServerRegisterControllerClassTests }
+
+  [TestFixture]
+  TTHttpServerRegisterControllerClassTests = class
+  strict private
+    FServer: TTHttpServer<TTestHttpContext>;
+  public
+    [Setup]
+    procedure Setup;
+
+    [TearDown]
+    procedure TearDown;
+
+    [Test]
+    procedure AControllerClassIsRegistered;
+
+    [Test]
+    procedure AClassThatIsNotAControllerIsRefused;
+
+    [Test]
+    procedure ANilClassIsRefused;
+  end;
+
 implementation
 
 { TTestProtectedController }
@@ -2148,6 +2171,71 @@ begin
     'The scheme is the prefix the authentication reads in the header');
 end;
 
+{ TTHttpServerRegisterControllerClassTests }
+
+procedure TTHttpServerRegisterControllerClassTests.Setup;
+begin
+  FServer := TTHttpServer<TTestHttpContext>.Create;
+end;
+
+procedure TTHttpServerRegisterControllerClassTests.TearDown;
+begin
+  FServer.Free;
+end;
+
+procedure TTHttpServerRegisterControllerClassTests.AControllerClassIsRegistered;
+begin
+  FServer.RegisterControllerClass(TTestRoutesController, '/Order');
+
+  Assert.AreEqual<Integer>(
+    2,
+    Length(FServer.Routes),
+    'A class reference registers the same routes as the generic form');
+  Assert.IsTrue(
+    FServer.Routes[0].ControllerClass = TTestRoutesController,
+    'The routes name the class that was passed');
+end;
+
+procedure
+  TTHttpServerRegisterControllerClassTests.AClassThatIsNotAControllerIsRefused;
+var
+  LRaised: Boolean;
+begin
+  LRaised := False;
+  try
+    FServer.RegisterControllerClass(TTestCustomer, '/customer');
+  except
+    on E: ETHttpServerException do
+      LRaised := True;
+  end;
+
+  Assert.IsTrue(
+    LRaised,
+    'Without the generic constraint the check moves to run time, and a ' +
+    'class that is not a controller of the server context is refused');
+  Assert.AreEqual<Integer>(
+    0, Length(FServer.Routes), 'A refused class leaves no route behind');
+end;
+
+procedure TTHttpServerRegisterControllerClassTests.ANilClassIsRefused;
+var
+  LRaised: Boolean;
+begin
+  LRaised := False;
+  try
+    FServer.RegisterControllerClass(nil, '/customer');
+  except
+    on E: ETHttpServerException do
+      LRaised := True;
+  end;
+
+  Assert.IsTrue(
+    LRaised,
+    'A class reference computed at run time can be nil, and it must be ' +
+    'refused like any other class that is not a controller, not end in ' +
+    'an access violation');
+end;
+
 initialization
   TDUnitX.RegisterTestFixture(TTHttpServerStartTests);
   TDUnitX.RegisterTestFixture(TTHttpListenerTests);
@@ -2156,5 +2244,6 @@ initialization
   TDUnitX.RegisterTestFixture(TTHttpServerRoutesTests);
   TDUnitX.RegisterTestFixture(TTHttpControllerEntityClassTests);
   TDUnitX.RegisterTestFixture(TTHttpServerAuthenticationClassTests);
+  TDUnitX.RegisterTestFixture(TTHttpServerRegisterControllerClassTests);
 
 end.
