@@ -22,7 +22,7 @@ type
 
 { TTApiRestFeature }
 
-  TTApiRestFeature = (MultiTenant, Auth, Log, RS256, Sqids);
+  TTApiRestFeature = (MultiTenant, Auth, Log, RS256, Sqids, OpenApi);
 
 { TTApiRestFeatures }
 

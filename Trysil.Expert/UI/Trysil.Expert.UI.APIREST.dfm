@@ -50,7 +50,7 @@ inherited TAPIRestForm: TTAPIRestForm
         end
         object APISqidsNotSupportedLabel: TLabel
           Left = 44
-          Top = 266
+          Top = 289
           Width = 239
           Height = 15
           Caption = 'Feature not supported by this Delphi version'
@@ -110,13 +110,23 @@ inherited TAPIRestForm: TTAPIRestForm
           Caption = 'Log'
           TabOrder = 5
         end
-        object APISqidsCheckbox: TCheckBox
+        object APIOpenApiCheckbox: TCheckBox
           Left = 24
           Top = 245
           Width = 250
           Height = 17
-          Caption = 'Sqids (encode IDs in JSON and URLs)'
+          Caption = 'Document with OpenAPI'
+          Checked = True
+          State = cbChecked
           TabOrder = 6
+        end
+        object APISqidsCheckbox: TCheckBox
+          Left = 24
+          Top = 268
+          Width = 250
+          Height = 17
+          Caption = 'Sqids (encode IDs in JSON and URLs)'
+          TabOrder = 7
         end
       end
     end

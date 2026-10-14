@@ -30,7 +30,7 @@ type
   TTApiRestCondition = class
   strict private
     const Names: array[TTApiRestFeature] of String = (
-      'multitenant', 'auth', 'log', 'rs256', 'sqids');
+      'multitenant', 'auth', 'log', 'rs256', 'sqids', 'openapi');
   public
     class function Holds(
       const AFeatures: TTApiRestFeatures;

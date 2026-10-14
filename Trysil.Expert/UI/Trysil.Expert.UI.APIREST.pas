@@ -61,6 +61,7 @@ type
     APILogCheckbox: TCheckBox;
     APISqidsCheckbox: TCheckBox;
     APISqidsNotSupportedLabel: TLabel;
+    APIOpenApiCheckbox: TCheckBox;
     DatabasePagePanel: TPanel;
     DatabasePageGroupBox: TGroupBox;
     DatabaseDriverLabel: TLabel;
@@ -432,6 +433,8 @@ begin
     Include(result, TTApiRestFeature.Log);
   if APISqidsCheckbox.Checked then
     Include(result, TTApiRestFeature.Sqids);
+  if APIOpenApiCheckbox.Checked then
+    Include(result, TTApiRestFeature.OpenApi);
 end;
 
 function TTAPIRestForm.GetDescription: String;
