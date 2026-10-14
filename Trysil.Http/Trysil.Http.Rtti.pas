@@ -114,6 +114,30 @@ type
     property NotSqids: TArray<Boolean> read FNotSqids;
   end;
 
+{ TTHttpRoute }
+
+  TTHttpRoute = record
+  strict private
+    FControllerClass: TClass;
+    FMethod: TRttiMethod;
+    FControllerID: TTHttpControllerID;
+    FAuthorizationType: TTHttpAuthorizationType;
+    FAreas: TArray<String>;
+    FNotSqids: TArray<Boolean>;
+  public
+    constructor Create(
+      const AControllerClass: TClass;
+      const AMethod: TTHttpRttiMethod);
+
+    property ControllerClass: TClass read FControllerClass;
+    property Method: TRttiMethod read FMethod;
+    property ControllerID: TTHttpControllerID read FControllerID;
+    property AuthorizationType: TTHttpAuthorizationType
+      read FAuthorizationType;
+    property Areas: TArray<String> read FAreas;
+    property NotSqids: TArray<Boolean> read FNotSqids;
+  end;
+
 { TTHttpRttiController<C> }
 
   TTHttpRttiController<C: class> = class(TTHttpAbstractRtti<C>)
@@ -154,6 +178,7 @@ type
       const AContext: C;
       const ARequest: TTHttpRequest;
       const AResponse: TTHttpResponse): TTHttpController<C>;
+    procedure AddRoutes(const ARoutes: TList<TTHttpRoute>);
 
     property ControllerName: String read FControllerName;
     property Methods: TObjectList<TTHttpRttiMethod> read FMethods;
@@ -401,6 +426,20 @@ begin
   FAuthorizationType := AAuthType.AuthorizationType;
 end;
 
+{ TTHttpRoute }
+
+constructor TTHttpRoute.Create(
+  const AControllerClass: TClass;
+  const AMethod: TTHttpRttiMethod);
+begin
+  FControllerClass := AControllerClass;
+  FMethod := AMethod.RttiMethod;
+  FControllerID := AMethod.ControllerID;
+  FAuthorizationType := AMethod.AuthorizationType;
+  FAreas := AMethod.Areas.ToArray;
+  FNotSqids := Copy(AMethod.NotSqids);
+end;
+
 { TTHttpRttiController<C> }
 
 constructor TTHttpRttiController<C>.Create(
@@ -582,6 +621,15 @@ begin
     result := LResult.AsType<TTHttpController<C>>
   else
     LResult.AsObject.Free;
+end;
+
+procedure TTHttpRttiController<C>.AddRoutes(
+  const ARoutes: TList<TTHttpRoute>);
+var
+  LMethod: TTHttpRttiMethod;
+begin
+  for LMethod in FMethods do
+    ARoutes.Add(TTHttpRoute.Create(FInstanceType.MetaclassType, LMethod));
 end;
 
 { TTHttpRttiControllerMethod<C> }

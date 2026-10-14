@@ -18,6 +18,7 @@ uses
   System.SysUtils,
   System.Classes,
   System.TypInfo,
+  System.Rtti,
   System.JSon,
   System.Generics.Collections,
   DUnitX.TestFramework,
@@ -196,6 +197,20 @@ type
   public
     [TGet('/?')]
     procedure ByName(const AName: String);
+  end;
+
+{ TTestRoutesController }
+
+  [TArea('Reader')]
+  TTestRoutesController = class(TTHttpController<TTestHttpContext>)
+  public
+    [TGet('/?')]
+    procedure Load(const AID: Integer);
+
+    [TDelete('/?/?')]
+    procedure Remove(
+      const AID: Integer;
+      [TNotSqid] const AVersionID: Integer);
   end;
 
 { TTestParamCountController }
@@ -548,6 +563,40 @@ type
     procedure TheServerHeaderCanBeSuppressed;
   end;
 
+{ TTHttpServerRoutesTests }
+
+  [TestFixture]
+  TTHttpServerRoutesTests = class
+  strict private
+    FServer: TTHttpServer<TTestHttpContext>;
+
+    function RouteOf(const AMethodName: String): TTHttpRoute;
+  public
+    [Setup]
+    procedure Setup;
+
+    [TearDown]
+    procedure TearDown;
+
+    [Test]
+    procedure EveryRoutedMethodIsListed;
+
+    [Test]
+    procedure ARouteNamesItsControllerAndMethod;
+
+    [Test]
+    procedure ARouteCarriesUriAndVerb;
+
+    [Test]
+    procedure ARouteCarriesItsAreas;
+
+    [Test]
+    procedure ARouteMarksPlainNumberPlaceholders;
+
+    [Test]
+    procedure ARouteCarriesItsAuthorizationType;
+  end;
+
 implementation
 
 { TTestProtectedController }
@@ -783,6 +832,18 @@ end;
 { TTestStringParamController }
 
 procedure TTestStringParamController.ByName(const AName: String);
+begin
+end;
+
+{ TTestRoutesController }
+
+procedure TTestRoutesController.Load(const AID: Integer);
+begin
+end;
+
+procedure TTestRoutesController.Remove(
+  const AID: Integer;
+  const AVersionID: Integer);
 begin
 end;
 
@@ -1876,10 +1937,107 @@ begin
     'to stop it');
 end;
 
+{ TTHttpServerRoutesTests }
+
+procedure TTHttpServerRoutesTests.Setup;
+begin
+  FServer := TTHttpServer<TTestHttpContext>.Create;
+  FServer.RegisterController<TTestRoutesController>('/Order');
+  FServer.RegisterController<TTestAnonymousController>('/public');
+end;
+
+procedure TTHttpServerRoutesTests.TearDown;
+begin
+  FServer.Free;
+end;
+
+function TTHttpServerRoutesTests.RouteOf(
+  const AMethodName: String): TTHttpRoute;
+var
+  LRoute: TTHttpRoute;
+begin
+  result := Default(TTHttpRoute);
+  for LRoute in FServer.Routes do
+    if LRoute.Method.Name = AMethodName then
+      result := LRoute;
+end;
+
+procedure TTHttpServerRoutesTests.EveryRoutedMethodIsListed;
+begin
+  Assert.AreEqual<Integer>(
+    3,
+    Length(FServer.Routes),
+    'One route for every method with a verb attribute, across controllers');
+end;
+
+procedure TTHttpServerRoutesTests.ARouteNamesItsControllerAndMethod;
+var
+  LRoute: TTHttpRoute;
+begin
+  LRoute := RouteOf('Remove');
+
+  Assert.IsTrue(
+    LRoute.ControllerClass = TTestRoutesController,
+    'The route names the registered controller class');
+  Assert.AreEqual(
+    'Remove',
+    LRoute.Method.Name,
+    'The route lends the method the router invokes');
+end;
+
+procedure TTHttpServerRoutesTests.ARouteCarriesUriAndVerb;
+var
+  LRoute: TTHttpRoute;
+begin
+  LRoute := RouteOf('Remove');
+
+  Assert.AreEqual(
+    '/order/?/?',
+    LRoute.ControllerID.Uri,
+    'The uri is the one the router matches, placeholders included');
+  Assert.IsTrue(
+    LRoute.ControllerID.MethodType = TTHttpMethodType.DELETE,
+    'The verb is the one of the method attribute');
+end;
+
+procedure TTHttpServerRoutesTests.ARouteCarriesItsAreas;
+var
+  LAreas: TArray<String>;
+begin
+  LAreas := RouteOf('Load').Areas;
+
+  Assert.AreEqual<Integer>(
+    1, Length(LAreas), 'The class area reaches the route');
+  Assert.AreEqual('reader', LAreas[0], 'Areas are lower-cased by the router');
+end;
+
+procedure TTHttpServerRoutesTests.ARouteMarksPlainNumberPlaceholders;
+var
+  LNotSqids: TArray<Boolean>;
+begin
+  LNotSqids := RouteOf('Remove').NotSqids;
+
+  Assert.AreEqual<Integer>(2, Length(LNotSqids), 'One entry per placeholder');
+  Assert.IsFalse(LNotSqids[0], 'An unmarked placeholder is a sqid');
+  Assert.IsTrue(LNotSqids[1], 'A [TNotSqid] placeholder is a plain number');
+end;
+
+procedure TTHttpServerRoutesTests.ARouteCarriesItsAuthorizationType;
+begin
+  Assert.IsTrue(
+    RouteOf('Load').AuthorizationType =
+      TTHttpAuthorizationType.Authentication,
+    'A route without the attribute requires authentication');
+  Assert.IsTrue(
+    RouteOf('Get').AuthorizationType = TTHttpAuthorizationType.None,
+    'A route marked None says so');
+end;
+
 initialization
   TDUnitX.RegisterTestFixture(TTHttpServerStartTests);
   TDUnitX.RegisterTestFixture(TTHttpListenerTests);
   TDUnitX.RegisterTestFixture(TTHttpCappedStreamTests);
   TDUnitX.RegisterTestFixture(TTHttpResponseHeaderTests);
+  TDUnitX.RegisterTestFixture(TTHttpServerRoutesTests);
 
 end.

@@ -75,6 +75,7 @@ type
     procedure CreateBindings;
 
     function GetStarted: Boolean;
+    function GetRoutes: TArray<TTHttpRoute>;
     procedure SetBaseUri(const AValue: String);
     procedure SetPort(const AValue: Word);
     function GetCorsConfig: TTHttpCorsConfig;
@@ -155,6 +156,7 @@ type
     procedure Stop;
 
     property Started: Boolean read GetStarted;
+    property Routes: TArray<TTHttpRoute> read GetRoutes;
     property BaseUri: String read FBaseUri write SetBaseUri;
     property Port: Word read FPort write SetPort;
     property CorsConfig: TTHttpCorsConfig read GetCorsConfig;
@@ -552,6 +554,21 @@ end;
 function TTHttpServer<C>.GetStarted: Boolean;
 begin
   result := FHttpServer.Active;
+end;
+
+function TTHttpServer<C>.GetRoutes: TArray<TTHttpRoute>;
+var
+  LRoutes: TList<TTHttpRoute>;
+  LController: TTHttpRttiController<C>;
+begin
+  LRoutes := TList<TTHttpRoute>.Create;
+  try
+    for LController in FControllers do
+      LController.AddRoutes(LRoutes);
+    result := LRoutes.ToArray;
+  finally
+    LRoutes.Free;
+  end;
 end;
 
 procedure TTHttpServer<C>.SetBaseUri(const AValue: String);
