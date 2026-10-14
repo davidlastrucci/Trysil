@@ -68,6 +68,9 @@ begin
   if IsRegistered(AServer) then
     raise ETOpenApiException.Create(
       TTLanguage.Instance.Translate(SOpenApiAlreadyRegistered));
+  if not TTOpenApiController<C>.Document.IsEmpty then
+    raise ETOpenApiException.Create(
+      TTLanguage.Instance.Translate(SOpenApiContextAlreadyRegistered));
   if AInfo.Title.IsEmpty then
     raise ETOpenApiException.Create(
       TTLanguage.Instance.Translate(SOpenApiEmptyTitle));

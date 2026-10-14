@@ -131,6 +131,20 @@ type
       const AMember: TTRttiMember;
       const AName: String;
       const AJSon: TJSonObject);
+    procedure WriteNumber(
+      const AJSon: TJSonObject; const AName: String; const AValue: TValue);
+    procedure WriteBound(
+      const AJSon: TJSonObject;
+      const AName: String;
+      const AAttribute: TValueAttribute);
+    procedure WriteLengths(
+      const AMember: TTRttiMember; const AJSon: TJSonObject);
+    procedure WriteBounds(
+      const AMember: TTRttiMember; const AJSon: TJSonObject);
+    procedure WriteRange(
+      const AMember: TTRttiMember; const AJSon: TJSonObject);
+    procedure WritePattern(
+      const AMember: TTRttiMember; const AJSon: TJSonObject);
     procedure WriteLazy(const AColumnMap: TTColumnMap; const AName: String);
     procedure WriteLazyEntity(const AType: TRttiType; const AJSon: TJSonObject);
     procedure WriteDetail(const ADetailColumnMap: TTDetailColumnMap);
@@ -528,6 +542,83 @@ begin
     AJSon.AddPair('format', 'email');
   if Assigned(AMember.GetAttribute<TRequiredAttribute>()) then
     FRequired.Add(AName);
+  WriteLengths(AMember, AJSon);
+  WriteBounds(AMember, AJSon);
+  WritePattern(AMember, AJSon);
+end;
+
+procedure TTOpenApiEntitySchema.WriteNumber(
+  const AJSon: TJSonObject; const AName: String; const AValue: TValue);
+var
+  LPair: TJSonPair;
+begin
+  LPair := AJSon.RemovePair(AName);
+  if Assigned(LPair) then
+    LPair.Free;
+  if AValue.Kind = tkInteger then
+    AJSon.AddPair(AName, TJSonNumber.Create(AValue.AsInteger))
+  else
+    AJSon.AddPair(AName, TJSonNumber.Create(AValue.AsType<Double>()));
+end;
+
+procedure TTOpenApiEntitySchema.WriteBound(
+  const AJSon: TJSonObject;
+  const AName: String;
+  const AAttribute: TValueAttribute);
+begin
+  if Assigned(AAttribute) then
+    WriteNumber(AJSon, AName, AAttribute.Value);
+end;
+
+procedure TTOpenApiEntitySchema.WriteLengths(
+  const AMember: TTRttiMember; const AJSon: TJSonObject);
+var
+  LMinLength: TMinLengthAttribute;
+  LMaxLength: TMaxLengthAttribute;
+begin
+  LMinLength := AMember.GetAttribute<TMinLengthAttribute>();
+  if Assigned(LMinLength) then
+    WriteNumber(AJSon, 'minLength', LMinLength.Length);
+  LMaxLength := AMember.GetAttribute<TMaxLengthAttribute>();
+  if Assigned(LMaxLength) then
+    WriteNumber(AJSon, 'maxLength', LMaxLength.Length);
+end;
+
+procedure TTOpenApiEntitySchema.WriteBounds(
+  const AMember: TTRttiMember; const AJSon: TJSonObject);
+begin
+  WriteRange(AMember, AJSon);
+  WriteBound(
+    AJSon, 'minimum', AMember.GetAttribute<TMinValueAttribute>());
+  WriteBound(
+    AJSon, 'maximum', AMember.GetAttribute<TMaxValueAttribute>());
+  WriteBound(
+    AJSon, 'exclusiveMinimum', AMember.GetAttribute<TGreaterAttribute>());
+  WriteBound(
+    AJSon, 'exclusiveMaximum', AMember.GetAttribute<TLessAttribute>());
+end;
+
+procedure TTOpenApiEntitySchema.WriteRange(
+  const AMember: TTRttiMember; const AJSon: TJSonObject);
+var
+  LRange: TRangeAttribute;
+begin
+  LRange := AMember.GetAttribute<TRangeAttribute>();
+  if Assigned(LRange) then
+  begin
+    WriteNumber(AJSon, 'minimum', LRange.MinValue);
+    WriteNumber(AJSon, 'maximum', LRange.MaxValue);
+  end;
+end;
+
+procedure TTOpenApiEntitySchema.WritePattern(
+  const AMember: TTRttiMember; const AJSon: TJSonObject);
+var
+  LRegex: TRegexAttribute;
+begin
+  LRegex := AMember.GetAttribute<TRegexAttribute>();
+  if Assigned(LRegex) then
+    AJSon.AddPair('pattern', LRegex.Regex);
 end;
 
 procedure TTOpenApiEntitySchema.WriteLazy(

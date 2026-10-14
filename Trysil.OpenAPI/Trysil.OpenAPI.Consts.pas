@@ -21,6 +21,9 @@ resourcestring
     'OpenAPI: the document cannot be registered on a started server.';
   SOpenApiAlreadyRegistered =
     'OpenAPI: the document is already registered on this server.';
+  SOpenApiContextAlreadyRegistered =
+    'OpenAPI: the document of this context is already registered ' +
+    'on another server.';
   SOpenApiEmptyTitle = 'OpenAPI: the title of the document is empty.';
   SOpenApiEmptyVersion = 'OpenAPI: the version of the document is empty.';
   SOpenApiNoEntityClass =

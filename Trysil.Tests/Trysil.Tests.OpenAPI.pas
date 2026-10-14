@@ -81,6 +81,8 @@ type
     [TColumn('Name')]
     [TDisplayName('Product name')]
     [TRequired]
+    [TMinLength(2)]
+    [TMaxLength(50)]
     FName: String;
 
     [TColumn('Email')]
@@ -88,9 +90,12 @@ type
     FEmail: String;
 
     [TColumn('Quantity')]
+    [TRange(1, 100)]
     FQuantity: TTNullable<Integer>;
 
     [TColumn('Price')]
+    [TGreater(0.5)]
+    [TMaxValue(1000)]
     FPrice: Double;
 
     [TColumn('Secret')]
@@ -99,6 +104,7 @@ type
 
     [TColumn('Token')]
     [TJSonIgnoreSerialize]
+    [TRegex('^[A-Z]+$')]
     FToken: String;
 
     [TColumn('CategoryID')]
@@ -314,6 +320,12 @@ type
     procedure TheEntitySchemaFollowsTheValidation;
 
     [Test]
+    procedure TheEntitySchemaFollowsTheConstraints;
+
+    [Test]
+    procedure TheEntitySchemaFollowsTheRegex;
+
+    [Test]
     procedure ALazyRelationIsAnIdAndAReference;
 
     [Test]
@@ -347,6 +359,9 @@ type
 
     [Test]
     procedure RegisterTwiceIsRefused;
+
+    [Test]
+    procedure ASecondServerOfTheContextIsRefused;
 
     [Test]
     procedure AnEmptyTitleIsRefused;
@@ -841,6 +856,57 @@ begin
     '[TEMail]');
 end;
 
+procedure TTOpenApiDocumentTests.TheEntitySchemaFollowsTheConstraints;
+const
+  Product = 'TTestOpenApiProduct';
+begin
+  Assert.AreEqual(
+    '2',
+    TextAt(['components', 'schemas', Product, 'properties', 'name',
+      'minLength']),
+    '[TMinLength]');
+  Assert.AreEqual(
+    '50',
+    TextAt(['components', 'schemas', Product, 'properties', 'name',
+      'maxLength']),
+    '[TMaxLength]');
+  Assert.AreEqual(
+    '1',
+    TextAt(['components', 'schemas', Product, 'properties', 'quantity',
+      'minimum']),
+    '[TRange] gives the inclusive minimum');
+  Assert.AreEqual(
+    '100',
+    TextAt(['components', 'schemas', Product, 'properties', 'quantity',
+      'maximum']),
+    '[TRange] gives the inclusive maximum');
+  Assert.AreEqual(
+    '0.5',
+    TextAt(['components', 'schemas', Product, 'properties', 'price',
+      'exclusiveMinimum']),
+    '[TGreater] is an exclusive minimum');
+  Assert.AreEqual(
+    '1000',
+    TextAt(['components', 'schemas', Product, 'properties', 'price',
+      'maximum']),
+    '[TMaxValue]');
+end;
+
+procedure TTOpenApiDocumentTests.TheEntitySchemaFollowsTheRegex;
+const
+  Product = 'TTestOpenApiProduct';
+begin
+  Assert.AreEqual(
+    '^[A-Z]+$',
+    TextAt(['components', 'schemas', Product, 'properties', 'token',
+      'pattern']),
+    '[TRegex]');
+  Assert.IsFalse(
+    TextAt(['components', 'schemas', Product, 'properties', 'email',
+      'pattern']).IsEmpty,
+    '[TEMail] is a regex too, and its pattern goes with the format');
+end;
+
 procedure TTOpenApiDocumentTests.ALazyRelationIsAnIdAndAReference;
 const
   Product = 'TTestOpenApiProduct';
@@ -891,6 +957,7 @@ end;
 
 procedure TTOpenApiRegisterTests.Setup;
 begin
+  TTOpenApiController<TTestOpenApiContext>.Document := String.Empty;
   FServer := TTHttpServer<TTestOpenApiContext>.Create;
   FServer.RegisterController<TTestOpenApiPingController>('/ping');
 end;
@@ -898,6 +965,7 @@ end;
 procedure TTOpenApiRegisterTests.TearDown;
 begin
   FServer.Free;
+  TTOpenApiController<TTestOpenApiContext>.Document := String.Empty;
 end;
 
 function TTOpenApiRegisterTests.TryRegister: Boolean;
@@ -955,6 +1023,35 @@ procedure TTOpenApiRegisterTests.RegisterTwiceIsRefused;
 begin
   Assert.IsTrue(TryRegister, 'The first registration succeeds');
   Assert.IsFalse(TryRegister, 'The second one is refused');
+end;
+
+procedure TTOpenApiRegisterTests.ASecondServerOfTheContextIsRefused;
+var
+  LServer: TTHttpServer<TTestOpenApiContext>;
+  LRefused: Boolean;
+begin
+  Assert.IsTrue(TryRegister, 'The first server gets the document');
+  LServer := TTHttpServer<TTestOpenApiContext>.Create;
+  try
+    LRefused := False;
+    try
+      TTOpenApi<TTestOpenApiContext>.Register(
+        LServer, TTOpenApiInfo.Create('Admin API', '1.0'));
+    except
+      on E: ETOpenApiException do
+        LRefused := True;
+    end;
+  finally
+    LServer.Free;
+  end;
+
+  Assert.IsTrue(
+    LRefused,
+    'The document lives once per context, so a second server would ' +
+    'replace the one of the first and publish its routes');
+  Assert.IsFalse(
+    TTOpenApiController<TTestOpenApiContext>.Document.Contains('Admin API'),
+    'The document of the first server is left untouched');
 end;
 
 procedure TTOpenApiRegisterTests.AnEmptyTitleIsRefused;
