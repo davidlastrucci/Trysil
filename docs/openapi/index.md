@@ -151,7 +151,7 @@ A route that uses a shape without a class on a controller whose `EntityClass` is
 
 ## Implicit error responses
 
-Every operation gets the error responses Trysil can send on its own, all with the `TTOpenApiError` schema:
+Every operation gets the error responses Trysil can send on its own, all with the `TTOpenApiError` schema and an example that carries the code and the description of the response - `{"status": 400, "message": "Bad request"}`:
 
 | Code | When |
 |---|---|
