@@ -86,7 +86,7 @@ var
 begin
   Check(AServer, AInfo);
   LGenerator := TTOpenApiGenerator.Create(
-    AInfo, AServer.Routes, AServer.AuthenticationClass);
+    AInfo, AServer.Routes, AServer.BaseUri, AServer.AuthenticationClass);
   try
     result := LGenerator.Generate;
   finally

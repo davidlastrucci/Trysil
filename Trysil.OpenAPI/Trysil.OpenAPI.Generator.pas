@@ -59,6 +59,19 @@ type
     function FindFirst<T: TCustomAttribute>(): T;
   end;
 
+{ TTOpenApiUri }
+
+  TTOpenApiUri = record
+  strict private
+    FRelative: String;
+    FSegment: String;
+  public
+    constructor Create(const AUri: String; const ABaseUri: String);
+
+    property Relative: String read FRelative;
+    property Segment: String read FSegment;
+  end;
+
 { TTOpenApiPathNames }
 
   TTOpenApiPathNames = class
@@ -78,15 +91,19 @@ type
   strict private
     FRoute: TTHttpRoute;
     FPathNames: TTOpenApiPathNames;
+    FUri: TTOpenApiUri;
     FParameters: TArray<TRttiParameter>;
     FNames: TArray<String>;
 
     function GetCount: Integer;
+    function GetSegment: String;
     function ParameterName(const AIndex: Integer): String;
     function CreateNames: TArray<String>;
   public
     constructor Create(
-      const ARoute: TTHttpRoute; const APathNames: TTOpenApiPathNames);
+      const ARoute: TTHttpRoute;
+      const APathNames: TTOpenApiPathNames;
+      const ABaseUri: String);
 
     procedure AfterConstruction; override;
 
@@ -94,6 +111,7 @@ type
     function Name(const AIndex: Integer): String;
 
     property Count: Integer read GetCount;
+    property Segment: String read GetSegment;
   end;
 
 { TTOpenApiBody }
@@ -172,6 +190,7 @@ type
 
     function IsEntityClassMethod(const AMethod: TRttiMethod): Boolean;
     function SearchEntityClass: TClass;
+    function TagName: String;
     procedure CheckRequestBody(const AAttribute: TRequestBodyAttribute);
     procedure WriteHeader(const AJSon: TJSonObject);
     procedure WriteParameters(const AJSon: TJSonObject);
@@ -188,7 +207,8 @@ type
       const ARoute: TTHttpRoute;
       const AControllerType: TRttiType;
       const ASchemeName: String;
-      const APathNames: TTOpenApiPathNames);
+      const APathNames: TTOpenApiPathNames;
+      const ABaseUri: String);
     destructor Destroy; override;
 
     procedure AfterConstruction; override;
@@ -206,12 +226,13 @@ type
     FDescriptions: TDictionary<String, String>;
 
     function DescriptionOf(const AType: TRttiType): String;
+    procedure Include(const AName: String; const ADescription: String);
     procedure WriteTag(const ATags: TJSonArray; const AName: String);
   public
     constructor Create(const AContext: TRttiContext);
     destructor Destroy; override;
 
-    procedure Add(const AClass: TClass);
+    procedure Add(const AClass: TClass; const ASegment: String);
     procedure Write(const AJSon: TJSonObject);
   end;
 
@@ -221,6 +242,7 @@ type
   strict private
     FInfo: TTOpenApiInfo;
     FRoutes: TArray<TTHttpRoute>;
+    FBaseUri: String;
     FAuthenticationClass: TClass;
     FContext: TRttiContext;
     FSchemeName: String;
@@ -236,6 +258,7 @@ type
       const APaths: TJSonObject; const ATemplate: String): TJSonObject;
     procedure WriteDocument(const AJSon: TJSonObject);
     procedure WriteInfo(const AJSon: TJSonObject);
+    procedure WriteServers(const AJSon: TJSonObject);
     procedure WritePaths(
       const AJSon: TJSonObject; const ASchemas: TTOpenApiSchemas);
     procedure WriteRoute(
@@ -248,6 +271,7 @@ type
     constructor Create(
       const AInfo: TTOpenApiInfo;
       const ARoutes: TArray<TTHttpRoute>;
+      const ABaseUri: String;
       const AAuthenticationClass: TClass);
     destructor Destroy; override;
 
@@ -358,6 +382,25 @@ end;
 
 { TTOpenApiPath }
 
+{ TTOpenApiUri }
+
+constructor TTOpenApiUri.Create(const AUri: String; const ABaseUri: String);
+var
+  LBaseUri: String;
+  LParts: TArray<String>;
+begin
+  LBaseUri := ABaseUri.ToLowerInvariant;
+  FRelative := AUri;
+  if (not LBaseUri.IsEmpty) and FRelative.StartsWith(LBaseUri) then
+    FRelative := FRelative.Substring(LBaseUri.Length);
+  if not FRelative.StartsWith('/') then
+    FRelative := Format('/%s', [FRelative]);
+  FSegment := String.Empty;
+  LParts := FRelative.Split(['/'], TStringSplitOptions.ExcludeEmpty);
+  if (Length(LParts) > 0) and (LParts[0] <> '?') then
+    FSegment := LParts[0];
+end;
+
 { TTOpenApiPathNames }
 
 constructor TTOpenApiPathNames.Create;
@@ -385,11 +428,14 @@ end;
 { TTOpenApiPath }
 
 constructor TTOpenApiPath.Create(
-  const ARoute: TTHttpRoute; const APathNames: TTOpenApiPathNames);
+  const ARoute: TTHttpRoute;
+  const APathNames: TTOpenApiPathNames;
+  const ABaseUri: String);
 begin
   inherited Create;
   FRoute := ARoute;
   FPathNames := APathNames;
+  FUri := TTOpenApiUri.Create(ARoute.ControllerID.Uri, ABaseUri);
 end;
 
 procedure TTOpenApiPath.AfterConstruction;
@@ -402,6 +448,11 @@ end;
 function TTOpenApiPath.GetCount: Integer;
 begin
   result := Length(FParameters);
+end;
+
+function TTOpenApiPath.GetSegment: String;
+begin
+  result := FUri.Segment;
 end;
 
 function TTOpenApiPath.CreateNames: TArray<String>;
@@ -433,7 +484,7 @@ var
   LIndex: Integer;
   LParameter: Integer;
 begin
-  LParts := FRoute.ControllerID.Uri.Split(['/']);
+  LParts := FUri.Relative.Split(['/']);
   LParameter := 0;
   for LIndex := Low(LParts) to High(LParts) do
     if LParts[LIndex] = '?' then
@@ -630,7 +681,8 @@ constructor TTOpenApiOperation.Create(
   const ARoute: TTHttpRoute;
   const AControllerType: TRttiType;
   const ASchemeName: String;
-  const APathNames: TTOpenApiPathNames);
+  const APathNames: TTOpenApiPathNames;
+  const ABaseUri: String);
 begin
   inherited Create;
   FSchemas := ASchemas;
@@ -638,7 +690,7 @@ begin
   FControllerType := AControllerType;
   FSchemeName := ASchemeName;
   FMethod := TTOpenApiMethod.Create(AControllerType, ARoute.Method);
-  FPath := TTOpenApiPath.Create(ARoute, APathNames);
+  FPath := TTOpenApiPath.Create(ARoute, APathNames, ABaseUri);
   FBody := nil;
   FHasRequestBody := False;
 end;
@@ -678,6 +730,16 @@ begin
     result := LMethod.Invoke(FRoute.ControllerClass, []).AsClass;
 end;
 
+function TTOpenApiOperation.TagName: String;
+var
+  LTag: TTagAttribute;
+begin
+  result := FPath.Segment;
+  LTag := FControllerType.GetInheritedAttribute<TTagAttribute>();
+  if Assigned(LTag) then
+    result := LTag.Name;
+end;
+
 function TTOpenApiOperation.Template: String;
 begin
   result := FPath.Template;
@@ -694,13 +756,13 @@ end;
 
 procedure TTOpenApiOperation.WriteHeader(const AJSon: TJSonObject);
 var
-  LTag: TTagAttribute;
+  LTagName: String;
   LSummary: TSummaryAttribute;
   LDescription: TDescriptionAttribute;
 begin
-  LTag := FControllerType.GetInheritedAttribute<TTagAttribute>();
-  if Assigned(LTag) then
-    AddStrings(AJSon, 'tags', [LTag.Name]);
+  LTagName := TagName;
+  if not LTagName.IsEmpty then
+    AddStrings(AJSon, 'tags', [LTagName]);
   LSummary := FMethod.FindFirst<TSummaryAttribute>();
   if Assigned(LSummary) then
     AJSon.AddPair('summary', LSummary.Text);
@@ -847,17 +909,26 @@ begin
     result := LDescription.Text;
 end;
 
-procedure TTOpenApiTags.Add(const AClass: TClass);
+procedure TTOpenApiTags.Add(const AClass: TClass; const ASegment: String);
 var
   LType: TRttiType;
   LTag: TTagAttribute;
 begin
   LType := FContext.GetType(AClass);
   LTag := LType.GetInheritedAttribute<TTagAttribute>();
-  if Assigned(LTag) and (not FNames.Contains(LTag.Name)) then
+  if Assigned(LTag) then
+    Include(LTag.Name, DescriptionOf(LType))
+  else if not ASegment.IsEmpty then
+    Include(ASegment, String.Empty);
+end;
+
+procedure TTOpenApiTags.Include(
+  const AName: String; const ADescription: String);
+begin
+  if not FNames.Contains(AName) then
   begin
-    FNames.Add(LTag.Name);
-    FDescriptions.Add(LTag.Name, DescriptionOf(LType));
+    FNames.Add(AName);
+    FDescriptions.Add(AName, ADescription);
   end;
 end;
 
@@ -892,11 +963,13 @@ end;
 constructor TTOpenApiGenerator.Create(
   const AInfo: TTOpenApiInfo;
   const ARoutes: TArray<TTHttpRoute>;
+  const ABaseUri: String;
   const AAuthenticationClass: TClass);
 begin
   inherited Create;
   FInfo := AInfo;
   FRoutes := ARoutes;
+  FBaseUri := ABaseUri;
   FAuthenticationClass := AAuthenticationClass;
   FContext := TRttiContext.Create;
   FPathNames := TTOpenApiPathNames.Create;
@@ -970,6 +1043,7 @@ var
 begin
   AJSon.AddPair('openapi', SOpenApiVersion);
   WriteInfo(AddObject(AJSon, 'info'));
+  WriteServers(AJSon);
   WriteTags(AJSon);
   LComponents := AddObject(AJSon, 'components');
   LSchemas := TTOpenApiSchemas.Create(
@@ -991,6 +1065,18 @@ begin
     AJSon.AddPair('description', FInfo.Description);
 end;
 
+procedure TTOpenApiGenerator.WriteServers(const AJSon: TJSonObject);
+var
+  LServer: TJSonObject;
+begin
+  if not FBaseUri.IsEmpty then
+  begin
+    LServer := TJSonObject.Create;
+    AddArray(AJSon, 'servers').AddElement(LServer);
+    LServer.AddPair('url', FBaseUri);
+  end;
+end;
+
 procedure TTOpenApiGenerator.WriteTags(const AJSon: TJSonObject);
 var
   LTags: TTOpenApiTags;
@@ -999,7 +1085,9 @@ begin
   LTags := TTOpenApiTags.Create(FContext);
   try
     for LRoute in FRoutes do
-      LTags.Add(LRoute.ControllerClass);
+      LTags.Add(
+        LRoute.ControllerClass,
+        TTOpenApiUri.Create(LRoute.ControllerID.Uri, FBaseUri).Segment);
     LTags.Write(AJSon);
   finally
     LTags.Free;
@@ -1027,7 +1115,8 @@ begin
     ARoute,
     FContext.GetType(ARoute.ControllerClass),
     FSchemeName,
-    FPathNames);
+    FPathNames,
+    FBaseUri);
   try
     LOperation.Write(
       AddObject(PathOf(APaths, LOperation.Template), VerbOf(ARoute)));

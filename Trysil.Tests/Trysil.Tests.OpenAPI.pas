@@ -306,6 +306,12 @@ type
     procedure TheTagComesFromTheConcreteController;
 
     [Test]
+    procedure AControllerWithoutTagIsGroupedByItsFirstSegment;
+
+    [Test]
+    procedure TheBaseUriIsTheServer;
+
+    [Test]
     procedure APathParameterIsAnIdUnlessMarkedNotSqid;
 
     [Test]
@@ -568,6 +574,7 @@ begin
   LGenerator := TTOpenApiGenerator.Create(
     TTOpenApiInfo.Create('Test API', '1.0', 'Products and pings'),
     FServer.Routes,
+    FServer.BaseUri,
     FServer.AuthenticationClass);
   try
     result := TJSonObject.ParseJSONValue(LGenerator.Generate) as TJSonObject;
@@ -678,6 +685,50 @@ begin
     TextAt(['paths', '/product/{id}', 'get', 'responses', '200',
       'description']),
     'The override declares no response, so the base responses stay');
+end;
+
+procedure
+  TTOpenApiDocumentTests.AControllerWithoutTagIsGroupedByItsFirstSegment;
+begin
+  Assert.AreEqual(
+    'ping',
+    TextAt(['paths', '/ping', 'get', 'tags', '0']),
+    'Without [TTag] the first segment of the path groups the operations');
+  Assert.AreEqual(
+    'product',
+    TextAt(['paths', '/product/{id}', 'put', 'tags', '0']),
+    'The segment, not the tag another controller of the path declares');
+  Assert.IsTrue(
+    Exists(['tags', '1', 'name']) and
+      (TextAt(['tags', '1', 'name']) = 'product'),
+    'An automatic tag is listed after the tags declared before it');
+end;
+
+procedure TTOpenApiDocumentTests.TheBaseUriIsTheServer;
+begin
+  FreeAndNil(FDocument);
+  FServer.Free;
+  FServer := TTHttpServer<TTestOpenApiContext>.Create;
+  FServer.BaseUri := '/Shop/API';
+  FServer.RegisterAuthentication<TTestOpenApiAuthentication>();
+  FServer.RegisterController<TTestOpenApiProductController>('/product');
+  FServer.RegisterController<TTestOpenApiPingController>('/ping');
+  FDocument := Generate;
+
+  Assert.AreEqual(
+    '/Shop/API',
+    TextAt(['servers', '0', 'url']),
+    'The base uri is the url of the server, as it was written');
+  Assert.IsTrue(
+    Exists(['paths', '/product/{id}']),
+    'Paths are relative to the server');
+  Assert.IsFalse(
+    Exists(['paths', '/shop/api/product/{id}']),
+    'The base uri is not repeated in every path');
+  Assert.AreEqual(
+    'ping',
+    TextAt(['paths', '/ping', 'get', 'tags', '0']),
+    'The first segment is counted after the base uri');
 end;
 
 procedure TTOpenApiDocumentTests.TheTagComesFromTheConcreteController;
