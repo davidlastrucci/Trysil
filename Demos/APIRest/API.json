@@ -15,6 +15,7 @@
     "server": "",
     "username": "",
     "password": "",
-    "databaseName": ""
+    "databaseName": "",
+    "trustServerCertificate": false
   }
 }

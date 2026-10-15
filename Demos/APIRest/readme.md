@@ -10,13 +10,14 @@ A complete REST API server demonstrating Trysil's HTTP module with JWT authentic
 - Per-request context with connection pooling
 - CORS support
 - Full request/response logging to database
+- OpenAPI 3.1 document of the API, generated from the routes and the entities
 - System tray application with Start/Stop controls
 - SQL scripts for SQL Server, Firebird, and SQLite
 
 ## Prerequisites
 
 - Delphi Enterprise edition (for SQL Server) or Community edition (for SQLite/Firebird)
-- Trysil packages built, including `Trysil.Http` and `Trysil.JSon` (see [Installation](../../docs/getting-started/installation.md))
+- Trysil packages built, including `Trysil.Http`, `Trysil.JSon` and `Trysil.OpenAPI` (see [Installation](../../docs/getting-started/installation.md))
 
 ## Setup
 
@@ -46,10 +47,13 @@ A complete REST API server demonstrating Trysil's HTTP module with JWT authentic
        "server": "YourServer",
        "username": "",
        "password": "",
-       "databaseName": "YourDatabase"
+       "databaseName": "YourDatabase",
+       "trustServerCertificate": false
      }
    }
    ```
+
+   Leave `username` and `password` empty to connect with Windows authentication. Set `trustServerCertificate` to `true` when SQL Server presents a self-signed certificate, as a local instance usually does with ODBC Driver 18: the connection is refused otherwise.
 
 3. Open `API.dproj` in Delphi, build and run.
 
@@ -93,6 +97,15 @@ FServer.RegisterController<TAPIReadWriteController<TAPICompany>>('/company');
 ### Employee Controller
 
 Same endpoints as Company, registered at `/employee` with `TAPIEmployee`.
+
+### OpenAPI Document
+
+```
+GET /openapi.json
+Authorization: Bearer eyJ...
+```
+
+`TTOpenApi<TAPIContext>.Register` in `TAPIHttp.RegisterOpenApi` describes every route above, with the schema of `TAPICompany` and `TAPIEmployee`. The document is protected like the other routes, so it needs the token of `/logon`. The operations are grouped by the first segment of their path: `logon`, `company`, `employee`. See the [OpenAPI module](../../docs/openapi/index.md).
 
 ## Project Structure
 

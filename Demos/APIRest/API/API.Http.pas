@@ -21,6 +21,8 @@ uses
   Trysil.Http,
   Trysil.Http.Classes,
   Trysil.Http.Log.Types,
+  Trysil.OpenAPI.Types,
+  Trysil.OpenAPI,
 
   API.Config,
   API.Context,
@@ -40,9 +42,11 @@ type
   strict private
     FServer: TTHttpServer<TAPIContext>;
 
+    procedure RegisterConnection;
     procedure RegisterLogWriter;
     procedure RegisterAuthentication;
     procedure RegisterControllers;
+    procedure RegisterOpenApi;
 
     function GetPort: Word;
     function GetStarted: Boolean;
@@ -88,16 +92,25 @@ begin
 
   TTFireDACConnectionPool.Instance.Config.Enabled := True;
 
+  RegisterConnection;
+  RegisterLogWriter;
+  RegisterAuthentication;
+  RegisterControllers;
+  RegisterOpenApi;
+end;
+
+procedure TAPIHttp.RegisterConnection;
+begin
+  if TAPIConfig.Instance.Database.TrustServerCertificate then
+    TTSqlServerParams.Instance.TrustServerCertificate :=
+      TTSqlServerTrustServerCertificate.Yes;
+
   TTSqlServerConnection.RegisterConnection(
     TAPIConfig.Instance.Database.ConnectionName,
     TAPIConfig.Instance.Database.Server,
     TAPIConfig.Instance.Database.Username,
     TAPIConfig.Instance.Database.Password,
     TAPIConfig.Instance.Database.DatabaseName);
-
-  RegisterLogWriter;
-  RegisterAuthentication;
-  RegisterControllers;
 end;
 
 procedure TAPIHttp.RegisterLogWriter;
@@ -124,6 +137,12 @@ begin
   FServer.RegisterController<TAPILogonController>();
   FServer.RegisterController<TAPIReadWriteController<TAPICompany>>('/company');
   FServer.RegisterController<TAPIReadWriteController<TAPIEmployee>>('/employee');
+end;
+
+procedure TAPIHttp.RegisterOpenApi;
+begin
+  TTOpenApi<TAPIContext>.Register(
+    FServer, TTOpenApiInfo.Create('Trysil API REST demo', '1.0'));
 end;
 
 procedure TAPIHttp.Start;

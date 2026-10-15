@@ -66,6 +66,7 @@ type
     FUsername: String;
     FPassword: String;
     FDatabaseName: String;
+    FTrustServerCertificate: Boolean;
   private // internal
     procedure Load(const AJSon: TJSonValue);
   public
@@ -74,6 +75,7 @@ type
     property Username: String read FUsername;
     property Password: String read FPassword;
     property DatabaseName: String read FDatabaseName;
+    property TrustServerCertificate: Boolean read FTrustServerCertificate;
   end;
 
 { TAPIConfig }
@@ -151,6 +153,8 @@ begin
     FUsername := AJSon.GetValue<String>('username', '');
     FPassword := AJSon.GetValue<String>('password', '');
     FDatabaseName := AJSon.GetValue<String>('databaseName', '');
+    FTrustServerCertificate :=
+      AJSon.GetValue<Boolean>('trustServerCertificate', False);
   end;
 end;
 

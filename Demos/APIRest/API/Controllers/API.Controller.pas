@@ -17,12 +17,15 @@ interface
 uses
   System.Classes,
   System.SysUtils,
+  System.TypInfo,
   Trysil.Types,
   Trysil.Http.Classes,
   Trysil.Http.Attributes,
   Trysil.Http.Context,
   Trysil.Http.Controller,
   Trysil.Http.Entity,
+  Trysil.OpenAPI.Types,
+  Trysil.OpenAPI.Attributes,
 
   API.Context;
 
@@ -49,24 +52,38 @@ type
       const AResponse: TTHttpResponse); override;
     destructor Destroy; override;
 
+    class function EntityClass: TClass; override;
+
     [TGet('/?')]
     [TArea('read')]
+    [TSummary('Read by ID')]
+    [TResponse(200, TTOpenApiShape.Single, 'The entity, with its details')]
     procedure Get(const AID: TTPrimaryKey);
 
     [TGet]
     [TArea('read')]
+    [TSummary('Read all')]
+    [TResponse(200, TTOpenApiShape.Page, 'Count and rows')]
     procedure SelectAll;
 
     [TPost('/select')]
     [TArea('read')]
+    [TSummary('Read with a filter')]
+    [TRequestBody(TTOpenApiFilter, TTOpenApiShape.Single, 'Filter')]
+    [TResponse(200, TTOpenApiShape.Page, 'Count and rows')]
     procedure Select;
 
     [TGet('/find/?')]
     [TArea('read')]
+    [TSummary('Read by ID, without details')]
+    [TResponse(200, TTOpenApiShape.Single, 'The entity')]
     procedure Find(const AID: TTPrimaryKey);
 
     [TGet('/metadata')]
     [TArea('read')]
+    [TSummary('Metadata')]
+    [TResponse(
+      200, TTOpenApiMetadata, TTOpenApiShape.Single, 'Columns and keys')]
     procedure Metadata;
   end;
 
@@ -84,20 +101,33 @@ type
 
     [TPost]
     [TArea('write')]
+    [TSummary('Insert')]
+    [TRequestBody(TTOpenApiShape.Single, 'The entity to insert')]
+    [TResponse(200, TTOpenApiShape.Single, 'The inserted entity')]
     procedure Insert;
 
     [TPut]
     [TArea('write')]
+    [TSummary('Update')]
+    [TRequestBody(TTOpenApiShape.Single, 'The entity to update')]
+    [TResponse(200, TTOpenApiShape.Single, 'The updated entity')]
+    [TResponse(404, 'The entity does not exist')]
+    [TResponse(409, 'The version changed in the meantime')]
     procedure Update;
 
     [TDelete('/?/?')]
     [TArea('write')]
+    [TSummary('Delete')]
+    [TResponse(200, 'Deleted')]
+    [TResponse(409, 'The version changed in the meantime')]
     procedure Delete(
       const AID: TTPrimaryKey;
       [TNotSqid] const AVersionID: TTVersion);
 
     [TGet('/createnew')]
     [TArea('write')]
+    [TSummary('A new entity with its defaults')]
+    [TResponse(200, TTOpenApiShape.Single, 'The new entity')]
     procedure CreateNew;
   end;
 
@@ -111,6 +141,11 @@ begin
 end;
 
 { TAPIReadOnlyController<T> }
+
+class function TAPIReadOnlyController<T>.EntityClass: TClass;
+begin
+  result := GetTypeData(TypeInfo(T))^.ClassType;
+end;
 
 constructor TAPIReadOnlyController<T>.Create(
   const AContext: TAPIContext;

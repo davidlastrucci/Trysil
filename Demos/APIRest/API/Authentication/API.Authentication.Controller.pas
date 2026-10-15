@@ -19,18 +19,48 @@ uses
   System.SysUtils,
   System.Generics.Collections,
   System.JSon,
+  Trysil.Attributes,
+  Trysil.Validation.Attributes,
   Trysil.Http.Consts,
   Trysil.Http.Types,
   Trysil.Http.Attributes,
   Trysil.Http.Exceptions,
   Trysil.Http.Classes,
   Trysil.Http.JWT,
+  Trysil.OpenAPI.Types,
+  Trysil.OpenAPI.Attributes,
 
   API.Context,
   API.Controller,
   API.Authentication.JWT;
 
 type
+
+{ TAPILogonRequest }
+
+  TAPILogonRequest = class
+  strict private
+    [TColumn('Username')]
+    [TRequired]
+    FUsername: String;
+
+    [TColumn('Password')]
+    [TRequired]
+    FPassword: String;
+  public
+    property Username: String read FUsername;
+    property Password: String read FPassword;
+  end;
+
+{ TAPILogonResponse }
+
+  TAPILogonResponse = class
+  strict private
+    [TColumn('Token')]
+    FToken: String;
+  public
+    property Token: String read FToken;
+  end;
 
 { TAPILogonController }
 
@@ -52,6 +82,11 @@ type
     destructor Destroy; override;
 
     [TPost]
+    [TSummary('Logon')]
+    [TRequestBody(TAPILogonRequest, TTOpenApiShape.Single, 'Credentials')]
+    [TResponse(
+      200, TAPILogonResponse, TTOpenApiShape.Single, 'The access token')]
+    [TResponse(403, 'Invalid credentials')]
     procedure Logon;
   end;
 
