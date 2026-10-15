@@ -50,7 +50,9 @@ The document is generated **once**, inside `Register`, from the routes registere
 
 | Part of the document | Where it comes from |
 |---|---|
-| Paths and verbs | The registered routes, lower-case, `BaseUri` included. |
+| Server | The `BaseUri`, as it was set, in `servers`: `{"url": "/api"}`. Without a `BaseUri` there is no `servers`. |
+| Paths and verbs | The registered routes, lower-case and relative to the server: `/customer/{id}`, not `/api/customer/{id}`. |
+| Tags | `[TTag]` when the controller has one; otherwise the first segment of the path, lower-case - every route under `/customer` is tagged `customer`. A path whose first segment is a placeholder, or that is the `BaseUri` alone, has no tag. |
 | Path parameters | Each `?` becomes `{name}`, from the name of the method parameter without its `A` prefix: `AID` is `{id}`, `AVersionID` is `{versionID}`. Always required. |
 | Path parameter type | `integer` (`int32`). With Sqids on - `TTJSonSqids.Instance.UseSqids`, read when the document is generated - `{type: string, minLength: 8}`, never a pattern, so the alphabet is not published; a `[TNotSqid]` parameter stays an integer. |
 | Security | With an authentication registered, one scheme in `components.securitySchemes`, `<name>: {type: http, scheme: <name>}`, where the name is the scheme the authentication reads, lower-case (`bearer`, `basic`, `digest`), and a protected route requires it. A route marked `[TAuthorizationType(None)]` always says `security: []`. Without an authentication there is no scheme, and the protected routes carry no `security`. |
@@ -63,7 +65,7 @@ The attributes live in `Trysil.OpenAPI.Attributes`, the enumerations in `Trysil.
 
 | Attribute | Where | Effect |
 |---|---|---|
-| `[TTag('Name')]` | Controller class, inherited | Tag of every operation of the controller. |
+| `[TTag('Name')]` | Controller class, inherited | Tag of every operation of the controller, in place of the first segment of the path. |
 | `[TDescription('Text')]` | Controller class, inherited | Description of the tag. |
 | `[TSummary('Text')]` | Method | Summary of the operation. |
 | `[TDescription('Text')]` | Method | Description of the operation. |
@@ -204,7 +206,7 @@ A schema takes the name of its class. When two different classes have the same n
 - **One document per context type.** The document belongs to `TTOpenApiController<C>`, not to a server: in one process a second server with the same context type cannot register it, even after the first server has been destroyed. `Register` raises rather than replacing the document of the first server.
 - **Placeholder names on a shared path.** OpenAPI does not allow two templates that differ only in the names of their parameters, so when two routes share a path every route takes the names of the first one registered. Within one controller the order of the methods is the order RTTI returns, which is not under your control.
 - **Routes without attributes** get their path, parameters, security and implicit errors, and nothing else: no request body and no successful response.
-- **No automatic tags.** An operation of a controller without `[TTag]` has no tag, and tools show it in a default group.
+- **Automatic tags are lower-case and have no description.** They are the first segment of the path as the router stores it; `[TTag]` and the class `[TDescription]` give a tag a name and a description of your choice.
 - **Registration order.** Controllers registered after `Register` are not described.
 - **Fields the application adds** to a predefined body - a `searchText` next to the filter, say - are not in `TTOpenApiFilter`: describe that body with a class of your own.
 
