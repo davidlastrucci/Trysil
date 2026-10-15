@@ -348,6 +348,9 @@ type
     procedure AnErrorReferencesTheErrorSchema;
 
     [Test]
+    procedure AnErrorShowsItsOwnStatusInTheExample;
+
+    [Test]
     procedure TheSecurityFollowsTheAuthentication;
 
     [Test]
@@ -926,6 +929,27 @@ begin
     Exists(['paths', '/product/{id}/{versionID}', 'delete', 'responses',
       '200', 'content']),
     'A response declared without a type has no schema');
+end;
+
+procedure TTOpenApiDocumentTests.AnErrorShowsItsOwnStatusInTheExample;
+const
+  GetPath = '/product/{id}';
+begin
+  Assert.AreEqual(
+    '404',
+    TextAt(['paths', GetPath, 'get', 'responses', '404', 'content',
+      'application/json', 'example', 'status']),
+    'The example carries the status of its response, not a generic one');
+  Assert.AreEqual(
+    'Not found',
+    TextAt(['paths', GetPath, 'get', 'responses', '404', 'content',
+      'application/json', 'example', 'message']),
+    'and its description as the message');
+  Assert.AreEqual(
+    '500',
+    TextAt(['paths', GetPath, 'get', 'responses', '500', 'content',
+      'application/json', 'example', 'status']),
+    'Every error response has its own');
 end;
 
 procedure TTOpenApiDocumentTests.AnErrorReferencesTheErrorSchema;

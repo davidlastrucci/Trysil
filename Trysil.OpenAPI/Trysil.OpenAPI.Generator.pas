@@ -160,6 +160,10 @@ type
       const ADescription: String);
     procedure WriteError(
       const AStatusCode: Integer; const ADescription: String);
+    procedure WriteErrorExample(
+      const AMedia: TJSonObject;
+      const AStatusCode: Integer;
+      const ADescription: String);
   public
     constructor Create(
       const ASchemas: TTOpenApiSchemas;
@@ -671,7 +675,20 @@ begin
     LJSon.AddPair('description', ADescription);
     LMedia := AddObject(AddObject(LJSon, 'content'), SOpenApiMediaType);
     FSchemas.WriteReference(TTOpenApiError, AddObject(LMedia, 'schema'));
+    WriteErrorExample(LMedia, AStatusCode, ADescription);
   end;
+end;
+
+procedure TTOpenApiResponses.WriteErrorExample(
+  const AMedia: TJSonObject;
+  const AStatusCode: Integer;
+  const ADescription: String);
+var
+  LExample: TJSonObject;
+begin
+  LExample := AddObject(AMedia, 'example');
+  LExample.AddPair('status', TJSonNumber.Create(AStatusCode));
+  LExample.AddPair('message', ADescription);
 end;
 
 { TTOpenApiOperation }
