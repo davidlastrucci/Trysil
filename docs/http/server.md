@@ -310,6 +310,8 @@ Assign it before `Start`. It runs on **every** request thread, so it must be thr
 !!! warning "LogRequest runs before routing and authentication"
     When the writer receives a request, it is not yet known whether the route exists or who the caller is: `WriteRequest` is invoked for a 404 and for a 401 too. In a per-database multi-tenant application this means an anonymous caller can place two rows of arbitrary content into the log database of whichever tenant it names in the `Host` header. `OnCanLog` is where you reject or divert those requests.
 
+The resolved context is in the response entry, which is written after the request has been served: `User` carries `Username`, `Tenant` and `Areas`, empty for an anonymous caller, and `StatusCode` tells how the request ended. The two entries of one request share the same `TaskID`, so a writer that needs the context of a request reads it from its response. With an authentication registered, a route that does not exist, or a method the route does not allow, answers 401 rather than 404 or 405 to a caller that is not authenticated. A 404 does not by itself mean that no route matched: a controller raises it too, for a row that does not exist.
+
 #### Capping the captured body
 
 When a body is larger than `MaxContentLength` it is not captured at all. The size is measured **without touching the body**, so an oversized request is never parsed nor re-serialized, and an oversized binary response skips Base64 encoding entirely.
