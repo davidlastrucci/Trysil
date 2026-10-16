@@ -8,7 +8,7 @@
   http://codenames.info/operation/orm/
 
 *)
-library Trysil.Expert280;
+library Trysil.Expert270;
 
 uses
   System.SysUtils,
