@@ -178,7 +178,7 @@ as well, together with the three subfolders of the latter: `Authentication`,
    ```
    git clone https://github.com/davidlastrucci/Trysil.git
    ```
-2. Open `Packages/<ver>/Trysil.groupproj` in the Delphi IDE and **Build All**, or run from the command line:
+2. Open `Packages/<ver>/TrysilGroup.groupproj` in the Delphi IDE and **Build All**, or run from the command line:
    ```
    Packages\Build370.bat
    ```

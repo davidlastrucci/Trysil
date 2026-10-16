@@ -1,0 +1,224 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{BA9CD0D8-9DF9-4953-9D0B-FB0728CFF650}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Trysil.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Trysil.FirebirdSQL.dproj">
+            <Dependencies>Trysil.dproj</Dependencies>
+        </Projects>
+        <Projects Include="Trysil.PostgreSQL.dproj">
+            <Dependencies>Trysil.dproj</Dependencies>
+        </Projects>
+        <Projects Include="Trysil.SQLite.dproj">
+            <Dependencies>Trysil.dproj</Dependencies>
+        </Projects>
+        <Projects Include="Trysil.SqlServer.dproj">
+            <Dependencies>Trysil.dproj</Dependencies>
+        </Projects>
+        <Projects Include="Trysil.InterBase.dproj">
+            <Dependencies>Trysil.dproj</Dependencies>
+        </Projects>
+        <Projects Include="Trysil.MariaDB.dproj">
+            <Dependencies>Trysil.dproj</Dependencies>
+        </Projects>
+        <Projects Include="Trysil.Oracle.dproj">
+            <Dependencies>Trysil.dproj</Dependencies>
+        </Projects>
+        <Projects Include="Trysil.JSon.dproj">
+            <Dependencies>Trysil.dproj</Dependencies>
+        </Projects>
+        <Projects Include="Trysil.Http.dproj">
+            <Dependencies>Trysil.dproj;Trysil.JSon.dproj</Dependencies>
+        </Projects>
+        <Projects Include="Trysil.OpenAPI.dproj">
+            <Dependencies>Trysil.dproj;Trysil.JSon.dproj;Trysil.Http.dproj</Dependencies>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="Trysil">
+        <MSBuild Projects="Trysil.dproj"/>
+    </Target>
+    <Target Name="Trysil:Clean">
+        <MSBuild Projects="Trysil.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil:Make">
+        <MSBuild Projects="Trysil.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Trysil_FirebirdSQL">
+        <MSBuild Projects="Trysil.FirebirdSQL.dproj"/>
+    </Target>
+    <Target Name="Trysil_FirebirdSQL:Clean">
+        <MSBuild Projects="Trysil.FirebirdSQL.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil_FirebirdSQL:Make">
+        <MSBuild Projects="Trysil.FirebirdSQL.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Trysil_PostgreSQL">
+        <MSBuild Projects="Trysil.PostgreSQL.dproj"/>
+    </Target>
+    <Target Name="Trysil_PostgreSQL:Clean">
+        <MSBuild Projects="Trysil.PostgreSQL.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil_PostgreSQL:Make">
+        <MSBuild Projects="Trysil.PostgreSQL.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Trysil_SQLite">
+        <MSBuild Projects="Trysil.SQLite.dproj"/>
+    </Target>
+    <Target Name="Trysil_SQLite:Clean">
+        <MSBuild Projects="Trysil.SQLite.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil_SQLite:Make">
+        <MSBuild Projects="Trysil.SQLite.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Trysil_SqlServer">
+        <MSBuild Projects="Trysil.SqlServer.dproj"/>
+    </Target>
+    <Target Name="Trysil_SqlServer:Clean">
+        <MSBuild Projects="Trysil.SqlServer.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil_SqlServer:Make">
+        <MSBuild Projects="Trysil.SqlServer.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Trysil_InterBase">
+        <MSBuild Projects="Trysil.InterBase.dproj"/>
+    </Target>
+    <Target Name="Trysil_InterBase:Clean">
+        <MSBuild Projects="Trysil.InterBase.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil_InterBase:Make">
+        <MSBuild Projects="Trysil.InterBase.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Trysil_MariaDB">
+        <MSBuild Projects="Trysil.MariaDB.dproj"/>
+    </Target>
+    <Target Name="Trysil_MariaDB:Clean">
+        <MSBuild Projects="Trysil.MariaDB.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil_MariaDB:Make">
+        <MSBuild Projects="Trysil.MariaDB.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Trysil_Oracle">
+        <MSBuild Projects="Trysil.Oracle.dproj"/>
+    </Target>
+    <Target Name="Trysil_Oracle:Clean">
+        <MSBuild Projects="Trysil.Oracle.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil_Oracle:Make">
+        <MSBuild Projects="Trysil.Oracle.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Trysil_JSon">
+        <MSBuild Projects="Trysil.JSon.dproj"/>
+    </Target>
+    <Target Name="Trysil_JSon:Clean">
+        <MSBuild Projects="Trysil.JSon.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil_JSon:Make">
+        <MSBuild Projects="Trysil.JSon.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Trysil_Http">
+        <MSBuild Projects="Trysil.Http.dproj"/>
+    </Target>
+    <Target Name="Trysil_Http:Clean">
+        <MSBuild Projects="Trysil.Http.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil_Http:Make">
+        <MSBuild Projects="Trysil.Http.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Trysil_OpenAPI">
+        <MSBuild Projects="Trysil.OpenAPI.dproj"/>
+    </Target>
+    <Target Name="Trysil_OpenAPI:Clean">
+        <MSBuild Projects="Trysil.OpenAPI.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Trysil_OpenAPI:Make">
+        <MSBuild Projects="Trysil.OpenAPI.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="Trysil;Trysil_FirebirdSQL;Trysil_PostgreSQL;Trysil_SQLite;Trysil_SqlServer;Trysil_InterBase;Trysil_MariaDB;Trysil_Oracle;Trysil_JSon;Trysil_Http;Trysil_OpenAPI"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="Trysil:Clean;Trysil_FirebirdSQL:Clean;Trysil_PostgreSQL:Clean;Trysil_SQLite:Clean;Trysil_SqlServer:Clean;Trysil_InterBase:Clean;Trysil_MariaDB:Clean;Trysil_Oracle:Clean;Trysil_JSon:Clean;Trysil_Http:Clean;Trysil_OpenAPI:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="Trysil:Make;Trysil_FirebirdSQL:Make;Trysil_PostgreSQL:Make;Trysil_SQLite:Make;Trysil_SqlServer:Make;Trysil_InterBase:Make;Trysil_MariaDB:Make;Trysil_Oracle:Make;Trysil_JSon:Make;Trysil_Http:Make;Trysil_OpenAPI:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+    <ItemGroup Condition="'$(BuildGroup)'=='All target and configuration'">
+        <BuildGroupProject Include="Trysil.dproj">
+            <ProjectGuid>{ED0C237C-FCB5-4ECD-8882-4D4FE40D687F}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.FirebirdSQL.dproj">
+            <ProjectGuid>{202D19A4-BEFF-4F24-A5F4-E7F98E050DFF}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.PostgreSQL.dproj">
+            <ProjectGuid>{F4568167-F236-47E8-BC62-F6697F268163}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.SQLite.dproj">
+            <ProjectGuid>{97EACA67-3D39-4DC4-8C03-1607128EC00C}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.SqlServer.dproj">
+            <ProjectGuid>{48800C8D-839F-44F6-A0BC-FCADBC31A910}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.InterBase.dproj">
+            <ProjectGuid>{1BAE5803-8AE4-4F59-A8A7-5687F734411D}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.MariaDB.dproj">
+            <ProjectGuid>{0D08881E-3344-4F4B-8BAC-5D6155E55965}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.Oracle.dproj">
+            <ProjectGuid>{11C27D7D-0637-4062-8206-42D7E6815502}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.JSon.dproj">
+            <ProjectGuid>{1327E9B8-5D46-4C4B-847E-3CF1DEB63A18}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.Http.dproj">
+            <ProjectGuid>{1F3CD306-0A96-4D5A-B562-9E641619E333}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Trysil.OpenAPI.dproj">
+            <ProjectGuid>{4C510030-4B1A-46FD-91F4-65510F0D82E4}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
+</Project>

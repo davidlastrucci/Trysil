@@ -1,0 +1,46 @@
+package Trysil.MariaDB;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IFDEF MSWINDOWS}
+{$IMAGEBASE $400000}
+{$ENDIF}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$LIBSUFFIX '370'}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  dbrtl,
+  FireDAC,
+  FireDACCommon,
+  FireDACCommonDriver,
+  FireDACMySQLDriver,
+  Trysil;
+
+contains
+  Trysil.Data.SqlSyntax.MariaDB in '..\..\Trysil\Data\SqlSyntax\Trysil.Data.SqlSyntax.MariaDB.pas',
+  Trysil.Data.FireDAC.MariaDB in '..\..\Trysil\Data\FireDAC\Trysil.Data.FireDAC.MariaDB.pas';
+
+end.

@@ -67,6 +67,10 @@ Not released yet: what this section describes is on `master` and in no tag.
 - **Folders and unit names of rules and controllers are settings.** Like the models, each has a directory and a unit filename pattern, `Rules` / `{ProjectName}.Rule.{EntityName}` and `Controllers` / `{ProjectName}.Controller.{EntityName}` by default: in **Settings** for every project, in the wizard for the current one. The controllers had both written in the code. The Settings dialog chooses its page from a tree on the left.
 - **The panels of the Expert dialogs take the colours they were designed with.** The content area had the colour of the buttons bar and the buttons bar that of the content area.
 
+### Build
+
+- **Breaking for a package that requires Trysil: the packages are named without the Delphi version.** `Trysil370.dpk` is `Trysil.dpk`, `Trysil.Http370.dproj` is `Trysil.Http.dproj`, and so on for the eleven packages in the five sets; the version goes into the LIB suffix, set explicitly in each set (`{$LIBSUFFIX '370'}` and `<DllSuffix>370</DllSuffix>`, the same for `260` to `290`), so the `.bpl` keeps its name - `Trysil370.bpl` - and an application already deployed with runtime packages finds the files it found before. The `.dcp` loses the version: a package of your own writes `requires Trysil, Trysil.JSon;` instead of `requires Trysil370, Trysil.JSon370;`, and a project built with runtime packages lists `Trysil` instead of `Trysil370`. The group project is `TrysilGroup.groupproj`, since `Trysil.groupproj` would sit next to `Trysil.dproj`.
+
 ## 2.0.0 - Audit Integrity, Directional JSon Attributes & Fail-Safe Startup
 
 *2026-09-20*

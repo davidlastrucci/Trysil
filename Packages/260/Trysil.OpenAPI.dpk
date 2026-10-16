@@ -1,0 +1,50 @@
+package Trysil.OpenAPI;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$LIBSUFFIX '260'}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  IndySystem,
+  IndyProtocols,
+  IndyCore,
+  Trysil,
+  Trysil.JSon,
+  Trysil.Http;
+
+contains
+  Trysil.OpenAPI.Attributes in '..\..\Trysil.OpenAPI\Trysil.OpenAPI.Attributes.pas',
+  Trysil.OpenAPI.Consts in '..\..\Trysil.OpenAPI\Trysil.OpenAPI.Consts.pas',
+  Trysil.OpenAPI.Controller in '..\..\Trysil.OpenAPI\Trysil.OpenAPI.Controller.pas',
+  Trysil.OpenAPI.Exceptions in '..\..\Trysil.OpenAPI\Trysil.OpenAPI.Exceptions.pas',
+  Trysil.OpenAPI.Generator in '..\..\Trysil.OpenAPI\Trysil.OpenAPI.Generator.pas',
+  Trysil.OpenAPI in '..\..\Trysil.OpenAPI\Trysil.OpenAPI.pas',
+  Trysil.OpenAPI.Schema in '..\..\Trysil.OpenAPI\Trysil.OpenAPI.Schema.pas',
+  Trysil.OpenAPI.Types in '..\..\Trysil.OpenAPI\Trysil.OpenAPI.Types.pas';
+
+end.

@@ -20,7 +20,7 @@ FOR %%P IN (Trysil Trysil.FirebirdSQL Trysil.InterBase Trysil.PostgreSQL Trysil.
   FOR %%C IN (Debug Release) DO (
     FOR %%X IN (%PLATFORMS%) DO (
       <nul SET /P=%%P %PKG% %%C %%X ...
-      MSBuild ".\%PKG%\%%P%PKG%.dproj" /t:Build /p:Config=%%C /p:platform=%%X /v:quiet /nologo > "!LOG!" 2>&1
+      MSBuild ".\%PKG%\%%P.dproj" /t:Build /p:Config=%%C /p:platform=%%X /v:quiet /nologo > "!LOG!" 2>&1
       IF ERRORLEVEL 1 (
         ECHO !ESC![91m[FAIL]!ESC![0m
         TYPE "!LOG!"

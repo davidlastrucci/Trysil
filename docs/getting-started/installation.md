@@ -39,10 +39,10 @@ git pull trysil master
 Open the group project for your Delphi version:
 
 ```
-Packages/<version>/Trysil.groupproj
+Packages/<version>/TrysilGroup.groupproj
 ```
 
-For example, for Delphi 13 Florence open `Packages/370/Trysil.groupproj`, then use **Build All**.
+For example, for Delphi 13 Florence open `Packages/370/TrysilGroup.groupproj`, then use **Build All**.
 
 The group project builds all packages in the correct dependency order:
 
@@ -89,6 +89,8 @@ Lib/<version>/$(Platform)/$(Config)/
 ```
 
 This includes `.bpl` (runtime packages), `.dcp` (design-time packages), and `.dcu` (compiled units).
+
+The packages are named without the Delphi version: the version is in the LIB suffix, so it goes into the `.bpl` only. Delphi 13 Florence builds `Trysil370.bpl` and `Trysil.dcp`, and a package of yours that uses Trysil writes `requires Trysil;`.
 
 ## Configure Your Environment
 

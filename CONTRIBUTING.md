@@ -35,7 +35,7 @@ Build the packages for your Delphi version from the command line:
 Packages\Build370.bat
 ```
 
-Or open `Packages/<ver>/Trysil.groupproj` in the IDE and use **Build All**.
+Or open `Packages/<ver>/TrysilGroup.groupproj` in the IDE and use **Build All**.
 
 ## Questions?
 
