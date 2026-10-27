@@ -6,7 +6,7 @@ Thank you for your interest in contributing to Trysil!
 
 - **Report bugs** -- open an [issue](https://github.com/davidlastrucci/Trysil/issues) with steps to reproduce
 - **Suggest features** -- open an issue describing the use case
-- **Share your project** -- tell us how you use Trysil in the [Show and tell](https://github.com/davidlastrucci/Trysil/issues/9) issue
+- **Share your project** -- tell us how you use Trysil in the [Show and tell](https://github.com/davidlastrucci/Trysil/discussions/17) discussion
 - **Translate** -- add a new language file (see [Demos/Languages](Demos/Languages/))
 - **Improve documentation** -- fix typos, add examples, clarify explanations
 - **Submit code** -- bug fixes and enhancements via pull request

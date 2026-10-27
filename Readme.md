@@ -240,7 +240,7 @@ Projects and applications using Trysil in production. [See the full list](https:
 If Trysil is useful to you, please consider:
 
 - **Star** this repository — it's free and helps others discover the project
-- **Share** your project in the [Show and tell](https://github.com/davidlastrucci/Trysil/issues/9) issue
+- **Share** your project in the [Show and tell](https://github.com/davidlastrucci/Trysil/discussions/17) discussion
 - **Donate** via [![PayPal](https://img.shields.io/badge/PayPal-donate-blue.svg)](https://www.paypal.com/paypalme/DavidLastrucci)
 - **Reach out** at [david.lastrucci@gmail.com](mailto:david.lastrucci@gmail.com) — feedback is always welcome
 
