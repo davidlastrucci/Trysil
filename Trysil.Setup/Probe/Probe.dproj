@@ -1,0 +1,17 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <MainSource>Probe.dpr</MainSource>
+        <Config Condition="'$(Config)'==''">Release</Config>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <AppType>Console</AppType>
+        <FrameworkType>None</FrameworkType>
+        <DCC_DcuOutput>.\Dcu</DCC_DcuOutput>
+        <DCC_ExeOutput>.\Bin</DCC_ExeOutput>
+    </PropertyGroup>
+    <ItemGroup>
+        <DelphiCompile Include="$(MainSource)">
+            <MainSource>MainSource</MainSource>
+        </DelphiCompile>
+    </ItemGroup>
+    <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets"/>
+</Project>

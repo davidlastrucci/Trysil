@@ -1,0 +1,2 @@
+PROBE_DPR RCDATA "Probe\\Probe.dpr"
+PROBE_DPROJ RCDATA "Probe\\Probe.dproj"
