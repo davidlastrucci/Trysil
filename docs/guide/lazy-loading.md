@@ -178,6 +178,7 @@ end;
 - **The foreign key written is the primary key of the related object.** `Insert<T>` and `Update<T>` take the key from the object the member holds.
 - **A NULL foreign key reads as 0.** The related object stays empty, with key 0, and an `Update<T>` of the entity writes 0 back, not NULL: on a column with a foreign key constraint the write fails. Use `TTLazy<T>` for an optional relation.
 - **A clone carries a copy of the related object.** `CloneEntity`, and the copies a `TTSession<T>` works on, receive every mapped column of it, key included.
+- **JSON carries the key and the object.** The serializer emits `<name>ID` always, and the nested object when the level allows it, as for a `TTLazy<T>`. The deserializer reads both: the key first, then the nested object into the related entity.
 
 ## Important Notes
 
