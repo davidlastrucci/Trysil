@@ -74,6 +74,9 @@ type
       const AOptions: TTInstallOptions): Boolean;
     function InstallVersions(const AOptions: TTInstallOptions): TArray<String>;
     procedure CopySetup(const ADirectory: String);
+    procedure SaveInstallation(
+      const AOptions: TTInstallOptions; const AVersions: TArray<String>);
+    procedure DiscardInstallation(const ADirectory: String);
     procedure Deploy(const AOptions: TTInstallOptions);
     procedure DetectInstalled(const AVersions: TObjectList<TTDelphiVersion>);
     procedure UpdateVersions;
@@ -270,16 +273,32 @@ begin
     TFile.Copy(ParamStr(0), LFileName, True);
 end;
 
+procedure TTInstaller.SaveInstallation(
+  const AOptions: TTInstallOptions; const AVersions: TArray<String>);
+begin
+  CopySetup(AOptions.Directory);
+  FInstallation.Save(
+    AOptions.Directory, FDownloader.Version, AVersions, AOptions.Expert);
+  FLog.AddFormat(SCompleted, [FDownloader.Version, Length(AVersions)]);
+end;
+
+procedure TTInstaller.DiscardInstallation(const ADirectory: String);
+begin
+  RemoveDirectory(ADirectory);
+  FInstallation.Delete;
+  raise ETSetupException.CreateFmt(SNothingInstalled, [FDownloader.Version]);
+end;
+
 procedure TTInstaller.Deploy(const AOptions: TTInstallOptions);
 var
   LVersions: TArray<String>;
 begin
   DownloadRelease(AOptions.Directory);
   LVersions := InstallVersions(AOptions);
-  CopySetup(AOptions.Directory);
-  FInstallation.Save(
-    AOptions.Directory, FDownloader.Version, LVersions, AOptions.Expert);
-  FLog.AddFormat(SCompleted, [FDownloader.Version, Length(LVersions)]);
+  if Length(LVersions) > 0 then
+    SaveInstallation(AOptions, LVersions)
+  else
+    DiscardInstallation(AOptions.Directory);
 end;
 
 procedure TTInstaller.Install(const AOptions: TTInstallOptions);

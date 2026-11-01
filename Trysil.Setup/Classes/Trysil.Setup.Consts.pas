@@ -166,6 +166,7 @@ resourcestring
   SVersionInstalled = '%s: done.';
   SVersionFailed = '%s: failed.';
   SCompleted = 'Trysil %s installed in %d Delphi version(s).';
+  SNothingInstalled = 'Trysil %s was not installed in any Delphi version.';
   SUpToDate = 'Trysil %s is already up to date.';
   SRemovingVersion = 'Removing Trysil from the settings of BDS %s...';
   SRemovingFolder = 'Removing %s...';
