@@ -669,7 +669,7 @@ begin
   try
     LType := LContext.GetType(AObject.ClassType.ClassInfo);
     LProperty := LType.GetProperty('ID');
-    if Assigned(LProperty) then
+    if Assigned(LProperty) and LProperty.IsWritable then
       LProperty.SetValue(AObject, AID);
   finally
     LContext.Free;

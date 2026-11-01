@@ -745,32 +745,6 @@ type
     property Version: TTVersion read FVersion;
   end;
 
-{ TTestEagerCustomer - customer with a writable ID, for eager relations }
-
-  [TTable('Customers')]
-  [TSequence('CustomersID')]
-  TTestEagerCustomer = class
-  strict private
-    [TPrimaryKey]
-    [TColumn('ID')]
-    FID: TTPrimaryKey;
-
-    [TColumn('Name')]
-    FName: String;
-
-    [TColumn('Email')]
-    FEmail: String;
-
-    [TVersionColumn]
-    [TColumn('VersionID')]
-    FVersion: TTVersion;
-  public
-    property ID: TTPrimaryKey read FID write FID;
-    property Name: String read FName;
-    property Email: String read FEmail;
-    property Version: TTVersion read FVersion;
-  end;
-
 { TTestEagerOrder - order whose customer is loaded while it is read }
 
   [TTable('Orders')]
@@ -782,7 +756,7 @@ type
     FID: TTPrimaryKey;
 
     [TColumn('CustomerID')]
-    FCustomer: TTestEagerCustomer;
+    FCustomer: TTestCustomer;
 
     [TColumn('Amount')]
     FAmount: Double;
@@ -795,7 +769,7 @@ type
     destructor Destroy; override;
 
     property ID: TTPrimaryKey read FID;
-    property Customer: TTestEagerCustomer read FCustomer;
+    property Customer: TTestCustomer read FCustomer;
     property Amount: Double read FAmount;
     property Version: TTVersion read FVersion;
   end;
@@ -1597,7 +1571,7 @@ var
 constructor TTestEagerOrder.Create;
 begin
   inherited Create;
-  FCustomer := TTestEagerCustomer.Create;
+  FCustomer := TTestCustomer.Create;
 end;
 
 destructor TTestEagerOrder.Destroy;
