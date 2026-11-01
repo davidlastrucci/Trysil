@@ -90,6 +90,12 @@ type
     procedure EntityFromJSonRefusesANonObjectEager;
 
     [Test]
+    procedure EntityToJSonMaxLevelsZeroEmitsTheEagerId;
+
+    [Test]
+    procedure EntityFromJSonReadsTheEagerId;
+
+    [Test]
     procedure InsertRefusesABodyThatCarriesNoKey;
 
     [Test]
@@ -791,6 +797,55 @@ begin
 
   Assert.IsTrue(
     LRaised, 'An eager relation that is not an object must be refused');
+end;
+
+procedure TTAbstractJSonTests.EntityToJSonMaxLevelsZeroEmitsTheEagerId;
+var
+  LCustomer: TTestCustomer;
+  LOrder: TTestOrder;
+  LConfig: TTJSonSerializerConfig;
+  LLoadedOrder: TTestEagerOrder;
+  LJSon: TJSonObject;
+begin
+  LConfig := TTJSonSerializerConfig.Create(0, False);
+
+  LCustomer := FJSonContext.CreateEntity<TTestCustomer>();
+  FCreatedEntities.Add(LCustomer);
+  LCustomer.Name := 'EagerLevelParent';
+  FJSonContext.Insert<TTestCustomer>(LCustomer);
+
+  LOrder := FJSonContext.CreateEntity<TTestOrder>();
+  FCreatedEntities.Add(LOrder);
+  LOrder.CustomerID := LCustomer.ID;
+  LOrder.Amount := 10.0;
+  FJSonContext.Insert<TTestOrder>(LOrder);
+
+  LLoadedOrder := FJSonContext.Get<TTestEagerOrder>(LOrder.ID);
+  FCreatedEntities.Add(LLoadedOrder);
+
+  LJSon := FJSonContext.EntityToJSonObject<TTestEagerOrder>(
+    LLoadedOrder, LConfig);
+  try
+    Assert.AreEqual<Integer>(
+      LCustomer.ID, LJSon.GetValue<Integer>('customerID', 0),
+      'The key of an eager relation must be emitted when MaxLevels is zero');
+    Assert.IsTrue(
+      LJSon.GetValue('customer') = nil,
+      'The related entity must not be emitted when MaxLevels is zero');
+  finally
+    LJSon.Free;
+  end;
+end;
+
+procedure TTAbstractJSonTests.EntityFromJSonReadsTheEagerId;
+var
+  LRestored: TTestEagerOrder;
+begin
+  LRestored := FJSonContext.EntityFromJSon<TTestEagerOrder>(
+    '{"customerID": 42}');
+  FCreatedEntities.Add(LRestored);
+  Assert.AreEqual<Integer>(42, LRestored.Customer.ID,
+    'The key of an eager relation must be read without its nested object');
 end;
 
 procedure TTAbstractJSonTests.EntityToJSonMaxLevelsZeroEmitsOnlyLazyId;

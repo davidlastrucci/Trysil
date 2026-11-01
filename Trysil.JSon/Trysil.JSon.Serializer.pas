@@ -53,6 +53,8 @@ type
     function EntityKey(const AObject: TObject): String;
     function IsVisiting(const AObject: TObject): Boolean;
 
+    procedure AddEagerID(
+      const AObject: TObject; const AName: String; const AJSon: TJSonObject);
     procedure AddLazyID(
       const AObject: TObject; const AName: String; const AJSon: TJSonObject);
     function CanSerializeLevel: Boolean;
@@ -142,6 +144,22 @@ var
 begin
   LKey := EntityKey(AObject);
   result := (not LKey.IsEmpty) and (FVisiting.IndexOf(LKey) >= 0);
+end;
+
+procedure TTJSonSerializer.AddEagerID(
+  const AObject: TObject; const AName: String; const AJSon: TJSonObject);
+var
+  LTableMap: TTTableMap;
+  LID: TTPrimaryKey;
+begin
+  LTableMap := TTMapper.Instance.Load(AObject.ClassInfo);
+  if Assigned(LTableMap.PrimaryKey) then
+  begin
+    LID := LTableMap.PrimaryKey.Member.GetValue(
+      AObject).AsType<TTPrimaryKey>();
+    AJSon.AddPair(
+      Format('%sID', [AName]), TTJSonSqids.Instance.Encode(LID));
+  end;
 end;
 
 procedure TTJSonSerializer.AddLazyID(
@@ -275,7 +293,9 @@ begin
   begin
     LObject := AColumnMap.Member.GetValue(AObject).AsObject;
     if TTRttiLazy.IsLazy(LObject) then
-      AddLazyID(LObject, AName, AResult);
+      AddLazyID(LObject, AName, AResult)
+    else if Assigned(LObject) then
+      AddEagerID(LObject, AName, AResult);
     result := GetJSonObjectOrArrayValue(LObject);
   end
   else if TTJSonSqids.Instance.UseSqids and

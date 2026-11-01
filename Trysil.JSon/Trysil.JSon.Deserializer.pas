@@ -21,6 +21,7 @@ uses
   System.TypInfo,
   System.DateUtils,
   Trysil.Consts,
+  Trysil.Types,
   Trysil.Rtti,
   Trysil.Mapping,
 
@@ -71,6 +72,10 @@ type
       const AColumnMap: TTColumnMap;
       const AObject: TObject;
       const AValue: TJSonValue);
+    procedure SetEagerID(
+      const AName: String;
+      const AObject: TObject;
+      const AJSon: TJSonValue);
     procedure SetEagerValue(
       const AName: String;
       const AObject: TObject;
@@ -312,6 +317,24 @@ begin
   end;
 end;
 
+procedure TTJSonDeserializer.SetEagerID(
+  const AName: String;
+  const AObject: TObject;
+  const AJSon: TJSonValue);
+var
+  LValue: TJSonValue;
+  LTableMap: TTTableMap;
+  LID: TTPrimaryKey;
+begin
+  LValue := AJSon.GetValue<TJSonValue>(Format('%sID', [AName]), nil);
+  LTableMap := TTMapper.Instance.Load(AObject.ClassInfo);
+  if Assigned(LValue) and Assigned(LTableMap.PrimaryKey) then
+  begin
+    LID := LazyIDFromJSon(Format('%sID', [AName]), LValue);
+    LTableMap.PrimaryKey.Member.SetValue(AObject, LID);
+  end;
+end;
+
 procedure TTJSonDeserializer.SetEagerValue(
   const AName: String;
   const AObject: TObject;
@@ -337,7 +360,10 @@ begin
     SetObjectValue(AName, AObject, AJSon);
   end
   else if Assigned(AObject) then
+  begin
+    SetEagerID(AName, AObject, AJSon);
     SetEagerValue(AName, AObject, AJSon);
+  end;
 end;
 
 procedure TTJSonDeserializer.SetSqidsPrimaryKeyValue(
