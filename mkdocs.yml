@@ -54,6 +54,7 @@ nav:
   - Home: index.md
   - Getting Started:
     - Installation: getting-started/installation.md
+    - Setup Program: getting-started/setup.md
     - Quick Start: getting-started/quick-start.md
     - Database Setup: getting-started/database-setup.md
   - Guide:
