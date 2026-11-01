@@ -87,6 +87,7 @@ type
       const AIndex: Integer; const AOptions: TTInstallOptions): Boolean;
     function InstallVersions(const AOptions: TTInstallOptions): TArray<String>;
     procedure CopySetup(const ADirectory: String);
+    function CompletedFormat: String;
     procedure SaveInstallation(
       const AOptions: TTInstallOptions; const AVersions: TArray<String>);
     procedure DiscardInstallation(const ADirectory: String);
@@ -367,13 +368,28 @@ begin
     TFile.Copy(ParamStr(0), LFileName, True);
 end;
 
+function TTInstaller.CompletedFormat: String;
+begin
+  if FInstallation.Installed then
+    result := SUpdated
+  else
+    result := SCompleted;
+end;
+
 procedure TTInstaller.SaveInstallation(
   const AOptions: TTInstallOptions; const AVersions: TArray<String>);
+var
+  LFormat: String;
 begin
+  LFormat := CompletedFormat;
   CopySetup(AOptions.Directory);
   FInstallation.Save(
-    AOptions.Directory, FDownloader.Version, AVersions, AOptions.Expert);
-  FLog.AddFormat(SCompleted, [FDownloader.Version, Length(AVersions)]);
+    AOptions.Directory,
+    FDownloader.Version,
+    FDownloader.Commit,
+    AVersions,
+    AOptions.Expert);
+  FLog.AddFormat(LFormat, [FDownloader.Version, Length(AVersions)]);
 end;
 
 procedure TTInstaller.DiscardInstallation(const ADirectory: String);
@@ -439,7 +455,8 @@ end;
 procedure TTInstaller.Update;
 begin
   FDownloader.Fetch;
-  if FDownloader.IsUpToDate(FInstallation.Version) then
+  if FDownloader.IsUpToDate(
+    FInstallation.Version, FInstallation.Commit) then
     FLog.AddFormat(SUpToDate, [FInstallation.Version])
   else
     UpdateVersions;

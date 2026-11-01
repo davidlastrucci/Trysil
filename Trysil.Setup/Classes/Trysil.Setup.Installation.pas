@@ -29,6 +29,7 @@ type
     FInstalled: Boolean;
     FDirectory: String;
     FVersion: String;
+    FCommit: String;
     FVersions: TArray<String>;
     FExpert: Boolean;
 
@@ -43,6 +44,7 @@ type
     procedure Save(
       const ADirectory: String;
       const AVersion: String;
+      const ACommit: String;
       const AVersions: TArray<String>;
       const AExpert: Boolean);
     procedure Delete;
@@ -50,6 +52,7 @@ type
     property Installed: Boolean read FInstalled;
     property Directory: String read FDirectory;
     property Version: String read FVersion;
+    property Commit: String read FCommit;
     property Versions: TArray<String> read FVersions;
     property Expert: Boolean read FExpert;
   end;
@@ -64,6 +67,7 @@ begin
   FInstalled := False;
   FDirectory := String.Empty;
   FVersion := String.Empty;
+  FCommit := String.Empty;
   FVersions := [];
   FExpert := False;
 end;
@@ -72,6 +76,7 @@ procedure TTInstallation.ReadChoices(const ARegistry: TRegistry);
 begin
   FDirectory := ARegistry.ReadString(SInstallLocationValue);
   FVersion := ARegistry.ReadString(SDisplayVersionValue);
+  FCommit := ARegistry.ReadString(SCommitValue);
   FVersions := ARegistry.ReadString(SVersionsValue).Split(
     [SSearchPathSeparator], TStringSplitOptions.ExcludeEmpty);
   FExpert :=
@@ -115,6 +120,7 @@ begin
   ARegistry.WriteString(
     SVersionsValue, String.Join(SSearchPathSeparator, FVersions));
   ARegistry.WriteBool(SExpertValue, FExpert);
+  ARegistry.WriteString(SCommitValue, FCommit);
 end;
 
 procedure TTInstallation.WriteKey;
@@ -136,11 +142,13 @@ end;
 procedure TTInstallation.Save(
   const ADirectory: String;
   const AVersion: String;
+  const ACommit: String;
   const AVersions: TArray<String>;
   const AExpert: Boolean);
 begin
   FDirectory := ExcludeTrailingPathDelimiter(ADirectory);
   FVersion := AVersion;
+  FCommit := ACommit;
   FVersions := AVersions;
   FExpert := AExpert;
   WriteKey;

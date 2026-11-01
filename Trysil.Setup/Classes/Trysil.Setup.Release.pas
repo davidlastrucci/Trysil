@@ -35,10 +35,15 @@ type
     FLog: TTSetupLog;
     FMaster: Boolean;
     FTag: String;
+    FCommit: String;
     FArchiveUrl: String;
 
     procedure Get(const AUrl: String; const AStream: TStream);
-    function ReadTag(const AJSon: String): String;
+    function GetText(const AUrl: String): String;
+    function ReadValue(
+      const AJSon: String;
+      const AName: String;
+      const AError: String): String;
     function GetVersion: String;
     procedure FetchLatest;
     procedure FetchMaster;
@@ -46,10 +51,12 @@ type
     constructor Create(const ALog: TTSetupLog; const AMaster: Boolean);
 
     procedure Fetch;
-    function IsUpToDate(const AVersion: String): Boolean;
+    function IsUpToDate(
+      const AVersion: String; const ACommit: String): Boolean;
     procedure Download(const AFileName: String);
 
     property Tag: String read FTag;
+    property Commit: String read FCommit;
     property Version: String read GetVersion;
   end;
 
@@ -79,6 +86,7 @@ begin
   FLog := ALog;
   FMaster := AMaster;
   FTag := String.Empty;
+  FCommit := String.Empty;
   FArchiveUrl := String.Empty;
 end;
 
@@ -99,15 +107,31 @@ begin
   end;
 end;
 
-function TTReleaseDownloader.ReadTag(const AJSon: String): String;
+function TTReleaseDownloader.GetText(const AUrl: String): String;
+var
+  LStream: TStringStream;
+begin
+  LStream := TStringStream.Create(String.Empty, TEncoding.UTF8);
+  try
+    Get(AUrl, LStream);
+    result := LStream.DataString;
+  finally
+    LStream.Free;
+  end;
+end;
+
+function TTReleaseDownloader.ReadValue(
+  const AJSon: String;
+  const AName: String;
+  const AError: String): String;
 var
   LValue: TJSONValue;
 begin
   LValue := TJSONObject.ParseJSONValue(AJSon);
   try
     if not (Assigned(LValue) and
-      LValue.TryGetValue<String>(STagName, result)) then
-      raise ETSetupException.Create(SReleaseNotFound);
+      LValue.TryGetValue<String>(AName, result)) then
+      raise ETSetupException.Create(AError);
   finally
     LValue.Free;
   end;
@@ -122,25 +146,19 @@ begin
 end;
 
 procedure TTReleaseDownloader.FetchLatest;
-var
-  LStream: TStringStream;
 begin
-  LStream := TStringStream.Create(String.Empty, TEncoding.UTF8);
-  try
-    Get(SReleaseUrl, LStream);
-    FTag := ReadTag(LStream.DataString);
-    FArchiveUrl := Format(SArchiveUrl, [FTag]);
-    FLog.AddFormat(SLatestRelease, [GetVersion]);
-  finally
-    LStream.Free;
-  end;
+  FTag := ReadValue(GetText(SReleaseUrl), STagName, SReleaseNotFound);
+  FArchiveUrl := Format(SArchiveUrl, [FTag]);
+  FLog.AddFormat(SLatestRelease, [GetVersion]);
 end;
 
 procedure TTReleaseDownloader.FetchMaster;
 begin
   FTag := SMasterBranch;
-  FArchiveUrl := SMasterArchiveUrl;
+  FCommit := ReadValue(GetText(SMasterCommitUrl), SShaName, SCommitNotFound);
+  FArchiveUrl := Format(SCommitArchiveUrl, [FCommit]);
   FLog.AddFormat(SMasterVersion, [GetVersion]);
+  FLog.AddFormat(SMasterCommit, [FCommit]);
 end;
 
 procedure TTReleaseDownloader.Fetch;
@@ -151,9 +169,13 @@ begin
     FetchLatest;
 end;
 
-function TTReleaseDownloader.IsUpToDate(const AVersion: String): Boolean;
+function TTReleaseDownloader.IsUpToDate(
+  const AVersion: String; const ACommit: String): Boolean;
 begin
-  result := (not FMaster) and SameText(GetVersion, AVersion);
+  if FMaster then
+    result := SameText(AVersion, SMasterBranch) and SameText(FCommit, ACommit)
+  else
+    result := SameText(GetVersion, AVersion);
 end;
 
 procedure TTReleaseDownloader.Download(const AFileName: String);

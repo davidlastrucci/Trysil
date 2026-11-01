@@ -27,13 +27,16 @@ const
     'https://api.github.com/repos/davidlastrucci/Trysil/releases/latest';
   SArchiveUrl =
     'https://github.com/davidlastrucci/Trysil/archive/refs/tags/%s.zip';
-  SMasterArchiveUrl =
-    'https://github.com/davidlastrucci/Trysil/archive/refs/heads/master.zip';
+  SMasterCommitUrl =
+    'https://api.github.com/repos/davidlastrucci/Trysil/commits/master';
+  SCommitArchiveUrl =
+    'https://github.com/davidlastrucci/Trysil/archive/%s.zip';
   SMasterBranch = 'master';
   SProjectUrl = 'https://github.com/davidlastrucci/Trysil';
   SMeasureText = 'X';
   SUserAgent = 'Trysil.Setup';
   STagName = 'tag_name';
+  SShaName = 'sha';
   SArchiveFileName = 'Trysil-%s.zip';
 
   SMachineKey = 'Software\Embarcadero\BDS\%s';
@@ -63,6 +66,7 @@ const
   SNoRepairValue = 'NoRepair';
   SVersionsValue = 'DelphiVersions';
   SExpertValue = 'Expert';
+  SCommitValue = 'Commit';
   SDisplayName = 'Trysil - Delphi ORM';
   SPublisher = 'David Lastrucci';
   SUninstallCommand = '"%s" /%s';
@@ -149,6 +153,8 @@ resourcestring
   SReleaseNotFound = 'Latest release of Trysil not found.';
   SLatestRelease = 'Latest release: Trysil %s.';
   SMasterVersion = 'Development version: Trysil %s.';
+  SMasterCommit = 'Latest commit of master: %s.';
+  SCommitNotFound = 'Latest commit of master not found.';
   SDownloading = 'Downloading Trysil %s...';
   SExtracting = 'Extracting into %s...';
   SInvalidArchiveEntry = 'Invalid entry %s in the archive.';
@@ -162,6 +168,7 @@ resourcestring
   SVersionInstalled = '%s: done.';
   SVersionFailed = '%s: failed.';
   SCompleted = 'Trysil %s installed in %d Delphi version(s).';
+  SUpdated = 'Trysil %s updated in %d Delphi version(s).';
   SNothingInstalled = 'Trysil %s was not installed in any Delphi version.';
   SUpToDate = 'Trysil %s is already up to date.';
   SRemovingVersion = 'Removing Trysil from the settings of BDS %s...';
