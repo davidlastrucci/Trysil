@@ -115,7 +115,6 @@
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <Icon_MainIcon>Images\Trysil.ico</Icon_MainIcon>
         <UWP_DelphiLogo44>Images\Trysil44.png</UWP_DelphiLogo44>
         <UWP_DelphiLogo150>Images\Trysil150.png</UWP_DelphiLogo150>
     </PropertyGroup>

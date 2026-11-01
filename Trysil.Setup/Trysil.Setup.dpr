@@ -46,7 +46,7 @@ begin
     begin
       Application.Initialize;
       Application.MainFormOnTaskbar := True;
-      Application.Title := 'Trysil Setup';
+      Application.Title := '"Trysil - Delphi ORM" Setup';
       Application.CreateForm(TTSetupForm, SetupForm);
       Application.Run;
     end;

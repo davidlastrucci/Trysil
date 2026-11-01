@@ -3,10 +3,10 @@ object TSetupForm: TTSetupForm
   Top = 0
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
-  Caption = 'Trysil Setup'
+  Caption = '"Trysil - Delphi ORM" Setup'
   ClientHeight = 441
   ClientWidth = 624
-  Color = clBtnFace
+  Color = clWhite
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -12
@@ -22,7 +22,7 @@ object TSetupForm: TTSetupForm
     Height = 392
     Align = alClient
     BevelOuter = bvNone
-    Color = clWindow
+    Color = clWhite
     ParentBackground = False
     ShowCaption = False
     TabOrder = 0
@@ -60,68 +60,6 @@ object TSetupForm: TTSetupForm
         9DAF5A270F1ED15E190061D9C4CF7769A51927CBAB17C04A41F68290BEC4918B
         39C8B7B1DE6298F98FFF62AA90A400CA9D1440B953C503FC0234E919409EF243
         A10000000049454E44AE426082}
-    end
-    object FolderPagePanel: TPanel
-      AlignWithMargins = True
-      Left = 70
-      Top = 8
-      Width = 546
-      Height = 376
-      Margins.Left = 70
-      Margins.Top = 8
-      Margins.Right = 8
-      Margins.Bottom = 8
-      BevelOuter = bvNone
-      ParentBackground = False
-      ParentColor = True
-      ShowCaption = False
-      TabOrder = 1
-      object FolderTitleLabel: TLabel
-        AlignWithMargins = True
-        Left = 2
-        Top = 4
-        Width = 542
-        Height = 28
-        Margins.Left = 2
-        Margins.Top = 4
-        Margins.Right = 2
-        Margins.Bottom = 0
-        Align = alTop
-        Caption = 'Installation folder'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -20
-        Font.Name = 'Segoe UI'
-        Font.Style = [fsBold]
-        ParentFont = False
-        ExplicitWidth = 170
-      end
-      object FolderLabel: TLabel
-        Left = 2
-        Top = 44
-        Width = 36
-        Height = 15
-        Caption = 'Folder:'
-      end
-      object FolderTextbox: TEdit
-        Left = 2
-        Top = 65
-        Width = 505
-        Height = 23
-        TabOrder = 0
-      end
-      object FolderButton: TButton
-        Left = 513
-        Top = 64
-        Width = 27
-        Height = 25
-        Hint = 'Select the installation folder'
-        Caption = '...'
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 1
-        OnClick = FolderButtonClick
-      end
     end
     object VersionsPagePanel: TPanel
       AlignWithMargins = True
@@ -186,7 +124,7 @@ object TSetupForm: TTSetupForm
         TabOrder = 1
       end
     end
-    object SummaryPagePanel: TPanel
+    object FolderPagePanel: TPanel
       AlignWithMargins = True
       Left = 70
       Top = 8
@@ -200,8 +138,8 @@ object TSetupForm: TTSetupForm
       ParentBackground = False
       ParentColor = True
       ShowCaption = False
-      TabOrder = 3
-      object SummaryTitleLabel: TLabel
+      TabOrder = 1
+      object FolderTitleLabel: TLabel
         AlignWithMargins = True
         Left = 2
         Top = 4
@@ -212,29 +150,40 @@ object TSetupForm: TTSetupForm
         Margins.Right = 2
         Margins.Bottom = 0
         Align = alTop
-        Caption = 'Summary'
+        Caption = 'Installation folder'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -20
         Font.Name = 'Segoe UI'
         Font.Style = [fsBold]
         ParentFont = False
-        ExplicitWidth = 90
+        ExplicitWidth = 170
       end
-      object SummaryMemo: TMemo
-        AlignWithMargins = True
+      object FolderLabel: TLabel
         Left = 2
         Top = 44
-        Width = 542
-        Height = 330
-        Margins.Left = 2
-        Margins.Top = 12
-        Margins.Right = 2
-        Margins.Bottom = 2
-        Align = alClient
-        BorderStyle = bsNone
-        ReadOnly = True
+        Width = 36
+        Height = 15
+        Caption = 'Folder:'
+      end
+      object FolderTextbox: TEdit
+        Left = 2
+        Top = 65
+        Width = 505
+        Height = 23
         TabOrder = 0
+      end
+      object FolderButton: TButton
+        Left = 513
+        Top = 64
+        Width = 27
+        Height = 25
+        Hint = 'Select the installation folder'
+        Caption = '...'
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 1
+        OnClick = FolderButtonClick
       end
     end
     object ProgressPagePanel: TPanel
@@ -295,6 +244,57 @@ object TSetupForm: TTSetupForm
         WordWrap = False
       end
     end
+    object SummaryPagePanel: TPanel
+      AlignWithMargins = True
+      Left = 70
+      Top = 8
+      Width = 546
+      Height = 376
+      Margins.Left = 70
+      Margins.Top = 8
+      Margins.Right = 8
+      Margins.Bottom = 8
+      BevelOuter = bvNone
+      ParentBackground = False
+      ParentColor = True
+      ShowCaption = False
+      TabOrder = 3
+      object SummaryTitleLabel: TLabel
+        AlignWithMargins = True
+        Left = 2
+        Top = 4
+        Width = 542
+        Height = 28
+        Margins.Left = 2
+        Margins.Top = 4
+        Margins.Right = 2
+        Margins.Bottom = 0
+        Align = alTop
+        Caption = 'Summary'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -20
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsBold]
+        ParentFont = False
+        ExplicitWidth = 90
+      end
+      object SummaryMemo: TMemo
+        AlignWithMargins = True
+        Left = 2
+        Top = 44
+        Width = 542
+        Height = 330
+        Margins.Left = 2
+        Margins.Top = 12
+        Margins.Right = 2
+        Margins.Bottom = 2
+        Align = alClient
+        BorderStyle = bsNone
+        ReadOnly = True
+        TabOrder = 0
+      end
+    end
     object ModePagePanel: TPanel
       AlignWithMargins = True
       Left = 70
@@ -321,40 +321,41 @@ object TSetupForm: TTSetupForm
         Margins.Right = 2
         Margins.Bottom = 0
         Align = alTop
-        Caption = 'Trysil Setup'
+        Caption = '"Trysil - Delphi ORM" Setup'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -20
         Font.Name = 'Segoe UI'
         Font.Style = [fsBold]
         ParentFont = False
-        ExplicitWidth = 111
+        ExplicitWidth = 266
       end
       object ModeInfoLabel: TLabel
         Left = 2
         Top = 44
-        Width = 3
+        Width = 83
         Height = 15
+        Caption = 'ModelInfoLabel'
       end
       object ModeInstallRadioButton: TRadioButton
-        Left = 5
-        Top = 73
+        Left = 2
+        Top = 65
         Width = 300
         Height = 17
         Caption = 'Install Trysil'
         TabOrder = 0
       end
       object ModeUpdateRadioButton: TRadioButton
-        Left = 5
-        Top = 99
+        Left = 2
+        Top = 88
         Width = 300
         Height = 17
         Caption = 'Update Trysil to the latest release'
         TabOrder = 1
       end
       object ModeUninstallRadioButton: TRadioButton
-        Left = 5
-        Top = 125
+        Left = 2
+        Top = 111
         Width = 300
         Height = 17
         Caption = 'Uninstall Trysil'
@@ -369,6 +370,7 @@ object TSetupForm: TTSetupForm
     Height = 49
     Align = alBottom
     BevelOuter = bvNone
+    Color = clWhite
     Padding.Left = 12
     Padding.Top = 12
     Padding.Right = 12
