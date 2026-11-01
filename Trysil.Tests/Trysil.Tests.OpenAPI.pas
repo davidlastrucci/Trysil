@@ -118,6 +118,9 @@ type
     [TColumn('CategoryID')]
     FCategory: TTLazy<TTestOpenApiCategory>;
 
+    [TColumn('SupplierID')]
+    FSupplier: TTestOpenApiCategory;
+
     [TColumn('CreatedAt')]
     [TCreatedAt]
     FCreatedAt: TTNullable<TDateTime>;
@@ -126,6 +129,9 @@ type
     [TVersionColumn]
     FVersion: TTVersion;
   public
+    constructor Create;
+    destructor Destroy; override;
+
     property ID: TTPrimaryKey read FID;
     property Name: String read FName;
     property Email: String read FEmail;
@@ -134,6 +140,7 @@ type
     property Secret: String read FSecret;
     property Token: String read FToken;
     property Category: TTLazy<TTestOpenApiCategory> read FCategory;
+    property Supplier: TTestOpenApiCategory read FSupplier;
     property CreatedAt: TTNullable<TDateTime> read FCreatedAt;
     property Version: TTVersion read FVersion;
   end;
@@ -378,6 +385,9 @@ type
     procedure ALazyRelationIsAnIdAndAReference;
 
     [Test]
+    procedure AnEagerRelationIsAnIdAndAWritableReference;
+
+    [Test]
     procedure SqidsTurnIdsIntoStrings;
   end;
 
@@ -457,6 +467,20 @@ type
   end;
 
 implementation
+
+{ TTestOpenApiProduct }
+
+constructor TTestOpenApiProduct.Create;
+begin
+  inherited Create;
+  FSupplier := TTestOpenApiCategory.Create;
+end;
+
+destructor TTestOpenApiProduct.Destroy;
+begin
+  FSupplier.Free;
+  inherited Destroy;
+end;
 
 { TTestOpenApiBaseController<T> }
 
@@ -1134,6 +1158,26 @@ begin
     TextAt(['components', 'schemas', Product, 'properties', 'email',
       'pattern']).IsEmpty,
     '[TEMail] is a regex too, and its pattern goes with the format');
+end;
+
+procedure TTOpenApiDocumentTests.AnEagerRelationIsAnIdAndAWritableReference;
+const
+  Product = 'TTestOpenApiProduct';
+begin
+  Assert.AreEqual(
+    'integer',
+    TextAt(['components', 'schemas', Product, 'properties', 'supplierID',
+      'type']),
+    'The id of the relation is always there');
+  Assert.AreEqual(
+    '#/components/schemas/TTestOpenApiCategory',
+    TextAt(['components', 'schemas', Product, 'properties', 'supplier',
+      '$ref']),
+    'The related entity, when the level allows it');
+  Assert.IsFalse(
+    Exists(['components', 'schemas', Product, 'properties', 'supplier',
+      'readOnly']),
+    'The related entity is read back from the body');
 end;
 
 procedure TTOpenApiDocumentTests.ALazyRelationIsAnIdAndAReference;

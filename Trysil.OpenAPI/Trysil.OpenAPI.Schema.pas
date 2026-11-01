@@ -147,6 +147,7 @@ type
       const AMember: TTRttiMember; const AJSon: TJSonObject);
     procedure WriteLazy(const AColumnMap: TTColumnMap; const AName: String);
     procedure WriteLazyEntity(const AType: TRttiType; const AJSon: TJSonObject);
+    procedure WriteEager(const AColumnMap: TTColumnMap; const AName: String);
     procedure WriteDetail(const ADetailColumnMap: TTDetailColumnMap);
     procedure WriteRequired;
   public
@@ -507,6 +508,8 @@ begin
   if AColumnMap.Member.IsClass and
     TTRttiLazy.IsLazyType(AColumnMap.Member.RttiType) then
     WriteLazy(AColumnMap, LName)
+  else if AColumnMap.Member.IsClass then
+    WriteEager(AColumnMap, LName)
   else
   begin
     LJSon := AddProperty(LName);
@@ -657,6 +660,23 @@ begin
   end
   else if Assigned(LClass) then
     FSchemas.WriteReference(LClass, AJSon);
+end;
+
+procedure TTOpenApiEntitySchema.WriteEager(
+  const AColumnMap: TTColumnMap; const AName: String);
+var
+  LID: TJSonObject;
+  LJSon: TJSonObject;
+  LClass: TClass;
+begin
+  LID := AddProperty(Format('%sID', [AName]));
+  FSchemas.WriteId(LID);
+  WriteAccess(AColumnMap, LID);
+  LJSon := AddProperty(AName);
+  LClass := ClassOf(AColumnMap.Member.RttiType);
+  if Assigned(LClass) then
+    FSchemas.WriteReference(LClass, LJSon);
+  WriteAccess(AColumnMap, LJSon);
 end;
 
 procedure TTOpenApiEntitySchema.WriteDetail(
