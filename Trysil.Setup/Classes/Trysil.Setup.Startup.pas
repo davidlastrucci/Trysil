@@ -34,6 +34,7 @@ type
     FInstallation: TTInstallation;
 
     function IsIDERunning: Boolean;
+    function MustCloseIDE: Boolean;
     function IsInstalledCopy: Boolean;
     function Arguments: String;
     procedure Relaunch;
@@ -79,6 +80,15 @@ begin
   end;
 end;
 
+function TTStartup.MustCloseIDE: Boolean;
+begin
+{$IFDEF DEBUG}
+  result := False;
+{$ELSE}
+  result := IsIDERunning;
+{$ENDIF}
+end;
+
 function TTStartup.IsInstalledCopy: Boolean;
 begin
   FInstallation.Load;
@@ -112,7 +122,7 @@ end;
 function TTStartup.CanRun: Boolean;
 begin
   result := False;
-  if IsIDERunning then
+  if MustCloseIDE then
     MessageDlg(SCloseIDE, TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], 0)
   else if IsInstalledCopy then
     Relaunch

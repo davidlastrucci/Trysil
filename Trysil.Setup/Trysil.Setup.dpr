@@ -30,6 +30,7 @@ uses
   Trysil.Setup.Installer in 'Classes\Trysil.Setup.Installer.pas',
   Trysil.Setup.Thread in 'Classes\Trysil.Setup.Thread.pas',
   Trysil.Setup.Startup in 'Classes\Trysil.Setup.Startup.pas',
+  Trysil.Setup.UI.Controls in 'UI\Trysil.Setup.UI.Controls.pas',
   Trysil.Setup.UI.Main in 'UI\Trysil.Setup.UI.Main.pas' {SetupForm};
 
 {$R *.res}

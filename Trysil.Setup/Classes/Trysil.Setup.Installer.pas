@@ -53,6 +53,7 @@ type
     FLog: TTSetupLog;
     FInstallation: TTInstallation;
     FDownloader: TTReleaseDownloader;
+    FHasErrors: Boolean;
 
     procedure CleanDirectory(const ADirectory: String);
     procedure ExtractArchive(
@@ -92,6 +93,8 @@ type
     procedure Install(const AOptions: TTInstallOptions);
     procedure Update;
     procedure Uninstall;
+
+    property HasErrors: Boolean read FHasErrors;
   end;
 
 implementation
@@ -124,6 +127,7 @@ begin
   FLog := ALog;
   FInstallation := AInstallation;
   FDownloader := TTReleaseDownloader.Create(ALog, AMaster);
+  FHasErrors := False;
 end;
 
 destructor TTInstaller.Destroy;
@@ -204,7 +208,10 @@ begin
       ASettings.SetExpert(LPlatform, ABuilder.ExpertLibrary(LPlatform));
   end
   else
+  begin
+    FHasErrors := True;
     FLog.Add(SExpertFailed);
+  end;
 end;
 
 function TTInstaller.InstallPackages(
@@ -261,7 +268,10 @@ begin
       FLog.AddFormat(SVersionInstalled, [LVersion.Name]);
     end
     else
+    begin
+      FHasErrors := True;
       FLog.AddFormat(SVersionFailed, [LVersion.Name]);
+    end;
 end;
 
 procedure TTInstaller.CopySetup(const ADirectory: String);

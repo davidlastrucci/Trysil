@@ -4,8 +4,8 @@ object TSetupForm: TTSetupForm
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = '"Trysil - Delphi ORM" Setup'
-  ClientHeight = 441
-  ClientWidth = 624
+  ClientHeight = 480
+  ClientWidth = 720
   Color = clWhite
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,20 +15,20 @@ object TSetupForm: TTSetupForm
   Position = poScreenCenter
   OnCloseQuery = FormCloseQuery
   TextHeight = 15
-  object ContentPanel: TPanel
+  object SidebarPanel: TPanel
     Left = 0
     Top = 0
-    Width = 624
-    Height = 392
-    Align = alClient
+    Width = 214
+    Height = 480
+    Align = alLeft
     BevelOuter = bvNone
-    Color = clWhite
+    Color = 1446158
     ParentBackground = False
     ShowCaption = False
     TabOrder = 0
     object TrysilImage: TImage
-      Left = 12
-      Top = 12
+      Left = 14
+      Top = 24
       Width = 48
       Height = 48
       Picture.Data = {
@@ -61,394 +61,1534 @@ object TSetupForm: TTSetupForm
         39C8B7B1DE6298F98FFF62AA90A400CA9D1440B953C503FC0234E919409EF243
         A10000000049454E44AE426082}
     end
-    object VersionsPagePanel: TPanel
-      AlignWithMargins = True
-      Left = 70
-      Top = 8
-      Width = 546
-      Height = 376
-      Margins.Left = 70
-      Margins.Top = 8
-      Margins.Right = 8
-      Margins.Bottom = 8
-      BevelOuter = bvNone
-      ParentBackground = False
-      ParentColor = True
-      ShowCaption = False
-      TabOrder = 2
-      object VersionsTitleLabel: TLabel
-        AlignWithMargins = True
-        Left = 2
-        Top = 4
-        Width = 542
-        Height = 28
-        Margins.Left = 2
-        Margins.Top = 4
-        Margins.Right = 2
-        Margins.Bottom = 0
-        Align = alTop
-        Caption = 'Delphi versions'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -20
-        Font.Name = 'Segoe UI'
-        Font.Style = [fsBold]
-        ParentFont = False
-        ExplicitWidth = 146
-      end
-      object VersionsLabel: TLabel
-        Left = 2
-        Top = 44
-        Width = 205
-        Height = 15
-        Caption = 'Install Trysil in these versions of Delphi:'
-      end
-      object VersionsListBox: TCheckListBox
-        Left = 2
-        Top = 65
-        Width = 538
-        Height = 284
-        ItemHeight = 24
-        Style = lbOwnerDrawFixed
-        TabOrder = 0
-        OnDrawItem = VersionsListBoxDrawItem
-      end
-      object ExpertCheckbox: TCheckBox
-        Left = 2
-        Top = 355
-        Width = 300
-        Height = 17
-        Caption = 'Install Trysil Expert'
-        Checked = True
-        State = cbChecked
-        TabOrder = 1
-      end
+    object ProductLabel: TLabel
+      Left = 74
+      Top = 26
+      Width = 47
+      Height = 25
+      Caption = 'Trysil'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWhite
+      Font.Height = -19
+      Font.Name = 'Segoe UI'
+      Font.Style = [fsBold]
+      ParentFont = False
     end
-    object FolderPagePanel: TPanel
-      AlignWithMargins = True
-      Left = 70
-      Top = 8
-      Width = 546
-      Height = 376
-      Margins.Left = 70
-      Margins.Top = 8
-      Margins.Right = 8
-      Margins.Bottom = 8
-      BevelOuter = bvNone
-      ParentBackground = False
-      ParentColor = True
-      ShowCaption = False
-      TabOrder = 1
-      object FolderTitleLabel: TLabel
-        AlignWithMargins = True
-        Left = 2
-        Top = 4
-        Width = 542
-        Height = 28
-        Margins.Left = 2
-        Margins.Top = 4
-        Margins.Right = 2
-        Margins.Bottom = 0
-        Align = alTop
-        Caption = 'Installation folder'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -20
-        Font.Name = 'Segoe UI'
-        Font.Style = [fsBold]
-        ParentFont = False
-        ExplicitWidth = 170
-      end
-      object FolderLabel: TLabel
-        Left = 2
-        Top = 44
-        Width = 36
-        Height = 15
-        Caption = 'Folder:'
-      end
-      object FolderTextbox: TEdit
-        Left = 2
-        Top = 65
-        Width = 505
-        Height = 23
-        TabOrder = 0
-      end
-      object FolderButton: TButton
-        Left = 513
-        Top = 64
-        Width = 27
-        Height = 25
-        Hint = 'Select the installation folder'
-        Caption = '...'
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 1
-        OnClick = FolderButtonClick
-      end
+    object ProductInfoLabel: TLabel
+      Left = 74
+      Top = 52
+      Width = 97
+      Height = 15
+      Caption = 'Delphi ORM Setup'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = 10392715
+      Font.Height = -12
+      Font.Name = 'Segoe UI'
+      Font.Style = []
+      ParentFont = False
     end
-    object ProgressPagePanel: TPanel
-      AlignWithMargins = True
-      Left = 70
-      Top = 8
-      Width = 546
-      Height = 376
-      Margins.Left = 70
-      Margins.Top = 8
-      Margins.Right = 8
-      Margins.Bottom = 8
-      BevelOuter = bvNone
-      ParentBackground = False
-      ParentColor = True
-      ShowCaption = False
-      TabOrder = 4
-      object ProgressTitleLabel: TLabel
-        AlignWithMargins = True
-        Left = 2
-        Top = 4
-        Width = 542
-        Height = 28
-        Margins.Left = 2
-        Margins.Top = 4
-        Margins.Right = 2
-        Margins.Bottom = 0
-        Align = alTop
-        Caption = 'Progress'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -20
-        Font.Name = 'Segoe UI'
-        Font.Style = [fsBold]
-        ParentFont = False
-        ExplicitWidth = 81
-      end
-      object ProgressMemo: TMemo
-        AlignWithMargins = True
-        Left = 2
-        Top = 44
-        Width = 542
-        Height = 330
-        Margins.Left = 2
-        Margins.Top = 12
-        Margins.Right = 2
-        Margins.Bottom = 2
-        Align = alClient
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = 'Consolas'
-        Font.Style = []
-        ParentFont = False
-        ReadOnly = True
-        ScrollBars = ssBoth
-        TabOrder = 0
-        WordWrap = False
-      end
-    end
-    object SummaryPagePanel: TPanel
-      AlignWithMargins = True
-      Left = 70
-      Top = 8
-      Width = 546
-      Height = 376
-      Margins.Left = 70
-      Margins.Top = 8
-      Margins.Right = 8
-      Margins.Bottom = 8
-      BevelOuter = bvNone
-      ParentBackground = False
-      ParentColor = True
-      ShowCaption = False
-      TabOrder = 3
-      object SummaryTitleLabel: TLabel
-        AlignWithMargins = True
-        Left = 2
-        Top = 4
-        Width = 542
-        Height = 28
-        Margins.Left = 2
-        Margins.Top = 4
-        Margins.Right = 2
-        Margins.Bottom = 0
-        Align = alTop
-        Caption = 'Summary'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -20
-        Font.Name = 'Segoe UI'
-        Font.Style = [fsBold]
-        ParentFont = False
-        ExplicitWidth = 90
-      end
-      object SummaryMemo: TMemo
-        AlignWithMargins = True
-        Left = 2
-        Top = 44
-        Width = 542
-        Height = 330
-        Margins.Left = 2
-        Margins.Top = 12
-        Margins.Right = 2
-        Margins.Bottom = 2
-        Align = alClient
-        BorderStyle = bsNone
-        ReadOnly = True
-        TabOrder = 0
-      end
-    end
-    object ModePagePanel: TPanel
-      AlignWithMargins = True
-      Left = 70
-      Top = 8
-      Width = 546
-      Height = 376
-      Margins.Left = 70
-      Margins.Top = 8
-      Margins.Right = 8
-      Margins.Bottom = 8
+    object StepsPanel: TPanel
+      Left = 20
+      Top = 104
+      Width = 160
+      Height = 180
       BevelOuter = bvNone
       ParentBackground = False
       ParentColor = True
       ShowCaption = False
       TabOrder = 0
-      object ModeTitleLabel: TLabel
-        AlignWithMargins = True
-        Left = 2
-        Top = 4
-        Width = 542
-        Height = 28
-        Margins.Left = 2
-        Margins.Top = 4
-        Margins.Right = 2
-        Margins.Bottom = 0
+      object ModeStepPanel: TPanel
+        Left = 0
+        Top = 0
+        Width = 160
+        Height = 34
         Align = alTop
-        Caption = '"Trysil - Delphi ORM" Setup'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -20
-        Font.Name = 'Segoe UI'
-        Font.Style = [fsBold]
-        ParentFont = False
-        ExplicitWidth = 266
-      end
-      object ModeInfoLabel: TLabel
-        Left = 2
-        Top = 44
-        Width = 83
-        Height = 15
-        Caption = 'ModelInfoLabel'
-      end
-      object ModeInstallRadioButton: TRadioButton
-        Left = 2
-        Top = 65
-        Width = 300
-        Height = 17
-        Caption = 'Install Trysil'
+        BevelOuter = bvNone
+        ParentBackground = False
+        ParentColor = True
+        ShowCaption = False
         TabOrder = 0
-        OnClick = ModeRadioButtonClick
+        object ModeStepBadgeLabel: TLabel
+          Left = 0
+          Top = 7
+          Width = 20
+          Height = 20
+          Alignment = taCenter
+          AutoSize = False
+          Color = 2958881
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = 10392715
+          Font.Height = -11
+          Font.Name = 'Segoe UI Symbol'
+          Font.Style = [fsBold]
+          ParentColor = False
+          ParentFont = False
+          Transparent = False
+          Layout = tlCenter
+        end
+        object ModeStepLabel: TLabel
+          Left = 30
+          Top = 9
+          Width = 56
+          Height = 15
+          Caption = 'Setup type'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = 10392715
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = []
+          ParentFont = False
+        end
       end
-      object ModeUpdateRadioButton: TRadioButton
-        Left = 2
-        Top = 88
-        Width = 300
-        Height = 17
-        Caption = 'Update Trysil to the latest release'
+      object FolderStepPanel: TPanel
+        Left = 0
+        Top = 34
+        Width = 160
+        Height = 34
+        Align = alTop
+        BevelOuter = bvNone
+        ParentBackground = False
+        ParentColor = True
+        ShowCaption = False
         TabOrder = 1
-        OnClick = ModeRadioButtonClick
+        object FolderStepBadgeLabel: TLabel
+          Left = 0
+          Top = 7
+          Width = 20
+          Height = 20
+          Alignment = taCenter
+          AutoSize = False
+          Color = 2958881
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = 10392715
+          Font.Height = -11
+          Font.Name = 'Segoe UI Symbol'
+          Font.Style = [fsBold]
+          ParentColor = False
+          ParentFont = False
+          Transparent = False
+          Layout = tlCenter
+        end
+        object FolderStepLabel: TLabel
+          Left = 30
+          Top = 9
+          Width = 33
+          Height = 15
+          Caption = 'Folder'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = 10392715
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = []
+          ParentFont = False
+        end
       end
-      object ModeUninstallRadioButton: TRadioButton
-        Left = 2
-        Top = 111
-        Width = 300
-        Height = 17
-        Caption = 'Uninstall Trysil'
+      object VersionsStepPanel: TPanel
+        Left = 0
+        Top = 68
+        Width = 160
+        Height = 34
+        Align = alTop
+        BevelOuter = bvNone
+        ParentBackground = False
+        ParentColor = True
+        ShowCaption = False
         TabOrder = 2
-        OnClick = ModeRadioButtonClick
+        object VersionsStepBadgeLabel: TLabel
+          Left = 0
+          Top = 7
+          Width = 20
+          Height = 20
+          Alignment = taCenter
+          AutoSize = False
+          Color = 2958881
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = 10392715
+          Font.Height = -11
+          Font.Name = 'Segoe UI Symbol'
+          Font.Style = [fsBold]
+          ParentColor = False
+          ParentFont = False
+          Transparent = False
+          Layout = tlCenter
+        end
+        object VersionsStepLabel: TLabel
+          Left = 30
+          Top = 9
+          Width = 80
+          Height = 15
+          Caption = 'Delphi versions'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = 10392715
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = []
+          ParentFont = False
+        end
       end
-      object MasterCheckbox: TCheckBox
-        Left = 2
-        Top = 142
-        Width = 540
-        Height = 17
-        Caption = 
-          'Install the development version (master) instead of the latest ' +
-          'release'
+      object SummaryStepPanel: TPanel
+        Left = 0
+        Top = 102
+        Width = 160
+        Height = 34
+        Align = alTop
+        BevelOuter = bvNone
+        ParentBackground = False
+        ParentColor = True
+        ShowCaption = False
         TabOrder = 3
+        object SummaryStepBadgeLabel: TLabel
+          Left = 0
+          Top = 7
+          Width = 20
+          Height = 20
+          Alignment = taCenter
+          AutoSize = False
+          Color = 2958881
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = 10392715
+          Font.Height = -11
+          Font.Name = 'Segoe UI Symbol'
+          Font.Style = [fsBold]
+          ParentColor = False
+          ParentFont = False
+          Transparent = False
+          Layout = tlCenter
+        end
+        object SummaryStepLabel: TLabel
+          Left = 30
+          Top = 9
+          Width = 51
+          Height = 15
+          Caption = 'Summary'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = 10392715
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = []
+          ParentFont = False
+        end
+      end
+      object InstallationStepPanel: TPanel
+        Left = 0
+        Top = 136
+        Width = 160
+        Height = 34
+        Align = alTop
+        BevelOuter = bvNone
+        ParentBackground = False
+        ParentColor = True
+        ShowCaption = False
+        TabOrder = 4
+        object InstallationStepBadgeLabel: TLabel
+          Left = 0
+          Top = 7
+          Width = 20
+          Height = 20
+          Alignment = taCenter
+          AutoSize = False
+          Color = 2958881
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = 10392715
+          Font.Height = -11
+          Font.Name = 'Segoe UI Symbol'
+          Font.Style = [fsBold]
+          ParentColor = False
+          ParentFont = False
+          Transparent = False
+          Layout = tlCenter
+        end
+        object InstallationStepLabel: TLabel
+          Left = 30
+          Top = 9
+          Width = 58
+          Height = 15
+          Caption = 'Installation'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = 10392715
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = []
+          ParentFont = False
+        end
       end
     end
   end
-  object ButtonsPanel: TPanel
-    Left = 0
-    Top = 392
-    Width = 624
-    Height = 49
-    Align = alBottom
+  object MainPanel: TPanel
+    Left = 214
+    Top = 0
+    Width = 506
+    Height = 480
+    Align = alClient
     BevelOuter = bvNone
     Color = clWhite
-    Padding.Left = 12
-    Padding.Top = 12
-    Padding.Right = 12
-    Padding.Bottom = 12
     ParentBackground = False
     ShowCaption = False
     TabOrder = 1
-    object BackButton: TButton
-      AlignWithMargins = True
-      Left = 300
-      Top = 12
-      Width = 75
-      Height = 25
-      Margins.Left = 0
-      Margins.Top = 0
-      Margins.Right = 4
-      Margins.Bottom = 0
-      Align = alRight
-      Caption = '&Back'
-      Enabled = False
+    ExplicitLeft = 200
+    ExplicitWidth = 520
+    object ButtonsLineShape: TShape
+      Left = 0
+      Top = 423
+      Width = 506
+      Height = 1
+      Align = alBottom
+      Brush.Color = 15460325
+      Pen.Color = 15460325
+      ExplicitWidth = 520
+    end
+    object ContentPanel: TPanel
+      Left = 0
+      Top = 0
+      Width = 506
+      Height = 423
+      Align = alClient
+      BevelOuter = bvNone
+      Color = clWhite
+      ParentBackground = False
+      ShowCaption = False
       TabOrder = 0
-      OnClick = BackButtonClick
+      ExplicitWidth = 520
+      object ModePagePanel: TPanel
+        AlignWithMargins = True
+        Left = 32
+        Top = 26
+        Width = 456
+        Height = 367
+        Margins.Left = 32
+        Margins.Top = 26
+        Margins.Right = 32
+        Margins.Bottom = 28
+        BevelOuter = bvNone
+        ParentBackground = False
+        ParentColor = True
+        ShowCaption = False
+        TabOrder = 0
+        DesignSize = (
+          456
+          367)
+        object ModeTitleLabel: TLabel
+          Left = 0
+          Top = 0
+          Width = 232
+          Height = 28
+          Caption = 'ModeTitleLabel'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -20
+          Font.Name = 'Segoe UI Semibold'
+          Font.Style = []
+          ParentFont = False
+        end
+        object ModeSubtitleLabel: TLabel
+          Left = 0
+          Top = 38
+          Width = 140
+          Height = 15
+          Caption = 'What do you want to do?'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = 6509899
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = []
+          ParentFont = False
+        end
+        object InstallCardPanel: TPanel
+          Left = 0
+          Top = 68
+          Width = 456
+          Height = 62
+          Anchors = [akLeft, akTop, akRight]
+          BevelOuter = bvNone
+          Color = 15460325
+          Padding.Left = 1
+          Padding.Top = 1
+          Padding.Right = 1
+          Padding.Bottom = 1
+          ParentBackground = False
+          ShowCaption = False
+          TabOrder = 0
+          object InstallContentPanel: TPanel
+            Left = 1
+            Top = 1
+            Width = 454
+            Height = 60
+            Align = alClient
+            BevelOuter = bvNone
+            Color = clWhite
+            ParentBackground = False
+            ShowCaption = False
+            TabOrder = 0
+            object InstallDescriptionLabel: TLabel
+              Left = 31
+              Top = 33
+              Width = 410
+              Height = 15
+              Anchors = [akLeft, akTop, akRight]
+              AutoSize = False
+              Caption = 'InstallDescriptionLabel'
+              EllipsisPosition = epEndEllipsis
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = 6509899
+              Font.Height = -12
+              Font.Name = 'Segoe UI'
+              Font.Style = []
+              ParentFont = False
+            end
+            object ModeInstallRadioButton: TRadioButton
+              Left = 13
+              Top = 10
+              Width = 420
+              Height = 19
+              Caption = 'Install Trysil'
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clWindowText
+              Font.Height = -13
+              Font.Name = 'Segoe UI'
+              Font.Style = [fsBold]
+              ParentFont = False
+              TabOrder = 0
+              OnClick = ModeRadioButtonClick
+            end
+          end
+        end
+        object UpdateCardPanel: TPanel
+          Left = 0
+          Top = 134
+          Width = 456
+          Height = 62
+          Anchors = [akLeft, akTop, akRight]
+          BevelOuter = bvNone
+          Color = 15460325
+          Padding.Left = 1
+          Padding.Top = 1
+          Padding.Right = 1
+          Padding.Bottom = 1
+          ParentBackground = False
+          ShowCaption = False
+          TabOrder = 1
+          object UpdateContentPanel: TPanel
+            Left = 1
+            Top = 1
+            Width = 454
+            Height = 60
+            Align = alClient
+            BevelOuter = bvNone
+            Color = clWhite
+            ParentBackground = False
+            ShowCaption = False
+            TabOrder = 0
+            object UpdateDescriptionLabel: TLabel
+              Left = 31
+              Top = 33
+              Width = 410
+              Height = 15
+              Anchors = [akLeft, akTop, akRight]
+              AutoSize = False
+              Caption = 'UpdateDescriptionLabel'
+              EllipsisPosition = epEndEllipsis
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = 6509899
+              Font.Height = -12
+              Font.Name = 'Segoe UI'
+              Font.Style = []
+              ParentFont = False
+            end
+            object ModeUpdateRadioButton: TRadioButton
+              Left = 13
+              Top = 10
+              Width = 420
+              Height = 19
+              Caption = 'Update Trysil to the latest release'
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clWindowText
+              Font.Height = -13
+              Font.Name = 'Segoe UI'
+              Font.Style = [fsBold]
+              ParentFont = False
+              TabOrder = 0
+              OnClick = ModeRadioButtonClick
+            end
+          end
+        end
+        object UninstallCardPanel: TPanel
+          Left = 0
+          Top = 200
+          Width = 456
+          Height = 62
+          Anchors = [akLeft, akTop, akRight]
+          BevelOuter = bvNone
+          Color = 15460325
+          Padding.Left = 1
+          Padding.Top = 1
+          Padding.Right = 1
+          Padding.Bottom = 1
+          ParentBackground = False
+          ShowCaption = False
+          TabOrder = 2
+          object UninstallContentPanel: TPanel
+            Left = 1
+            Top = 1
+            Width = 454
+            Height = 60
+            Align = alClient
+            BevelOuter = bvNone
+            Color = clWhite
+            ParentBackground = False
+            ShowCaption = False
+            TabOrder = 0
+            object UninstallDescriptionLabel: TLabel
+              Left = 31
+              Top = 33
+              Width = 410
+              Height = 15
+              Anchors = [akLeft, akTop, akRight]
+              AutoSize = False
+              Caption = 'UninstallDescriptionLabel'
+              EllipsisPosition = epEndEllipsis
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = 6509899
+              Font.Height = -12
+              Font.Name = 'Segoe UI'
+              Font.Style = []
+              ParentFont = False
+            end
+            object ModeUninstallRadioButton: TRadioButton
+              Left = 13
+              Top = 10
+              Width = 420
+              Height = 19
+              Caption = 'Uninstall Trysil'
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clWindowText
+              Font.Height = -13
+              Font.Name = 'Segoe UI'
+              Font.Style = [fsBold]
+              ParentFont = False
+              TabOrder = 0
+              OnClick = ModeRadioButtonClick
+            end
+          end
+        end
+        object MasterCardPanel: TPanel
+          Left = 0
+          Top = 282
+          Width = 456
+          Height = 62
+          Anchors = [akLeft, akTop, akRight]
+          BevelOuter = bvNone
+          Color = 15460325
+          Padding.Left = 1
+          Padding.Top = 1
+          Padding.Right = 1
+          Padding.Bottom = 1
+          ParentBackground = False
+          ShowCaption = False
+          TabOrder = 3
+          object MasterContentPanel: TPanel
+            Left = 1
+            Top = 1
+            Width = 454
+            Height = 60
+            Align = alClient
+            BevelOuter = bvNone
+            Color = clWhite
+            ParentBackground = False
+            ShowCaption = False
+            TabOrder = 0
+            object MasterDescriptionLabel: TLabel
+              Left = 31
+              Top = 33
+              Width = 145
+              Height = 15
+              Caption = 'Instead of the latest release.'
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = 6509899
+              Font.Height = -12
+              Font.Name = 'Segoe UI'
+              Font.Style = []
+              ParentFont = False
+            end
+            object MasterCheckbox: TCheckBox
+              Left = 13
+              Top = 10
+              Width = 420
+              Height = 19
+              Caption = 'Install the development version (master)'
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clWindowText
+              Font.Height = -13
+              Font.Name = 'Segoe UI'
+              Font.Style = [fsBold]
+              ParentFont = False
+              TabOrder = 0
+            end
+          end
+        end
+      end
+      object FolderPagePanel: TPanel
+        AlignWithMargins = True
+        Left = 32
+        Top = 26
+        Width = 456
+        Height = 367
+        Margins.Left = 32
+        Margins.Top = 26
+        Margins.Right = 32
+        Margins.Bottom = 28
+        BevelOuter = bvNone
+        ParentBackground = False
+        ParentColor = True
+        ShowCaption = False
+        TabOrder = 1
+        DesignSize = (
+          456
+          367)
+        object FolderTitleLabel: TLabel
+          Left = 0
+          Top = 0
+          Width = 160
+          Height = 28
+          Caption = 'Installation folder'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -20
+          Font.Name = 'Segoe UI Semibold'
+          Font.Style = []
+          ParentFont = False
+        end
+        object FolderSubtitleLabel: TLabel
+          Left = 0
+          Top = 38
+          Width = 302
+          Height = 15
+          Caption = 'Sources and compiled packages of Trysil go in this folder.'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = 6509899
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = []
+          ParentFont = False
+        end
+        object FolderLabel: TLabel
+          Left = 0
+          Top = 72
+          Width = 35
+          Height = 15
+          Caption = 'Folder:'
+          FocusControl = FolderTextbox
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object FolderHintLabel: TLabel
+          Left = 0
+          Top = 122
+          Width = 335
+          Height = 15
+          Caption = 'The folder must be empty, or created by a previous Trysil Setup.'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = 6509899
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = []
+          ParentFont = False
+        end
+        object FolderTextbox: TEdit
+          Left = 0
+          Top = 92
+          Width = 360
+          Height = 23
+          Anchors = [akLeft, akTop, akRight]
+          TabOrder = 0
+        end
+        object FolderButton: TButton
+          Left = 366
+          Top = 91
+          Width = 90
+          Height = 25
+          Anchors = [akTop, akRight]
+          Caption = 'Browse...'
+          TabOrder = 1
+          OnClick = FolderButtonClick
+        end
+        object FolderInfoPanel: TPanel
+          Left = 0
+          Top = 152
+          Width = 456
+          Height = 54
+          Anchors = [akLeft, akTop, akRight]
+          BevelOuter = bvNone
+          Color = 7722738
+          Padding.Left = 1
+          Padding.Top = 1
+          Padding.Right = 1
+          Padding.Bottom = 1
+          ParentBackground = False
+          ShowCaption = False
+          TabOrder = 2
+          object FolderInfoContentPanel: TPanel
+            Left = 1
+            Top = 1
+            Width = 454
+            Height = 52
+            Align = alClient
+            BevelOuter = bvNone
+            Color = 15137791
+            Padding.Left = 10
+            Padding.Top = 10
+            Padding.Right = 12
+            Padding.Bottom = 10
+            ParentBackground = False
+            ShowCaption = False
+            TabOrder = 0
+            object FolderInfoIconLabel: TLabel
+              Left = 10
+              Top = 10
+              Width = 30
+              Height = 32
+              Align = alLeft
+              AutoSize = False
+              Caption = #9888
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = 24970
+              Font.Height = -20
+              Font.Name = 'Segoe UI Symbol'
+              Font.Style = []
+              ParentFont = False
+            end
+            object FolderInfoLabel: TLabel
+              Left = 36
+              Top = 10
+              Width = 406
+              Height = 32
+              Align = alClient
+              Caption = 
+                'Each Delphi version gets a $(Trysil) environment variable that p' +
+                'oints inside this folder.'
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = 5325111
+              Font.Height = -12
+              Font.Name = 'Segoe UI'
+              Font.Style = []
+              ParentFont = False
+              WordWrap = True
+            end
+          end
+        end
+      end
+      object VersionsPagePanel: TPanel
+        AlignWithMargins = True
+        Left = 32
+        Top = 26
+        Width = 456
+        Height = 367
+        Margins.Left = 32
+        Margins.Top = 26
+        Margins.Right = 32
+        Margins.Bottom = 28
+        BevelOuter = bvNone
+        ParentBackground = False
+        ParentColor = True
+        ShowCaption = False
+        TabOrder = 2
+        DesignSize = (
+          456
+          367)
+        object VersionsTitleLabel: TLabel
+          Left = 0
+          Top = 0
+          Width = 140
+          Height = 28
+          Caption = 'Delphi versions'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -20
+          Font.Name = 'Segoe UI Semibold'
+          Font.Style = []
+          ParentFont = False
+        end
+        object VersionsLabel: TLabel
+          Left = 0
+          Top = 38
+          Width = 205
+          Height = 15
+          Caption = 'Install Trysil in these versions of Delphi:'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = 6509899
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = []
+          ParentFont = False
+        end
+        object VersionsBodyPanel: TPanel
+          Left = 0
+          Top = 64
+          Width = 456
+          Height = 305
+          Anchors = [akLeft, akTop, akRight, akBottom]
+          BevelOuter = bvNone
+          ParentBackground = False
+          ParentColor = True
+          ShowCaption = False
+          TabOrder = 0
+          object VersionsPanel: TPanel
+            Left = 0
+            Top = 0
+            Width = 456
+            Height = 210
+            Align = alTop
+            AutoSize = True
+            BevelOuter = bvNone
+            ParentBackground = False
+            ParentColor = True
+            ShowCaption = False
+            TabOrder = 0
+            object Version1CardPanel: TPanel
+              AlignWithMargins = True
+              Left = 0
+              Top = 0
+              Width = 456
+              Height = 38
+              Margins.Left = 0
+              Margins.Top = 0
+              Margins.Right = 0
+              Margins.Bottom = 4
+              Align = alTop
+              BevelOuter = bvNone
+              Color = 15460325
+              Padding.Left = 1
+              Padding.Top = 1
+              Padding.Right = 1
+              Padding.Bottom = 1
+              ParentBackground = False
+              ShowCaption = False
+              TabOrder = 0
+              object Version1ContentPanel: TPanel
+                Left = 1
+                Top = 1
+                Width = 454
+                Height = 36
+                Align = alClient
+                BevelOuter = bvNone
+                Color = clWhite
+                ParentBackground = False
+                ShowCaption = False
+                TabOrder = 0
+                DesignSize = (
+                  454
+                  36)
+                object Version1PaintBox: TPaintBox
+                  Left = 220
+                  Top = 0
+                  Width = 234
+                  Height = 36
+                  Anchors = [akLeft, akTop, akRight, akBottom]
+                end
+                object Version1Checkbox: TCheckBox
+                  Left = 11
+                  Top = 9
+                  Width = 200
+                  Height = 19
+                  Caption = 'Version1Checkbox'
+                  Checked = True
+                  Font.Charset = DEFAULT_CHARSET
+                  Font.Color = clWindowText
+                  Font.Height = -12
+                  Font.Name = 'Segoe UI'
+                  Font.Style = [fsBold]
+                  ParentFont = False
+                  State = cbChecked
+                  TabOrder = 0
+                end
+              end
+            end
+            object Version2CardPanel: TPanel
+              AlignWithMargins = True
+              Left = 0
+              Top = 42
+              Width = 456
+              Height = 38
+              Margins.Left = 0
+              Margins.Top = 0
+              Margins.Right = 0
+              Margins.Bottom = 4
+              Align = alTop
+              BevelOuter = bvNone
+              Color = 15460325
+              Padding.Left = 1
+              Padding.Top = 1
+              Padding.Right = 1
+              Padding.Bottom = 1
+              ParentBackground = False
+              ShowCaption = False
+              TabOrder = 1
+              object Version2ContentPanel: TPanel
+                Left = 1
+                Top = 1
+                Width = 454
+                Height = 36
+                Align = alClient
+                BevelOuter = bvNone
+                Color = clWhite
+                ParentBackground = False
+                ShowCaption = False
+                TabOrder = 0
+                DesignSize = (
+                  454
+                  36)
+                object Version2PaintBox: TPaintBox
+                  Left = 220
+                  Top = 0
+                  Width = 234
+                  Height = 36
+                  Anchors = [akLeft, akTop, akRight, akBottom]
+                end
+                object Version2Checkbox: TCheckBox
+                  Left = 11
+                  Top = 9
+                  Width = 200
+                  Height = 19
+                  Caption = 'Version2Checkbox'
+                  Checked = True
+                  Font.Charset = DEFAULT_CHARSET
+                  Font.Color = clWindowText
+                  Font.Height = -12
+                  Font.Name = 'Segoe UI'
+                  Font.Style = [fsBold]
+                  ParentFont = False
+                  State = cbChecked
+                  TabOrder = 0
+                end
+              end
+            end
+            object Version3CardPanel: TPanel
+              AlignWithMargins = True
+              Left = 0
+              Top = 84
+              Width = 456
+              Height = 38
+              Margins.Left = 0
+              Margins.Top = 0
+              Margins.Right = 0
+              Margins.Bottom = 4
+              Align = alTop
+              BevelOuter = bvNone
+              Color = 15460325
+              Padding.Left = 1
+              Padding.Top = 1
+              Padding.Right = 1
+              Padding.Bottom = 1
+              ParentBackground = False
+              ShowCaption = False
+              TabOrder = 2
+              object Version3ContentPanel: TPanel
+                Left = 1
+                Top = 1
+                Width = 454
+                Height = 36
+                Align = alClient
+                BevelOuter = bvNone
+                Color = clWhite
+                ParentBackground = False
+                ShowCaption = False
+                TabOrder = 0
+                DesignSize = (
+                  454
+                  36)
+                object Version3PaintBox: TPaintBox
+                  Left = 220
+                  Top = 0
+                  Width = 234
+                  Height = 36
+                  Anchors = [akLeft, akTop, akRight, akBottom]
+                end
+                object Version3Checkbox: TCheckBox
+                  Left = 11
+                  Top = 9
+                  Width = 200
+                  Height = 19
+                  Caption = 'Version3Checkbox'
+                  Checked = True
+                  Font.Charset = DEFAULT_CHARSET
+                  Font.Color = clWindowText
+                  Font.Height = -12
+                  Font.Name = 'Segoe UI'
+                  Font.Style = [fsBold]
+                  ParentFont = False
+                  State = cbChecked
+                  TabOrder = 0
+                end
+              end
+            end
+            object Version4CardPanel: TPanel
+              AlignWithMargins = True
+              Left = 0
+              Top = 126
+              Width = 456
+              Height = 38
+              Margins.Left = 0
+              Margins.Top = 0
+              Margins.Right = 0
+              Margins.Bottom = 4
+              Align = alTop
+              BevelOuter = bvNone
+              Color = 15460325
+              Padding.Left = 1
+              Padding.Top = 1
+              Padding.Right = 1
+              Padding.Bottom = 1
+              ParentBackground = False
+              ShowCaption = False
+              TabOrder = 3
+              object Version4ContentPanel: TPanel
+                Left = 1
+                Top = 1
+                Width = 454
+                Height = 36
+                Align = alClient
+                BevelOuter = bvNone
+                Color = clWhite
+                ParentBackground = False
+                ShowCaption = False
+                TabOrder = 0
+                DesignSize = (
+                  454
+                  36)
+                object Version4PaintBox: TPaintBox
+                  Left = 220
+                  Top = 0
+                  Width = 234
+                  Height = 36
+                  Anchors = [akLeft, akTop, akRight, akBottom]
+                end
+                object Version4Checkbox: TCheckBox
+                  Left = 11
+                  Top = 9
+                  Width = 200
+                  Height = 19
+                  Caption = 'Version4Checkbox'
+                  Checked = True
+                  Font.Charset = DEFAULT_CHARSET
+                  Font.Color = clWindowText
+                  Font.Height = -12
+                  Font.Name = 'Segoe UI'
+                  Font.Style = [fsBold]
+                  ParentFont = False
+                  State = cbChecked
+                  TabOrder = 0
+                end
+              end
+            end
+            object Version5CardPanel: TPanel
+              AlignWithMargins = True
+              Left = 0
+              Top = 168
+              Width = 456
+              Height = 38
+              Margins.Left = 0
+              Margins.Top = 0
+              Margins.Right = 0
+              Margins.Bottom = 4
+              Align = alTop
+              BevelOuter = bvNone
+              Color = 15460325
+              Padding.Left = 1
+              Padding.Top = 1
+              Padding.Right = 1
+              Padding.Bottom = 1
+              ParentBackground = False
+              ShowCaption = False
+              TabOrder = 4
+              object Version5ContentPanel: TPanel
+                Left = 1
+                Top = 1
+                Width = 454
+                Height = 36
+                Align = alClient
+                BevelOuter = bvNone
+                Color = clWhite
+                ParentBackground = False
+                ShowCaption = False
+                TabOrder = 0
+                DesignSize = (
+                  454
+                  36)
+                object Version5PaintBox: TPaintBox
+                  Left = 220
+                  Top = 0
+                  Width = 234
+                  Height = 36
+                  Anchors = [akLeft, akTop, akRight, akBottom]
+                end
+                object Version5Checkbox: TCheckBox
+                  Left = 11
+                  Top = 9
+                  Width = 200
+                  Height = 19
+                  Caption = 'Version5Checkbox'
+                  Checked = True
+                  Font.Charset = DEFAULT_CHARSET
+                  Font.Color = clWindowText
+                  Font.Height = -12
+                  Font.Name = 'Segoe UI'
+                  Font.Style = [fsBold]
+                  ParentFont = False
+                  State = cbChecked
+                  TabOrder = 0
+                end
+              end
+            end
+          end
+          object VersionsLegendPanel: TPanel
+            AlignWithMargins = True
+            Left = 0
+            Top = 214
+            Width = 456
+            Height = 44
+            Margins.Left = 0
+            Margins.Top = 4
+            Margins.Right = 0
+            Margins.Bottom = 0
+            Align = alTop
+            BevelOuter = bvNone
+            ParentBackground = False
+            ParentColor = True
+            ShowCaption = False
+            TabOrder = 1
+            object PackagesChipLabel: TLabel
+              Left = 0
+              Top = 2
+              Width = 70
+              Height = 18
+              Alignment = taCenter
+              AutoSize = False
+              Caption = 'Packages'
+              Color = 16710351
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = 7691797
+              Font.Height = -12
+              Font.Name = 'Segoe UI'
+              Font.Style = [fsBold]
+              ParentColor = False
+              ParentFont = False
+              Transparent = False
+              Layout = tlCenter
+            end
+            object PackagesLegendLabel: TLabel
+              Left = 80
+              Top = 3
+              Width = 160
+              Height = 15
+              Caption = 'Built from the command line.'
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = 6509899
+              Font.Height = -12
+              Font.Name = 'Segoe UI'
+              Font.Style = []
+              ParentFont = False
+            end
+            object SourcesChipLabel: TLabel
+              Left = 0
+              Top = 24
+              Width = 70
+              Height = 18
+              Alignment = taCenter
+              AutoSize = False
+              Caption = 'Sources'
+              Color = 13104126
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = 934034
+              Font.Height = -12
+              Font.Name = 'Segoe UI'
+              Font.Style = [fsBold]
+              ParentColor = False
+              ParentFont = False
+              Transparent = False
+              Layout = tlCenter
+            end
+            object SourcesLegendLabel: TLabel
+              Left = 80
+              Top = 25
+              Width = 360
+              Height = 15
+              Caption = 
+                'The command line build is not available: the sources go in the' +
+                ' search path.'
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = 6509899
+              Font.Height = -12
+              Font.Name = 'Segoe UI'
+              Font.Style = []
+              ParentFont = False
+            end
+          end
+          object ExpertCardPanel: TPanel
+            AlignWithMargins = True
+            Left = 0
+            Top = 278
+            Width = 456
+            Height = 62
+            Margins.Left = 0
+            Margins.Top = 20
+            Margins.Right = 0
+            Margins.Bottom = 0
+            Align = alTop
+            BevelOuter = bvNone
+            Color = 15460325
+            Padding.Left = 1
+            Padding.Top = 1
+            Padding.Right = 1
+            Padding.Bottom = 1
+            ParentBackground = False
+            ShowCaption = False
+            TabOrder = 2
+            object ExpertContentPanel: TPanel
+              Left = 1
+              Top = 1
+              Width = 454
+              Height = 60
+              Align = alClient
+              BevelOuter = bvNone
+              Color = clWhite
+              ParentBackground = False
+              ShowCaption = False
+              TabOrder = 0
+              object ExpertDescriptionLabel: TLabel
+                Left = 31
+                Top = 33
+                Width = 334
+                Height = 15
+                Caption = 
+                  'Visual designer for entities, SQL and REST, inside the Delphi ID' +
+                  'E.'
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = 6509899
+                Font.Height = -12
+                Font.Name = 'Segoe UI'
+                Font.Style = []
+                ParentFont = False
+              end
+              object ExpertCheckbox: TCheckBox
+                Left = 13
+                Top = 10
+                Width = 420
+                Height = 19
+                Caption = 'Install Trysil Expert'
+                Checked = True
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = clWindowText
+                Font.Height = -13
+                Font.Name = 'Segoe UI'
+                Font.Style = [fsBold]
+                ParentFont = False
+                State = cbChecked
+                TabOrder = 0
+              end
+            end
+          end
+        end
+      end
+      object SummaryPagePanel: TPanel
+        AlignWithMargins = True
+        Left = 32
+        Top = 26
+        Width = 456
+        Height = 367
+        Margins.Left = 32
+        Margins.Top = 26
+        Margins.Right = 32
+        Margins.Bottom = 28
+        BevelOuter = bvNone
+        ParentBackground = False
+        ParentColor = True
+        ShowCaption = False
+        TabOrder = 3
+        DesignSize = (
+          456
+          367)
+        object SummaryTitleLabel: TLabel
+          Left = 0
+          Top = 0
+          Width = 138
+          Height = 28
+          Caption = 'Ready to install'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -20
+          Font.Name = 'Segoe UI Semibold'
+          Font.Style = []
+          ParentFont = False
+        end
+        object SummarySubtitleLabel: TLabel
+          Left = 0
+          Top = 38
+          Width = 456
+          Height = 15
+          Anchors = [akLeft, akTop, akRight]
+          AutoSize = False
+          Caption = 'SummarySubtitleLabel'
+          EllipsisPosition = epEndEllipsis
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = 6509899
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = []
+          ParentFont = False
+        end
+        object SummaryListView: TListView
+          Left = 0
+          Top = 68
+          Width = 456
+          Height = 299
+          Anchors = [akLeft, akTop, akRight, akBottom]
+          Columns = <
+            item
+              Width = 130
+            end
+            item
+              AutoSize = True
+            end>
+          ReadOnly = True
+          ShowColumnHeaders = False
+          SmallImages = SummaryImageList
+          TabOrder = 0
+          ViewStyle = vsReport
+          OnCustomDrawItem = SummaryListViewCustomDrawItem
+          OnCustomDrawSubItem = SummaryListViewCustomDrawSubItem
+          OnSelectItem = SummaryListViewSelectItem
+        end
+      end
+      object ProgressPagePanel: TPanel
+        AlignWithMargins = True
+        Left = 32
+        Top = 26
+        Width = 456
+        Height = 367
+        Margins.Left = 32
+        Margins.Top = 26
+        Margins.Right = 32
+        Margins.Bottom = 28
+        BevelOuter = bvNone
+        ParentBackground = False
+        ParentColor = True
+        ShowCaption = False
+        TabOrder = 4
+        DesignSize = (
+          456
+          367)
+        object ProgressTitleLabel: TLabel
+          Left = 0
+          Top = 0
+          Width = 135
+          Height = 28
+          Caption = 'Installing Trysil'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -20
+          Font.Name = 'Segoe UI Semibold'
+          Font.Style = []
+          ParentFont = False
+        end
+        object ProgressCurrentLabel: TLabel
+          Left = 0
+          Top = 38
+          Width = 456
+          Height = 15
+          Anchors = [akLeft, akTop, akRight]
+          AutoSize = False
+          EllipsisPosition = epEndEllipsis
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = 6509899
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = []
+          ParentFont = False
+        end
+        object ProgressLogLabel: TLabel
+          Left = 0
+          Top = 70
+          Width = 20
+          Height = 15
+          Caption = 'Log'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = 5325111
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object ProgressLogPanel: TPanel
+          Left = 0
+          Top = 90
+          Width = 456
+          Height = 277
+          Anchors = [akLeft, akTop, akRight, akBottom]
+          BevelOuter = bvNone
+          Color = 1446158
+          Padding.Left = 10
+          Padding.Top = 8
+          Padding.Right = 4
+          Padding.Bottom = 4
+          ParentBackground = False
+          ShowCaption = False
+          TabOrder = 0
+          object ProgressMemo: TMemo
+            Left = 10
+            Top = 8
+            Width = 442
+            Height = 265
+            Align = alClient
+            BorderStyle = bsNone
+            Color = 1446158
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = 14275017
+            Font.Height = -12
+            Font.Name = 'Consolas'
+            Font.Style = []
+            ParentFont = False
+            ReadOnly = True
+            ScrollBars = ssBoth
+            TabOrder = 0
+            WordWrap = False
+          end
+        end
+      end
+      object CompletedPagePanel: TPanel
+        AlignWithMargins = True
+        Left = 32
+        Top = 26
+        Width = 456
+        Height = 367
+        Margins.Left = 32
+        Margins.Top = 26
+        Margins.Right = 32
+        Margins.Bottom = 28
+        BevelOuter = bvNone
+        ParentBackground = False
+        ParentColor = True
+        ShowCaption = False
+        TabOrder = 5
+        DesignSize = (
+          456
+          367)
+        object CompletedTitleLabel: TLabel
+          Left = 0
+          Top = 0
+          Width = 208
+          Height = 28
+          Caption = 'Trysil Setup completed'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -20
+          Font.Name = 'Segoe UI Semibold'
+          Font.Style = []
+          ParentFont = False
+        end
+        object CompletedInfoLabel: TLabel
+          Left = 0
+          Top = 38
+          Width = 456
+          Height = 15
+          Anchors = [akLeft, akTop, akRight]
+          AutoSize = False
+          EllipsisPosition = epEndEllipsis
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = 6509899
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = []
+          ParentFont = False
+        end
+        object CompletedDocsLinkLabel: TLinkLabel
+          Left = 0
+          Top = 72
+          Width = 195
+          Height = 19
+          Caption = 
+            'Get started with the <a href="https://davidlastrucci.github.io/T' +
+            'rysil">documentation</a>.'
+          TabOrder = 0
+          OnLinkClick = CompletedDocsLinkLabelLinkClick
+        end
+      end
     end
-    object NextButton: TButton
-      AlignWithMargins = True
-      Left = 379
-      Top = 12
-      Width = 75
-      Height = 25
-      Margins.Left = 0
-      Margins.Top = 0
-      Margins.Right = 4
-      Margins.Bottom = 0
-      Align = alRight
-      Caption = '&Next'
-      Default = True
+    object ButtonsPanel: TPanel
+      Left = 0
+      Top = 424
+      Width = 506
+      Height = 56
+      Align = alBottom
+      BevelOuter = bvNone
+      Color = 16513785
+      Padding.Left = 20
+      Padding.Top = 15
+      Padding.Right = 20
+      Padding.Bottom = 15
+      ParentBackground = False
+      ShowCaption = False
       TabOrder = 1
-      OnClick = NextButtonClick
-    end
-    object FinishButton: TButton
-      AlignWithMargins = True
-      Left = 458
-      Top = 12
-      Width = 75
-      Height = 25
-      Margins.Left = 0
-      Margins.Top = 0
-      Margins.Right = 4
-      Margins.Bottom = 0
-      Align = alRight
-      Caption = '&Finish'
-      Enabled = False
-      TabOrder = 2
-      OnClick = FinishButtonClick
-    end
-    object CancelButton: TButton
-      Left = 537
-      Top = 12
-      Width = 75
-      Height = 25
-      Align = alRight
-      Cancel = True
-      Caption = 'Cancel'
-      TabOrder = 3
-      OnClick = CancelButtonClick
+      ExplicitWidth = 520
+      object LogButton: TButton
+        Left = 20
+        Top = 15
+        Width = 90
+        Height = 26
+        Align = alLeft
+        Caption = '&Show log'
+        TabOrder = 0
+        Visible = False
+        OnClick = LogButtonClick
+      end
+      object BackButton: TButton
+        AlignWithMargins = True
+        Left = 243
+        Top = 15
+        Width = 75
+        Height = 26
+        Margins.Left = 0
+        Margins.Top = 0
+        Margins.Right = 6
+        Margins.Bottom = 0
+        Align = alRight
+        Caption = '&Back'
+        Enabled = False
+        TabOrder = 1
+        OnClick = BackButtonClick
+        ExplicitLeft = 257
+      end
+      object NextButton: TButton
+        AlignWithMargins = True
+        Left = 324
+        Top = 15
+        Width = 75
+        Height = 26
+        Margins.Left = 0
+        Margins.Top = 0
+        Margins.Right = 12
+        Margins.Bottom = 0
+        Align = alRight
+        Caption = '&Next'
+        Default = True
+        TabOrder = 2
+        OnClick = NextButtonClick
+        ExplicitLeft = 338
+      end
+      object CancelButton: TButton
+        Left = 411
+        Top = 15
+        Width = 75
+        Height = 26
+        Align = alRight
+        Cancel = True
+        Caption = 'Cancel'
+        TabOrder = 3
+        OnClick = CancelButtonClick
+        ExplicitLeft = 425
+      end
     end
   end
   object FolderDialog: TFileOpenDialog
@@ -456,7 +1596,13 @@ object TSetupForm: TTSetupForm
     FileTypes = <>
     Options = [fdoPickFolders, fdoForceFileSystem]
     Title = 'Installation folder'
-    Left = 12
-    Top = 72
+    Left = 112
+    Top = 400
+  end
+  object SummaryImageList: TImageList
+    Height = 22
+    Width = 1
+    Left = 112
+    Top = 344
   end
 end

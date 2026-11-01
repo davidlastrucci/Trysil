@@ -31,6 +31,7 @@ const
     'https://github.com/davidlastrucci/Trysil/archive/refs/heads/master.zip';
   SMasterBranch = 'master';
   SProjectUrl = 'https://github.com/davidlastrucci/Trysil';
+  SMeasureText = 'X';
   SUserAgent = 'Trysil.Setup';
   STagName = 'tag_name';
   SArchiveFileName = 'Trysil-%s.zip';
@@ -174,26 +175,57 @@ resourcestring
   SError = 'Error: %s';
 
   SCloseIDE = 'Close Delphi before running Trysil Setup.';
-  SNotInstalledInfo = 'Trysil is not installed.';
-  SInstalledInfo = 'Trysil %s is installed in %s.';
+  SNotInstalledInfo = 'Trysil is not installed';
+  SInstalledInfo = 'Trysil is installed';
   SFolderEmpty = 'Folder cannot be empty.';
   SFolderNotAbsolute = 'Folder must be an absolute path.';
   SFolderNotEmpty = 'Folder is not empty and was not created by setup.';
   SNoDelphiVersion = 'No Delphi version ready for Trysil was found.';
   SSelectVersion = 'Select at least one Delphi version.';
-  SInstallSummary = 'Trysil will be downloaded from GitHub and installed in:';
-  SExpertSummary = 'Trysil Expert will be installed.';
-  SMasterSummary =
-    'The development version (master) will be installed ' +
-    'instead of the latest release.';
-  SUpdateSummary =
-    'Trysil %s installed in %s will be updated to the latest release.';
-  SUninstallSummary =
-    'Trysil %s will be removed from %s and from the Delphi settings.';
-  SSummaryItem = '- %s';
+  SInstallDescription =
+    'Download Trysil from GitHub and set it up in your Delphi versions.';
+  SAlreadyInstalledDescription = 'Trysil is already installed.';
+  SUpdateDescription =
+    'Replace the installed version with the latest release.';
+  SUninstallDescription =
+    'Remove Trysil from this computer and from the Delphi settings.';
+  SNotInstalledDescription = 'Available when Trysil is installed.';
+  SPackagesChip = 'Packages';
+  SSourcesChip = 'Sources';
+
+  SInstallTitle = 'Ready to install';
+  SUpdateTitle = 'Ready to update';
+  SUninstallTitle = 'Ready to uninstall';
+  SInstallSubtitle =
+    'Trysil will be downloaded from GitHub and installed with these settings.';
+  SUpdateSubtitle = 'Trysil will be updated with these settings.';
+  SUninstallSubtitle =
+    'Trysil will be removed from this computer and from the Delphi settings.';
+  SVersionKey = 'Version';
+  SInstalledKey = 'Installed';
+  SFolderKey = 'Folder';
+  SVersionsKey = 'Delphi versions';
+  SExpertKey = 'Trysil Expert';
+  SLatestReleaseValue = 'Latest release';
+  SMasterValue = 'Development version (master)';
+  SInstalledValue = 'Trysil %s';
+  SYesValue = 'Yes';
+  SNoValue = 'No';
+
+  SInstallingTitle = 'Installing Trysil';
+  SUpdatingTitle = 'Updating Trysil';
+  SUninstallingTitle = 'Uninstalling Trysil';
+  SCompletedTitle = 'Trysil Setup completed';
+  SCompletedWithErrorsTitle = 'Trysil Setup completed with errors';
+  SFailedTitle = 'Trysil Setup failed';
+
+  SNextCaption = '&Next';
+  SInstallCaption = '&Install';
+  SUpdateCaption = '&Update';
+  SUninstallCaption = '&Uninstall';
+  SShowLogCaption = '&Show log';
+  SHideLogCaption = '&Hide log';
   SCloseCaption = '&Close';
-  SSetupCompleted = 'Trysil Setup completed.';
-  SSetupFailed = 'Trysil Setup failed, see the log.';
 
 implementation
 

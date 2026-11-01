@@ -143,6 +143,7 @@
         <DCCReference Include="Classes\Trysil.Setup.Installer.pas"/>
         <DCCReference Include="Classes\Trysil.Setup.Thread.pas"/>
         <DCCReference Include="Classes\Trysil.Setup.Startup.pas"/>
+        <DCCReference Include="UI\Trysil.Setup.UI.Controls.pas"/>
         <DCCReference Include="UI\Trysil.Setup.UI.Main.pas">
             <Form>SetupForm</Form>
         </DCCReference>

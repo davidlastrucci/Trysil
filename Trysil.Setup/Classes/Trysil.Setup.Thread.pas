@@ -44,6 +44,7 @@ type
     FOptions: TTInstallOptions;
     FMaster: Boolean;
     FSucceeded: Boolean;
+    FHasErrors: Boolean;
 
     procedure Run(const AInstaller: TTInstaller);
     function LogDirectory: String;
@@ -59,6 +60,7 @@ type
       const AMaster: Boolean);
 
     property Succeeded: Boolean read FSucceeded;
+    property HasErrors: Boolean read FHasErrors;
   end;
 
 { TTDetectThread }
@@ -93,6 +95,7 @@ begin
   FOptions := AOptions;
   FMaster := AMaster;
   FSucceeded := False;
+  FHasErrors := False;
 end;
 
 procedure TTSetupThread.Run(const AInstaller: TTInstaller);
@@ -137,6 +140,7 @@ begin
     try
       Run(LInstaller);
       FSucceeded := True;
+      FHasErrors := LInstaller.HasErrors;
     except
       on E: Exception do
         FLog.AddFormat(SError, [E.Message]);
