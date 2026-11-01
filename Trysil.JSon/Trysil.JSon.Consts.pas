@@ -38,6 +38,8 @@ resourcestring
   SNotValidType = 'Not valid type';
   SNotValidJSonArray = 'Field "%s" is not an array. A body the ' +
     'deserializer cannot read is refused, not ignored.';
+  SNotValidJSonObject = 'Field "%s" is not an object. A body the ' +
+    'deserializer cannot read is refused, not ignored.';
   SNotValidJSon = 'The JSon is not valid: %s';
   SNotValidJSonValue = 'Value of "%s" is not valid for its type.';
   SSerializerReentered = 'EntityToJSon has been re-entered %0:d times ' +

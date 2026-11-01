@@ -31,6 +31,7 @@ begin
   TTLanguage.Instance.Add(SNotAJSonObjectInList, 'L''élément %0:d du tableau "%1:s" n''est pas un objet.');
   TTLanguage.Instance.Add(SNotAJSonObject, 'Le JSon n''est pas un objet.');
   TTLanguage.Instance.Add(SNotValidJSonArray, 'Le champ "%s" n''est pas un tableau. Un corps que le désérialiseur ne sait pas lire est refusé, non ignoré.');
+  TTLanguage.Instance.Add(SNotValidJSonObject, 'Le champ "%s" n''est pas un objet. Un corps que le désérialiseur ne sait pas lire est refusé, non ignoré.');
   TTLanguage.Instance.Add(SNotValidSqid, 'La valeur de "%s" n''est pas un sqid valide.');
   TTLanguage.Instance.Add(SNotValidJSon, 'Le JSon n''est pas valide : %s');
   TTLanguage.Instance.Add(SNotValidJSonValue, 'La valeur de "%s" n''est pas valide pour son type.');

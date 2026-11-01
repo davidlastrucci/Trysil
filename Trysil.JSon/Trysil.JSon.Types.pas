@@ -63,6 +63,10 @@ type
       const AJSon: TJSonValue;
       const AName: String;
       out AValue: TJSonArray): TTJSonValueState;
+    class function GetObject(
+      const AJSon: TJSonValue;
+      const AName: String;
+      out AValue: TJSonObject): TTJSonValueState;
   end;
 
 implementation
@@ -157,6 +161,23 @@ begin
   if result = TTJSonValueState.Valid then
     if LValue is TJSonArray then
       AValue := TJSonArray(LValue)
+    else
+      result := TTJSonValueState.Invalid;
+end;
+
+class function TTJSonValues.GetObject(
+  const AJSon: TJSonValue;
+  const AName: String;
+  out AValue: TJSonObject): TTJSonValueState;
+var
+  LValue: TJSonValue;
+begin
+  AValue := nil;
+  LValue := AJSon.FindValue(AName);
+  result := StateOf(LValue);
+  if result = TTJSonValueState.Valid then
+    if LValue is TJSonObject then
+      AValue := TJSonObject(LValue)
     else
       result := TTJSonValueState.Invalid;
 end;

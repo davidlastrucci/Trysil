@@ -71,6 +71,10 @@ type
       const AColumnMap: TTColumnMap;
       const AObject: TObject;
       const AValue: TJSonValue);
+    procedure SetEagerValue(
+      const AName: String;
+      const AObject: TObject;
+      const AJSon: TJSonValue);
 
     procedure SetClassColumnValue(
       const AName: String;
@@ -308,6 +312,22 @@ begin
   end;
 end;
 
+procedure TTJSonDeserializer.SetEagerValue(
+  const AName: String;
+  const AObject: TObject;
+  const AJSon: TJSonValue);
+var
+  LObject: TJSonObject;
+begin
+  if TTJSonValues.GetObject(AJSon, AName, LObject) =
+    TTJSonValueState.Invalid then
+    raise ETJSonException.CreateFmt(
+      TTLanguage.Instance.Translate(SNotValidJSonObject), [AName]);
+
+  if Assigned(LObject) then
+    EntityFromJSon(LObject, AObject);
+end;
+
 procedure TTJSonDeserializer.SetClassColumnValue(
   const AName: String; const AObject: TObject; const AJSon: TJSonValue);
 begin
@@ -315,7 +335,9 @@ begin
   begin
     SetLazyID(AName, AObject, AJSon);
     SetObjectValue(AName, AObject, AJSon);
-  end;
+  end
+  else if Assigned(AObject) then
+    SetEagerValue(AName, AObject, AJSon);
 end;
 
 procedure TTJSonDeserializer.SetSqidsPrimaryKeyValue(

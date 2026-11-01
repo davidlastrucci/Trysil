@@ -31,6 +31,7 @@ begin
   TTLanguage.Instance.Add(SNotAJSonObjectInList, 'L''elemento %0:d dell''array "%1:s" non è un oggetto.');
   TTLanguage.Instance.Add(SNotAJSonObject, 'Il JSon non è un oggetto.');
   TTLanguage.Instance.Add(SNotValidJSonArray, 'Il campo "%s" non è un array. Un corpo che il deserializzatore non sa leggere viene rifiutato, non ignorato.');
+  TTLanguage.Instance.Add(SNotValidJSonObject, 'Il campo "%s" non è un oggetto. Un corpo che il deserializzatore non sa leggere viene rifiutato, non ignorato.');
   TTLanguage.Instance.Add(SNotValidSqid, 'Il valore di "%s" non è uno sqid valido.');
   TTLanguage.Instance.Add(SNotValidJSon, 'Il JSon non è valido: %s');
   TTLanguage.Instance.Add(SNotValidJSonValue, 'Il valore di "%s" non è valido per il suo tipo.');

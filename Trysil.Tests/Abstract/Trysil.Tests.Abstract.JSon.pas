@@ -84,6 +84,12 @@ type
     procedure EntityFromJSonRoundTripsLazyReferenceIdWithSqids;
 
     [Test]
+    procedure EntityFromJSonRestoresAnEagerRelation;
+
+    [Test]
+    procedure EntityFromJSonRefusesANonObjectEager;
+
+    [Test]
     procedure InsertRefusesABodyThatCarriesNoKey;
 
     [Test]
@@ -731,6 +737,60 @@ begin
   finally
     TTJSonSqids.Instance.UseSqids := False;
   end;
+end;
+
+procedure TTAbstractJSonTests.EntityFromJSonRestoresAnEagerRelation;
+var
+  LConfig: TTJSonSerializerConfig;
+  LCustomer: TTestCustomer;
+  LOrder: TTestOrder;
+  LLoadedOrder: TTestEagerOrder;
+  LJson: String;
+  LRestored: TTestEagerOrder;
+begin
+  LConfig := TTJSonSerializerConfig.Create(-1, False);
+
+  LCustomer := FJSonContext.CreateEntity<TTestCustomer>();
+  FCreatedEntities.Add(LCustomer);
+  LCustomer.Name := 'EagerJSon';
+  FJSonContext.Insert<TTestCustomer>(LCustomer);
+
+  LOrder := FJSonContext.CreateEntity<TTestOrder>();
+  FCreatedEntities.Add(LOrder);
+  LOrder.CustomerID := LCustomer.ID;
+  LOrder.Amount := 21.0;
+  FJSonContext.Insert<TTestOrder>(LOrder);
+
+  LLoadedOrder := FJSonContext.Get<TTestEagerOrder>(LOrder.ID);
+  FCreatedEntities.Add(LLoadedOrder);
+  Assert.AreEqual<Integer>(LCustomer.ID, LLoadedOrder.Customer.ID,
+    'Precondition: the eager relation must carry the customer');
+
+  LJson := FJSonContext.EntityToJSon<TTestEagerOrder>(LLoadedOrder, LConfig);
+  LRestored := FJSonContext.EntityFromJSon<TTestEagerOrder>(LJson);
+  FCreatedEntities.Add(LRestored);
+  Assert.AreEqual<Integer>(LCustomer.ID, LRestored.Customer.ID,
+    'An eager relation must be read back from its nested object');
+  Assert.AreEqual('EagerJSon', LRestored.Customer.Name);
+end;
+
+procedure TTAbstractJSonTests.EntityFromJSonRefusesANonObjectEager;
+var
+  LRestored: TTestEagerOrder;
+  LRaised: Boolean;
+begin
+  LRaised := False;
+  try
+    LRestored := FJSonContext.EntityFromJSon<TTestEagerOrder>(
+      '{"customer": 5}');
+    FCreatedEntities.Add(LRestored);
+  except
+    on E: ETJSonException do
+      LRaised := True;
+  end;
+
+  Assert.IsTrue(
+    LRaised, 'An eager relation that is not an object must be refused');
 end;
 
 procedure TTAbstractJSonTests.EntityToJSonMaxLevelsZeroEmitsOnlyLazyId;
