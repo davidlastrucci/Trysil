@@ -192,6 +192,7 @@ function TTInstaller.InstallSources(
   const AOptions: TTInstallOptions;
   const ASettings: TTIDESettings): Boolean;
 begin
+  ASettings.Clear;
   ASettings.SetVariable(AOptions.Directory);
   ASettings.SetSearchPath(AVersion.Platforms, SourceSearchPath);
   result := True;
@@ -226,6 +227,7 @@ begin
     result := LBuilder.BuildPackages;
     if result then
     begin
+      ASettings.Clear;
       ASettings.SetVariable(LBuilder.LibraryDirectory);
       ASettings.SetSearchPath(AVersion.Platforms, [SPackagesSearchPath]);
       if AOptions.Expert then
@@ -245,7 +247,6 @@ begin
   FLog.AddFormat(SInstallingVersion, [AVersion.Name]);
   LSettings := TTIDESettings.Create(AVersion.Key, AVersion.HasIDE64);
   try
-    LSettings.Clear;
     if AVersion.CanBuild then
       result := InstallPackages(AVersion, AOptions, LSettings)
     else
