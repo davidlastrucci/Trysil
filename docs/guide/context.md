@@ -466,6 +466,8 @@ Execute raw SQL and return a `TDataset`. For most use cases, prefer `RawSelect<T
 LDataset := LContext.CreateDataset('SELECT COUNT(*) FROM Persons');
 ```
 
+The dataset is open and can be navigated both ways, so it keeps every row it has fetched until it is freed. The reads that build entities - `Select<T>`, `SelectAll<T>`, `Get<T>`, `RawSelect<T>` - use a forward-only dataset instead, which does not.
+
 ## Validation
 
 Validate an entity explicitly before submitting. Raises `ETValidationException` on failure:

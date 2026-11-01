@@ -183,6 +183,8 @@ well before the limit.
 
 All connection classes inherit from `TTConnection` (defined in `Trysil.Data.pas`), which declares the full contract: transaction management, `CreateReader`, `CreateInsertCommand`, `CreateUpdateCommand`, `CreateSoftDeleteCommand`, `CreateUndeleteCommand`, `CreateDeleteCommand`, `GetSequenceID`, `SelectCount`, and `CheckRelations`. `CreateUndeleteCommand` is `virtual` with a body that raises, not `abstract`: a driver written before 2.0.0 still compiles, and only an `Undelete<T>` on it fails, at runtime, saying which method is missing.
 
+A driver builds its datasets in two `strict protected` methods. `InternalCreateDataSet` is abstract and serves `CreateDataSet`, which `TTContext.CreateDataset`, `SelectCount` and the metadata reads use. `InternalCreateUnidirectionalDataSet` serves `CreateUnidirectionalDataSet`, which the readers that build entities and `RawSelect<T>` use: they only move forward, so the dataset does not need to keep the rows already read. It is virtual and returns the dataset of `InternalCreateDataSet` by default, so a driver that does not override it reads as before. The FireDAC drivers override it: they call `InternalCreateDataSet` and turn on `FetchOptions.Unidirectional`, so an override of `InternalCreateDataSet` in a class derived from them applies to these reads too.
+
 `TTGenericConnection` (defined in `Trysil.Data.Connection.pas`) extends `TTConnection` and adds:
 
 - A UUID-based `ConnectionID` for log correlation across threads.
