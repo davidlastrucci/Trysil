@@ -542,7 +542,7 @@ object TSetupForm: TTSetupForm
               Top = 10
               Width = 420
               Height = 19
-              Caption = 'Update Trysil to the latest release'
+              Caption = 'Update Trysil'
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -13

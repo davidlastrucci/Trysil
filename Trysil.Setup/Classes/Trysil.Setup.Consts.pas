@@ -181,7 +181,7 @@ resourcestring
     'Download Trysil from GitHub and set it up in your Delphi versions.';
   SAlreadyInstalledDescription = 'Trysil is already installed.';
   SUpdateDescription =
-    'Replace the installed version with the latest release.';
+    'Replace the installed version with a new one.';
   SUninstallDescription =
     'Remove Trysil from this computer and from the Delphi settings.';
   SNotInstalledDescription = 'Available when Trysil is installed.';
