@@ -131,6 +131,54 @@ finally
 end;
 ```
 
+## Eager Relations
+
+A member whose type is an entity, not a `TTLazy<T>`, mapped with `[TColumn]` on the foreign key, is an eager relation: the related entity is read together with the row that holds it.
+
+```pascal
+[TTable('Orders')]
+[TSequence('OrdersID')]
+TOrder = class
+strict private
+  [TPrimaryKey]
+  [TColumn('ID')]
+  FID: TTPrimaryKey;
+
+  [TColumn('CustomerID')]
+  FCustomer: TCustomer;
+
+  [TVersionColumn]
+  [TColumn('VersionID')]
+  FVersionID: TTVersion;
+public
+  constructor Create;
+  destructor Destroy; override;
+
+  property ID: TTPrimaryKey read FID;
+  property Customer: TCustomer read FCustomer;
+end;
+
+constructor TOrder.Create;
+begin
+  inherited Create;
+  FCustomer := TCustomer.Create;
+end;
+
+destructor TOrder.Destroy;
+begin
+  FCustomer.Free;
+  inherited Destroy;
+end;
+```
+
+### Behavior
+
+- **The entity creates the related object and frees it.** Trysil creates only `TTLazy<T>` and `TTLazyList<T>`: an eager member left `nil` ends in an access violation when the row is read or written. The object belongs to the entity, not to the context, and is not in the identity map.
+- **One query per row, always.** Every row read - by `Select<T>`, `SelectAll<T>`, `Get<T>` - runs one more select for the related entity, whether the application uses it or not. Use `TTLazy<T>` when the relation is not always needed.
+- **The foreign key written is the primary key of the related object.** `Insert<T>` and `Update<T>` take the key from the object the member holds.
+- **A NULL foreign key reads as 0.** The related object stays empty, with key 0, and an `Update<T>` of the entity writes 0 back, not NULL: on a column with a foreign key constraint the write fails. Use `TTLazy<T>` for an optional relation.
+- **A clone carries a copy of the related object.** `CloneEntity`, and the copies a `TTSession<T>` works on, receive every mapped column of it, key included.
+
 ## Important Notes
 
 - **Context lifetime** -- Both `TTLazy<T>` and `TTLazyList<T>` hold a reference to the owning `TTContext`. The context must remain alive for as long as lazy fields may be accessed. Accessing a lazy field after the context is freed will cause an access violation.
