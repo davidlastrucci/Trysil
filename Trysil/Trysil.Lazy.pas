@@ -235,16 +235,17 @@ begin
 end;
 
 function TTLazyList<T>.AddEntity: T;
+var
+  LList: TTList<T>;
 begin
+  LList := GetList;
   result := FContext.CreateEntity<T>();
   try
-    FList.Add(result);
+    LList.Add(result);
   except
     FContext.FreeEntity<T>(result);
     raise;
   end;
-
-  FList.IsValid := True;
 end;
 
 procedure TTLazyList<T>.NotifyChangedID;
