@@ -81,7 +81,9 @@ type
     procedure RemoveDirectory(const ADirectory: String);
   public
     constructor Create(
-      const ALog: TTSetupLog; const AInstallation: TTInstallation);
+      const ALog: TTSetupLog;
+      const AInstallation: TTInstallation;
+      const AMaster: Boolean);
     destructor Destroy; override;
 
     procedure Install(const AOptions: TTInstallOptions);
@@ -111,12 +113,14 @@ end;
 { TTInstaller }
 
 constructor TTInstaller.Create(
-  const ALog: TTSetupLog; const AInstallation: TTInstallation);
+  const ALog: TTSetupLog;
+  const AInstallation: TTInstallation;
+  const AMaster: Boolean);
 begin
   inherited Create;
   FLog := ALog;
   FInstallation := AInstallation;
-  FDownloader := TTReleaseDownloader.Create(ALog);
+  FDownloader := TTReleaseDownloader.Create(ALog, AMaster);
 end;
 
 destructor TTInstaller.Destroy;
@@ -280,7 +284,7 @@ end;
 
 procedure TTInstaller.Install(const AOptions: TTInstallOptions);
 begin
-  FDownloader.FetchLatest;
+  FDownloader.Fetch;
   Deploy(AOptions);
 end;
 
@@ -320,8 +324,8 @@ end;
 
 procedure TTInstaller.Update;
 begin
-  FDownloader.FetchLatest;
-  if SameText(FDownloader.Version, FInstallation.Version) then
+  FDownloader.Fetch;
+  if FDownloader.IsUpToDate(FInstallation.Version) then
     FLog.AddFormat(SUpToDate, [FInstallation.Version])
   else
     UpdateVersions;

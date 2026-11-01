@@ -33,15 +33,20 @@ type
     const HttpOK = 200;
   strict private
     FLog: TTSetupLog;
+    FMaster: Boolean;
     FTag: String;
+    FArchiveUrl: String;
 
     procedure Get(const AUrl: String; const AStream: TStream);
     function ReadTag(const AJSon: String): String;
     function GetVersion: String;
-  public
-    constructor Create(const ALog: TTSetupLog);
-
     procedure FetchLatest;
+    procedure FetchMaster;
+  public
+    constructor Create(const ALog: TTSetupLog; const AMaster: Boolean);
+
+    procedure Fetch;
+    function IsUpToDate(const AVersion: String): Boolean;
     procedure Download(const AFileName: String);
 
     property Tag: String read FTag;
@@ -67,11 +72,14 @@ implementation
 
 { TTReleaseDownloader }
 
-constructor TTReleaseDownloader.Create(const ALog: TTSetupLog);
+constructor TTReleaseDownloader.Create(
+  const ALog: TTSetupLog; const AMaster: Boolean);
 begin
   inherited Create;
   FLog := ALog;
+  FMaster := AMaster;
   FTag := String.Empty;
+  FArchiveUrl := String.Empty;
 end;
 
 procedure TTReleaseDownloader.Get(const AUrl: String; const AStream: TStream);
@@ -121,10 +129,31 @@ begin
   try
     Get(SReleaseUrl, LStream);
     FTag := ReadTag(LStream.DataString);
+    FArchiveUrl := Format(SArchiveUrl, [FTag]);
     FLog.AddFormat(SLatestRelease, [GetVersion]);
   finally
     LStream.Free;
   end;
+end;
+
+procedure TTReleaseDownloader.FetchMaster;
+begin
+  FTag := SMasterBranch;
+  FArchiveUrl := SMasterArchiveUrl;
+  FLog.AddFormat(SMasterVersion, [GetVersion]);
+end;
+
+procedure TTReleaseDownloader.Fetch;
+begin
+  if FMaster then
+    FetchMaster
+  else
+    FetchLatest;
+end;
+
+function TTReleaseDownloader.IsUpToDate(const AVersion: String): Boolean;
+begin
+  result := (not FMaster) and SameText(GetVersion, AVersion);
 end;
 
 procedure TTReleaseDownloader.Download(const AFileName: String);
@@ -134,7 +163,7 @@ begin
   FLog.AddFormat(SDownloading, [GetVersion]);
   LStream := TFileStream.Create(AFileName, fmCreate);
   try
-    Get(Format(SArchiveUrl, [FTag]), LStream);
+    Get(FArchiveUrl, LStream);
   finally
     LStream.Free;
   end;

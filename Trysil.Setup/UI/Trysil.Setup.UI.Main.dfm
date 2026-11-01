@@ -344,6 +344,7 @@ object TSetupForm: TTSetupForm
         Height = 17
         Caption = 'Install Trysil'
         TabOrder = 0
+        OnClick = ModeRadioButtonClick
       end
       object ModeUpdateRadioButton: TRadioButton
         Left = 2
@@ -352,6 +353,7 @@ object TSetupForm: TTSetupForm
         Height = 17
         Caption = 'Update Trysil to the latest release'
         TabOrder = 1
+        OnClick = ModeRadioButtonClick
       end
       object ModeUninstallRadioButton: TRadioButton
         Left = 2
@@ -360,6 +362,17 @@ object TSetupForm: TTSetupForm
         Height = 17
         Caption = 'Uninstall Trysil'
         TabOrder = 2
+        OnClick = ModeRadioButtonClick
+      end
+      object MasterCheckbox: TCheckBox
+        Left = 2
+        Top = 142
+        Width = 540
+        Height = 17
+        Caption = 
+          'Install the development version (master) instead of the latest ' +
+          'release'
+        TabOrder = 3
       end
     end
   end

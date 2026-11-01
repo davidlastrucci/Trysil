@@ -42,6 +42,7 @@ type
     FLog: TTSetupLog;
     FInstallation: TTInstallation;
     FOptions: TTInstallOptions;
+    FMaster: Boolean;
     FSucceeded: Boolean;
 
     procedure Run(const AInstaller: TTInstaller);
@@ -54,7 +55,8 @@ type
       const AMode: TTSetupMode;
       const ALog: TTSetupLog;
       const AInstallation: TTInstallation;
-      const AOptions: TTInstallOptions);
+      const AOptions: TTInstallOptions;
+      const AMaster: Boolean);
 
     property Succeeded: Boolean read FSucceeded;
   end;
@@ -81,13 +83,15 @@ constructor TTSetupThread.Create(
   const AMode: TTSetupMode;
   const ALog: TTSetupLog;
   const AInstallation: TTInstallation;
-  const AOptions: TTInstallOptions);
+  const AOptions: TTInstallOptions;
+  const AMaster: Boolean);
 begin
   inherited Create(True);
   FMode := AMode;
   FLog := ALog;
   FInstallation := AInstallation;
   FOptions := AOptions;
+  FMaster := AMaster;
   FSucceeded := False;
 end;
 
@@ -128,7 +132,7 @@ procedure TTSetupThread.Execute;
 var
   LInstaller: TTInstaller;
 begin
-  LInstaller := TTInstaller.Create(FLog, FInstallation);
+  LInstaller := TTInstaller.Create(FLog, FInstallation, FMaster);
   try
     try
       Run(LInstaller);

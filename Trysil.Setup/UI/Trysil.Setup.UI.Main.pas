@@ -53,6 +53,7 @@ type
     ModeUpdateRadioButton: TRadioButton;
     ModeUninstallRadioButton: TRadioButton;
     ModeInfoLabel: TLabel;
+    MasterCheckbox: TCheckBox;
     FolderPagePanel: TPanel;
     FolderTitleLabel: TLabel;
     FolderLabel: TLabel;
@@ -81,6 +82,7 @@ type
     procedure CancelButtonClick(Sender: TObject);
     procedure FolderButtonClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure ModeRadioButtonClick(Sender: TObject);
     procedure VersionsListBoxDrawItem(
       Control: TWinControl;
       Index: Integer;
@@ -98,6 +100,8 @@ type
     procedure AddPages;
     function ModeInfo: String;
     procedure InitializeMode;
+    procedure EnableDisableMaster;
+    function MasterSelected: Boolean;
     function IsIdle: Boolean;
     procedure EnableDisableButtons;
     procedure MoveNext;
@@ -213,6 +217,17 @@ begin
   ModeUpdateRadioButton.Checked := LInstalled and (not LUninstall);
   ModeUninstallRadioButton.Checked := LInstalled and LUninstall;
   ModeInfoLabel.Caption := ModeInfo;
+  EnableDisableMaster;
+end;
+
+procedure TTSetupForm.EnableDisableMaster;
+begin
+  MasterCheckbox.Enabled := not ModeUninstallRadioButton.Checked;
+end;
+
+function TTSetupForm.MasterSelected: Boolean;
+begin
+  result := MasterCheckbox.Enabled and MasterCheckbox.Checked;
 end;
 
 function TTSetupForm.IsIdle: Boolean;
@@ -421,6 +436,11 @@ begin
       SummaryMemo.Lines.Add(Format(SUninstallSummary, [
         FInstallation.Version, FInstallation.Directory]));
   end;
+  if MasterSelected then
+  begin
+    SummaryMemo.Lines.Add(String.Empty);
+    SummaryMemo.Lines.Add(SMasterSummary);
+  end;
 end;
 
 procedure TTSetupForm.CreateOptions;
@@ -440,7 +460,8 @@ var
 begin
   if Mode = TTSetupMode.Install then
     CreateOptions;
-  LThread := TTSetupThread.Create(Mode, FLog, FInstallation, FOptions);
+  LThread := TTSetupThread.Create(
+    Mode, FLog, FInstallation, FOptions, MasterSelected);
   LThread.FreeOnTerminate := True;
   LThread.OnTerminate := ThreadTerminate;
   LThread.Start;
@@ -505,6 +526,11 @@ end;
 procedure TTSetupForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   CanClose := not FRunning;
+end;
+
+procedure TTSetupForm.ModeRadioButtonClick(Sender: TObject);
+begin
+  EnableDisableMaster;
 end;
 
 procedure TTSetupForm.VersionsListBoxDrawItem(

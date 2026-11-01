@@ -27,6 +27,9 @@ const
     'https://api.github.com/repos/davidlastrucci/Trysil/releases/latest';
   SArchiveUrl =
     'https://github.com/davidlastrucci/Trysil/archive/refs/tags/%s.zip';
+  SMasterArchiveUrl =
+    'https://github.com/davidlastrucci/Trysil/archive/refs/heads/master.zip';
+  SMasterBranch = 'master';
   SProjectUrl = 'https://github.com/davidlastrucci/Trysil';
   SUserAgent = 'Trysil.Setup';
   STagName = 'tag_name';
@@ -149,6 +152,7 @@ resourcestring
   SHttpError = 'HTTP error %d downloading %s.';
   SReleaseNotFound = 'Latest release of Trysil not found.';
   SLatestRelease = 'Latest release: Trysil %s.';
+  SMasterVersion = 'Development version: Trysil %s.';
   SDownloading = 'Downloading Trysil %s...';
   SExtracting = 'Extracting into %s...';
   SInvalidArchiveEntry = 'Invalid entry %s in the archive.';
@@ -178,6 +182,9 @@ resourcestring
   SSelectVersion = 'Select at least one Delphi version.';
   SInstallSummary = 'Trysil will be downloaded from GitHub and installed in:';
   SExpertSummary = 'Trysil Expert will be installed.';
+  SMasterSummary =
+    'The development version (master) will be installed ' +
+    'instead of the latest release.';
   SUpdateSummary =
     'Trysil %s installed in %s will be updated to the latest release.';
   SUninstallSummary =
