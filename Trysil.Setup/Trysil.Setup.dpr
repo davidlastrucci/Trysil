@@ -19,7 +19,6 @@ uses
   Trysil.Setup.Log in 'Classes\Trysil.Setup.Log.pas',
   Trysil.Setup.Process in 'Classes\Trysil.Setup.Process.pas',
   Trysil.Setup.MSBuild in 'Classes\Trysil.Setup.MSBuild.pas',
-  Trysil.Setup.Probe in 'Classes\Trysil.Setup.Probe.pas',
   Trysil.Setup.Delphi in 'Classes\Trysil.Setup.Delphi.pas',
   Trysil.Setup.Detector in 'Classes\Trysil.Setup.Detector.pas',
   Trysil.Setup.Release in 'Classes\Trysil.Setup.Release.pas',
@@ -34,7 +33,6 @@ uses
   Trysil.Setup.UI.Main in 'UI\Trysil.Setup.UI.Main.pas' {SetupForm};
 
 {$R *.res}
-{$R 'Trysil.Setup.Probe.res' 'Trysil.Setup.Probe.rc'}
 
 var
   LStartup: TTStartup;

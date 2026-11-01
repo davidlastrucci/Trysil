@@ -81,11 +81,7 @@ const
     '%s /S /C ""%s" >nul && msbuild "%s" /t:Build /p:Config=%s ' +
     '/p:Platform=%s /nr:false /v:minimal /nologo"';
 
-  SProbeDirectory = 'Trysil.Setup.Probe.%s';
-  SProbeDprResource = 'PROBE_DPR';
-  SProbeDprojResource = 'PROBE_DPROJ';
-  SProbeDpr = 'Probe.dpr';
-  SProbeDproj = 'Probe.dproj';
+  SRtlSource = 'source\rtl\sys\System.pas';
 
   SPackageProject = 'Packages\%s\%s.dproj';
   SPackagesLibrary = 'Lib\%s';
@@ -143,9 +139,8 @@ resourcestring
   SRsvarsNotFound = '%s: rsvars.bat not found, skipped.';
   SEnvOptionsNotFound = '%s: EnvOptions.proj not found, skipped.';
   SNoPlatform = '%s: no platform ready, skipped.';
-  SProbing = '%s: checking the command line build...';
-  SProbeSucceeded = '%s: command line build available, packages.';
-  SProbeFailed = '%s: command line build not available, sources.';
+  SRtlSourceFound = '%s: RTL sources found, packages.';
+  SRtlSourceNotFound = '%s: RTL sources not found, sources.';
   SPackagesPath = 'packages';
   SSourcesPath = 'sources';
   SVersionDescription = '%s (%s, %s)';

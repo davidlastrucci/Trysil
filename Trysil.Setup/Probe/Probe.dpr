@@ -1,4 +1,0 @@
-program Probe;
-
-begin
-end.

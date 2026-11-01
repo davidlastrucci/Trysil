@@ -22,7 +22,6 @@ uses
 
   Trysil.Setup.Consts,
   Trysil.Setup.Log,
-  Trysil.Setup.Probe,
   Trysil.Setup.Delphi;
 
 type
@@ -33,7 +32,6 @@ type
   strict private
     FLog: TTSetupLog;
     FReleases: TTDelphiReleases;
-    FProbe: TTProbe;
 
     function ReadMachineValue(const AKey: String; const AName: String): String;
     function ReadRootDir(const AKey: String): String;
@@ -75,12 +73,10 @@ begin
   inherited Create;
   FLog := ALog;
   FReleases := TTDelphiReleases.Create;
-  FProbe := TTProbe.Create(ALog);
 end;
 
 destructor TTDelphiDetector.Destroy;
 begin
-  FProbe.Free;
   FReleases.Free;
   inherited Destroy;
 end;
@@ -158,12 +154,11 @@ end;
 function TTDelphiDetector.CanBuild(
   const ARelease: TTDelphiRelease; const ARootDir: String): Boolean;
 begin
-  FLog.AddFormat(SProbing, [ARelease.Name]);
-  result := FProbe.Run(ARootDir);
+  result := TFile.Exists(TPath.Combine(ARootDir, SRtlSource));
   if result then
-    FLog.AddFormat(SProbeSucceeded, [ARelease.Name])
+    FLog.AddFormat(SRtlSourceFound, [ARelease.Name])
   else
-    FLog.AddFormat(SProbeFailed, [ARelease.Name]);
+    FLog.AddFormat(SRtlSourceNotFound, [ARelease.Name]);
 end;
 
 function TTDelphiDetector.CreateVersion(
