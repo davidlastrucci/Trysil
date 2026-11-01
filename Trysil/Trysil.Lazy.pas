@@ -84,13 +84,13 @@ type
     function SqlReference: String;
     function GetList: TTList<T>;
   strict protected
-    function AddEntity: T;
-
     procedure NotifyChangedID; override;
   public
     constructor Create(
       const AContext: TTContext; const AColumnName: String); override;
     destructor Destroy; override;
+
+    function AddEntity: T;
 
     property List: TTList<T> read GetList;
   end;
