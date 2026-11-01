@@ -48,26 +48,26 @@ type
     ContentPanel: TPanel;
     TrysilImage: TImage;
     ModePagePanel: TPanel;
-    ModePageGroupBox: TGroupBox;
+    ModeTitleLabel: TLabel;
     ModeInstallRadioButton: TRadioButton;
     ModeUpdateRadioButton: TRadioButton;
     ModeUninstallRadioButton: TRadioButton;
     ModeInfoLabel: TLabel;
     FolderPagePanel: TPanel;
-    FolderPageGroupBox: TGroupBox;
+    FolderTitleLabel: TLabel;
     FolderLabel: TLabel;
     FolderTextbox: TEdit;
     FolderButton: TButton;
     VersionsPagePanel: TPanel;
-    VersionsPageGroupBox: TGroupBox;
+    VersionsTitleLabel: TLabel;
     VersionsLabel: TLabel;
     VersionsListBox: TCheckListBox;
     ExpertCheckbox: TCheckBox;
     SummaryPagePanel: TPanel;
-    SummaryPageGroupBox: TGroupBox;
+    SummaryTitleLabel: TLabel;
     SummaryMemo: TMemo;
     ProgressPagePanel: TPanel;
-    ProgressPageGroupBox: TGroupBox;
+    ProgressTitleLabel: TLabel;
     ProgressMemo: TMemo;
     ButtonsPanel: TPanel;
     BackButton: TButton;
@@ -81,6 +81,11 @@ type
     procedure CancelButtonClick(Sender: TObject);
     procedure FolderButtonClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure VersionsListBoxDrawItem(
+      Control: TWinControl;
+      Index: Integer;
+      Rect: TRect;
+      State: TOwnerDrawState);
   strict private
     FWizard: TTWizard;
     FLog: TTSetupLog;
@@ -174,7 +179,7 @@ end;
 procedure TTSetupForm.AddPages;
 begin
   FWizard.AddPage(TTWizardPage.Create(
-    ModePagePanel, ModePageGroupBox, nil, nil));
+    ModePagePanel, ModePagePanel, nil, nil));
   FWizard.AddPage(TTWizardPage.Create(
     FolderPagePanel, FolderTextbox, IsInstallMode, CheckFolder));
   FWizard.AddPage(TTWizardPage.Create(
@@ -500,6 +505,23 @@ end;
 procedure TTSetupForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   CanClose := not FRunning;
+end;
+
+procedure TTSetupForm.VersionsListBoxDrawItem(
+  Control: TWinControl;
+  Index: Integer;
+  Rect: TRect;
+  State: TOwnerDrawState);
+var
+  LText: String;
+  LRect: TRect;
+begin
+  VersionsListBox.Canvas.FillRect(Rect);
+  LText := VersionsListBox.Items[Index];
+  LRect := Rect;
+  Inc(LRect.Left, 2);
+  VersionsListBox.Canvas.TextRect(
+    LRect, LText, [tfLeft, tfVerticalCenter, tfSingleLine]);
 end;
 
 end.

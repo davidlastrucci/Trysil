@@ -61,64 +61,6 @@ object TSetupForm: TTSetupForm
         39C8B7B1DE6298F98FFF62AA90A400CA9D1440B953C503FC0234E919409EF243
         A10000000049454E44AE426082}
     end
-    object ModePagePanel: TPanel
-      AlignWithMargins = True
-      Left = 70
-      Top = 8
-      Width = 546
-      Height = 376
-      Margins.Left = 70
-      Margins.Top = 8
-      Margins.Right = 8
-      Margins.Bottom = 8
-      BevelOuter = bvNone
-      ShowCaption = False
-      TabOrder = 0
-      object ModePageGroupBox: TGroupBox
-        AlignWithMargins = True
-        Left = 2
-        Top = 4
-        Width = 542
-        Height = 368
-        Margins.Left = 2
-        Margins.Top = 4
-        Margins.Right = 2
-        Margins.Bottom = 4
-        Align = alClient
-        Caption = 'Trysil Setup  '
-        TabOrder = 0
-        object ModeInfoLabel: TLabel
-          Left = 24
-          Top = 28
-          Width = 3
-          Height = 15
-        end
-        object ModeInstallRadioButton: TRadioButton
-          Left = 24
-          Top = 60
-          Width = 300
-          Height = 17
-          Caption = 'Install Trysil'
-          TabOrder = 0
-        end
-        object ModeUpdateRadioButton: TRadioButton
-          Left = 24
-          Top = 86
-          Width = 300
-          Height = 17
-          Caption = 'Update Trysil to the latest release'
-          TabOrder = 1
-        end
-        object ModeUninstallRadioButton: TRadioButton
-          Left = 24
-          Top = 112
-          Width = 300
-          Height = 17
-          Caption = 'Uninstall Trysil'
-          TabOrder = 2
-        end
-      end
-    end
     object FolderPagePanel: TPanel
       AlignWithMargins = True
       Left = 70
@@ -130,47 +72,55 @@ object TSetupForm: TTSetupForm
       Margins.Right = 8
       Margins.Bottom = 8
       BevelOuter = bvNone
+      ParentBackground = False
+      ParentColor = True
       ShowCaption = False
       TabOrder = 1
-      object FolderPageGroupBox: TGroupBox
+      object FolderTitleLabel: TLabel
         AlignWithMargins = True
         Left = 2
         Top = 4
         Width = 542
-        Height = 368
+        Height = 28
         Margins.Left = 2
         Margins.Top = 4
         Margins.Right = 2
-        Margins.Bottom = 4
-        Align = alClient
-        Caption = 'Installation folder  '
+        Margins.Bottom = 0
+        Align = alTop
+        Caption = 'Installation folder'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -20
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsBold]
+        ParentFont = False
+        ExplicitWidth = 170
+      end
+      object FolderLabel: TLabel
+        Left = 2
+        Top = 44
+        Width = 36
+        Height = 15
+        Caption = 'Folder:'
+      end
+      object FolderTextbox: TEdit
+        Left = 2
+        Top = 65
+        Width = 505
+        Height = 23
         TabOrder = 0
-        object FolderLabel: TLabel
-          Left = 24
-          Top = 28
-          Width = 36
-          Height = 15
-          Caption = 'Folder:'
-        end
-        object FolderTextbox: TEdit
-          Left = 24
-          Top = 49
-          Width = 457
-          Height = 23
-          TabOrder = 0
-        end
-        object FolderButton: TButton
-          Left = 487
-          Top = 48
-          Width = 27
-          Height = 25
-          Hint = 'Select the installation folder'
-          Caption = '...'
-          ParentShowHint = False
-          ShowHint = True
-          TabOrder = 1
-          OnClick = FolderButtonClick
-        end
+      end
+      object FolderButton: TButton
+        Left = 513
+        Top = 64
+        Width = 27
+        Height = 25
+        Hint = 'Select the installation folder'
+        Caption = '...'
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 1
+        OnClick = FolderButtonClick
       end
     end
     object VersionsPagePanel: TPanel
@@ -184,46 +134,56 @@ object TSetupForm: TTSetupForm
       Margins.Right = 8
       Margins.Bottom = 8
       BevelOuter = bvNone
+      ParentBackground = False
+      ParentColor = True
       ShowCaption = False
       TabOrder = 2
-      object VersionsPageGroupBox: TGroupBox
+      object VersionsTitleLabel: TLabel
         AlignWithMargins = True
         Left = 2
         Top = 4
         Width = 542
-        Height = 368
+        Height = 28
         Margins.Left = 2
         Margins.Top = 4
         Margins.Right = 2
-        Margins.Bottom = 4
-        Align = alClient
-        Caption = 'Delphi versions  '
+        Margins.Bottom = 0
+        Align = alTop
+        Caption = 'Delphi versions'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -20
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsBold]
+        ParentFont = False
+        ExplicitWidth = 146
+      end
+      object VersionsLabel: TLabel
+        Left = 2
+        Top = 44
+        Width = 205
+        Height = 15
+        Caption = 'Install Trysil in these versions of Delphi:'
+      end
+      object VersionsListBox: TCheckListBox
+        Left = 2
+        Top = 65
+        Width = 538
+        Height = 284
+        ItemHeight = 24
+        Style = lbOwnerDrawFixed
         TabOrder = 0
-        object VersionsLabel: TLabel
-          Left = 24
-          Top = 28
-          Width = 205
-          Height = 15
-          Caption = 'Install Trysil in these versions of Delphi:'
-        end
-        object VersionsListBox: TCheckListBox
-          Left = 24
-          Top = 49
-          Width = 490
-          Height = 240
-          ItemHeight = 15
-          TabOrder = 0
-        end
-        object ExpertCheckbox: TCheckBox
-          Left = 24
-          Top = 305
-          Width = 300
-          Height = 17
-          Caption = 'Install Trysil Expert'
-          Checked = True
-          State = cbChecked
-          TabOrder = 1
-        end
+        OnDrawItem = VersionsListBoxDrawItem
+      end
+      object ExpertCheckbox: TCheckBox
+        Left = 2
+        Top = 355
+        Width = 300
+        Height = 17
+        Caption = 'Install Trysil Expert'
+        Checked = True
+        State = cbChecked
+        TabOrder = 1
       end
     end
     object SummaryPagePanel: TPanel
@@ -237,36 +197,44 @@ object TSetupForm: TTSetupForm
       Margins.Right = 8
       Margins.Bottom = 8
       BevelOuter = bvNone
+      ParentBackground = False
+      ParentColor = True
       ShowCaption = False
       TabOrder = 3
-      object SummaryPageGroupBox: TGroupBox
+      object SummaryTitleLabel: TLabel
         AlignWithMargins = True
         Left = 2
         Top = 4
         Width = 542
-        Height = 368
+        Height = 28
         Margins.Left = 2
         Margins.Top = 4
         Margins.Right = 2
-        Margins.Bottom = 4
+        Margins.Bottom = 0
+        Align = alTop
+        Caption = 'Summary'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -20
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsBold]
+        ParentFont = False
+        ExplicitWidth = 90
+      end
+      object SummaryMemo: TMemo
+        AlignWithMargins = True
+        Left = 2
+        Top = 44
+        Width = 542
+        Height = 330
+        Margins.Left = 2
+        Margins.Top = 12
+        Margins.Right = 2
+        Margins.Bottom = 2
         Align = alClient
-        Caption = 'Summary  '
+        BorderStyle = bsNone
+        ReadOnly = True
         TabOrder = 0
-        object SummaryMemo: TMemo
-          AlignWithMargins = True
-          Left = 24
-          Top = 29
-          Width = 494
-          Height = 315
-          Margins.Left = 22
-          Margins.Top = 12
-          Margins.Right = 22
-          Margins.Bottom = 22
-          Align = alClient
-          BorderStyle = bsNone
-          ReadOnly = True
-          TabOrder = 0
-        end
       end
     end
     object ProgressPagePanel: TPanel
@@ -280,43 +248,117 @@ object TSetupForm: TTSetupForm
       Margins.Right = 8
       Margins.Bottom = 8
       BevelOuter = bvNone
+      ParentBackground = False
+      ParentColor = True
       ShowCaption = False
       TabOrder = 4
-      object ProgressPageGroupBox: TGroupBox
+      object ProgressTitleLabel: TLabel
         AlignWithMargins = True
         Left = 2
         Top = 4
         Width = 542
-        Height = 368
+        Height = 28
         Margins.Left = 2
         Margins.Top = 4
         Margins.Right = 2
-        Margins.Bottom = 4
+        Margins.Bottom = 0
+        Align = alTop
+        Caption = 'Progress'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -20
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsBold]
+        ParentFont = False
+        ExplicitWidth = 81
+      end
+      object ProgressMemo: TMemo
+        AlignWithMargins = True
+        Left = 2
+        Top = 44
+        Width = 542
+        Height = 330
+        Margins.Left = 2
+        Margins.Top = 12
+        Margins.Right = 2
+        Margins.Bottom = 2
         Align = alClient
-        Caption = 'Progress  '
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Consolas'
+        Font.Style = []
+        ParentFont = False
+        ReadOnly = True
+        ScrollBars = ssBoth
         TabOrder = 0
-        object ProgressMemo: TMemo
-          AlignWithMargins = True
-          Left = 12
-          Top = 29
-          Width = 518
-          Height = 327
-          Margins.Left = 10
-          Margins.Top = 12
-          Margins.Right = 10
-          Margins.Bottom = 10
-          Align = alClient
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -12
-          Font.Name = 'Consolas'
-          Font.Style = []
-          ParentFont = False
-          ReadOnly = True
-          ScrollBars = ssBoth
-          TabOrder = 0
-          WordWrap = False
-        end
+        WordWrap = False
+      end
+    end
+    object ModePagePanel: TPanel
+      AlignWithMargins = True
+      Left = 70
+      Top = 8
+      Width = 546
+      Height = 376
+      Margins.Left = 70
+      Margins.Top = 8
+      Margins.Right = 8
+      Margins.Bottom = 8
+      BevelOuter = bvNone
+      ParentBackground = False
+      ParentColor = True
+      ShowCaption = False
+      TabOrder = 0
+      object ModeTitleLabel: TLabel
+        AlignWithMargins = True
+        Left = 2
+        Top = 4
+        Width = 542
+        Height = 28
+        Margins.Left = 2
+        Margins.Top = 4
+        Margins.Right = 2
+        Margins.Bottom = 0
+        Align = alTop
+        Caption = 'Trysil Setup'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -20
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsBold]
+        ParentFont = False
+        ExplicitWidth = 111
+      end
+      object ModeInfoLabel: TLabel
+        Left = 2
+        Top = 44
+        Width = 3
+        Height = 15
+      end
+      object ModeInstallRadioButton: TRadioButton
+        Left = 5
+        Top = 73
+        Width = 300
+        Height = 17
+        Caption = 'Install Trysil'
+        TabOrder = 0
+      end
+      object ModeUpdateRadioButton: TRadioButton
+        Left = 5
+        Top = 99
+        Width = 300
+        Height = 17
+        Caption = 'Update Trysil to the latest release'
+        TabOrder = 1
+      end
+      object ModeUninstallRadioButton: TRadioButton
+        Left = 5
+        Top = 125
+        Width = 300
+        Height = 17
+        Caption = 'Uninstall Trysil'
+        TabOrder = 2
       end
     end
   end
