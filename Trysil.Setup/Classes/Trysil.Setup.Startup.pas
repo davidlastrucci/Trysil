@@ -38,6 +38,7 @@ type
     function IsInstalledCopy: Boolean;
     function Arguments: String;
     procedure Relaunch;
+    procedure CleanTemporaryCopies;
   public
     constructor Create;
     destructor Destroy; override;
@@ -119,9 +120,20 @@ begin
     0, 'open', PChar(LFileName), PChar(Arguments), nil, SW_SHOWNORMAL);
 end;
 
+procedure TTStartup.CleanTemporaryCopies;
+var
+  LFileName: String;
+begin
+  for LFileName in TDirectory.GetFiles(
+    TPath.GetTempPath, Format(STemporarySetupFileName, ['*'])) do
+    if not SameText(LFileName, ParamStr(0)) then
+      DeleteFile(LFileName);
+end;
+
 function TTStartup.CanRun: Boolean;
 begin
   result := False;
+  CleanTemporaryCopies;
   if MustCloseIDE then
     MessageDlg(SCloseIDE, TMsgDlgType.mtWarning, [TMsgDlgBtn.mbOK], 0)
   else if IsInstalledCopy then
