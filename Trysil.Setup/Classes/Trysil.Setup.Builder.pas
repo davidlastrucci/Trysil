@@ -59,9 +59,10 @@ type
     function StepCount(const AExpert: Boolean): Integer;
     function BuildPackages: Boolean;
     function BuildExpert: Boolean;
-    function LibraryDirectory: String;
+    function LibraryDirectory(const ADirectory: String): String;
     function ExpertPlatforms: TArray<String>;
-    function ExpertLibrary(const APlatform: String): String;
+    function ExpertLibrary(
+      const ADirectory: String; const APlatform: String): String;
   end;
 
 implementation
@@ -172,10 +173,10 @@ begin
       result := result and BuildConfig(LConfig, LPlatform);
 end;
 
-function TTBuilder.LibraryDirectory: String;
+function TTBuilder.LibraryDirectory(const ADirectory: String): String;
 begin
   result := TPath.Combine(
-    FDirectory, Format(SPackagesLibrary, [FVersion.Suffix]));
+    ADirectory, Format(SPackagesLibrary, [FVersion.Suffix]));
 end;
 
 function TTBuilder.ExpertPlatforms: TArray<String>;
@@ -195,10 +196,11 @@ begin
       Format(SExpertProject, [FVersion.Suffix]), SRelease, LPlatform);
 end;
 
-function TTBuilder.ExpertLibrary(const APlatform: String): String;
+function TTBuilder.ExpertLibrary(
+  const ADirectory: String; const APlatform: String): String;
 begin
   result := TPath.Combine(
-    FDirectory, Format(SExpertLibrary, [APlatform, FVersion.Suffix]));
+    ADirectory, Format(SExpertLibrary, [APlatform, FVersion.Suffix]));
 end;
 
 end.

@@ -36,13 +36,18 @@ type
   TTInstallOptions = class
   strict private
     FDirectory: String;
+    FBuildDirectory: String;
     FExpert: Boolean;
     FVersions: TList<TTDelphiVersion>;
   public
     constructor Create(const ADirectory: String; const AExpert: Boolean);
     destructor Destroy; override;
 
+    procedure Stage;
+    function IsStaged: Boolean;
+
     property Directory: String read FDirectory;
+    property BuildDirectory: String read FBuildDirectory;
     property Expert: Boolean read FExpert;
     property Versions: TList<TTDelphiVersion> read FVersions;
   end;
@@ -75,7 +80,9 @@ type
       const AOptions: TTInstallOptions;
       const ASettings: TTIDESettings): Boolean;
     procedure InstallExpert(
-      const ABuilder: TTBuilder; const ASettings: TTIDESettings);
+      const ABuilder: TTBuilder;
+      const AOptions: TTInstallOptions;
+      const ASettings: TTIDESettings);
     function InstallPackages(
       const AVersion: TTDelphiVersion;
       const AOptions: TTInstallOptions;
@@ -88,9 +95,14 @@ type
     function InstallVersions(const AOptions: TTInstallOptions): TArray<String>;
     procedure CopySetup(const ADirectory: String);
     function CompletedFormat: String;
+    procedure PrepareDirectory(const AOptions: TTInstallOptions);
+    function IsComplete(
+      const AOptions: TTInstallOptions;
+      const AVersions: TArray<String>): Boolean;
+    procedure PromoteDirectory(const AOptions: TTInstallOptions);
     procedure SaveInstallation(
       const AOptions: TTInstallOptions; const AVersions: TArray<String>);
-    procedure DiscardInstallation(const ADirectory: String);
+    procedure DiscardInstallation(const AOptions: TTInstallOptions);
     procedure Deploy(const AOptions: TTInstallOptions);
     procedure DetectInstalled(const AVersions: TObjectList<TTDelphiVersion>);
     procedure UpdateVersions;
@@ -120,6 +132,7 @@ constructor TTInstallOptions.Create(
 begin
   inherited Create;
   FDirectory := ExcludeTrailingPathDelimiter(ADirectory);
+  FBuildDirectory := FDirectory;
   FExpert := AExpert;
   FVersions := TList<TTDelphiVersion>.Create;
 end;
@@ -128,6 +141,16 @@ destructor TTInstallOptions.Destroy;
 begin
   FVersions.Free;
   inherited Destroy;
+end;
+
+procedure TTInstallOptions.Stage;
+begin
+  FBuildDirectory := Format(SStagingDirectory, [FDirectory]);
+end;
+
+function TTInstallOptions.IsStaged: Boolean;
+begin
+  result := not SameText(FDirectory, FBuildDirectory);
 end;
 
 { TTInstaller }
@@ -199,7 +222,8 @@ function TTInstaller.CreateBuilder(
   const AVersion: TTDelphiVersion;
   const AOptions: TTInstallOptions): TTBuilder;
 begin
-  result := TTBuilder.Create(AVersion, AOptions.Directory, FLog, FProgress);
+  result := TTBuilder.Create(
+    AVersion, AOptions.BuildDirectory, FLog, FProgress);
 end;
 
 function TTInstaller.VersionSteps(
@@ -262,14 +286,17 @@ begin
 end;
 
 procedure TTInstaller.InstallExpert(
-  const ABuilder: TTBuilder; const ASettings: TTIDESettings);
+  const ABuilder: TTBuilder;
+  const AOptions: TTInstallOptions;
+  const ASettings: TTIDESettings);
 var
   LPlatform: String;
 begin
   if ABuilder.BuildExpert then
   begin
     for LPlatform in ABuilder.ExpertPlatforms do
-      ASettings.SetExpert(LPlatform, ABuilder.ExpertLibrary(LPlatform));
+      ASettings.SetExpert(
+        LPlatform, ABuilder.ExpertLibrary(AOptions.Directory, LPlatform));
   end
   else
   begin
@@ -291,10 +318,10 @@ begin
     if result then
     begin
       ASettings.Clear;
-      ASettings.SetVariable(LBuilder.LibraryDirectory);
+      ASettings.SetVariable(LBuilder.LibraryDirectory(AOptions.Directory));
       ASettings.SetSearchPath(AVersion.Platforms, [SPackagesSearchPath]);
       if AOptions.Expert then
-        InstallExpert(LBuilder, ASettings);
+        InstallExpert(LBuilder, AOptions, ASettings);
     end;
   finally
     LBuilder.Free;
@@ -376,12 +403,38 @@ begin
     result := SCompleted;
 end;
 
+procedure TTInstaller.PrepareDirectory(const AOptions: TTInstallOptions);
+begin
+  if AOptions.IsStaged and TDirectory.Exists(AOptions.BuildDirectory) then
+    TDirectory.Delete(AOptions.BuildDirectory, True);
+end;
+
+function TTInstaller.IsComplete(
+  const AOptions: TTInstallOptions;
+  const AVersions: TArray<String>): Boolean;
+begin
+  if AOptions.IsStaged then
+    result := (Length(AVersions) = AOptions.Versions.Count)
+  else
+    result := (Length(AVersions) > 0);
+end;
+
+procedure TTInstaller.PromoteDirectory(const AOptions: TTInstallOptions);
+begin
+  if AOptions.IsStaged then
+  begin
+    RemoveDirectory(AOptions.Directory);
+    TDirectory.Move(AOptions.BuildDirectory, AOptions.Directory);
+  end;
+end;
+
 procedure TTInstaller.SaveInstallation(
   const AOptions: TTInstallOptions; const AVersions: TArray<String>);
 var
   LFormat: String;
 begin
   LFormat := CompletedFormat;
+  PromoteDirectory(AOptions);
   CopySetup(AOptions.Directory);
   FInstallation.Save(
     AOptions.Directory,
@@ -392,24 +445,32 @@ begin
   FLog.AddFormat(LFormat, [FDownloader.Version, Length(AVersions)]);
 end;
 
-procedure TTInstaller.DiscardInstallation(const ADirectory: String);
+procedure TTInstaller.DiscardInstallation(const AOptions: TTInstallOptions);
+var
+  LFormat: String;
 begin
-  RemoveDirectory(ADirectory);
-  FInstallation.Delete;
-  raise ETSetupException.CreateFmt(SNothingInstalled, [FDownloader.Version]);
+  RemoveDirectory(AOptions.BuildDirectory);
+  LFormat := SNotUpdated;
+  if not AOptions.IsStaged then
+  begin
+    FInstallation.Delete;
+    LFormat := SNothingInstalled;
+  end;
+  raise ETSetupException.CreateFmt(LFormat, [FDownloader.Version]);
 end;
 
 procedure TTInstaller.Deploy(const AOptions: TTInstallOptions);
 var
   LVersions: TArray<String>;
 begin
+  PrepareDirectory(AOptions);
   StartProgress(AOptions);
-  DownloadRelease(AOptions.Directory);
+  DownloadRelease(AOptions.BuildDirectory);
   LVersions := InstallVersions(AOptions);
-  if Length(LVersions) > 0 then
+  if IsComplete(AOptions, LVersions) then
     SaveInstallation(AOptions, LVersions)
   else
-    DiscardInstallation(AOptions.Directory);
+    DiscardInstallation(AOptions);
 end;
 
 procedure TTInstaller.Install(const AOptions: TTInstallOptions);
@@ -442,6 +503,7 @@ begin
     LOptions := TTInstallOptions.Create(
       FInstallation.Directory, FInstallation.Expert);
     try
+      LOptions.Stage;
       LOptions.Versions.AddRange(LVersions);
       Deploy(LOptions);
     finally

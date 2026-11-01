@@ -93,6 +93,7 @@ const
   SSourceSearchPath = '$(Trysil)\%s';
   SExpertProject = 'Trysil.Expert\Trysil.Expert%s.dproj';
   SExpertLibrary = 'Trysil.Expert\%s\Trysil.Expert%s.dll';
+  SStagingDirectory = '%s.new';
   SSqlServerPackage = 'Trysil.SqlServer';
   SOraclePackage = 'Trysil.Oracle';
   SMSSQLUnit = 'FireDAC.Phys.MSSQL.dcu';
@@ -170,6 +171,8 @@ resourcestring
   SCompleted = 'Trysil %s installed in %d Delphi version(s).';
   SUpdated = 'Trysil %s updated in %d Delphi version(s).';
   SNothingInstalled = 'Trysil %s was not installed in any Delphi version.';
+  SNotUpdated =
+    'Trysil %s was not updated: the installed version is unchanged.';
   SUpToDate = 'Trysil %s is already up to date.';
   SRemovingVersion = 'Removing Trysil from the settings of BDS %s...';
   SRemovingFolder = 'Removing %s...';
