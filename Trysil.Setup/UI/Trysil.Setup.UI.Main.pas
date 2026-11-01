@@ -149,6 +149,7 @@ type
     CompletedTitleLabel: TLabel;
     CompletedInfoLabel: TLabel;
     CompletedDocsLinkLabel: TLinkLabel;
+    CompletedLogLinkLabel: TLinkLabel;
     ButtonsLineShape: TShape;
     ButtonsPanel: TPanel;
     LogButton: TButton;
@@ -180,6 +181,10 @@ type
       Item: TListItem;
       Selected: Boolean);
     procedure CompletedDocsLinkLabelLinkClick(
+      Sender: TObject;
+      const Link: String;
+      LinkType: TSysLinkType);
+    procedure CompletedLogLinkLabelLinkClick(
       Sender: TObject;
       const Link: String;
       LinkType: TSysLinkType);
@@ -252,6 +257,7 @@ type
     procedure StartInstallation;
     procedure LogLine(const ALine: String);
     function CompletedTitle(const AThread: TTSetupThread): String;
+    function IsClean(const AThread: TTSetupThread): Boolean;
     function CompletedColor(const AThread: TTSetupThread): TColor;
     procedure FillCompleted(const AThread: TTSetupThread);
     procedure ThreadTerminate(Sender: TObject);
@@ -867,9 +873,14 @@ begin
     result := SCompletedTitle;
 end;
 
+function TTSetupForm.IsClean(const AThread: TTSetupThread): Boolean;
+begin
+  result := AThread.Succeeded and (not AThread.HasErrors);
+end;
+
 function TTSetupForm.CompletedColor(const AThread: TTSetupThread): TColor;
 begin
-  if AThread.Succeeded and (not AThread.HasErrors) then
+  if IsClean(AThread) then
     result := clWindowText
   else
     result := ErrorColor;
@@ -881,7 +892,8 @@ begin
   CompletedTitleLabel.Caption := CompletedTitle(AThread);
   CompletedTitleLabel.Font.Color := CompletedColor(AThread);
   CompletedDocsLinkLabel.Visible :=
-    AThread.Succeeded and (Mode <> TTSetupMode.Uninstall);
+    IsClean(AThread) and (Mode <> TTSetupMode.Uninstall);
+  CompletedLogLinkLabel.Visible := not IsClean(AThread);
 end;
 
 procedure TTSetupForm.ThreadTerminate(Sender: TObject);
@@ -978,6 +990,14 @@ procedure TTSetupForm.CompletedDocsLinkLabelLinkClick(
   LinkType: TSysLinkType);
 begin
   ShellExecute(Handle, 'open', PChar(Link), nil, nil, SW_SHOWNORMAL);
+end;
+
+procedure TTSetupForm.CompletedLogLinkLabelLinkClick(
+  Sender: TObject;
+  const Link: String;
+  LinkType: TSysLinkType);
+begin
+  LogButtonClick(Sender);
 end;
 
 end.

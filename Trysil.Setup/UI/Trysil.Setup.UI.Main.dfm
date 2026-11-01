@@ -1514,6 +1514,16 @@ object TSetupForm: TTSetupForm
           TabOrder = 0
           OnLinkClick = CompletedDocsLinkLabelLinkClick
         end
+        object CompletedLogLinkLabel: TLinkLabel
+          Left = 0
+          Top = 72
+          Width = 170
+          Height = 19
+          Caption = 'See the <a>log</a> for the details.'
+          TabOrder = 1
+          Visible = False
+          OnLinkClick = CompletedLogLinkLabelLinkClick
+        end
       end
     end
     object ButtonsPanel: TPanel
