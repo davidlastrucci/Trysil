@@ -32,6 +32,7 @@ their moment.
 ### JSON
 
 - **`TTJSonSerializerConfig` has four presets.** `Default` (`-1, False`), `WithDetails` (`1, True`), `WithRelations` (`1, False`) and `EntityOnly` (`0, False`) are static class functions that return the configuration, so the call site says what it serializes instead of carrying two numbers. `Create` is unchanged, and so is every existing call.
+- **An eager relation goes through JSON like a `TTLazy<T>`.** A member of an entity type mapped with `[TColumn]` on the foreign key went out as a nested object only, and with `EntityOnly` not at all, key included. Coming back it was skipped without an error: the related object kept key 0, and an `Insert<T>` or `Update<T>` wrote 0 into the foreign key. It now goes out as `<name>ID`, always, plus the nested object when the level allows it, as a `TTLazy<T>` does. On the way in, `<name>ID` sets the key of the related object, then the nested object, when the body has one, is read into it. A value of `<name>` that is not an object is refused with `ETJSonException`. The OpenAPI document describes it the same way, with the nested object writable.
 
 ### HTTP
 
