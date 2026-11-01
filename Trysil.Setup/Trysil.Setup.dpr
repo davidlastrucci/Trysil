@@ -26,6 +26,7 @@ uses
   Trysil.Setup.IDESettings in 'Classes\Trysil.Setup.IDESettings.pas',
   Trysil.Setup.Installation in 'Classes\Trysil.Setup.Installation.pas',
   Trysil.Setup.Builder in 'Classes\Trysil.Setup.Builder.pas',
+  Trysil.Setup.Progress in 'Classes\Trysil.Setup.Progress.pas',
   Trysil.Setup.Installer in 'Classes\Trysil.Setup.Installer.pas',
   Trysil.Setup.Thread in 'Classes\Trysil.Setup.Thread.pas',
   Trysil.Setup.Startup in 'Classes\Trysil.Setup.Startup.pas',

@@ -19,6 +19,7 @@ uses
 
   Trysil.Setup.Consts,
   Trysil.Setup.Log,
+  Trysil.Setup.Progress,
   Trysil.Setup.MSBuild,
   Trysil.Setup.Delphi;
 
@@ -31,10 +32,12 @@ type
     FVersion: TTDelphiVersion;
     FDirectory: String;
     FLog: TTSetupLog;
+    FProgress: TTSetupProgress;
     FMSBuild: TTMSBuild;
 
     function CanBuildPackage(
       const APackage: String; const APlatform: String): Boolean;
+    function PackageCount(const APlatform: String): Integer;
     function BuildProject(
       const AProject: String;
       const AConfig: String;
@@ -49,9 +52,11 @@ type
     constructor Create(
       const AVersion: TTDelphiVersion;
       const ADirectory: String;
-      const ALog: TTSetupLog);
+      const ALog: TTSetupLog;
+      const AProgress: TTSetupProgress);
     destructor Destroy; override;
 
+    function StepCount(const AExpert: Boolean): Integer;
     function BuildPackages: Boolean;
     function BuildExpert: Boolean;
     function LibraryDirectory: String;
@@ -66,12 +71,14 @@ implementation
 constructor TTBuilder.Create(
   const AVersion: TTDelphiVersion;
   const ADirectory: String;
-  const ALog: TTSetupLog);
+  const ALog: TTSetupLog;
+  const AProgress: TTSetupProgress);
 begin
   inherited Create;
   FVersion := AVersion;
   FDirectory := ADirectory;
   FLog := ALog;
+  FProgress := AProgress;
   FMSBuild := TTMSBuild.Create(AVersion.RootDir, ALog);
 end;
 
@@ -92,6 +99,27 @@ begin
     result := True;
 end;
 
+function TTBuilder.PackageCount(const APlatform: String): Integer;
+var
+  LPackage: String;
+begin
+  result := 0;
+  for LPackage in Packages do
+    if CanBuildPackage(LPackage, APlatform) then
+      Inc(result);
+end;
+
+function TTBuilder.StepCount(const AExpert: Boolean): Integer;
+var
+  LPlatform: String;
+begin
+  result := 0;
+  for LPlatform in FVersion.Platforms do
+    Inc(result, PackageCount(LPlatform) * Length(Configurations));
+  if AExpert then
+    Inc(result, Length(ExpertPlatforms));
+end;
+
 function TTBuilder.BuildProject(
   const AProject: String;
   const AConfig: String;
@@ -103,6 +131,7 @@ begin
   FLog.AddFormat(SBuilding, [LName, AConfig, APlatform]);
   result := FMSBuild.Build(
     TPath.Combine(FDirectory, AProject), AConfig, APlatform);
+  FProgress.Step;
   if not result then
     FLog.AddFormat(SBuildFailed, [LName, AConfig, APlatform]);
 end;

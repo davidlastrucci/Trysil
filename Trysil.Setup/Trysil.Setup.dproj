@@ -139,6 +139,7 @@
         <DCCReference Include="Classes\Trysil.Setup.IDESettings.pas"/>
         <DCCReference Include="Classes\Trysil.Setup.Installation.pas"/>
         <DCCReference Include="Classes\Trysil.Setup.Builder.pas"/>
+        <DCCReference Include="Classes\Trysil.Setup.Progress.pas"/>
         <DCCReference Include="Classes\Trysil.Setup.Installer.pas"/>
         <DCCReference Include="Classes\Trysil.Setup.Thread.pas"/>
         <DCCReference Include="Classes\Trysil.Setup.Startup.pas"/>

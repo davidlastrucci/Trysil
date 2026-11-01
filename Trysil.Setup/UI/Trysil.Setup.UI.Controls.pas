@@ -24,6 +24,7 @@ uses
   Vcl.ExtCtrls,
 
   Trysil.Setup.Consts,
+  Trysil.Setup.Progress,
   Trysil.Setup.Delphi;
 
 const
@@ -38,6 +39,7 @@ const
   SelectedColor = TColor($00FFFEEC);
   BorderColor = TColor($00EBE7E5);
   SecondaryTextColor = TColor($0063554B);
+  SuccessColor = TColor($00577804);
   ErrorColor = TColor($002020B8);
   ChipColor = TColor($00F6F4F3);
   ChipTextColor = TColor($00514137);
@@ -47,6 +49,10 @@ const
   SourcesChipTextColor = TColor($000E4092);
 
   StepDoneGlyph = #$2713;
+  WaitingGlyph = #$25CB;
+  InstallingGlyph = #$25CF;
+  DoneGlyph = #$2714;
+  FailedGlyph = #$2716;
 
 type
 
@@ -143,6 +149,32 @@ type
     function Checked: Boolean;
 
     property Version: TTDelphiVersion read FVersion;
+  end;
+
+{ TTVersionRow }
+
+  TTVersionRow = class
+  strict private
+    FPanel: TPanel;
+    FGlyph: TLabel;
+    FName: TLabel;
+    FState: TLabel;
+
+    procedure Paint(
+      const AGlyph: String;
+      const AState: String;
+      const AColor: TColor;
+      const AStyle: TFontStyles);
+  public
+    constructor Create(
+      const APanel: TPanel;
+      const AGlyph: TLabel;
+      const AName: TLabel;
+      const AState: TLabel);
+
+    procedure Bind(const AName: String);
+    procedure Hide;
+    procedure Show(const AState: TTVersionState);
   end;
 
 implementation
@@ -371,6 +403,63 @@ end;
 function TTVersionCard.Checked: Boolean;
 begin
   result := Assigned(FVersion) and FCheckbox.Checked;
+end;
+
+{ TTVersionRow }
+
+constructor TTVersionRow.Create(
+  const APanel: TPanel;
+  const AGlyph: TLabel;
+  const AName: TLabel;
+  const AState: TLabel);
+begin
+  inherited Create;
+  FPanel := APanel;
+  FGlyph := AGlyph;
+  FName := AName;
+  FState := AState;
+end;
+
+procedure TTVersionRow.Paint(
+  const AGlyph: String;
+  const AState: String;
+  const AColor: TColor;
+  const AStyle: TFontStyles);
+begin
+  FGlyph.Caption := AGlyph;
+  FGlyph.Font.Color := AColor;
+  FState.Caption := AState;
+  FState.Font.Color := AColor;
+  FState.Font.Style := AStyle;
+  FName.Font.Style := AStyle;
+end;
+
+procedure TTVersionRow.Bind(const AName: String);
+begin
+  FName.Caption := AName;
+  FPanel.Visible := True;
+  FPanel.Top := FPanel.Parent.ClientHeight;
+  Show(TTVersionState.Waiting);
+end;
+
+procedure TTVersionRow.Hide;
+begin
+  FPanel.Visible := False;
+end;
+
+procedure TTVersionRow.Show(const AState: TTVersionState);
+begin
+  case AState of
+    TTVersionState.Waiting:
+      Paint(WaitingGlyph, SWaitingState, MutedColor, []);
+    TTVersionState.Installing:
+      Paint(
+        InstallingGlyph, SInstallingState, AccentColor, [TFontStyle.fsBold]);
+    TTVersionState.Done:
+      Paint(DoneGlyph, SDoneState, SuccessColor, []);
+    TTVersionState.Failed:
+      Paint(FailedGlyph, SFailedState, ErrorColor, []);
+  end;
 end;
 
 end.

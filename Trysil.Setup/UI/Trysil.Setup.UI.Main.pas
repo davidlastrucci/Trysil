@@ -37,6 +37,7 @@ uses
   Trysil.Expert.UI.Wizard,
   Trysil.Setup.Consts,
   Trysil.Setup.Log,
+  Trysil.Setup.Progress,
   Trysil.Setup.Delphi,
   Trysil.Setup.Folder,
   Trysil.Setup.Installation,
@@ -142,6 +143,33 @@ type
     ProgressPagePanel: TPanel;
     ProgressTitleLabel: TLabel;
     ProgressCurrentLabel: TLabel;
+    ProgressBodyPanel: TPanel;
+    ProgressBarPanel: TPanel;
+    ProgressPercentLabel: TLabel;
+    ProgressTrackPanel: TPanel;
+    ProgressFillPanel: TPanel;
+    ProgressVersionsPanel: TPanel;
+    ProgressVersion1Panel: TPanel;
+    ProgressVersion1GlyphLabel: TLabel;
+    ProgressVersion1StateLabel: TLabel;
+    ProgressVersion1NameLabel: TLabel;
+    ProgressVersion2Panel: TPanel;
+    ProgressVersion2GlyphLabel: TLabel;
+    ProgressVersion2StateLabel: TLabel;
+    ProgressVersion2NameLabel: TLabel;
+    ProgressVersion3Panel: TPanel;
+    ProgressVersion3GlyphLabel: TLabel;
+    ProgressVersion3StateLabel: TLabel;
+    ProgressVersion3NameLabel: TLabel;
+    ProgressVersion4Panel: TPanel;
+    ProgressVersion4GlyphLabel: TLabel;
+    ProgressVersion4StateLabel: TLabel;
+    ProgressVersion4NameLabel: TLabel;
+    ProgressVersion5Panel: TPanel;
+    ProgressVersion5GlyphLabel: TLabel;
+    ProgressVersion5StateLabel: TLabel;
+    ProgressVersion5NameLabel: TLabel;
+    ProgressLogBoxPanel: TPanel;
     ProgressLogLabel: TLabel;
     ProgressLogPanel: TPanel;
     ProgressMemo: TMemo;
@@ -191,6 +219,7 @@ type
   strict private
     FWizard: TTWizard;
     FLog: TTSetupLog;
+    FProgress: TTSetupProgress;
     FInstallation: TTInstallation;
     FVersions: TObjectList<TTDelphiVersion>;
     FOptions: TTInstallOptions;
@@ -198,6 +227,7 @@ type
     FStepPages: TArray<TPanel>;
     FModeCards: TObjectList<TTSetupCard>;
     FVersionCards: TObjectList<TTVersionCard>;
+    FVersionRows: TObjectList<TTVersionRow>;
     FStarted: Boolean;
     FRunning: Boolean;
     FCompleted: Boolean;
@@ -205,6 +235,7 @@ type
     procedure AddSteps;
     procedure AddModeCards;
     procedure AddVersionCards;
+    procedure AddVersionRows;
     procedure AddPages;
     function ModeTitle: String;
     procedure DescribeInstalledModes;
@@ -220,6 +251,8 @@ type
     procedure RefreshSteps;
     function ActionCaption: String;
     function NextCaption: String;
+    function IsLogVisible: Boolean;
+    procedure ShowLog(const AVisible: Boolean);
     function LogCaption: String;
     procedure EnableDisableButtons;
     procedure RefreshView;
@@ -256,6 +289,12 @@ type
     procedure StartSetup;
     procedure StartInstallation;
     procedure LogLine(const ALine: String);
+    procedure BindVersionRows(const AVersions: TArray<String>);
+    procedure ShowPercent(const APercent: Integer);
+    procedure ProgressStart(const AVersions: TArray<String>);
+    procedure ProgressPercent(const APercent: Integer);
+    procedure ProgressState(
+      const AIndex: Integer; const AState: TTVersionState);
     function CompletedTitle(const AThread: TTSetupThread): String;
     function IsClean(const AThread: TTSetupThread): Boolean;
     function CompletedColor(const AThread: TTSetupThread): TColor;
@@ -282,12 +321,14 @@ begin
   inherited Create(AOwner);
   FWizard := TTWizard.Create(Handle);
   FLog := TTSetupLog.Create;
+  FProgress := TTSetupProgress.Create;
   FInstallation := TTInstallation.Create;
   FVersions := TObjectList<TTDelphiVersion>.Create;
   FOptions := nil;
   FSteps := TObjectList<TTSetupStep>.Create;
   FModeCards := TObjectList<TTSetupCard>.Create;
   FVersionCards := TObjectList<TTVersionCard>.Create;
+  FVersionRows := TObjectList<TTVersionRow>.Create;
   FStarted := False;
   FRunning := False;
   FCompleted := False;
@@ -297,11 +338,13 @@ destructor TTSetupForm.Destroy;
 begin
   if Assigned(FOptions) then
     FOptions.Free;
+  FVersionRows.Free;
   FVersionCards.Free;
   FModeCards.Free;
   FSteps.Free;
   FVersions.Free;
   FInstallation.Free;
+  FProgress.Free;
   FLog.Free;
   FWizard.Free;
   inherited Destroy;
@@ -311,12 +354,16 @@ procedure TTSetupForm.AfterConstruction;
 begin
   inherited AfterConstruction;
   FLog.OnLine := LogLine;
+  FProgress.OnStart := ProgressStart;
+  FProgress.OnPercent := ProgressPercent;
+  FProgress.OnState := ProgressState;
   FInstallation.Load;
   FolderTextbox.Text := TPath.Combine(
     GetEnvironmentVariable(SLocalAppDataVariable), SDefaultFolder);
   AddSteps;
   AddModeCards;
   AddVersionCards;
+  AddVersionRows;
   AddPages;
   InitializeMode;
   FWizard.Start;
@@ -391,6 +438,35 @@ begin
     Version5PaintBox));
 end;
 
+procedure TTSetupForm.AddVersionRows;
+begin
+  FVersionRows.Add(TTVersionRow.Create(
+    ProgressVersion1Panel,
+    ProgressVersion1GlyphLabel,
+    ProgressVersion1NameLabel,
+    ProgressVersion1StateLabel));
+  FVersionRows.Add(TTVersionRow.Create(
+    ProgressVersion2Panel,
+    ProgressVersion2GlyphLabel,
+    ProgressVersion2NameLabel,
+    ProgressVersion2StateLabel));
+  FVersionRows.Add(TTVersionRow.Create(
+    ProgressVersion3Panel,
+    ProgressVersion3GlyphLabel,
+    ProgressVersion3NameLabel,
+    ProgressVersion3StateLabel));
+  FVersionRows.Add(TTVersionRow.Create(
+    ProgressVersion4Panel,
+    ProgressVersion4GlyphLabel,
+    ProgressVersion4NameLabel,
+    ProgressVersion4StateLabel));
+  FVersionRows.Add(TTVersionRow.Create(
+    ProgressVersion5Panel,
+    ProgressVersion5GlyphLabel,
+    ProgressVersion5NameLabel,
+    ProgressVersion5StateLabel));
+end;
+
 procedure TTSetupForm.AddPages;
 begin
   FWizard.AddPage(TTWizardPage.Create(
@@ -402,7 +478,7 @@ begin
   FWizard.AddPage(TTWizardPage.Create(
     SummaryPagePanel, SummaryListView, nil, nil));
   FWizard.AddPage(TTWizardPage.Create(
-    ProgressPagePanel, ProgressMemo, IsStarted, nil));
+    ProgressPagePanel, ProgressPagePanel, IsStarted, nil));
   FWizard.AddPage(TTWizardPage.Create(
     CompletedPagePanel, CompletedPagePanel, IsCompleted, nil));
 end;
@@ -527,9 +603,19 @@ begin
     result := SNextCaption;
 end;
 
+function TTSetupForm.IsLogVisible: Boolean;
+begin
+  result := ProgressLogBoxPanel.Visible;
+end;
+
+procedure TTSetupForm.ShowLog(const AVisible: Boolean);
+begin
+  ProgressLogBoxPanel.Visible := AVisible;
+end;
+
 function TTSetupForm.LogCaption: String;
 begin
-  if CompletedPagePanel.Visible then
+  if CompletedPagePanel.Visible or (not IsLogVisible) then
     result := SShowLogCaption
   else
     result := SHideLogCaption;
@@ -542,7 +628,7 @@ begin
   BackButton.Enabled := IsIdle and (not FWizard.IsFirst);
   NextButton.Enabled := IsIdle;
   NextButton.Caption := NextCaption;
-  LogButton.Visible := FCompleted;
+  LogButton.Visible := FStarted;
   LogButton.Caption := LogCaption;
   CancelButton.Enabled := not FRunning;
 end;
@@ -834,7 +920,7 @@ begin
   if Mode = TTSetupMode.Install then
     CreateOptions;
   LThread := TTSetupThread.Create(
-    Mode, FLog, FInstallation, FOptions, MasterSelected);
+    Mode, FLog, FProgress, FInstallation, FOptions, MasterSelected);
   LThread.FreeOnTerminate := True;
   LThread.OnTerminate := ThreadTerminate;
   LThread.Start;
@@ -860,6 +946,63 @@ begin
     begin
       ProgressMemo.Lines.Add(LLine);
       ProgressCurrentLabel.Caption := LLine;
+    end);
+end;
+
+procedure TTSetupForm.BindVersionRows(const AVersions: TArray<String>);
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to FVersionRows.Count - 1 do
+    if LIndex < Length(AVersions) then
+      FVersionRows[LIndex].Bind(AVersions[LIndex])
+    else
+      FVersionRows[LIndex].Hide;
+end;
+
+procedure TTSetupForm.ShowPercent(const APercent: Integer);
+begin
+  ProgressFillPanel.Width :=
+    (ProgressTrackPanel.ClientWidth * APercent) div 100;
+  ProgressPercentLabel.Caption := Format(SPercent, [APercent]);
+end;
+
+procedure TTSetupForm.ProgressStart(const AVersions: TArray<String>);
+var
+  LVersions: TArray<String>;
+begin
+  LVersions := AVersions;
+  TThread.Queue(nil,
+    procedure
+    begin
+      BindVersionRows(LVersions);
+    end);
+end;
+
+procedure TTSetupForm.ProgressPercent(const APercent: Integer);
+var
+  LPercent: Integer;
+begin
+  LPercent := APercent;
+  TThread.Queue(nil,
+    procedure
+    begin
+      ShowPercent(LPercent);
+    end);
+end;
+
+procedure TTSetupForm.ProgressState(
+  const AIndex: Integer; const AState: TTVersionState);
+var
+  LIndex: Integer;
+  LState: TTVersionState;
+begin
+  LIndex := AIndex;
+  LState := AState;
+  TThread.Queue(nil,
+    procedure
+    begin
+      FVersionRows[LIndex].Show(LState);
     end);
 end;
 
@@ -923,9 +1066,14 @@ end;
 procedure TTSetupForm.LogButtonClick(Sender: TObject);
 begin
   if CompletedPagePanel.Visible then
-    FWizard.PreviousPage
+  begin
+    ShowLog(True);
+    FWizard.PreviousPage;
+  end
+  else if FCompleted then
+    FWizard.NextPage
   else
-    FWizard.NextPage;
+    ShowLog(not IsLogVisible);
   RefreshView;
 end;
 

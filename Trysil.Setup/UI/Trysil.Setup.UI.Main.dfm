@@ -1408,52 +1408,398 @@ object TSetupForm: TTSetupForm
           Font.Style = []
           ParentFont = False
         end
-        object ProgressLogLabel: TLabel
+        object ProgressBodyPanel: TPanel
           Left = 0
-          Top = 70
-          Width = 20
-          Height = 15
-          Caption = 'Log'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = 5325111
-          Font.Height = -12
-          Font.Name = 'Segoe UI'
-          Font.Style = [fsBold]
-          ParentFont = False
-        end
-        object ProgressLogPanel: TPanel
-          Left = 0
-          Top = 90
+          Top = 60
           Width = 456
-          Height = 277
+          Height = 307
           Anchors = [akLeft, akTop, akRight, akBottom]
           BevelOuter = bvNone
-          Color = 1446158
-          Padding.Left = 10
-          Padding.Top = 8
-          Padding.Right = 4
-          Padding.Bottom = 4
           ParentBackground = False
+          ParentColor = True
           ShowCaption = False
           TabOrder = 0
-          object ProgressMemo: TMemo
-            Left = 10
-            Top = 8
-            Width = 442
-            Height = 265
-            Align = alClient
-            BorderStyle = bsNone
-            Color = 1446158
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = 14275017
-            Font.Height = -12
-            Font.Name = 'Consolas'
-            Font.Style = []
-            ParentFont = False
-            ReadOnly = True
-            ScrollBars = ssBoth
+          object ProgressBarPanel: TPanel
+            Left = 0
+            Top = 0
+            Width = 456
+            Height = 16
+            Align = alTop
+            BevelOuter = bvNone
+            ParentBackground = False
+            ParentColor = True
+            ShowCaption = False
             TabOrder = 0
-            WordWrap = False
+            object ProgressPercentLabel: TLabel
+              Left = 416
+              Top = 0
+              Width = 40
+              Height = 16
+              Align = alRight
+              Alignment = taRightJustify
+              AutoSize = False
+              Caption = '0%'
+              Layout = tlCenter
+            end
+            object ProgressTrackPanel: TPanel
+              AlignWithMargins = True
+              Left = 0
+              Top = 5
+              Width = 408
+              Height = 6
+              Margins.Left = 0
+              Margins.Top = 5
+              Margins.Right = 8
+              Margins.Bottom = 5
+              Align = alClient
+              BevelOuter = bvNone
+              Color = 15460325
+              ParentBackground = False
+              ShowCaption = False
+              TabOrder = 0
+              object ProgressFillPanel: TPanel
+                Left = 0
+                Top = 0
+                Width = 0
+                Height = 6
+                Align = alLeft
+                BevelOuter = bvNone
+                Color = 9466894
+                ParentBackground = False
+                ShowCaption = False
+                TabOrder = 0
+              end
+            end
+          end
+          object ProgressVersionsPanel: TPanel
+            AlignWithMargins = True
+            Left = 0
+            Top = 30
+            Width = 456
+            Height = 120
+            Margins.Left = 0
+            Margins.Top = 14
+            Margins.Right = 0
+            Margins.Bottom = 0
+            Align = alTop
+            AutoSize = True
+            BevelOuter = bvNone
+            ParentBackground = False
+            ParentColor = True
+            ShowCaption = False
+            TabOrder = 1
+          object ProgressVersion1Panel: TPanel
+            Left = 0
+            Top = 0
+            Width = 456
+            Height = 24
+            Align = alTop
+            BevelOuter = bvNone
+            ParentBackground = False
+            ParentColor = True
+            ShowCaption = False
+            TabOrder = 0
+            Visible = False
+            object ProgressVersion1GlyphLabel: TLabel
+              Left = 0
+              Top = 0
+              Width = 22
+              Height = 24
+              Align = alLeft
+              AutoSize = False
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clWindowText
+              Font.Height = -13
+              Font.Name = 'Segoe UI Symbol'
+              Font.Style = []
+              ParentFont = False
+              Layout = tlCenter
+            end
+            object ProgressVersion1StateLabel: TLabel
+              Left = 366
+              Top = 0
+              Width = 90
+              Height = 24
+              Align = alRight
+              Alignment = taRightJustify
+              AutoSize = False
+              Layout = tlCenter
+            end
+            object ProgressVersion1NameLabel: TLabel
+              Left = 22
+              Top = 0
+              Width = 344
+              Height = 24
+              Align = alClient
+              AutoSize = False
+              EllipsisPosition = epEndEllipsis
+              Layout = tlCenter
+            end
+          end
+          object ProgressVersion2Panel: TPanel
+            Left = 0
+            Top = 24
+            Width = 456
+            Height = 24
+            Align = alTop
+            BevelOuter = bvNone
+            ParentBackground = False
+            ParentColor = True
+            ShowCaption = False
+            TabOrder = 1
+            Visible = False
+            object ProgressVersion2GlyphLabel: TLabel
+              Left = 0
+              Top = 0
+              Width = 22
+              Height = 24
+              Align = alLeft
+              AutoSize = False
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clWindowText
+              Font.Height = -13
+              Font.Name = 'Segoe UI Symbol'
+              Font.Style = []
+              ParentFont = False
+              Layout = tlCenter
+            end
+            object ProgressVersion2StateLabel: TLabel
+              Left = 366
+              Top = 0
+              Width = 90
+              Height = 24
+              Align = alRight
+              Alignment = taRightJustify
+              AutoSize = False
+              Layout = tlCenter
+            end
+            object ProgressVersion2NameLabel: TLabel
+              Left = 22
+              Top = 0
+              Width = 344
+              Height = 24
+              Align = alClient
+              AutoSize = False
+              EllipsisPosition = epEndEllipsis
+              Layout = tlCenter
+            end
+          end
+          object ProgressVersion3Panel: TPanel
+            Left = 0
+            Top = 48
+            Width = 456
+            Height = 24
+            Align = alTop
+            BevelOuter = bvNone
+            ParentBackground = False
+            ParentColor = True
+            ShowCaption = False
+            TabOrder = 2
+            Visible = False
+            object ProgressVersion3GlyphLabel: TLabel
+              Left = 0
+              Top = 0
+              Width = 22
+              Height = 24
+              Align = alLeft
+              AutoSize = False
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clWindowText
+              Font.Height = -13
+              Font.Name = 'Segoe UI Symbol'
+              Font.Style = []
+              ParentFont = False
+              Layout = tlCenter
+            end
+            object ProgressVersion3StateLabel: TLabel
+              Left = 366
+              Top = 0
+              Width = 90
+              Height = 24
+              Align = alRight
+              Alignment = taRightJustify
+              AutoSize = False
+              Layout = tlCenter
+            end
+            object ProgressVersion3NameLabel: TLabel
+              Left = 22
+              Top = 0
+              Width = 344
+              Height = 24
+              Align = alClient
+              AutoSize = False
+              EllipsisPosition = epEndEllipsis
+              Layout = tlCenter
+            end
+          end
+          object ProgressVersion4Panel: TPanel
+            Left = 0
+            Top = 72
+            Width = 456
+            Height = 24
+            Align = alTop
+            BevelOuter = bvNone
+            ParentBackground = False
+            ParentColor = True
+            ShowCaption = False
+            TabOrder = 3
+            Visible = False
+            object ProgressVersion4GlyphLabel: TLabel
+              Left = 0
+              Top = 0
+              Width = 22
+              Height = 24
+              Align = alLeft
+              AutoSize = False
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clWindowText
+              Font.Height = -13
+              Font.Name = 'Segoe UI Symbol'
+              Font.Style = []
+              ParentFont = False
+              Layout = tlCenter
+            end
+            object ProgressVersion4StateLabel: TLabel
+              Left = 366
+              Top = 0
+              Width = 90
+              Height = 24
+              Align = alRight
+              Alignment = taRightJustify
+              AutoSize = False
+              Layout = tlCenter
+            end
+            object ProgressVersion4NameLabel: TLabel
+              Left = 22
+              Top = 0
+              Width = 344
+              Height = 24
+              Align = alClient
+              AutoSize = False
+              EllipsisPosition = epEndEllipsis
+              Layout = tlCenter
+            end
+          end
+          object ProgressVersion5Panel: TPanel
+            Left = 0
+            Top = 96
+            Width = 456
+            Height = 24
+            Align = alTop
+            BevelOuter = bvNone
+            ParentBackground = False
+            ParentColor = True
+            ShowCaption = False
+            TabOrder = 4
+            Visible = False
+            object ProgressVersion5GlyphLabel: TLabel
+              Left = 0
+              Top = 0
+              Width = 22
+              Height = 24
+              Align = alLeft
+              AutoSize = False
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clWindowText
+              Font.Height = -13
+              Font.Name = 'Segoe UI Symbol'
+              Font.Style = []
+              ParentFont = False
+              Layout = tlCenter
+            end
+            object ProgressVersion5StateLabel: TLabel
+              Left = 366
+              Top = 0
+              Width = 90
+              Height = 24
+              Align = alRight
+              Alignment = taRightJustify
+              AutoSize = False
+              Layout = tlCenter
+            end
+            object ProgressVersion5NameLabel: TLabel
+              Left = 22
+              Top = 0
+              Width = 344
+              Height = 24
+              Align = alClient
+              AutoSize = False
+              EllipsisPosition = epEndEllipsis
+              Layout = tlCenter
+            end
+          end
+          end
+          object ProgressLogBoxPanel: TPanel
+            AlignWithMargins = True
+            Left = 0
+            Top = 164
+            Width = 456
+            Height = 143
+            Margins.Left = 0
+            Margins.Top = 14
+            Margins.Right = 0
+            Margins.Bottom = 0
+            Align = alClient
+            BevelOuter = bvNone
+            ParentBackground = False
+            ParentColor = True
+            ShowCaption = False
+            TabOrder = 2
+            Visible = False
+            object ProgressLogLabel: TLabel
+              AlignWithMargins = True
+              Left = 0
+              Top = 0
+              Width = 456
+              Height = 15
+              Margins.Left = 0
+              Margins.Top = 0
+              Margins.Right = 0
+              Margins.Bottom = 6
+              Align = alTop
+              Caption = 'Log'
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = 5325111
+              Font.Height = -12
+              Font.Name = 'Segoe UI'
+              Font.Style = [fsBold]
+              ParentFont = False
+            end
+            object ProgressLogPanel: TPanel
+              Left = 0
+              Top = 21
+              Width = 456
+              Height = 122
+              Align = alClient
+              BevelOuter = bvNone
+              Color = 1446158
+              Padding.Left = 10
+              Padding.Top = 8
+              Padding.Right = 4
+              Padding.Bottom = 4
+              ParentBackground = False
+              ShowCaption = False
+              TabOrder = 0
+              object ProgressMemo: TMemo
+                Left = 10
+                Top = 8
+                Width = 442
+                Height = 110
+                Align = alClient
+                BorderStyle = bsNone
+                Color = 1446158
+                Font.Charset = DEFAULT_CHARSET
+                Font.Color = 14275017
+                Font.Height = -12
+                Font.Name = 'Consolas'
+                Font.Style = []
+                ParentFont = False
+                ReadOnly = True
+                ScrollBars = ssBoth
+                TabOrder = 0
+                WordWrap = False
+              end
+            end
           end
         end
       end

@@ -20,6 +20,7 @@ uses
 
   Trysil.Setup.Consts,
   Trysil.Setup.Log,
+  Trysil.Setup.Progress,
   Trysil.Setup.Delphi,
   Trysil.Setup.Detector,
   Trysil.Setup.Release,
@@ -51,6 +52,7 @@ type
   TTInstaller = class
   strict private
     FLog: TTSetupLog;
+    FProgress: TTSetupProgress;
     FInstallation: TTInstallation;
     FDownloader: TTReleaseDownloader;
     FHasErrors: Boolean;
@@ -59,6 +61,14 @@ type
     procedure ExtractArchive(
       const AFileName: String; const ADirectory: String);
     procedure DownloadRelease(const ADirectory: String);
+    function CreateBuilder(
+      const AVersion: TTDelphiVersion;
+      const AOptions: TTInstallOptions): TTBuilder;
+    function VersionSteps(
+      const AVersion: TTDelphiVersion;
+      const AOptions: TTInstallOptions): Integer;
+    function VersionNames(const AOptions: TTInstallOptions): TArray<String>;
+    procedure StartProgress(const AOptions: TTInstallOptions);
     function SourceSearchPath: TArray<String>;
     function InstallSources(
       const AVersion: TTDelphiVersion;
@@ -73,6 +83,8 @@ type
     function InstallVersion(
       const AVersion: TTDelphiVersion;
       const AOptions: TTInstallOptions): Boolean;
+    function TrackVersion(
+      const AIndex: Integer; const AOptions: TTInstallOptions): Boolean;
     function InstallVersions(const AOptions: TTInstallOptions): TArray<String>;
     procedure CopySetup(const ADirectory: String);
     procedure SaveInstallation(
@@ -86,6 +98,7 @@ type
   public
     constructor Create(
       const ALog: TTSetupLog;
+      const AProgress: TTSetupProgress;
       const AInstallation: TTInstallation;
       const AMaster: Boolean);
     destructor Destroy; override;
@@ -120,11 +133,13 @@ end;
 
 constructor TTInstaller.Create(
   const ALog: TTSetupLog;
+  const AProgress: TTSetupProgress;
   const AInstallation: TTInstallation;
   const AMaster: Boolean);
 begin
   inherited Create;
   FLog := ALog;
+  FProgress := AProgress;
   FInstallation := AInstallation;
   FDownloader := TTReleaseDownloader.Create(ALog, AMaster);
   FHasErrors := False;
@@ -176,6 +191,53 @@ begin
     if TFile.Exists(LFileName) then
       TFile.Delete(LFileName);
   end;
+  FProgress.Step;
+end;
+
+function TTInstaller.CreateBuilder(
+  const AVersion: TTDelphiVersion;
+  const AOptions: TTInstallOptions): TTBuilder;
+begin
+  result := TTBuilder.Create(AVersion, AOptions.Directory, FLog, FProgress);
+end;
+
+function TTInstaller.VersionSteps(
+  const AVersion: TTDelphiVersion;
+  const AOptions: TTInstallOptions): Integer;
+var
+  LBuilder: TTBuilder;
+begin
+  result := 1;
+  if AVersion.CanBuild then
+  begin
+    LBuilder := CreateBuilder(AVersion, AOptions);
+    try
+      result := LBuilder.StepCount(AOptions.Expert);
+    finally
+      LBuilder.Free;
+    end;
+  end;
+end;
+
+function TTInstaller.VersionNames(
+  const AOptions: TTInstallOptions): TArray<String>;
+var
+  LVersion: TTDelphiVersion;
+begin
+  result := [];
+  for LVersion in AOptions.Versions do
+    result := result + [LVersion.Name];
+end;
+
+procedure TTInstaller.StartProgress(const AOptions: TTInstallOptions);
+var
+  LTotal: Integer;
+  LVersion: TTDelphiVersion;
+begin
+  LTotal := 1;
+  for LVersion in AOptions.Versions do
+    Inc(LTotal, VersionSteps(LVersion, AOptions));
+  FProgress.Start(LTotal, VersionNames(AOptions));
 end;
 
 function TTInstaller.SourceSearchPath: TArray<String>;
@@ -222,7 +284,7 @@ function TTInstaller.InstallPackages(
 var
   LBuilder: TTBuilder;
 begin
-  LBuilder := TTBuilder.Create(AVersion, AOptions.Directory, FLog);
+  LBuilder := CreateBuilder(AVersion, AOptions);
   try
     result := LBuilder.BuildPackages;
     if result then
@@ -256,14 +318,34 @@ begin
   end;
 end;
 
+function TTInstaller.TrackVersion(
+  const AIndex: Integer; const AOptions: TTInstallOptions): Boolean;
+var
+  LVersion: TTDelphiVersion;
+  LTarget: Integer;
+begin
+  LVersion := AOptions.Versions[AIndex];
+  LTarget := FProgress.Done + VersionSteps(LVersion, AOptions);
+  FProgress.SetState(AIndex, TTVersionState.Installing);
+  result := InstallVersion(LVersion, AOptions);
+  FProgress.Reach(LTarget);
+  if result then
+    FProgress.SetState(AIndex, TTVersionState.Done)
+  else
+    FProgress.SetState(AIndex, TTVersionState.Failed);
+end;
+
 function TTInstaller.InstallVersions(
   const AOptions: TTInstallOptions): TArray<String>;
 var
+  LIndex: Integer;
   LVersion: TTDelphiVersion;
 begin
   result := [];
-  for LVersion in AOptions.Versions do
-    if InstallVersion(LVersion, AOptions) then
+  for LIndex := 0 to AOptions.Versions.Count - 1 do
+  begin
+    LVersion := AOptions.Versions[LIndex];
+    if TrackVersion(LIndex, AOptions) then
     begin
       result := result + [LVersion.Key];
       FLog.AddFormat(SVersionInstalled, [LVersion.Name]);
@@ -273,6 +355,7 @@ begin
       FHasErrors := True;
       FLog.AddFormat(SVersionFailed, [LVersion.Name]);
     end;
+  end;
 end;
 
 procedure TTInstaller.CopySetup(const ADirectory: String);
@@ -304,6 +387,7 @@ procedure TTInstaller.Deploy(const AOptions: TTInstallOptions);
 var
   LVersions: TArray<String>;
 begin
+  StartProgress(AOptions);
   DownloadRelease(AOptions.Directory);
   LVersions := InstallVersions(AOptions);
   if Length(LVersions) > 0 then
@@ -372,6 +456,7 @@ begin
   finally
     LSettings.Free;
   end;
+  FProgress.Step;
 end;
 
 procedure TTInstaller.RemoveDirectory(const ADirectory: String);
@@ -385,12 +470,14 @@ begin
   finally
     LFolder.Free;
   end;
+  FProgress.Step;
 end;
 
 procedure TTInstaller.Uninstall;
 var
   LKey: String;
 begin
+  FProgress.Start(Length(FInstallation.Versions) + 1, []);
   for LKey in FInstallation.Versions do
     RemoveVersion(LKey);
   RemoveDirectory(FInstallation.Directory);

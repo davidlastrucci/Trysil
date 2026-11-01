@@ -22,6 +22,7 @@ uses
 
   Trysil.Setup.Consts,
   Trysil.Setup.Log,
+  Trysil.Setup.Progress,
   Trysil.Setup.Delphi,
   Trysil.Setup.Detector,
   Trysil.Setup.Folder,
@@ -40,6 +41,7 @@ type
   strict private
     FMode: TTSetupMode;
     FLog: TTSetupLog;
+    FProgress: TTSetupProgress;
     FInstallation: TTInstallation;
     FOptions: TTInstallOptions;
     FMaster: Boolean;
@@ -55,6 +57,7 @@ type
     constructor Create(
       const AMode: TTSetupMode;
       const ALog: TTSetupLog;
+      const AProgress: TTSetupProgress;
       const AInstallation: TTInstallation;
       const AOptions: TTInstallOptions;
       const AMaster: Boolean);
@@ -84,6 +87,7 @@ implementation
 constructor TTSetupThread.Create(
   const AMode: TTSetupMode;
   const ALog: TTSetupLog;
+  const AProgress: TTSetupProgress;
   const AInstallation: TTInstallation;
   const AOptions: TTInstallOptions;
   const AMaster: Boolean);
@@ -91,6 +95,7 @@ begin
   inherited Create(True);
   FMode := AMode;
   FLog := ALog;
+  FProgress := AProgress;
   FInstallation := AInstallation;
   FOptions := AOptions;
   FMaster := AMaster;
@@ -135,7 +140,8 @@ procedure TTSetupThread.Execute;
 var
   LInstaller: TTInstaller;
 begin
-  LInstaller := TTInstaller.Create(FLog, FInstallation, FMaster);
+  LInstaller := TTInstaller.Create(
+    FLog, FProgress, FInstallation, FMaster);
   try
     try
       Run(LInstaller);

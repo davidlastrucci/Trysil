@@ -220,6 +220,12 @@ resourcestring
   SUninstallCaption = '&Uninstall';
   SShowLogCaption = '&Show log';
   SHideLogCaption = '&Hide log';
+
+  SPercent = '%d%%';
+  SWaitingState = 'Waiting';
+  SInstallingState = 'Installing';
+  SDoneState = 'Done';
+  SFailedState = 'Failed';
   SCloseCaption = '&Close';
 
 implementation
