@@ -155,7 +155,13 @@ All packages build on Community Edition, except `Trysil.SqlServer` and `Trysil.O
 
 ## Installation
 
-### Via GetIt (recommended)
+### Via the setup program (recommended)
+
+Download [Trysil.Setup.exe](https://www.lastrucci.net/trysil/Trysil.Setup.exe) and run it with Delphi closed. It finds the Delphi versions installed, downloads the latest release from GitHub, builds the packages and the IDE Expert, and sets the `Trysil` variable and the library path of each IDE. On an edition that cannot build from the command line it points the library path at the sources. It runs as the user, writes only under `HKEY_CURRENT_USER`, and is registered in the installed apps of Windows, from where it updates and uninstalls Trysil.
+
+The setup is not signed: the first time, Windows SmartScreen shows *Windows protected your PC*. Click **More info**, then **Run anyway**. The source of the setup is in [`Trysil.Setup`](Trysil.Setup).
+
+### Via GetIt
 
 Install directly from the Delphi IDE: **Tools > GetIt Package Manager**, search for **Trysil**.
 

@@ -16,10 +16,43 @@ title: Installation
 
 Delphi 13 Florence (370) is the active development version.
 
-Trysil 2.0.0 was compiled on Delphi 11 and 13, and its test suite was run on
+Trysil 2.1.0 was compiled on Delphi 11 and 13, and its test suite was run on
 Delphi 13. The package sets for 10.3, 10.4 and 12 are kept aligned with the
 other two, but were not compiled for this release. If one of them does not
 build, please [open an issue](https://github.com/davidlastrucci/Trysil/issues).
+
+## Setup Program
+
+The quickest way to install Trysil is the setup program:
+[Trysil.Setup.exe](https://www.lastrucci.net/trysil/Trysil.Setup.exe). Run it
+with Delphi closed. For each Delphi version it finds, it:
+
+1. downloads the latest release from GitHub - or `master`, if you tick
+   **Install the development version (master) instead of the latest release** -
+   into `%LOCALAPPDATA%\Programs\Trysil`, or the folder you choose;
+2. builds the packages with MSBuild, Debug and Release, Win32 and Win64 where
+   the platform is installed, skipping `Trysil.SqlServer` and `Trysil.Oracle`
+   where their FireDAC driver is not there;
+3. sets the `Trysil` environment variable of the IDE to the `Lib\<ver>` folder of the
+   installation and adds `$(Trysil)\$(Platform)\Release` to the library path;
+4. builds and registers the IDE Expert, if you leave **Install Trysil Expert**
+   ticked.
+
+On an edition that cannot build from the command line, such as Community, it
+skips the build: `Trysil` points to the folder of the sources and the library
+path lists their folders.
+
+The setup runs as the user and writes only under `HKEY_CURRENT_USER`. It is
+registered in the installed apps of Windows: run it from there to update Trysil
+to the latest release or to uninstall it, which removes the folder and every
+setting it wrote.
+
+!!! note "The setup is not signed"
+    The first time you run it, Windows SmartScreen shows *Windows protected
+    your PC*. Click **More info**, then **Run anyway**. The source of the setup
+    is in `Trysil.Setup` in the repository.
+
+The rest of this page describes the manual installation.
 
 ## Clone the Repository
 
