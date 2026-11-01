@@ -784,7 +784,7 @@ var
 begin
   CheckRawFilter(AFilter);
   LTableMap := TTMapper.Instance.Load<T>();
-  LDataSet := FConnection.CreateDataSet(ASQL, AFilter);
+  LDataSet := FConnection.CreateUnidirectionalDataSet(ASQL, AFilter);
   LReader := TTRawReader.Create(LTableMap, LDataSet);
   try
     AResult.Clear;

@@ -177,6 +177,7 @@ type
 
     function GetTransactionObserverCount: Integer;
     function IsValidParameterChar(const AChar: Char): Boolean;
+    function OpenDataSet(const ADataSet: TDataSet): TDataSet;
   strict protected
     FUpdateMode: TTUpdateMode;
 
@@ -184,6 +185,8 @@ type
     function GetDatabaseVersion: String; virtual; abstract;
     function InternalCreateDataSet(
       const ASQL: String; const AFilter: TTFilter): TDataSet; virtual; abstract;
+    function InternalCreateUnidirectionalDataSet(
+      const ASQL: String; const AFilter: TTFilter): TDataSet; virtual;
     function GetInTransaction: Boolean; virtual; abstract;
     function GetSupportTransaction: Boolean; virtual; abstract;
     function CheckExists(
@@ -222,6 +225,8 @@ type
       const ATableMap: TTTableMap; const AEntity: TObject);
 
     function CreateDataSet(
+      const ASQL: String; const AFilter: TTFilter): TDataSet;
+    function CreateUnidirectionalDataSet(
       const ASQL: String; const AFilter: TTFilter): TDataSet;
 
     function Execute(
@@ -438,16 +443,33 @@ begin
     LObserver.TransactionRolledback();
 end;
 
-function TTConnection.CreateDataSet(
+function TTConnection.InternalCreateUnidirectionalDataSet(
   const ASQL: String; const AFilter: TTFilter): TDataSet;
 begin
   result := InternalCreateDataSet(ASQL, AFilter);
+end;
+
+function TTConnection.OpenDataSet(const ADataSet: TDataSet): TDataSet;
+begin
   try
-    result.Open;
+    ADataSet.Open;
   except
-    result.Free;
+    ADataSet.Free;
     raise;
   end;
+  result := ADataSet;
+end;
+
+function TTConnection.CreateDataSet(
+  const ASQL: String; const AFilter: TTFilter): TDataSet;
+begin
+  result := OpenDataSet(InternalCreateDataSet(ASQL, AFilter));
+end;
+
+function TTConnection.CreateUnidirectionalDataSet(
+  const ASQL: String; const AFilter: TTFilter): TDataSet;
+begin
+  result := OpenDataSet(InternalCreateUnidirectionalDataSet(ASQL, AFilter));
 end;
 
 procedure TTConnection.CheckRelations(

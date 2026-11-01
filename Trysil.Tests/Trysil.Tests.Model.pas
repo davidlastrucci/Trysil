@@ -745,6 +745,61 @@ type
     property Version: TTVersion read FVersion;
   end;
 
+{ TTestEagerCustomer - customer with a writable ID, for eager relations }
+
+  [TTable('Customers')]
+  [TSequence('CustomersID')]
+  TTestEagerCustomer = class
+  strict private
+    [TPrimaryKey]
+    [TColumn('ID')]
+    FID: TTPrimaryKey;
+
+    [TColumn('Name')]
+    FName: String;
+
+    [TColumn('Email')]
+    FEmail: String;
+
+    [TVersionColumn]
+    [TColumn('VersionID')]
+    FVersion: TTVersion;
+  public
+    property ID: TTPrimaryKey read FID write FID;
+    property Name: String read FName;
+    property Email: String read FEmail;
+    property Version: TTVersion read FVersion;
+  end;
+
+{ TTestEagerOrder - order whose customer is loaded while it is read }
+
+  [TTable('Orders')]
+  [TSequence('OrdersID')]
+  TTestEagerOrder = class
+  strict private
+    [TPrimaryKey]
+    [TColumn('ID')]
+    FID: TTPrimaryKey;
+
+    [TColumn('CustomerID')]
+    FCustomer: TTestEagerCustomer;
+
+    [TColumn('Amount')]
+    FAmount: Double;
+
+    [TVersionColumn]
+    [TColumn('VersionID')]
+    FVersion: TTVersion;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    property ID: TTPrimaryKey read FID;
+    property Customer: TTestEagerCustomer read FCustomer;
+    property Amount: Double read FAmount;
+    property Version: TTVersion read FVersion;
+  end;
+
 { TTestMissingColumn - maps a column the table does not have }
 
   [TTable('Customers')]
@@ -1536,6 +1591,20 @@ implementation
 
 var
   GDestroyedOwnedOrderReports: Integer;
+
+{ TTestEagerOrder }
+
+constructor TTestEagerOrder.Create;
+begin
+  inherited Create;
+  FCustomer := TTestEagerCustomer.Create;
+end;
+
+destructor TTestEagerOrder.Destroy;
+begin
+  FCustomer.Free;
+  inherited Destroy;
+end;
 
 { TTestOwnedOrderReport }
 

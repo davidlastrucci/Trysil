@@ -583,7 +583,7 @@ var
   LSql: String;
 begin
   LSql := FSyntax.SQL;
-  result := FConnection.CreateDataset(LSql, FSyntax.Filter);
+  result := FConnection.CreateUnidirectionalDataSet(LSql, FSyntax.Filter);
   TTLogger.Instance.LogSyntax(FConnection.ConnectionID, LSql);
 end;
 

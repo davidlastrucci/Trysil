@@ -20,6 +20,7 @@ uses
   Trysil.Types,
   Trysil.Consts,
   Trysil.Metadata,
+  Trysil.Filter,
   Trysil.Generics.Collections,
   Trysil.Context,
   Trysil.Exceptions,
@@ -41,6 +42,12 @@ type
 
     [Test]
     procedure CreateDatasetOnEmptyTableReturnsNoRows;
+
+    [Test]
+    procedure CreateDatasetIsBidirectional;
+
+    [Test]
+    procedure CreateUnidirectionalDataSetIsUnidirectional;
 
     [Test]
     procedure CloneEntityCopiesAllFields;
@@ -128,6 +135,31 @@ begin
   try
     Assert.IsTrue(LDataset.Active, 'Dataset must be open');
     Assert.IsTrue(LDataset.Eof, 'Dataset must be empty');
+  finally
+    LDataset.Free;
+  end;
+end;
+
+procedure TTAbstractContextApiTests.CreateDatasetIsBidirectional;
+var
+  LDataset: TDataset;
+begin
+  LDataset := FContext.CreateDataset('SELECT * FROM Customers');
+  try
+    Assert.IsFalse(LDataset.IsUniDirectional, 'Dataset must be bidirectional');
+  finally
+    LDataset.Free;
+  end;
+end;
+
+procedure TTAbstractContextApiTests.CreateUnidirectionalDataSetIsUnidirectional;
+var
+  LDataset: TDataset;
+begin
+  LDataset := Connection.CreateUnidirectionalDataSet(
+    'SELECT * FROM Customers', TTFilter.Empty);
+  try
+    Assert.IsTrue(LDataset.IsUniDirectional, 'Dataset must be unidirectional');
   finally
     LDataset.Free;
   end;

@@ -40,6 +40,16 @@ type
 { TTAbstractLazyTests }
 
   TTAbstractLazyTests = class(TTAbstractBaseTests)
+  strict private
+    const EagerOrderCount: Integer = 120;
+  strict private
+    function InsertEagerCustomer(const AName: String): TTPrimaryKey;
+    procedure InsertEagerOrders(
+      const AFirstCustomerID: TTPrimaryKey;
+      const ASecondCustomerID: TTPrimaryKey);
+    procedure CheckEagerOrders(
+      const AList: TTList<TTestEagerOrder>;
+      const AFirstCustomerID: TTPrimaryKey);
   public
     [Test]
     procedure LazyEntityLoadsOnFirstAccess;
@@ -79,6 +89,9 @@ type
 
     [Test]
     procedure ANilAssignedBeforeLoadingClearsTheRelation;
+
+    [Test]
+    procedure AnEagerRelationLoadsWhileTheOuterReaderIsOpen;
   end;
 
 implementation
@@ -563,6 +576,75 @@ begin
     end;
   finally
     LFreshContext.Free;
+  end;
+end;
+
+function TTAbstractLazyTests.InsertEagerCustomer(
+  const AName: String): TTPrimaryKey;
+var
+  LCustomer: TTestCustomer;
+begin
+  LCustomer := FContext.CreateEntity<TTestCustomer>();
+  LCustomer.Name := AName;
+  LCustomer.Email := Format('%s@example.com', [AName.ToLower]);
+  FContext.Insert<TTestCustomer>(LCustomer);
+  result := LCustomer.ID;
+end;
+
+procedure TTAbstractLazyTests.InsertEagerOrders(
+  const AFirstCustomerID: TTPrimaryKey;
+  const ASecondCustomerID: TTPrimaryKey);
+var
+  LIndex: Integer;
+  LOrder: TTestOrder;
+begin
+  for LIndex := 1 to EagerOrderCount do
+  begin
+    LOrder := FContext.CreateEntity<TTestOrder>();
+    if Odd(LIndex) then
+      LOrder.CustomerID := AFirstCustomerID
+    else
+      LOrder.CustomerID := ASecondCustomerID;
+    LOrder.Amount := LIndex;
+    FContext.Insert<TTestOrder>(LOrder);
+  end;
+end;
+
+procedure TTAbstractLazyTests.CheckEagerOrders(
+  const AList: TTList<TTestEagerOrder>;
+  const AFirstCustomerID: TTPrimaryKey);
+var
+  LOrder: TTestEagerOrder;
+begin
+  Assert.AreEqual<Integer>(EagerOrderCount, AList.Count,
+    'Every order must be read past the nested customer reads');
+  for LOrder in AList do
+    if LOrder.Customer.ID = AFirstCustomerID then
+      Assert.AreEqual('EagerFirst', LOrder.Customer.Name)
+    else
+      Assert.AreEqual('EagerSecond', LOrder.Customer.Name);
+end;
+
+procedure TTAbstractLazyTests.AnEagerRelationLoadsWhileTheOuterReaderIsOpen;
+var
+  LFirstID: TTPrimaryKey;
+  LSecondID: TTPrimaryKey;
+  LList: TTList<TTestEagerOrder>;
+begin
+  LFirstID := InsertEagerCustomer('EagerFirst');
+  LSecondID := InsertEagerCustomer('EagerSecond');
+  FContext.RunInTransaction(
+    procedure
+    begin
+      InsertEagerOrders(LFirstID, LSecondID);
+    end);
+
+  LList := TTList<TTestEagerOrder>.Create;
+  try
+    FContext.SelectAll<TTestEagerOrder>(LList);
+    CheckEagerOrders(LList, LFirstID);
+  finally
+    LList.Free;
   end;
 end;
 

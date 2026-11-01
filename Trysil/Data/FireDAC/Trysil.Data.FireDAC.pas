@@ -155,6 +155,8 @@ type
   strict protected
     function InternalCreateDataSet(
       const ASQL: String; const AFilter: TTFilter): TDataSet; override;
+    function InternalCreateUnidirectionalDataSet(
+      const ASQL: String; const AFilter: TTFilter): TDataSet; override;
     function GetInTransaction: Boolean; override;
     function GetSupportTransaction: Boolean; override;
     function GetConnectionName: String; override;
@@ -631,6 +633,14 @@ begin
     raise;
   end;
   result := LDataSet;
+end;
+
+function TTFireDACConnection.InternalCreateUnidirectionalDataSet(
+  const ASQL: String; const AFilter: TTFilter): TDataSet;
+begin
+  result := InternalCreateDataSet(ASQL, AFilter);
+  if result is TFDQuery then
+    TFDQuery(result).FetchOptions.Unidirectional := True;
 end;
 
 class procedure TTFireDACConnection.UnregisterConnection(const AName: String);
