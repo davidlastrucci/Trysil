@@ -2,7 +2,7 @@
 
 Notable changes to Trysil, in reverse chronological order.
 
-`## 2.0.0` is the released version. The sections below it, down to
+`## 2.1.0` and `## 2.0.0` are released versions. The sections below `## 2.0.0`, down to
 `## JOIN Queries & Raw Select`, are development windows between 1.0.0 and 2.0.0,
 in the same order: they were never tagged, so they carry a title and no version
 number. From `## Change Tracking & Soft Delete` down, the sections are the ones
@@ -11,9 +11,9 @@ newest win** - `includeDeleted`, for one, was read from the select payload in a
 window below and is decided server-side from 2.0.0, and both entries are true of
 their moment.
 
-## In development - HTTP Bind Addresses
+## 2.1.0 - OpenAPI, Registered Entity Events & Setup
 
-Not released yet: what this section describes is on `master` and in no tag.
+**Minor release on top of 2.0.0.** It adds the `Trysil.OpenAPI` package, entity events registered instead of declared with an attribute, generic CRUD readers and writers for the HTTP server, and a setup program. Upgrading from 2.0.0 can still require a change in a few places, each marked in its title: two compilation breaks, in the constructor of an event and in a class derived from `TLengthAttribute`; the packages named without the Delphi version, which changes the `requires` clause of a package of your own and the runtime package list of a project; a routed method whose parameters cannot serve its route, refused at registration; and the demo translation units, split by package. Two more are seen by a client of the server and are not counted.
 
 ### ORM
 
@@ -70,6 +70,10 @@ Not released yet: what this section describes is on `master` and in no tag.
 ### Build
 
 - **Breaking for a package that requires Trysil: the packages are named without the Delphi version.** `Trysil370.dpk` is `Trysil.dpk`, `Trysil.Http370.dproj` is `Trysil.Http.dproj`, and so on for the eleven packages in the five sets; the version goes into the LIB suffix, set explicitly in each set (`{$LIBSUFFIX '370'}` and `<DllSuffix>370</DllSuffix>`, the same for `260` to `290`), so the `.bpl` keeps its name - `Trysil370.bpl` - and an application already deployed with runtime packages finds the files it found before. The `.dcp` loses the version: a package of your own writes `requires Trysil, Trysil.JSon;` instead of `requires Trysil370, Trysil.JSon370;`, and a project built with runtime packages lists `Trysil` instead of `Trysil370`. The group project is `TrysilGroup.groupproj`, since `Trysil.groupproj` would sit next to `Trysil.dproj`.
+
+### Setup
+
+- **New: a setup program installs Trysil on the Delphi versions it finds.** `Trysil.Setup.exe`, downloaded from [www.lastrucci.net](https://www.lastrucci.net/trysil/Trysil.Setup.exe), finds Delphi 10.3 to 13 from the registry, downloads the latest release from GitHub - or `master`, if asked - into `%LOCALAPPDATA%\Programs\Trysil` by default, builds the packages and the Expert with MSBuild, and writes the `Trysil` variable and the library path in the settings of each IDE. On an edition that cannot build from the command line it points the library path at the sources instead. It registers itself in the installed apps of Windows, from where it updates and uninstalls Trysil. It runs as the user, writes only under `HKEY_CURRENT_USER`, and does not start while Delphi is open. It is not signed, so Windows SmartScreen asks for a confirmation the first time. The source is in `Trysil.Setup`.
 
 ## 2.0.0 - Audit Integrity, Directional JSon Attributes & Fail-Safe Startup
 
