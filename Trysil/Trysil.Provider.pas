@@ -99,6 +99,19 @@ type
       const AID: TTPrimaryKey);
     procedure GetAndMapObject(const AObject: TObject; const AID: TTPrimaryKey);
 
+    function GetMemberObject(
+      const AMember: TTRttiMember; const AInstance: TObject): TObject;
+    procedure CloneColumn(
+      const AColumnMap: TTColumnMap;
+      const AClone: TObject;
+      const AOriginal: TObject);
+    procedure CloneClassColumn(
+      const AColumnMap: TTColumnMap;
+      const AClone: TObject;
+      const AOriginal: TObject);
+    procedure CloneMappedColumns(
+      const AClone: TObject; const AOriginal: TObject);
+
     function GetPrimaryKey(
       const ATablemap: TTTableMap; const AReader: TTReader): TTPrimaryKey;
     function FindColumnByName(
@@ -414,11 +427,7 @@ begin
     try
       MapEntity(LTableMap, nil, result);
       for LColumnMap in LTableMap.Columns do
-        if LColumnMap.Member.IsClass then
-          LColumnMap.Member.CloneLazyID(result, AEntity)
-        else
-          LColumnMap.Member.SetValue(
-            result, LColumnMap.Member.GetValue(AEntity));
+        CloneColumn(LColumnMap, result, AEntity);
 
       for LDetailColumnMap in LTableMap.DetailColumns do
         LDetailColumnMap.Member.CloneLazyID(result, AEntity);
@@ -430,6 +439,58 @@ begin
   finally
     LRttiEntity.Free;
   end;
+end;
+
+function TTProvider.GetMemberObject(
+  const AMember: TTRttiMember; const AInstance: TObject): TObject;
+var
+  LValue: TTValue;
+begin
+  result := nil;
+  LValue := AMember.GetValue(AInstance);
+  if LValue.IsType<TObject>() then
+    result := LValue.AsType<TObject>();
+end;
+
+procedure TTProvider.CloneColumn(
+  const AColumnMap: TTColumnMap;
+  const AClone: TObject;
+  const AOriginal: TObject);
+begin
+  if AColumnMap.Member.IsClass then
+    CloneClassColumn(AColumnMap, AClone, AOriginal)
+  else
+    AColumnMap.Member.SetValue(
+      AClone, AColumnMap.Member.GetValue(AOriginal));
+end;
+
+procedure TTProvider.CloneClassColumn(
+  const AColumnMap: TTColumnMap;
+  const AClone: TObject;
+  const AOriginal: TObject);
+var
+  LCloneObject: TObject;
+  LOriginalObject: TObject;
+begin
+  LCloneObject := GetMemberObject(AColumnMap.Member, AClone);
+  LOriginalObject := GetMemberObject(AColumnMap.Member, AOriginal);
+  if Assigned(LCloneObject) and
+    Assigned(LOriginalObject) and
+    (not TTRttiLazy.IsLazy(LOriginalObject)) then
+    CloneMappedColumns(LCloneObject, LOriginalObject)
+  else
+    AColumnMap.Member.CloneLazyID(AClone, AOriginal);
+end;
+
+procedure TTProvider.CloneMappedColumns(
+  const AClone: TObject; const AOriginal: TObject);
+var
+  LTableMap: TTTableMap;
+  LColumnMap: TTColumnMap;
+begin
+  LTableMap := TTMapper.Instance.Load(AOriginal.ClassInfo);
+  for LColumnMap in LTableMap.Columns do
+    CloneColumn(LColumnMap, AClone, AOriginal);
 end;
 
 function TTProvider.GetValue(

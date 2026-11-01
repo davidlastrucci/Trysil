@@ -50,6 +50,9 @@ type
     procedure CheckEagerOrders(
       const AList: TTList<TTestEagerOrder>;
       const AFirstCustomerID: TTPrimaryKey);
+    procedure UpdateEagerOrdersInSession;
+    procedure CheckOrderCustomer(
+      const AOrderID: TTPrimaryKey; const ACustomerID: TTPrimaryKey);
   public
     [Test]
     procedure LazyEntityLoadsOnFirstAccess;
@@ -92,6 +95,12 @@ type
 
     [Test]
     procedure AnEagerRelationLoadsWhileTheOuterReaderIsOpen;
+
+    [Test]
+    procedure ACloneCarriesTheDataOfAnEagerRelation;
+
+    [Test]
+    procedure ASessionUpdateKeepsTheKeyOfAnEagerRelation;
   end;
 
 implementation
@@ -646,6 +655,83 @@ begin
   finally
     LList.Free;
   end;
+end;
+
+procedure TTAbstractLazyTests.ACloneCarriesTheDataOfAnEagerRelation;
+var
+  LCustomerID: TTPrimaryKey;
+  LOrder: TTestOrder;
+  LEagerOrder: TTestEagerOrder;
+  LClone: TTestEagerOrder;
+begin
+  LCustomerID := InsertEagerCustomer('EagerClone');
+  LOrder := FContext.CreateEntity<TTestOrder>();
+  LOrder.CustomerID := LCustomerID;
+  FContext.Insert<TTestOrder>(LOrder);
+
+  LEagerOrder := FContext.Get<TTestEagerOrder>(LOrder.ID);
+  LClone := FContext.CloneEntity<TTestEagerOrder>(LEagerOrder);
+  try
+    Assert.AreEqual<TTPrimaryKey>(LCustomerID, LClone.Customer.ID);
+    Assert.AreEqual('EagerClone', LClone.Customer.Name);
+    Assert.AreNotSame(LEagerOrder.Customer, LClone.Customer);
+  finally
+    FContext.FreeClone<TTestEagerOrder>(LClone);
+  end;
+end;
+
+procedure TTAbstractLazyTests.UpdateEagerOrdersInSession;
+var
+  LList: TTList<TTestEagerOrder>;
+  LSession: TTSession<TTestEagerOrder>;
+begin
+  LList := TTList<TTestEagerOrder>.Create;
+  try
+    FContext.SelectAll<TTestEagerOrder>(LList);
+    LSession := FContext.CreateSession<TTestEagerOrder>(LList);
+    try
+      LSession.Update(LSession.Entities[0]);
+      LSession.ApplyChanges;
+    finally
+      LSession.Free;
+    end;
+  finally
+    LList.Free;
+  end;
+end;
+
+procedure TTAbstractLazyTests.CheckOrderCustomer(
+  const AOrderID: TTPrimaryKey; const ACustomerID: TTPrimaryKey);
+var
+  LFreshContext: TTContext;
+  LOrder: TTestOrder;
+begin
+  LFreshContext := TTContext.Create(Connection, False);
+  try
+    LOrder := LFreshContext.Get<TTestOrder>(AOrderID);
+    try
+      Assert.AreEqual<Integer>(ACustomerID, LOrder.CustomerID,
+        'Updating a clone must write back the key of its eager relation');
+    finally
+      LFreshContext.FreeEntity<TTestOrder>(LOrder);
+    end;
+  finally
+    LFreshContext.Free;
+  end;
+end;
+
+procedure TTAbstractLazyTests.ASessionUpdateKeepsTheKeyOfAnEagerRelation;
+var
+  LCustomerID: TTPrimaryKey;
+  LOrder: TTestOrder;
+begin
+  LCustomerID := InsertEagerCustomer('EagerSession');
+  LOrder := FContext.CreateEntity<TTestOrder>();
+  LOrder.CustomerID := LCustomerID;
+  FContext.Insert<TTestOrder>(LOrder);
+
+  UpdateEagerOrdersInSession;
+  CheckOrderCustomer(LOrder.ID, LCustomerID);
 end;
 
 end.
