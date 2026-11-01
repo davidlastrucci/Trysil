@@ -17,6 +17,13 @@ asks you to close it before it starts.
 The setup runs as the user, without administrator rights, and writes only
 under `HKEY_CURRENT_USER`. Its source is in `Trysil.Setup` in the repository.
 
+If you prefer not to run a downloaded executable, build the setup yourself: in
+a clone of the repository open `Trysil.Setup\Trysil.Setup.dproj` with Delphi
+13, build it for Win32 in the Release configuration and run
+`Trysil.Setup\Win32\Release\Trysil.Setup.exe`. It needs nothing but the
+repository, no Trysil package. An executable you build yourself does not
+trigger the SmartScreen warning.
+
 !!! note "The setup is not signed"
     The first time you run it, Windows SmartScreen shows *Windows protected
     your PC*. Click **More info**, then **Run anyway**.
@@ -115,6 +122,21 @@ folder and the library path lists the source folders.
 The `Trysil` variable is set for both the 32-bit and the 64-bit IDE. Entries of
 the library path that use `$(Trysil)` are replaced, so running the setup again
 does not duplicate them.
+
+!!! warning "A Trysil configured by hand"
+    The setup owns the `Trysil` variable, the library path entries that use
+    `$(Trysil)` and the `Trysil` entry of the IDE experts. If you set them up
+    by hand, for example for a clone of the repository you build yourself, the
+    installation replaces them with its own, and uninstalling removes them,
+    yours included. To go back to your configuration, set them again after
+    uninstalling.
+
+!!! note "Custom IDE profiles"
+    The setup configures the standard profile of each IDE, under
+    `HKEY_CURRENT_USER\Software\Embarcadero\BDS`. A profile started with
+    `bds -r <name>` lives under a key of its own, and the setup leaves it
+    alone: there, set the `Trysil` variable, the library path and the Expert
+    by hand, as described in [Installation](installation.md).
 
 Finally the setup registers Trysil in the installed apps of Windows, with the
 choices you made.
