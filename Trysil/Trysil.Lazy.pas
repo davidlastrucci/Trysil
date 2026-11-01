@@ -73,7 +73,7 @@ type
 { TTLazyList<T> }
 
 {$RTTI EXPLICIT
-  METHODS([vcProtected, vcPrivate])}
+  METHODS([vcPublished, vcPublic, vcProtected, vcPrivate])}
   TTLazyList<T: class> = class(TTAbstractLazy<T>)
   strict private
     FList: TTObjectList<T>;
