@@ -13,6 +13,8 @@ their moment.
 
 ## 2.1.0 - OpenAPI, Registered Entity Events & Setup
 
+*2026-11-01*
+
 **Minor release on top of 2.0.0.** It adds the `Trysil.OpenAPI` package, entity events registered instead of declared with an attribute, generic CRUD readers and writers for the HTTP server, and a setup program. Upgrading from 2.0.0 can still require a change in a few places, each marked in its title: two compilation breaks, in the constructor of an event and in a class derived from `TLengthAttribute`; the packages named without the Delphi version, which changes the `requires` clause of a package of your own and the runtime package list of a project; a routed method whose parameters cannot serve its route, refused at registration; and the demo translation units, split by package. Two more are seen by a client of the server and are not counted.
 
 ### ORM
