@@ -202,6 +202,7 @@ resourcestring
   SVersionsKey = 'Delphi versions';
   SExpertKey = 'Trysil Expert';
   SLatestReleaseValue = 'Latest release';
+  SLatestReleaseVersion = 'Latest release %s';
   SMasterValue = 'Development version (master)';
   SInstalledValue = 'Trysil %s';
   SYesValue = 'Yes';

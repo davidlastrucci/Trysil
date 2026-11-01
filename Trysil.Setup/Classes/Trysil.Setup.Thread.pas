@@ -26,6 +26,7 @@ uses
   Trysil.Setup.Delphi,
   Trysil.Setup.Detector,
   Trysil.Setup.Folder,
+  Trysil.Setup.Release,
   Trysil.Setup.Installation,
   Trysil.Setup.Installer;
 
@@ -78,6 +79,21 @@ type
     constructor Create(
       const ALog: TTSetupLog;
       const AVersions: TObjectList<TTDelphiVersion>);
+  end;
+
+{ TTReleaseThread }
+
+  TTReleaseThread = class(TThread)
+  strict private
+    FVersion: String;
+
+    function FetchVersion(const ALog: TTSetupLog): String;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create;
+
+    property Version: String read FVersion;
   end;
 
 implementation
@@ -182,6 +198,44 @@ begin
     end;
   finally
     LDetector.Free;
+  end;
+end;
+
+{ TTReleaseThread }
+
+constructor TTReleaseThread.Create;
+begin
+  inherited Create(True);
+  FVersion := String.Empty;
+end;
+
+function TTReleaseThread.FetchVersion(const ALog: TTSetupLog): String;
+var
+  LDownloader: TTReleaseDownloader;
+begin
+  LDownloader := TTReleaseDownloader.Create(ALog, False);
+  try
+    LDownloader.Fetch;
+    result := LDownloader.Version;
+  finally
+    LDownloader.Free;
+  end;
+end;
+
+procedure TTReleaseThread.Execute;
+var
+  LLog: TTSetupLog;
+begin
+  LLog := TTSetupLog.Create;
+  try
+    try
+      FVersion := FetchVersion(LLog);
+    except
+      on Exception do
+        FVersion := String.Empty;
+    end;
+  finally
+    LLog.Free;
   end;
 end;
 

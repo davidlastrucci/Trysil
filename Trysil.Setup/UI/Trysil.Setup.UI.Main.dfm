@@ -91,7 +91,7 @@ object TSetupForm: TTSetupForm
       Left = 20
       Top = 104
       Width = 160
-      Height = 180
+      Height = 214
       BevelOuter = bvNone
       ParentBackground = False
       ParentColor = True
@@ -140,9 +140,52 @@ object TSetupForm: TTSetupForm
           ParentFont = False
         end
       end
-      object FolderStepPanel: TPanel
+      object ReleaseStepPanel: TPanel
         Left = 0
         Top = 34
+        Width = 160
+        Height = 34
+        Align = alTop
+        BevelOuter = bvNone
+        ParentBackground = False
+        ParentColor = True
+        ShowCaption = False
+        TabOrder = 5
+        object ReleaseStepBadgeLabel: TLabel
+          Left = 0
+          Top = 7
+          Width = 20
+          Height = 20
+          Alignment = taCenter
+          AutoSize = False
+          Color = 2958881
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = 10392715
+          Font.Height = -11
+          Font.Name = 'Segoe UI Symbol'
+          Font.Style = [fsBold]
+          ParentColor = False
+          ParentFont = False
+          Transparent = False
+          Layout = tlCenter
+        end
+        object ReleaseStepLabel: TLabel
+          Left = 30
+          Top = 9
+          Width = 38
+          Height = 15
+          Caption = 'Version'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = 10392715
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = []
+          ParentFont = False
+        end
+      end
+      object FolderStepPanel: TPanel
+        Left = 0
+        Top = 68
         Width = 160
         Height = 34
         Align = alTop
@@ -185,7 +228,7 @@ object TSetupForm: TTSetupForm
       end
       object VersionsStepPanel: TPanel
         Left = 0
-        Top = 68
+        Top = 102
         Width = 160
         Height = 34
         Align = alTop
@@ -228,7 +271,7 @@ object TSetupForm: TTSetupForm
       end
       object SummaryStepPanel: TPanel
         Left = 0
-        Top = 102
+        Top = 136
         Width = 160
         Height = 34
         Align = alTop
@@ -271,7 +314,7 @@ object TSetupForm: TTSetupForm
       end
       object InstallationStepPanel: TPanel
         Left = 0
-        Top = 136
+        Top = 170
         Width = 160
         Height = 34
         Align = alTop
@@ -570,9 +613,54 @@ object TSetupForm: TTSetupForm
             end
           end
         end
-        object MasterCardPanel: TPanel
+      end
+      object ReleasePagePanel: TPanel
+        AlignWithMargins = True
+        Left = 32
+        Top = 26
+        Width = 456
+        Height = 367
+        Margins.Left = 32
+        Margins.Top = 26
+        Margins.Right = 32
+        Margins.Bottom = 28
+        BevelOuter = bvNone
+        ParentBackground = False
+        ParentColor = True
+        ShowCaption = False
+        TabOrder = 6
+        DesignSize = (
+          456
+          367)
+        object ReleaseTitleLabel: TLabel
           Left = 0
-          Top = 282
+          Top = 0
+          Width = 263
+          Height = 28
+          Caption = 'What do you want to install?'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -20
+          Font.Name = 'Segoe UI Semibold'
+          Font.Style = []
+          ParentFont = False
+        end
+        object ReleaseSubtitleLabel: TLabel
+          Left = 0
+          Top = 38
+          Width = 158
+          Height = 15
+          Caption = 'Choose the version of Trysil.'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = 6509899
+          Font.Height = -12
+          Font.Name = 'Segoe UI'
+          Font.Style = []
+          ParentFont = False
+        end
+        object LatestCardPanel: TPanel
+          Left = 0
+          Top = 68
           Width = 456
           Height = 62
           Anchors = [akLeft, akTop, akRight]
@@ -584,7 +672,66 @@ object TSetupForm: TTSetupForm
           Padding.Bottom = 1
           ParentBackground = False
           ShowCaption = False
-          TabOrder = 3
+          TabOrder = 0
+          object LatestContentPanel: TPanel
+            Left = 1
+            Top = 1
+            Width = 454
+            Height = 60
+            Align = alClient
+            BevelOuter = bvNone
+            Color = clWhite
+            ParentBackground = False
+            ShowCaption = False
+            TabOrder = 0
+            object LatestDescriptionLabel: TLabel
+              Left = 31
+              Top = 33
+              Width = 410
+              Height = 15
+              Anchors = [akLeft, akTop, akRight]
+              AutoSize = False
+              Caption = 'The stable version, recommended.'
+              EllipsisPosition = epEndEllipsis
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = 6509899
+              Font.Height = -12
+              Font.Name = 'Segoe UI'
+              Font.Style = []
+              ParentFont = False
+            end
+            object LatestReleaseRadioButton: TRadioButton
+              Left = 13
+              Top = 10
+              Width = 420
+              Height = 19
+              Caption = 'Latest release'
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clWindowText
+              Font.Height = -13
+              Font.Name = 'Segoe UI'
+              Font.Style = [fsBold]
+              ParentFont = False
+              TabOrder = 0
+              OnClick = ReleaseRadioButtonClick
+            end
+          end
+        end
+        object MasterCardPanel: TPanel
+          Left = 0
+          Top = 134
+          Width = 456
+          Height = 62
+          Anchors = [akLeft, akTop, akRight]
+          BevelOuter = bvNone
+          Color = 15460325
+          Padding.Left = 1
+          Padding.Top = 1
+          Padding.Right = 1
+          Padding.Bottom = 1
+          ParentBackground = False
+          ShowCaption = False
+          TabOrder = 1
           object MasterContentPanel: TPanel
             Left = 1
             Top = 1
@@ -599,9 +746,12 @@ object TSetupForm: TTSetupForm
             object MasterDescriptionLabel: TLabel
               Left = 31
               Top = 33
-              Width = 145
+              Width = 410
               Height = 15
-              Caption = 'Instead of the latest release.'
+              Anchors = [akLeft, akTop, akRight]
+              AutoSize = False
+              Caption = 'The latest changes, not released yet.'
+              EllipsisPosition = epEndEllipsis
               Font.Charset = DEFAULT_CHARSET
               Font.Color = 6509899
               Font.Height = -12
@@ -609,12 +759,12 @@ object TSetupForm: TTSetupForm
               Font.Style = []
               ParentFont = False
             end
-            object MasterCheckbox: TCheckBox
+            object MasterRadioButton: TRadioButton
               Left = 13
               Top = 10
               Width = 420
               Height = 19
-              Caption = 'Install the development version (master)'
+              Caption = 'Development version (master)'
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clWindowText
               Font.Height = -13
@@ -622,6 +772,7 @@ object TSetupForm: TTSetupForm
               Font.Style = [fsBold]
               ParentFont = False
               TabOrder = 0
+              OnClick = ReleaseRadioButtonClick
             end
           end
         end

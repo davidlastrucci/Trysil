@@ -58,6 +58,9 @@ type
     ModeStepPanel: TPanel;
     ModeStepBadgeLabel: TLabel;
     ModeStepLabel: TLabel;
+    ReleaseStepPanel: TPanel;
+    ReleaseStepBadgeLabel: TLabel;
+    ReleaseStepLabel: TLabel;
     FolderStepPanel: TPanel;
     FolderStepBadgeLabel: TLabel;
     FolderStepLabel: TLabel;
@@ -87,9 +90,16 @@ type
     UninstallContentPanel: TPanel;
     ModeUninstallRadioButton: TRadioButton;
     UninstallDescriptionLabel: TLabel;
+    ReleasePagePanel: TPanel;
+    ReleaseTitleLabel: TLabel;
+    ReleaseSubtitleLabel: TLabel;
+    LatestCardPanel: TPanel;
+    LatestContentPanel: TPanel;
+    LatestReleaseRadioButton: TRadioButton;
+    LatestDescriptionLabel: TLabel;
     MasterCardPanel: TPanel;
     MasterContentPanel: TPanel;
-    MasterCheckbox: TCheckBox;
+    MasterRadioButton: TRadioButton;
     MasterDescriptionLabel: TLabel;
     FolderPagePanel: TPanel;
     FolderTitleLabel: TLabel;
@@ -193,6 +203,7 @@ type
     procedure FolderButtonClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure ModeRadioButtonClick(Sender: TObject);
+    procedure ReleaseRadioButtonClick(Sender: TObject);
     procedure SummaryListViewCustomDrawItem(
       Sender: TCustomListView;
       Item: TListItem;
@@ -226,14 +237,18 @@ type
     FSteps: TObjectList<TTSetupStep>;
     FStepPages: TArray<TPanel>;
     FModeCards: TObjectList<TTSetupCard>;
+    FReleaseCards: TObjectList<TTSetupCard>;
     FVersionCards: TObjectList<TTVersionCard>;
     FVersionRows: TObjectList<TTVersionRow>;
     FStarted: Boolean;
     FRunning: Boolean;
     FCompleted: Boolean;
+    FReleaseThread: TTReleaseThread;
+    FLatestVersion: String;
 
     procedure AddSteps;
     procedure AddModeCards;
+    procedure AddReleaseCards;
     procedure AddVersionCards;
     procedure AddVersionRows;
     procedure AddPages;
@@ -241,7 +256,10 @@ type
     procedure DescribeInstalledModes;
     procedure DescribeNotInstalledModes;
     procedure InitializeMode;
-    procedure EnableDisableMaster;
+    procedure InitializeRelease;
+    procedure StartReleaseFetch;
+    procedure ReleaseTerminate(Sender: TObject);
+    function IsReleaseMode: Boolean;
     function MasterSelected: Boolean;
     function IsIdle: Boolean;
     function CurrentStep: Integer;
@@ -327,19 +345,25 @@ begin
   FOptions := nil;
   FSteps := TObjectList<TTSetupStep>.Create;
   FModeCards := TObjectList<TTSetupCard>.Create;
+  FReleaseCards := TObjectList<TTSetupCard>.Create;
   FVersionCards := TObjectList<TTVersionCard>.Create;
   FVersionRows := TObjectList<TTVersionRow>.Create;
   FStarted := False;
   FRunning := False;
   FCompleted := False;
+  FReleaseThread := nil;
+  FLatestVersion := String.Empty;
 end;
 
 destructor TTSetupForm.Destroy;
 begin
+  if Assigned(FReleaseThread) then
+    FReleaseThread.OnTerminate := nil;
   if Assigned(FOptions) then
     FOptions.Free;
   FVersionRows.Free;
   FVersionCards.Free;
+  FReleaseCards.Free;
   FModeCards.Free;
   FSteps.Free;
   FVersions.Free;
@@ -362,10 +386,13 @@ begin
     GetEnvironmentVariable(SLocalAppDataVariable), SDefaultFolder);
   AddSteps;
   AddModeCards;
+  AddReleaseCards;
   AddVersionCards;
   AddVersionRows;
   AddPages;
   InitializeMode;
+  InitializeRelease;
+  StartReleaseFetch;
   FWizard.Start;
   RefreshView;
 end;
@@ -374,6 +401,8 @@ procedure TTSetupForm.AddSteps;
 begin
   FSteps.Add(TTSetupStep.Create(
     ModeStepPanel, ModeStepBadgeLabel, ModeStepLabel));
+  FSteps.Add(TTSetupStep.Create(
+    ReleaseStepPanel, ReleaseStepBadgeLabel, ReleaseStepLabel));
   FSteps.Add(TTSetupStep.Create(
     FolderStepPanel, FolderStepBadgeLabel, FolderStepLabel));
   FSteps.Add(TTSetupStep.Create(
@@ -384,6 +413,7 @@ begin
     InstallationStepPanel, InstallationStepBadgeLabel, InstallationStepLabel));
   FStepPages := [
     ModePagePanel,
+    ReleasePagePanel,
     FolderPagePanel,
     VersionsPagePanel,
     SummaryPagePanel,
@@ -407,6 +437,20 @@ begin
     UninstallContentPanel,
     ModeUninstallRadioButton,
     UninstallDescriptionLabel));
+end;
+
+procedure TTSetupForm.AddReleaseCards;
+begin
+  FReleaseCards.Add(TTSetupCard.Create(
+    LatestCardPanel,
+    LatestContentPanel,
+    LatestReleaseRadioButton,
+    LatestDescriptionLabel));
+  FReleaseCards.Add(TTSetupCard.Create(
+    MasterCardPanel,
+    MasterContentPanel,
+    MasterRadioButton,
+    MasterDescriptionLabel));
 end;
 
 procedure TTSetupForm.AddVersionCards;
@@ -472,6 +516,8 @@ begin
   FWizard.AddPage(TTWizardPage.Create(
     ModePagePanel, ModePagePanel, nil, nil));
   FWizard.AddPage(TTWizardPage.Create(
+    ReleasePagePanel, LatestReleaseRadioButton, IsReleaseMode, nil));
+  FWizard.AddPage(TTWizardPage.Create(
     FolderPagePanel, FolderTextbox, IsInstallMode, CheckFolder));
   FWizard.AddPage(TTWizardPage.Create(
     VersionsPagePanel, Version1Checkbox, IsInstallMode, CheckVersions));
@@ -523,18 +569,42 @@ begin
     DescribeInstalledModes
   else
     DescribeNotInstalledModes;
-  EnableDisableMaster;
 end;
 
-procedure TTSetupForm.EnableDisableMaster;
+procedure TTSetupForm.InitializeRelease;
+var
+  LCard: TTSetupCard;
 begin
-  MasterCheckbox.Enabled := not ModeUninstallRadioButton.Checked;
-  MasterDescriptionLabel.Enabled := MasterCheckbox.Enabled;
+  LatestReleaseRadioButton.Checked := True;
+  for LCard in FReleaseCards do
+    LCard.Select(LatestReleaseRadioButton);
+end;
+
+procedure TTSetupForm.StartReleaseFetch;
+begin
+  FReleaseThread := TTReleaseThread.Create;
+  FReleaseThread.FreeOnTerminate := True;
+  FReleaseThread.OnTerminate := ReleaseTerminate;
+  FReleaseThread.Start;
+end;
+
+procedure TTSetupForm.ReleaseTerminate(Sender: TObject);
+begin
+  FReleaseThread := nil;
+  FLatestVersion := TTReleaseThread(Sender).Version;
+  if not FLatestVersion.IsEmpty then
+    LatestReleaseRadioButton.Caption :=
+      Format(SLatestReleaseVersion, [FLatestVersion]);
+end;
+
+function TTSetupForm.IsReleaseMode: Boolean;
+begin
+  result := not ModeUninstallRadioButton.Checked;
 end;
 
 function TTSetupForm.MasterSelected: Boolean;
 begin
-  result := MasterCheckbox.Enabled and MasterCheckbox.Checked;
+  result := IsReleaseMode and MasterRadioButton.Checked;
 end;
 
 function TTSetupForm.IsIdle: Boolean;
@@ -554,11 +624,16 @@ begin
 end;
 
 function TTSetupForm.IsStepVisible(const AIndex: Integer): Boolean;
+var
+  LPage: TPanel;
 begin
-  result :=
-    IsInstallMode or (
-      (FStepPages[AIndex] <> FolderPagePanel) and
-      (FStepPages[AIndex] <> VersionsPagePanel));
+  LPage := FStepPages[AIndex];
+  if LPage = ReleasePagePanel then
+    result := IsReleaseMode
+  else if (LPage = FolderPagePanel) or (LPage = VersionsPagePanel) then
+    result := IsInstallMode
+  else
+    result := True;
 end;
 
 function TTSetupForm.StepState(
@@ -822,6 +897,8 @@ function TTSetupForm.ReleaseValue: String;
 begin
   if MasterSelected then
     result := SMasterValue
+  else if not FLatestVersion.IsEmpty then
+    result := Format(SLatestReleaseVersion, [FLatestVersion])
   else
     result := SLatestReleaseValue;
 end;
@@ -1100,8 +1177,15 @@ var
 begin
   for LCard in FModeCards do
     LCard.Select(Sender);
-  EnableDisableMaster;
   RefreshSteps;
+end;
+
+procedure TTSetupForm.ReleaseRadioButtonClick(Sender: TObject);
+var
+  LCard: TTSetupCard;
+begin
+  for LCard in FReleaseCards do
+    LCard.Select(Sender);
 end;
 
 procedure TTSetupForm.SummaryListViewCustomDrawItem(
