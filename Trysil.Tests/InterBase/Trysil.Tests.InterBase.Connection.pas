@@ -16,6 +16,7 @@ uses
   System.SysUtils,
 
   Trysil.Data,
+  Trysil.Data.FireDAC,
   Trysil.Data.FireDAC.ConnectionPool,
   Trysil.Data.FireDAC.InterBase,
 
@@ -35,6 +36,7 @@ type
     class procedure DropSequences;
     class procedure CreateSequences;
     class procedure CreateTables;
+    class procedure RegisterConnection;
   public
     class procedure Initialize;
     class procedure Finalize;
@@ -228,17 +230,28 @@ begin
   FConnection.Execute(DDL_SHIFTS);
 end;
 
+class procedure TTInterBaseTestConnection.RegisterConnection;
+var
+  LParameters: TTFireDACConnectionParameters;
+begin
+  LParameters := TTFireDACConnectionParameters.Create(
+    'InterBase',
+    TTTestConfig.GetDatabaseParam('InterBase', 'host'),
+    StrToIntDef(TTTestConfig.GetDatabaseParam('InterBase', 'port'), 0),
+    TTTestConfig.GetDatabaseParam('InterBase', 'username'),
+    TTTestConfig.GetDatabaseParam('InterBase', 'password'),
+    TTTestConfig.GetDatabaseParam('InterBase', 'database'));
+  LParameters.CharacterSet :=
+    TTTestConfig.GetDatabaseParam('InterBase', 'characterSet');
+  TTFireDACConnectionFactory.Instance.RegisterConnection(
+    'TrysilInterBaseTests', LParameters);
+end;
+
 class procedure TTInterBaseTestConnection.Initialize;
 begin
   TTFireDACConnectionPool.Instance.Config.Enabled := False;
   TTTestVendorLibrary.Apply('InterBase', TTInterBaseConnection.Driver);
-  TTInterBaseConnection.RegisterConnection(
-    'TrysilInterBaseTests',
-    TTTestConfig.GetDatabaseParam('InterBase', 'host'),
-    TTTestConfig.GetDatabaseParam('InterBase', 'username'),
-    TTTestConfig.GetDatabaseParam('InterBase', 'password'),
-    TTTestConfig.GetDatabaseParam('InterBase', 'database'),
-    TTTestConfig.GetDatabaseParam('InterBase', 'characterSet'));
+  RegisterConnection;
   FConnection := TTInterBaseConnection.Create('TrysilInterBaseTests');
 
   DropTables;

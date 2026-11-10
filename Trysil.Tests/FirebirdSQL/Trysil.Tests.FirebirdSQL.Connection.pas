@@ -16,6 +16,7 @@ uses
   System.SysUtils,
 
   Trysil.Data,
+  Trysil.Data.FireDAC,
   Trysil.Data.FireDAC.ConnectionPool,
   Trysil.Data.FireDAC.FirebirdSQL,
 
@@ -35,6 +36,7 @@ type
     class procedure DropSequences;
     class procedure CreateSequences;
     class procedure CreateTables;
+    class procedure RegisterConnection;
   public
     class procedure Initialize;
     class procedure Finalize;
@@ -228,17 +230,28 @@ begin
   FConnection.Execute(DDL_SHIFTS);
 end;
 
+class procedure TTFirebirdSQLTestConnection.RegisterConnection;
+var
+  LParameters: TTFireDACConnectionParameters;
+begin
+  LParameters := TTFireDACConnectionParameters.Create(
+    'FirebirdSQL',
+    TTTestConfig.GetDatabaseParam('FirebirdSQL', 'host'),
+    StrToIntDef(TTTestConfig.GetDatabaseParam('FirebirdSQL', 'port'), 0),
+    TTTestConfig.GetDatabaseParam('FirebirdSQL', 'username'),
+    TTTestConfig.GetDatabaseParam('FirebirdSQL', 'password'),
+    TTTestConfig.GetDatabaseParam('FirebirdSQL', 'database'));
+  LParameters.CharacterSet :=
+    TTTestConfig.GetDatabaseParam('FirebirdSQL', 'characterSet');
+  TTFireDACConnectionFactory.Instance.RegisterConnection(
+    'TrysilFirebirdSQLTests', LParameters);
+end;
+
 class procedure TTFirebirdSQLTestConnection.Initialize;
 begin
   TTFireDACConnectionPool.Instance.Config.Enabled := False;
   TTTestVendorLibrary.Apply('FirebirdSQL', TTFirebirdSQLConnection.Driver);
-  TTFirebirdSQLConnection.RegisterConnection(
-    'TrysilFirebirdSQLTests',
-    TTTestConfig.GetDatabaseParam('FirebirdSQL', 'host'),
-    TTTestConfig.GetDatabaseParam('FirebirdSQL', 'username'),
-    TTTestConfig.GetDatabaseParam('FirebirdSQL', 'password'),
-    TTTestConfig.GetDatabaseParam('FirebirdSQL', 'database'),
-    TTTestConfig.GetDatabaseParam('FirebirdSQL', 'characterSet'));
+  RegisterConnection;
   FConnection := TTFirebirdSQLConnection.Create('TrysilFirebirdSQLTests');
 
   DropTables;
