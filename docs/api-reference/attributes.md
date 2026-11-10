@@ -158,6 +158,8 @@ Adds a fixed WHERE clause to every query on this entity. Parameters are **compil
 
 `TWhereClauseParameter` constructors accept: `String`, `Integer`, `Int64`, `Double`, `Boolean`, `TDateTime`. For a `Currency` column, pass the constant as a `Double`.
 
+The name `TrysilID` is reserved: a read by ID passes the ID as a parameter with that name (`TTPrimaryKeyHelper.ParameterName`) in the same query, so a `TWhereClauseParameter` named so would replace it.
+
 ### TJoin
 
 Declares a JOIN for multi-table SELECT queries. Three overloads:

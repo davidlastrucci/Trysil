@@ -185,6 +185,8 @@ All connection classes inherit from `TTConnection` (defined in `Trysil.Data.pas`
 
 A driver builds its datasets in two `strict protected` methods. `InternalCreateDataSet` is abstract and serves `CreateDataSet`, which `TTContext.CreateDataset`, `SelectCount` and the metadata reads use. `InternalCreateUnidirectionalDataSet` serves `CreateUnidirectionalDataSet`, which the readers that build entities and `RawSelect<T>` use: they only move forward, so the dataset does not need to keep the rows already read. It is virtual and returns the dataset of `InternalCreateDataSet` by default, so a driver that does not override it reads as before. The FireDAC drivers override it: they call `InternalCreateDataSet` and turn on `FetchOptions.Unidirectional`, so an override of `InternalCreateDataSet` in a class derived from them applies to these reads too.
 
+`InternalCreateDataSet` receives the `TTFilter` of the read together with the SQL, and must bind every entry of `AFilter.Parameters` to the dataset. The filters of `TTFilterBuilder<T>`, the parameters of `[TWhereClauseParameter]` and every read by ID - `Get<T>`, `Refresh<T>`, lazy and eager relations, which pass the ID as `:TrysilID` - arrive that way, so a driver that skips them cannot read an entity.
+
 `TTGenericConnection` (defined in `Trysil.Data.Connection.pas`) extends `TTConnection` and adds:
 
 - A UUID-based `ConnectionID` for log correlation across threads.

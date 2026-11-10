@@ -9,13 +9,14 @@
 
 ### TTPrimaryKeyHelper
 
-Class helper for `TTPrimaryKey`:
+A class with what Trysil needs to write a `TTPrimaryKey` in a statement:
 
 ```pascal
-TTPrimaryKeyHelper.SqlValue(AValue: TTPrimaryKey): String
+const ParameterName = 'TrysilID';
+class function SqlValue(const AValue: TTPrimaryKey): String;
 ```
 
-Converts a primary key value to its SQL string representation.
+`ParameterName` is the name of the parameter that carries the ID in a read by ID (`Get<T>`, `Refresh<T>`, lazy and eager relations): the statement says `= :TrysilID`. `SqlValue` converts a primary key value to its SQL text, used where no parameter can be passed, such as the `DELETE` of a cascade relation.
 
 ## TTNullable&lt;T&gt;
 
