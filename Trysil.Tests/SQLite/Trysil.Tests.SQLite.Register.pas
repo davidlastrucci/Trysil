@@ -49,6 +49,7 @@ uses
   Trysil.Tests.SQLite.NullablePrimitivesJSon,
   Trysil.Tests.SQLite.CommitFailure,
   Trysil.Tests.SQLite.SequenceCeiling,
+  Trysil.Tests.SQLite.Time,
   Trysil.Tests.SQLite.HttpFilter,
   Trysil.Tests.SQLite.JSonReentrance,
   Trysil.Tests.SQLite.SqlSyntax;
@@ -71,6 +72,7 @@ begin
     TDUnitX.RegisterTestFixture(TTSQLiteTransactionTests);
     TDUnitX.RegisterTestFixture(TTSQLiteCommitFailureTests);
     TDUnitX.RegisterTestFixture(TTSQLiteSequenceCeilingTests);
+    TDUnitX.RegisterTestFixture(TTSQLiteTimeTests);
     TDUnitX.RegisterTestFixture(TTSQLiteHttpFilterTests);
     TDUnitX.RegisterTestFixture(TTSQLiteJSonReentranceTests);
     TDUnitX.RegisterTestFixture(TTSQLiteLazyTests);

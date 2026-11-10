@@ -1329,6 +1329,28 @@ type
     property Name: String read FName write FName;
   end;
 
+{ TTestShift - entity with a TIME column }
+
+  [TTable('Shifts')]
+  [TSequence('ShiftsID')]
+  TTestShift = class
+  strict private
+    [TPrimaryKey]
+    [TColumn('ID')]
+    FID: TTPrimaryKey;
+
+    [TColumn('StartsAt')]
+    FStartsAt: TDateTime;
+
+    [TVersionColumn]
+    [TColumn('VersionID')]
+    FVersionID: TTVersion;
+  public
+    property ID: TTPrimaryKey read FID;
+    property StartsAt: TDateTime read FStartsAt write FStartsAt;
+    property VersionID: TTVersion read FVersionID;
+  end;
+
 { TTestOrderByCountry - JOIN entity keyed on a column Orders does not have }
 
   [TTable('Orders')]

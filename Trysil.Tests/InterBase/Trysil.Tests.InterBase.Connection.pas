@@ -140,6 +140,13 @@ const
     ' VersionID INTEGER NOT NULL,' +
     ' PRIMARY KEY(ID))';
 
+  DDL_SHIFTS =
+    'CREATE TABLE Shifts (' +
+    ' ID INTEGER NOT NULL,' +
+    ' StartsAt TIME NOT NULL,' +
+    ' VersionID INTEGER NOT NULL,' +
+    ' PRIMARY KEY(ID))';
+
   DDL_NULLABLE_PRIMITIVES =
     'CREATE TABLE NullablePrimitives (' +
     ' ID INTEGER NOT NULL,' +
@@ -173,6 +180,7 @@ begin
   SafeExecute('DROP TABLE SimpleItems');
   SafeExecute('DROP TABLE AllTypes');
   SafeExecute('DROP TABLE NullablePrimitives');
+  SafeExecute('DROP TABLE Shifts');
 end;
 
 class procedure TTInterBaseTestConnection.DropSequences;
@@ -187,6 +195,7 @@ begin
   SafeExecute('DROP GENERATOR SimpleItemsID');
   SafeExecute('DROP GENERATOR AllTypesID');
   SafeExecute('DROP GENERATOR NullablePrimitivesID');
+  SafeExecute('DROP GENERATOR ShiftsID');
 end;
 
 class procedure TTInterBaseTestConnection.CreateSequences;
@@ -201,6 +210,7 @@ begin
   FConnection.Execute('CREATE GENERATOR SimpleItemsID');
   FConnection.Execute('CREATE GENERATOR AllTypesID');
   FConnection.Execute('CREATE GENERATOR NullablePrimitivesID');
+  FConnection.Execute('CREATE GENERATOR ShiftsID');
 end;
 
 class procedure TTInterBaseTestConnection.CreateTables;
@@ -215,6 +225,7 @@ begin
   FConnection.Execute(DDL_SIMPLE_ITEMS);
   FConnection.Execute(DDL_ALL_TYPES);
   FConnection.Execute(DDL_NULLABLE_PRIMITIVES);
+  FConnection.Execute(DDL_SHIFTS);
 end;
 
 class procedure TTInterBaseTestConnection.Initialize;

@@ -139,6 +139,13 @@ const
     ' VersionID INT NOT NULL,' +
     ' PRIMARY KEY(ID))';
 
+  DDL_SHIFTS =
+    'CREATE TABLE Shifts (' +
+    ' ID INT NOT NULL,' +
+    ' StartsAt TIME NOT NULL,' +
+    ' VersionID INT NOT NULL,' +
+    ' PRIMARY KEY(ID))';
+
   DDL_NULLABLE_PRIMITIVES =
     'CREATE TABLE NullablePrimitives (' +
     ' ID INT NOT NULL,' +
@@ -162,6 +169,7 @@ begin
   FConnection.Execute('DROP TABLE IF EXISTS SimpleItems');
   FConnection.Execute('DROP TABLE IF EXISTS AllTypes');
   FConnection.Execute('DROP TABLE IF EXISTS NullablePrimitives');
+  FConnection.Execute('DROP TABLE IF EXISTS Shifts');
 end;
 
 class procedure TTMariaDBTestConnection.DropSequences;
@@ -176,6 +184,7 @@ begin
   FConnection.Execute('DROP SEQUENCE IF EXISTS SimpleItemsID');
   FConnection.Execute('DROP SEQUENCE IF EXISTS AllTypesID');
   FConnection.Execute('DROP SEQUENCE IF EXISTS NullablePrimitivesID');
+  FConnection.Execute('DROP SEQUENCE IF EXISTS ShiftsID');
 end;
 
 class procedure TTMariaDBTestConnection.CreateSequences;
@@ -200,6 +209,8 @@ begin
     'CREATE SEQUENCE AllTypesID START WITH 1 MAXVALUE 2147483647');
   FConnection.Execute(
     'CREATE SEQUENCE NullablePrimitivesID START WITH 1 MAXVALUE 2147483647');
+  FConnection.Execute(
+    'CREATE SEQUENCE ShiftsID START WITH 1 MAXVALUE 2147483647');
 end;
 
 class procedure TTMariaDBTestConnection.CreateTables;
@@ -214,6 +225,7 @@ begin
   FConnection.Execute(DDL_SIMPLE_ITEMS);
   FConnection.Execute(DDL_ALL_TYPES);
   FConnection.Execute(DDL_NULLABLE_PRIMITIVES);
+  FConnection.Execute(DDL_SHIFTS);
 end;
 
 class procedure TTMariaDBTestConnection.Initialize;

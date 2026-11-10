@@ -140,6 +140,13 @@ const
     ' VersionID INT NOT NULL,' +
     ' PRIMARY KEY(ID))';
 
+  DDL_SHIFTS =
+    'CREATE TABLE IF NOT EXISTS Shifts (' +
+    ' ID INT NOT NULL,' +
+    ' StartsAt TIME NOT NULL,' +
+    ' VersionID INT NOT NULL,' +
+    ' PRIMARY KEY(ID))';
+
   DDL_PARAM_COLLISION =
     'CREATE TABLE IF NOT EXISTS ParamCollision (' +
     ' ID INT NOT NULL,' +
@@ -181,6 +188,7 @@ begin
   FConnection.Execute(DDL_ALL_TYPES);
   FConnection.Execute(DDL_NULLABLE_PRIMITIVES);
   FConnection.Execute(DDL_PARAM_COLLISION);
+  FConnection.Execute(DDL_SHIFTS);
 end;
 
 class procedure TTSQLiteTestConnection.Finalize;

@@ -140,6 +140,13 @@ const
     ' VersionID NUMBER(9) NOT NULL,' +
     ' PRIMARY KEY(ID))';
 
+  DDL_SHIFTS =
+    'CREATE TABLE Shifts (' +
+    ' ID NUMBER(9) NOT NULL,' +
+    ' StartsAt DATE NOT NULL,' +
+    ' VersionID NUMBER(9) NOT NULL,' +
+    ' PRIMARY KEY(ID))';
+
   DDL_NULLABLE_PRIMITIVES =
     'CREATE TABLE NullablePrimitives (' +
     ' ID NUMBER(9) NOT NULL,' +
@@ -173,6 +180,7 @@ begin
   SafeExecute('DROP TABLE SimpleItems');
   SafeExecute('DROP TABLE AllTypes');
   SafeExecute('DROP TABLE NullablePrimitives');
+  SafeExecute('DROP TABLE Shifts');
 end;
 
 class procedure TTOracleTestConnection.DropSequences;
@@ -187,6 +195,7 @@ begin
   SafeExecute('DROP SEQUENCE SimpleItemsID');
   SafeExecute('DROP SEQUENCE AllTypesID');
   SafeExecute('DROP SEQUENCE NullablePrimitivesID');
+  SafeExecute('DROP SEQUENCE ShiftsID');
 end;
 
 class procedure TTOracleTestConnection.CreateSequences;
@@ -211,6 +220,8 @@ begin
     'CREATE SEQUENCE AllTypesID START WITH 1 MAXVALUE 2147483647');
   FConnection.Execute(
     'CREATE SEQUENCE NullablePrimitivesID START WITH 1 MAXVALUE 2147483647');
+  FConnection.Execute(
+    'CREATE SEQUENCE ShiftsID START WITH 1 MAXVALUE 2147483647');
 end;
 
 class procedure TTOracleTestConnection.CreateTables;
@@ -225,6 +236,7 @@ begin
   FConnection.Execute(DDL_SIMPLE_ITEMS);
   FConnection.Execute(DDL_ALL_TYPES);
   FConnection.Execute(DDL_NULLABLE_PRIMITIVES);
+  FConnection.Execute(DDL_SHIFTS);
 end;
 
 class procedure TTOracleTestConnection.Initialize;

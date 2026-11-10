@@ -46,6 +46,7 @@ uses
   Trysil.Tests.MariaDB.AllTypes,
   Trysil.Tests.MariaDB.AllTypesJSon,
   Trysil.Tests.MariaDB.NullablePrimitives,
+  Trysil.Tests.MariaDB.Time,
   Trysil.Tests.MariaDB.NullablePrimitivesJSon;
 
 { TTMariaDBTestRegister }
@@ -73,6 +74,7 @@ begin
     TDUnitX.RegisterTestFixture(TTMariaDBAllTypesTests);
     TDUnitX.RegisterTestFixture(TTMariaDBAllTypesJSonTests);
     TDUnitX.RegisterTestFixture(TTMariaDBNullablePrimitivesTests);
+    TDUnitX.RegisterTestFixture(TTMariaDBTimeTests);
     TDUnitX.RegisterTestFixture(TTMariaDBNullablePrimitivesJSonTests);
   end;
 end;

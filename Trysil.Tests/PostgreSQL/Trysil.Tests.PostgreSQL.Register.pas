@@ -46,6 +46,7 @@ uses
   Trysil.Tests.PostgreSQL.AllTypes,
   Trysil.Tests.PostgreSQL.AllTypesJSon,
   Trysil.Tests.PostgreSQL.NullablePrimitives,
+  Trysil.Tests.PostgreSQL.Time,
   Trysil.Tests.PostgreSQL.NullablePrimitivesJSon;
 
 { TTPostgreSQLTestRegister }
@@ -73,6 +74,7 @@ begin
     TDUnitX.RegisterTestFixture(TTPostgreSQLAllTypesTests);
     TDUnitX.RegisterTestFixture(TTPostgreSQLAllTypesJSonTests);
     TDUnitX.RegisterTestFixture(TTPostgreSQLNullablePrimitivesTests);
+    TDUnitX.RegisterTestFixture(TTPostgreSQLTimeTests);
     TDUnitX.RegisterTestFixture(TTPostgreSQLNullablePrimitivesJSonTests);
   end;
 end;

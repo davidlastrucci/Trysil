@@ -46,6 +46,7 @@ uses
   Trysil.Tests.SqlServer.AllTypes,
   Trysil.Tests.SqlServer.AllTypesJSon,
   Trysil.Tests.SqlServer.NullablePrimitives,
+  Trysil.Tests.SqlServer.Time,
   Trysil.Tests.SqlServer.NullablePrimitivesJSon,
   Trysil.Tests.SqlServer.Params,
   Trysil.Tests.SqlServer.SchemaName;
@@ -75,6 +76,7 @@ begin
     TDUnitX.RegisterTestFixture(TTSqlServerAllTypesTests);
     TDUnitX.RegisterTestFixture(TTSqlServerAllTypesJSonTests);
     TDUnitX.RegisterTestFixture(TTSqlServerNullablePrimitivesTests);
+    TDUnitX.RegisterTestFixture(TTSqlServerTimeTests);
     TDUnitX.RegisterTestFixture(TTSqlServerNullablePrimitivesJSonTests);
     TDUnitX.RegisterTestFixture(TTSqlServerParamsTests);
     TDUnitX.RegisterTestFixture(TTSqlServerSchemaNameTests);

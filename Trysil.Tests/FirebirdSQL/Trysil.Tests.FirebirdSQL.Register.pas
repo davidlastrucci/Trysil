@@ -46,6 +46,7 @@ uses
   Trysil.Tests.FirebirdSQL.AllTypes,
   Trysil.Tests.FirebirdSQL.AllTypesJSon,
   Trysil.Tests.FirebirdSQL.NullablePrimitives,
+  Trysil.Tests.FirebirdSQL.Time,
   Trysil.Tests.FirebirdSQL.NullablePrimitivesJSon;
 
 { TTFirebirdSQLTestRegister }
@@ -73,6 +74,7 @@ begin
     TDUnitX.RegisterTestFixture(TTFirebirdSQLAllTypesTests);
     TDUnitX.RegisterTestFixture(TTFirebirdSQLAllTypesJSonTests);
     TDUnitX.RegisterTestFixture(TTFirebirdSQLNullablePrimitivesTests);
+    TDUnitX.RegisterTestFixture(TTFirebirdSQLTimeTests);
     TDUnitX.RegisterTestFixture(TTFirebirdSQLNullablePrimitivesJSonTests);
   end;
 end;

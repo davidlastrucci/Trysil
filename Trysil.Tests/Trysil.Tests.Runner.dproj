@@ -259,6 +259,7 @@
         <DCCReference Include="Abstract\Trysil.Tests.Abstract.AllTypes.pas"/>
         <DCCReference Include="Abstract\Trysil.Tests.Abstract.AllTypesJSon.pas"/>
         <DCCReference Include="Abstract\Trysil.Tests.Abstract.NullablePrimitives.pas"/>
+        <DCCReference Include="Abstract\Trysil.Tests.Abstract.Time.pas"/>
         <DCCReference Include="Abstract\Trysil.Tests.Abstract.NullablePrimitivesJSon.pas"/>
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.Connection.pas"/>
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.Crud.pas"/>
@@ -270,6 +271,7 @@
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.Transaction.pas"/>
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.CommitFailure.pas"/>
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.SequenceCeiling.pas"/>
+        <DCCReference Include="SQLite\Trysil.Tests.SQLite.Time.pas"/>
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.HttpFilter.pas"/>
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.JSonReentrance.pas"/>
         <DCCReference Include="SQLite\Trysil.Tests.SQLite.Lazy.pas"/>
@@ -303,6 +305,7 @@
         <DCCReference Include="SqlServer\Trysil.Tests.SqlServer.AllTypes.pas"/>
         <DCCReference Include="SqlServer\Trysil.Tests.SqlServer.AllTypesJSon.pas"/>
         <DCCReference Include="SqlServer\Trysil.Tests.SqlServer.NullablePrimitives.pas"/>
+        <DCCReference Include="SqlServer\Trysil.Tests.SqlServer.Time.pas"/>
         <DCCReference Include="SqlServer\Trysil.Tests.SqlServer.NullablePrimitivesJSon.pas"/>
         <DCCReference Include="SqlServer\Trysil.Tests.SqlServer.Params.pas"/>
         <DCCReference Include="SqlServer\Trysil.Tests.SqlServer.SchemaName.pas"/>
@@ -325,6 +328,7 @@
         <DCCReference Include="PostgreSQL\Trysil.Tests.PostgreSQL.AllTypes.pas"/>
         <DCCReference Include="PostgreSQL\Trysil.Tests.PostgreSQL.AllTypesJSon.pas"/>
         <DCCReference Include="PostgreSQL\Trysil.Tests.PostgreSQL.NullablePrimitives.pas"/>
+        <DCCReference Include="PostgreSQL\Trysil.Tests.PostgreSQL.Time.pas"/>
         <DCCReference Include="PostgreSQL\Trysil.Tests.PostgreSQL.NullablePrimitivesJSon.pas"/>
         <DCCReference Include="PostgreSQL\Trysil.Tests.PostgreSQL.Register.pas"/>
         <DCCReference Include="FirebirdSQL\Trysil.Tests.FirebirdSQL.Connection.pas"/>
@@ -345,6 +349,7 @@
         <DCCReference Include="FirebirdSQL\Trysil.Tests.FirebirdSQL.AllTypes.pas"/>
         <DCCReference Include="FirebirdSQL\Trysil.Tests.FirebirdSQL.AllTypesJSon.pas"/>
         <DCCReference Include="FirebirdSQL\Trysil.Tests.FirebirdSQL.NullablePrimitives.pas"/>
+        <DCCReference Include="FirebirdSQL\Trysil.Tests.FirebirdSQL.Time.pas"/>
         <DCCReference Include="FirebirdSQL\Trysil.Tests.FirebirdSQL.NullablePrimitivesJSon.pas"/>
         <DCCReference Include="FirebirdSQL\Trysil.Tests.FirebirdSQL.Register.pas"/>
         <DCCReference Include="InterBase\Trysil.Tests.InterBase.Connection.pas"/>
@@ -365,6 +370,7 @@
         <DCCReference Include="InterBase\Trysil.Tests.InterBase.AllTypes.pas"/>
         <DCCReference Include="InterBase\Trysil.Tests.InterBase.AllTypesJSon.pas"/>
         <DCCReference Include="InterBase\Trysil.Tests.InterBase.NullablePrimitives.pas"/>
+        <DCCReference Include="InterBase\Trysil.Tests.InterBase.Time.pas"/>
         <DCCReference Include="InterBase\Trysil.Tests.InterBase.NullablePrimitivesJSon.pas"/>
         <DCCReference Include="InterBase\Trysil.Tests.InterBase.Register.pas"/>
         <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.Connection.pas"/>
@@ -385,6 +391,7 @@
         <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.AllTypes.pas"/>
         <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.AllTypesJSon.pas"/>
         <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.NullablePrimitives.pas"/>
+        <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.Time.pas"/>
         <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.NullablePrimitivesJSon.pas"/>
         <DCCReference Include="MariaDB\Trysil.Tests.MariaDB.Register.pas"/>
         <DCCReference Include="Oracle\Trysil.Tests.Oracle.Connection.pas"/>
@@ -406,6 +413,7 @@
         <DCCReference Include="Oracle\Trysil.Tests.Oracle.AllTypes.pas"/>
         <DCCReference Include="Oracle\Trysil.Tests.Oracle.AllTypesJSon.pas"/>
         <DCCReference Include="Oracle\Trysil.Tests.Oracle.NullablePrimitives.pas"/>
+        <DCCReference Include="Oracle\Trysil.Tests.Oracle.Time.pas"/>
         <DCCReference Include="Oracle\Trysil.Tests.Oracle.NullablePrimitivesJSon.pas"/>
         <DCCReference Include="Oracle\Trysil.Tests.Oracle.Register.pas"/>
         <BuildConfiguration Include="Base">

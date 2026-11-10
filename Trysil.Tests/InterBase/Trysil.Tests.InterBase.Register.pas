@@ -46,6 +46,7 @@ uses
   Trysil.Tests.InterBase.AllTypes,
   Trysil.Tests.InterBase.AllTypesJSon,
   Trysil.Tests.InterBase.NullablePrimitives,
+  Trysil.Tests.InterBase.Time,
   Trysil.Tests.InterBase.NullablePrimitivesJSon;
 
 { TTInterBaseTestRegister }
@@ -73,6 +74,7 @@ begin
     TDUnitX.RegisterTestFixture(TTInterBaseAllTypesTests);
     TDUnitX.RegisterTestFixture(TTInterBaseAllTypesJSonTests);
     TDUnitX.RegisterTestFixture(TTInterBaseNullablePrimitivesTests);
+    TDUnitX.RegisterTestFixture(TTInterBaseTimeTests);
     TDUnitX.RegisterTestFixture(TTInterBaseNullablePrimitivesJSonTests);
   end;
 end;

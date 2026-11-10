@@ -47,6 +47,7 @@ uses
   Trysil.Tests.Oracle.AllTypes,
   Trysil.Tests.Oracle.AllTypesJSon,
   Trysil.Tests.Oracle.NullablePrimitives,
+  Trysil.Tests.Oracle.Time,
   Trysil.Tests.Oracle.NullablePrimitivesJSon;
 
 { TTOracleTestRegister }
@@ -75,6 +76,7 @@ begin
     TDUnitX.RegisterTestFixture(TTOracleAllTypesTests);
     TDUnitX.RegisterTestFixture(TTOracleAllTypesJSonTests);
     TDUnitX.RegisterTestFixture(TTOracleNullablePrimitivesTests);
+    TDUnitX.RegisterTestFixture(TTOracleTimeTests);
     TDUnitX.RegisterTestFixture(TTOracleNullablePrimitivesJSonTests);
   end;
 end;

@@ -139,6 +139,13 @@ const
     ' VersionID INT NOT NULL,' +
     ' PRIMARY KEY(ID))';
 
+  DDL_SHIFTS =
+    'CREATE TABLE Shifts (' +
+    ' ID INT NOT NULL,' +
+    ' StartsAt TIME NOT NULL,' +
+    ' VersionID INT NOT NULL,' +
+    ' PRIMARY KEY(ID))';
+
   DDL_NULLABLE_PRIMITIVES =
     'CREATE TABLE NullablePrimitives (' +
     ' ID INT NOT NULL,' +
@@ -171,6 +178,7 @@ begin
   FConnection.Execute('DROP TABLE IF EXISTS SimpleItems');
   FConnection.Execute('DROP TABLE IF EXISTS AllTypes');
   FConnection.Execute('DROP TABLE IF EXISTS NullablePrimitives');
+  FConnection.Execute('DROP TABLE IF EXISTS Shifts');
   FConnection.Execute('DROP TABLE IF EXISTS Report.Invoices');
   FConnection.Execute('DROP SCHEMA IF EXISTS Report');
 end;
@@ -187,6 +195,7 @@ begin
   FConnection.Execute('DROP SEQUENCE IF EXISTS SimpleItemsID');
   FConnection.Execute('DROP SEQUENCE IF EXISTS AllTypesID');
   FConnection.Execute('DROP SEQUENCE IF EXISTS NullablePrimitivesID');
+  FConnection.Execute('DROP SEQUENCE IF EXISTS ShiftsID');
   FConnection.Execute('DROP SEQUENCE IF EXISTS InvoicesID');
 end;
 
@@ -213,6 +222,8 @@ begin
   FConnection.Execute(
     'CREATE SEQUENCE NullablePrimitivesID AS int START WITH 1 INCREMENT BY 1');
   FConnection.Execute(
+    'CREATE SEQUENCE ShiftsID AS int START WITH 1 INCREMENT BY 1');
+  FConnection.Execute(
     'CREATE SEQUENCE InvoicesID AS int START WITH 1 INCREMENT BY 1');
 end;
 
@@ -228,6 +239,7 @@ begin
   FConnection.Execute(DDL_SIMPLE_ITEMS);
   FConnection.Execute(DDL_ALL_TYPES);
   FConnection.Execute(DDL_NULLABLE_PRIMITIVES);
+  FConnection.Execute(DDL_SHIFTS);
   FConnection.Execute(DDL_SCHEMA_REPORT);
   FConnection.Execute(DDL_REPORT_INVOICES);
 end;
