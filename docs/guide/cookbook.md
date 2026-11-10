@@ -330,6 +330,8 @@ end;
 
 ## Custom Validation with Event Methods
 
+The event methods go in the `protected` section, with the `$RTTI` directive described in [Events](events.md):
+
 ```pascal
 type
   [TTable('Orders')]
@@ -337,7 +339,7 @@ type
   strict private
     FTotal: Currency;
     FDiscount: Currency;
-  public
+  protected
     [TBeforeInsertEvent]
     [TBeforeUpdateEvent]
     procedure ValidateDiscount;

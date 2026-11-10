@@ -126,7 +126,7 @@ type
 
 When the database changes, regenerate the units of the entities that changed: the Expert rewrites each unit whole, after asking. Whatever was written by hand in a model unit is lost with it:
 
-- event methods on the entity (`[TBeforeInsertEvent]` and the other five) and `[TValidator]` methods;
+- event methods on the entity (`[TBeforeInsertEvent]` and the other five) and `[TValidator]` methods, and the `{$RTTI ...}` directive they need;
 - validation attributes added to the fields after generation;
 - calculated properties and helper methods;
 - an event class tied to the entity with `[TInsertEvent]`, `[TUpdateEvent]` or `[TDeleteEvent]`, which has to live in the unit of the entity.

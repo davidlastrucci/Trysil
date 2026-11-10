@@ -188,14 +188,16 @@ end;
 | `TBeforeDeleteEvent` | Before DELETE |
 | `TAfterDeleteEvent` | After DELETE |
 
-These methods are invoked by the resolver via RTTI. They must take no parameters, and they belong in the **`protected`** section: `public` would let anyone call a method that only Trysil should call, and `private` makes the compiler warn about a method nobody uses. They can be declared on the entity class or on one of its ancestors: an inherited event method fires as well. A virtual event method overridden in a derived class fires once, through the override, whether or not the override repeats the attribute.
+These methods are invoked by the resolver via RTTI. They must take no parameters, and they belong in the **`protected`** section: `public` would let anyone call a method that only Trysil should call, and `private` makes the compiler raise hint H2219 for a method nobody calls. They can be declared on the entity class or on one of its ancestors: an inherited event method fires as well. A virtual event method overridden in a derived class fires once, through the override, whether or not the override repeats the attribute.
 
 !!! warning "Ask for the RTTI of protected methods"
-    Delphi emits RTTI for `public` and `published` methods only. An event
+    By default Delphi emits RTTI for `public` and `published` methods only. An event
     attribute on a `protected` method is therefore never seen by the
     resolver unless the unit asks for that RTTI: nothing is registered,
     nothing raises, and the method is simply never called. Put this
-    directive at the top of the unit that declares the entity:
+    directive in every unit that declares a class with event methods,
+    ancestors included, before the class and after any other `$RTTI`
+    directive of the unit:
 
     ```pascal
     {$RTTI EXPLICIT

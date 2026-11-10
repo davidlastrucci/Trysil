@@ -186,13 +186,13 @@ end;
 A method of any other shape is refused with `SNotValidValidator` when the
 entity is validated, so a wrong signature is a message and not a silent skip.
 
-For validation logic that cannot be expressed with attributes, use event method attributes directly on the entity class:
+For validation logic that cannot be expressed with attributes, use event method attributes directly on the entity class. The methods go in the `protected` section, with the `$RTTI` directive described in [Events](events.md):
 
 ```pascal
 TPerson = class
 strict private
   // fields...
-public
+protected
   [TBeforeInsertEvent]
   procedure ValidateOnInsert;
 
