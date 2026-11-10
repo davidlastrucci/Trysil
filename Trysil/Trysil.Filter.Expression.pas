@@ -66,7 +66,7 @@ type
       const ALeft: TTExpression; const ARight: TTExpression): TTExpression;
     class operator LogicalNot(const AValue: TTExpression): TTExpression;
 
-    const ColumnMarker = '{%s}';
+    const ColumnMarker = '{{%s}}';
 
     property Sql: String read FSql;
     property Params: TArray<TTExpressionParam> read FParams;

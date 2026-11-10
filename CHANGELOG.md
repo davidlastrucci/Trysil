@@ -15,7 +15,7 @@ their moment.
 
 ### ORM
 
-- **An expression given to `TTFilterBuilder<T>` names its columns as the metadata does.** `Where`, `AndWhere` and `OrWhere` with a `TTExpression` now write each column with the reference the metadata gives, quoted by the driver - `[Date]` on SQL Server and SQLite, `"Date"` on PostgreSQL - as the fluent form already did. Until now the expression wrote the plain name, so a column named like a reserved word worked with `.Where('Date')` and failed with `TTProperty.Create('Date')`. `TTExpression.Sql` is unchanged: the builder reads the new `Template`, where every column is a marker it resolves. An expression built with the constructor that takes no template behaves as before.
+- **An expression given to `TTFilterBuilder<T>` names its columns as the metadata does.** `Where`, `AndWhere` and `OrWhere` with a `TTExpression` now write each column with the reference the metadata gives, quoted by the driver - `[Date]` on SQL Server and SQLite, `"date"` on PostgreSQL - as the fluent form already did. Until now the expression wrote the plain name, so a column named like a reserved word worked with `.Where('Date')` and failed with `TTProperty.Create('Date')`. `TTExpression.Sql` is unchanged: the builder reads the new `Template`, where every column is a marker it resolves. An expression built with the constructor that takes no template keeps its text, except that `{{Column}}` is reserved: written in that text for a column the expression names, it is resolved like the others.
 
 ## 2.1.0 - OpenAPI, Registered Entity Events & Setup
 
