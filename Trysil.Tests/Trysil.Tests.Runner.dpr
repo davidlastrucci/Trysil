@@ -21,6 +21,7 @@ uses
   Trysil.Tests.Mapping in 'Trysil.Tests.Mapping.pas',
   Trysil.Tests.Filter in 'Trysil.Tests.Filter.pas',
   Trysil.Tests.Model in 'Trysil.Tests.Model.pas',
+  Trysil.Tests.Model.Protected in 'Trysil.Tests.Model.Protected.pas',
   Trysil.Tests.Abstract.Base in 'Abstract\Trysil.Tests.Abstract.Base.pas',
   Trysil.Tests.Abstract.Crud in 'Abstract\Trysil.Tests.Abstract.Crud.pas',
   Trysil.Tests.Abstract.ChangeTracking in 'Abstract\Trysil.Tests.Abstract.ChangeTracking.pas',

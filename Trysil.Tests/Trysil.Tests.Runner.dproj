@@ -223,6 +223,7 @@
         <DCCReference Include="Trysil.Tests.Mapping.pas"/>
         <DCCReference Include="Trysil.Tests.Filter.pas"/>
         <DCCReference Include="Trysil.Tests.Model.pas"/>
+        <DCCReference Include="Trysil.Tests.Model.Protected.pas"/>
         <DCCReference Include="Abstract\Trysil.Tests.Abstract.Base.pas"/>
         <DCCReference Include="Abstract\Trysil.Tests.Abstract.Crud.pas"/>
         <DCCReference Include="Abstract\Trysil.Tests.Abstract.ChangeTracking.pas"/>

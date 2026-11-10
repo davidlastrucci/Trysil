@@ -23,7 +23,8 @@ uses
   Trysil.Events,
 
   Trysil.Tests.Abstract.Base,
-  Trysil.Tests.Model;
+  Trysil.Tests.Model,
+  Trysil.Tests.Model.Protected;
 
 type
 
@@ -70,6 +71,12 @@ type
 
     [Test]
     procedure DistinctMethodsForTheSameEventBothFire;
+
+    [Test]
+    procedure AProtectedEventMethodFiresWithTheRttiDirective;
+
+    [Test]
+    procedure AProtectedValidatorRunsWithTheRttiDirective;
 
     [Test]
     procedure RegisteredEventsFireAllEventsInOrder;
@@ -219,6 +226,32 @@ begin
 
   Assert.AreEqual('BI-base;BI-override;', LCustomer.EventLog,
     'An overridden event method with the attribute must fire once');
+end;
+
+procedure TTAbstractEventsTests.AProtectedEventMethodFiresWithTheRttiDirective;
+var
+  LCustomer: TTestProtectedEventCustomer;
+begin
+  LCustomer := FContext.CreateEntity<TTestProtectedEventCustomer>();
+  LCustomer.Name := 'ProtectedTest';
+  FContext.Insert<TTestProtectedEventCustomer>(LCustomer);
+
+  Assert.AreEqual('BI;AI;', LCustomer.EventLog,
+    'A protected event method must fire when its unit asks for the RTTI ' +
+    'of protected methods');
+end;
+
+procedure TTAbstractEventsTests.AProtectedValidatorRunsWithTheRttiDirective;
+var
+  LCustomer: TTestProtectedEventCustomer;
+begin
+  LCustomer := FContext.CreateEntity<TTestProtectedEventCustomer>();
+  LCustomer.Name := 'ProtectedTest';
+  FContext.Insert<TTestProtectedEventCustomer>(LCustomer);
+
+  Assert.IsTrue(LCustomer.Validated,
+    'A protected validator must run when its unit asks for the RTTI ' +
+    'of protected methods');
 end;
 
 procedure TTAbstractEventsTests.DistinctMethodsForTheSameEventBothFire;
