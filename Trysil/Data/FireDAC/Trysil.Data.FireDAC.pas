@@ -625,6 +625,7 @@ begin
   LDataSet := TFDQuery.Create(nil);
   try
     LDataSet.Connection := FConnection;
+    LDataSet.ResourceOptions.DirectExecute := True;
     LDataSet.SQL.Text := ASQL;
     for LParameter in AFilter.Parameters do
       SetParameter(LDataSet, LParameter);
