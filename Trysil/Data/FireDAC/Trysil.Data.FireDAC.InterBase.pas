@@ -76,6 +76,14 @@ type
 
     class procedure RegisterConnection(
       const AName: String;
+      const AServer: String;
+      const APort: Integer;
+      const AUsername: String;
+      const APassword: String;
+      const ADatabaseName: String); overload;
+
+    class procedure RegisterConnection(
+      const AName: String;
       const AParameters: TStrings); overload;
 
     function GetDatabaseObjectName(
@@ -136,14 +144,29 @@ end;
 class procedure TTInterBaseConnection.InternalRegisterConnection(
   const AName: String;
   const AParameters: TTFireDACConnectionParameters);
+var
+  LParameters: TStrings;
 begin
-  RegisterConnection(
-    AName,
-    AParameters.Server,
-    AParameters.Username,
-    AParameters.Password,
-    AParameters.DatabaseName,
-    AParameters.CharacterSet);
+  LParameters := TStringList.Create;
+  try
+    LParameters.Add(Format('Server=%s', [AParameters.Server]));
+    if AParameters.Port <> 0 then
+      LParameters.Add(Format('Port=%d', [AParameters.Port]));
+    LParameters.Add(Format('Database=%s', [AParameters.DatabaseName]));
+    if AParameters.Username.IsEmpty then
+      LParameters.Add('OSAuthent=Yes')
+    else
+    begin
+      LParameters.Add(Format('User_Name=%s', [AParameters.Username]));
+      LParameters.Add(Format('Password=%s', [AParameters.Password]));
+    end;
+    if not AParameters.CharacterSet.IsEmpty then
+      LParameters.Add(
+        Format('CharacterSet=%s', [AParameters.CharacterSet]));
+    RegisterConnection(AName, LParameters);
+  finally
+    LParameters.Free;
+  end;
 end;
 
 class procedure TTInterBaseConnection.RegisterConnection(
@@ -174,26 +197,26 @@ class procedure TTInterBaseConnection.RegisterConnection(
   const ADatabaseName: String;
   const ACharacterSet: String);
 var
-  LParameters: TStrings;
+  LParameters: TTFireDACConnectionParameters;
 begin
-  LParameters := TStringList.Create;
-  try
-    LParameters.Add(Format('Server=%s', [AServer]));
-    LParameters.Add(Format('Database=%s', [ADatabaseName]));
-    if AUsername.IsEmpty then
-      LParameters.Add('OSAuthent=Yes')
-    else
-    begin
-      LParameters.Add(Format('User_Name=%s', [AUserName]));
-      LParameters.Add(Format('Password=%s', [APassword]));
-    end;
-    if not ACharacterSet.IsEmpty then
-      LParameters.Add(Format('CharacterSet=%s', [ACharacterSet]));
+  LParameters := TTFireDACConnectionParameters.Create(
+    GetDriver, AServer, AUsername, APassword, ADatabaseName);
+  LParameters.CharacterSet := ACharacterSet;
+  InternalRegisterConnection(AName, LParameters);
+end;
 
-    RegisterConnection(AName, LParameters);
-  finally
-    LParameters.Free;
-  end;
+class procedure TTInterBaseConnection.RegisterConnection(
+  const AName: String;
+  const AServer: String;
+  const APort: Integer;
+  const AUsername: String;
+  const APassword: String;
+  const ADatabaseName: String);
+begin
+  InternalRegisterConnection(
+    AName,
+    TTFireDACConnectionParameters.Create(
+      GetDriver, AServer, APort, AUsername, APassword, ADatabaseName));
 end;
 
 class procedure TTInterBaseConnection.RegisterConnection(
