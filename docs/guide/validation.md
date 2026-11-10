@@ -164,7 +164,7 @@ strict private
   [TColumn('CustomerID')]
   [TRequired]
   FCustomer: TTLazy<TCustomer>;
-public
+protected
   [TValidator]
   procedure ValidateCustomerIsNotArchived(
     const AContext: TTContext;
@@ -185,6 +185,12 @@ end;
 
 A method of any other shape is refused with `SNotValidValidator` when the
 entity is validated, so a wrong signature is a message and not a silent skip.
+
+Like an event method, a validator is found through RTTI, so it follows the same
+rule: it goes in the `protected` section, with the `$RTTI` directive described
+in [Events](events.md). Without the directive a protected validator has no
+RTTI: it is never found and never runs, and that is the one mistake nothing
+reports.
 
 For validation logic that cannot be expressed with attributes, use event method attributes directly on the entity class. The methods go in the `protected` section, with the `$RTTI` directive described in [Events](events.md):
 
