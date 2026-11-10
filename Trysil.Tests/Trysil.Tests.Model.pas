@@ -872,6 +872,27 @@ type
     property Version: TTVersion read FVersion;
   end;
 
+{ TTestRequiredValues - required members that are not nullable }
+
+  TTestRequiredValues = class
+  strict private
+    [TColumn('Quantity')]
+    [TRequired]
+    FQuantity: Integer;
+
+    [TColumn('Price')]
+    [TRequired]
+    FPrice: Double;
+
+    [TColumn('DueDate')]
+    [TRequired]
+    FDueDate: TDateTime;
+  public
+    property Quantity: Integer read FQuantity write FQuantity;
+    property Price: Double read FPrice write FPrice;
+    property DueDate: TDateTime read FDueDate write FDueDate;
+  end;
+
 { TTestFullValidation - entity with all validation attributes }
 
   [TTable('FullValidation')]

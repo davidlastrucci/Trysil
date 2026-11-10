@@ -49,6 +49,12 @@ type
     procedure ARequiredRelationWithoutAKeyIsRefused;
 
     [Test]
+    procedure ARequiredNumberAtZeroIsAccepted;
+
+    [Test]
+    procedure ARequiredDateAtZeroIsRefused;
+
+    [Test]
     procedure ValidateMaxLengthExceededRaisesValidationException;
 
     [Test]
@@ -246,6 +252,52 @@ begin
     LRaised,
     'And a relation with no key at all is still what the attribute is ' +
     'there to catch');
+end;
+
+procedure TTAbstractValidationTests.ARequiredNumberAtZeroIsAccepted;
+var
+  LValues: TTestRequiredValues;
+begin
+  LValues := TTestRequiredValues.Create;
+  try
+    LValues.Quantity := 0;
+    LValues.Price := 0;
+    LValues.DueDate := EncodeDate(2026, 11, 10);
+
+    FContext.Validate<TTestRequiredValues>(LValues);
+
+    Assert.Pass(
+      'A number that is not nullable always has a value: zero is one');
+  finally
+    LValues.Free;
+  end;
+end;
+
+procedure TTAbstractValidationTests.ARequiredDateAtZeroIsRefused;
+var
+  LValues: TTestRequiredValues;
+  LRaised: Boolean;
+begin
+  LValues := TTestRequiredValues.Create;
+  try
+    LValues.Quantity := 1;
+    LValues.Price := 1;
+    LValues.DueDate := 0;
+
+    LRaised := False;
+    try
+      FContext.Validate<TTestRequiredValues>(LValues);
+    except
+      on E: ETValidationException do
+        LRaised := True;
+    end;
+
+    Assert.IsTrue(
+      LRaised,
+      'A date at zero is a date never entered, and Required refuses it');
+  finally
+    LValues.Free;
+  end;
 end;
 
 procedure TTAbstractValidationTests.ValidateRequiredFieldEmptyRaisesValidationException;

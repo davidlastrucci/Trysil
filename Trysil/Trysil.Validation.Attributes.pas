@@ -66,6 +66,7 @@ type
   TRequiredAttribute = class(TValidationAttribute)
   strict private
     function IsNullString(const AValue: TValue): Boolean;
+    function IsDateTimeType(const ATypeInfo: PTypeInfo): Boolean;
     function IsNullDateTime(const AValue: TValue): Boolean;
     function IsNullObject(const AValue: TValue): Boolean;
     function IsNullNullable(const AValue: TValue): Boolean;
@@ -400,9 +401,18 @@ begin
   result := AValue.IsType<String>() and AValue.AsType<String>().IsEmpty;
 end;
 
+function TRequiredAttribute.IsDateTimeType(
+  const ATypeInfo: PTypeInfo): Boolean;
+begin
+  result := (ATypeInfo = TypeInfo(TDateTime)) or
+    (ATypeInfo = TypeInfo(TDate)) or
+    (ATypeInfo = TypeInfo(TTime));
+end;
+
 function TRequiredAttribute.IsNullDateTime(const AValue: TValue): Boolean;
 begin
-  result := AValue.IsType<TDateTime>() and (AValue.AsType<TDateTime> = 0);
+  result := IsDateTimeType(AValue.TypeInfo) and
+    (AValue.AsType<TDateTime> = 0);
 end;
 
 function TRequiredAttribute.IsNullObject(const AValue: TValue): Boolean;
