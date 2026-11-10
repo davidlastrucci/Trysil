@@ -17,6 +17,7 @@ uses
   System.SysUtils,
   System.SyncObjs,
   System.Generics.Collections,
+  Data.DB,
  {$IFDEF MSWINDOWS}
   Winapi.Windows,
  {$ENDIF}
@@ -68,6 +69,7 @@ type
     function IsSequenceComputed(const AKey: String): Boolean;
     procedure InitializeSequence(
       const AKey: String; const ALast: TTPrimaryKey);
+    function ReadSequenceSeed(const ATableMap: TTTableMap): TTPrimaryKey;
     procedure EnsureSequence(const ATableMap: TTTableMap);
   strict protected
     function CreateSyntaxClasses: TTSyntaxClasses; override;
@@ -216,6 +218,30 @@ begin
   end;
 end;
 
+function TTSQLiteConnection.ReadSequenceSeed(
+  const ATableMap: TTTableMap): TTPrimaryKey;
+var
+  LSyntax: TTSequenceSyntax;
+  LDataset: TDataSet;
+  LLast: Int64;
+begin
+  LSyntax := TTSQLiteSequenceSyntax.Create(Self, ATableMap);
+  try
+    LDataset := CreateDataSet(LSyntax.SQL, TTFilter.Empty());
+    try
+      LLast := LDataset.Fields[0].AsLargeInt - 1;
+    finally
+      LDataset.Free;
+    end;
+  finally
+    LSyntax.Free;
+  end;
+
+  if LLast > High(TTPrimaryKey) then
+    LLast := High(TTPrimaryKey);
+  result := TTPrimaryKey(LLast);
+end;
+
 procedure TTSQLiteConnection.EnsureSequence(
   const ATableMap: TTTableMap);
 var
@@ -225,7 +251,7 @@ begin
   begin
     LKey := SequenceKey(ATableMap);
     if not IsSequenceComputed(LKey) then
-      InitializeSequence(LKey, inherited GetSequenceID(ATableMap) - 1);
+      InitializeSequence(LKey, ReadSequenceSeed(ATableMap));
   end;
 end;
 

@@ -44,6 +44,7 @@ type
     function CreateFreshConnection: TTConnection;
     procedure CheckTheDeletedIDIsNotReused(const AConnection: TTConnection);
     procedure CheckTheNextIDIsNew(const AContext: TTContext);
+    procedure CheckTheTableIsRead(const AConnection: TTConnection);
   public
     [Setup]
     procedure Setup;
@@ -59,6 +60,9 @@ type
 
     [Test]
     procedure AnIDStillInTheIdentityMapIsNotHandedOutAgain;
+
+    [Test]
+    procedure ATableAtTheCeilingCanStillBeRead;
   end;
 
 implementation
@@ -226,6 +230,44 @@ begin
   LConnection := CreateFreshConnection;
   try
     CheckTheDeletedIDIsNotReused(LConnection);
+  finally
+    LConnection.Free;
+  end;
+end;
+
+procedure TTSQLiteSequenceCeilingTests.CheckTheTableIsRead(
+  const AConnection: TTConnection);
+var
+  LContext: TTContext;
+  LList: TTList<TTestSequenceCeiling>;
+begin
+  LContext := TTContext.Create(AConnection, False);
+  try
+    LList := LContext.CreateEntityList<TTestSequenceCeiling>();
+    try
+      LContext.SelectAll<TTestSequenceCeiling>(LList);
+      Assert.AreEqual<Integer>(
+        1,
+        LList.Count,
+        'The first read of a table starts the key counter: a table that ' +
+        'holds the last valid key must still be read, only a new entity ' +
+        'is out of range');
+    finally
+      LList.Free;
+    end;
+  finally
+    LContext.Free;
+  end;
+end;
+
+procedure TTSQLiteSequenceCeilingTests.ATableAtTheCeilingCanStillBeRead;
+var
+  LConnection: TTConnection;
+begin
+  InsertRowWithID(High(TTPrimaryKey));
+  LConnection := CreateFreshConnection;
+  try
+    CheckTheTableIsRead(LConnection);
   finally
     LConnection.Free;
   end;
