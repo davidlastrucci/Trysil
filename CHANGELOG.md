@@ -11,6 +11,12 @@ newest win** - `includeDeleted`, for one, was read from the select payload in a
 window below and is decided server-side from 2.0.0, and both entries are true of
 their moment.
 
+## In development - Quoted Expressions
+
+### ORM
+
+- **An expression given to `TTFilterBuilder<T>` names its columns as the metadata does.** `Where`, `AndWhere` and `OrWhere` with a `TTExpression` now write each column with the reference the metadata gives, quoted by the driver - `[Date]` on SQL Server and SQLite, `"Date"` on PostgreSQL - as the fluent form already did. Until now the expression wrote the plain name, so a column named like a reserved word worked with `.Where('Date')` and failed with `TTProperty.Create('Date')`. `TTExpression.Sql` is unchanged: the builder reads the new `Template`, where every column is a marker it resolves. An expression built with the constructor that takes no template behaves as before.
+
 ## 2.1.0 - OpenAPI, Registered Entity Events & Setup
 
 *2026-11-01*

@@ -195,6 +195,7 @@ type
     function ReplaceFirstPlaceholder(
       const ASql: String;
       const AParamName: String): String;
+    function ResolveColumns(const AExpression: TTExpression): String;
     function AddExpression(
       const AOperator: TTFilterOperator;
       const AExpression: TTExpression): TTFilterBuilder<T>;
@@ -671,19 +672,29 @@ begin
       Copy(ASql, LPosition + 1, Length(ASql))]);
 end;
 
+function TTFilterBuilder<T>.ResolveColumns(
+  const AExpression: TTExpression): String;
+var
+  LColumnName: String;
+begin
+  result := AExpression.Template;
+  for LColumnName in AExpression.ColumnNames do
+    result := StringReplace(
+      result,
+      Format(TTExpression.ColumnMarker, [LColumnName]),
+      SqlReferenceOf(LColumnName),
+      [rfReplaceAll]);
+end;
+
 function TTFilterBuilder<T>.AddExpression(
   const AOperator: TTFilterOperator;
   const AExpression: TTExpression): TTFilterBuilder<T>;
 var
-  LColumnName: String;
   LSql: String;
   LParamName: String;
   LParameter: TTExpressionParam;
 begin
-  for LColumnName in AExpression.ColumnNames do
-    CheckColumn(LColumnName);
-
-  LSql := AExpression.Sql;
+  LSql := ResolveColumns(AExpression);
   for LParameter in AExpression.Params do
   begin
     LParamName := Format('p%d', [NextParamIndex]);

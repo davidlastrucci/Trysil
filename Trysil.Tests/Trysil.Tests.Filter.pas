@@ -298,6 +298,12 @@ type
     procedure IsNullCarriesTheReferenceTheMetadataGives;
 
     [Test]
+    procedure AnExpressionCarriesTheReferenceTheMetadataGives;
+
+    [Test]
+    procedure AnExpressionKeepsItsOwnSqlOnThePlainName;
+
+    [Test]
     procedure AnOrderByCarriesTheReferenceTheMetadataGives;
   end;
 
@@ -1240,6 +1246,37 @@ begin
   finally
     LBuilder.Free;
   end;
+end;
+
+procedure TTFilterQuotingTests.AnExpressionCarriesTheReferenceTheMetadataGives;
+var
+  LCode: TTProperty;
+  LBuilder: TTFilterBuilder<TTestFilterItem>;
+  LFilter: TTFilter;
+begin
+  LCode := TTProperty.Create('Code');
+  LBuilder := NewBuilder;
+  try
+    LBuilder.Where((LCode = 'X01') or LCode.IsNull);
+    LFilter := LBuilder.Build;
+    Assert.AreEqual(
+      '([Code] = :p0 OR [Code] IS NULL)',
+      LFilter.Where,
+      'An expression given to the builder must carry the reference the ' +
+      'metadata gives, as the fluent API does');
+  finally
+    LBuilder.Free;
+  end;
+end;
+
+procedure TTFilterQuotingTests.AnExpressionKeepsItsOwnSqlOnThePlainName;
+var
+  LCode: TTProperty;
+  LExpression: TTExpression;
+begin
+  LCode := TTProperty.Create('Code');
+  LExpression := (LCode = 'X01') or LCode.IsNull;
+  Assert.AreEqual('(Code = ? OR Code IS NULL)', LExpression.Sql);
 end;
 
 procedure TTFilterQuotingTests.AnOrderByCarriesTheReferenceTheMetadataGives;
