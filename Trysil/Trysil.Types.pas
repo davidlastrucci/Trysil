@@ -32,6 +32,8 @@ type
   strict private
     const IsQuoted: Boolean = False;
   public
+    const ParameterName = 'TrysilID';
+
     class function SqlValue(const AValue: TTPrimaryKey): String;
   end;
 

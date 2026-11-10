@@ -15,6 +15,7 @@ interface
 uses
   System.SysUtils,
   System.Classes,
+  Data.DB,
 
   Trysil.Consts,
   Trysil.Types,
@@ -276,8 +277,12 @@ var
 begin
   if not FList.IsValid then
   begin
-    LFilter := TTFilter.Create(
-      Format('%s = %s', [SqlReference, TTPrimaryKeyHelper.SqlValue(FID)]));
+    LFilter := TTFilter.Create(Format('%s = :%s', [
+      SqlReference, TTPrimaryKeyHelper.ParameterName]));
+    LFilter.AddParameter(
+      TTPrimaryKeyHelper.ParameterName,
+      TFieldType.ftInteger,
+      TTValue.From<TTPrimaryKey>(FID));
     FContext.Select<T>(FList, LFilter);
     FList.IsValid := True;
   end;

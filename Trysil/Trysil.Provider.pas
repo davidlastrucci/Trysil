@@ -117,12 +117,14 @@ type
     function FindColumnByName(
       const ATablemap: TTTableMap;
       const AColumnName: String): TTColumnMap;
-    function GetWhere(
+    function ReferenceFilter(
+      const AReference: String; const AID: TTPrimaryKey): TTFilter;
+    function IDFilter(
       const ATablemap: TTTableMap;
       const AColumnName: String;
-      const AID: TTPrimaryKey): String; overload;
-    function GetWhere(
-      const ATablemap: TTTableMap; const AID: TTPrimaryKey): String; overload;
+      const AID: TTPrimaryKey): TTFilter; overload;
+    function IDFilter(
+      const ATablemap: TTTableMap; const AID: TTPrimaryKey): TTFilter; overload;
   public
     constructor Create(
       const AConnection: TTConnection;
@@ -615,7 +617,7 @@ begin
   try
     LTableMap := TTMapper.Instance.Load(LGenericList.GenericTypeInfo);
     LTableMetadata := FMetadata.Load(LGenericList.GenericTypeInfo);
-    LFilter := TTFilter.Create(GetWhere(LTableMap, AColumnName, AID));
+    LFilter := IDFilter(LTableMap, AColumnName, AID);
     LReader := FConnection.CreateReader(LTableMap, LTableMetadata, LFilter);
     try
       LGenericList.Clear;
@@ -650,7 +652,7 @@ var
 begin
   LTableMap := TTMapper.Instance.Load(AObject.ClassInfo);
   LTableMetadata := FMetadata.Load(AObject.ClassInfo);
-  LFilter := TTFilter.Create(GetWhere(LTablemap, AID));
+  LFilter := IDFilter(LTablemap, AID);
   LReader := FConnection.CreateReader(LTableMap, LTableMetadata, LFilter);
   try
     if not LReader.IsEmpty then
@@ -697,10 +699,22 @@ begin
     end;
 end;
 
-function TTProvider.GetWhere(
+function TTProvider.ReferenceFilter(
+  const AReference: String; const AID: TTPrimaryKey): TTFilter;
+begin
+  result := TTFilter.Create(Format('%s = :%s', [
+    FConnection.GetDatabaseObjectName(AReference),
+    TTPrimaryKeyHelper.ParameterName]));
+  result.AddParameter(
+    TTPrimaryKeyHelper.ParameterName,
+    TFieldType.ftInteger,
+    TTValue.From<TTPrimaryKey>(AID));
+end;
+
+function TTProvider.IDFilter(
   const ATablemap: TTTableMap;
   const AColumnName: String;
-  const AID: TTPrimaryKey): String;
+  const AID: TTPrimaryKey): TTFilter;
 var
   LColumnMap: TTColumnMap;
   LReference: String;
@@ -713,21 +727,17 @@ begin
   else
     LReference := AColumnName;
 
-  result := Format('%s = %s', [
-    FConnection.GetDatabaseObjectName(LReference),
-    TTPrimaryKeyHelper.SqlValue(AID)]);
+  result := ReferenceFilter(LReference, AID);
 end;
 
-function TTProvider.GetWhere(
-  const ATablemap: TTTableMap; const AID: TTPrimaryKey): String;
+function TTProvider.IDFilter(
+  const ATablemap: TTTableMap; const AID: TTPrimaryKey): TTFilter;
 begin
   if not Assigned(ATablemap.PrimaryKey) then
     raise ETException.Create(
       TTLanguage.Instance.Translate(SNotDefinedPrimaryKey));
 
-  result := Format('%s = %s', [
-    FConnection.GetDatabaseObjectName(ATablemap.PrimaryKey.SqlReference),
-    TTPrimaryKeyHelper.SqlValue(AID)]);
+  result := ReferenceFilter(ATablemap.PrimaryKey.SqlReference, AID);
 end;
 
 function TTProvider.SelectCount<T>(const AFilter: TTFilter): Int64;
@@ -779,7 +789,7 @@ begin
   result := default(T);
   LTableMap := TTMapper.Instance.Load<T>();
   LTableMetadata := FMetadata.Load<T>();
-  LFilter := TTFilter.Create(GetWhere(LTablemap, AID));
+  LFilter := IDFilter(LTablemap, AID);
   LFilter.IncludeDeleted := AIncludeDeleted;
   LReader := FConnection.CreateReader(LTableMap, LTableMetadata, LFilter);
   try
@@ -806,9 +816,9 @@ var
 begin
   LTableMap := TTMapper.Instance.Load<T>();
   LTableMetadata := FMetadata.Load<T>();
-  LFilter := TTFilter.Create(GetWhere(
+  LFilter := IDFilter(
     LTablemap,
-    LTablemap.PrimaryKey.Member.GetValue(AEntity).AsType<TTPrimaryKey>()));
+    LTablemap.PrimaryKey.Member.GetValue(AEntity).AsType<TTPrimaryKey>());
   LReader := FConnection.CreateReader(LTableMap, LTableMetadata, LFilter);
   try
     result := not LReader.IsEmpty;
