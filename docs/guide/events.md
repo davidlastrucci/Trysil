@@ -156,7 +156,7 @@ For simpler cases where a full event class is not needed, add event methods dire
 TPerson = class
 strict private
   // fields...
-public
+protected
   [TBeforeInsertEvent]
   procedure BeforeInsert;
 
@@ -188,14 +188,24 @@ end;
 | `TBeforeDeleteEvent` | Before DELETE |
 | `TAfterDeleteEvent` | After DELETE |
 
-These methods are invoked by the resolver via RTTI. They must take no parameters and must be **`public`**. They can be declared on the entity class or on one of its ancestors: an inherited event method fires as well. A virtual event method overridden in a derived class fires once, through the override, whether or not the override repeats the attribute.
+These methods are invoked by the resolver via RTTI. They must take no parameters, and they belong in the **`protected`** section: `public` would let anyone call a method that only Trysil should call, and `private` makes the compiler warn about a method nobody uses. They can be declared on the entity class or on one of its ancestors: an inherited event method fires as well. A virtual event method overridden in a derived class fires once, through the override, whether or not the override repeats the attribute.
 
-!!! warning "A private event method is never called"
+!!! warning "Ask for the RTTI of protected methods"
     Delphi emits RTTI for `public` and `published` methods only. An event
-    attribute on a `private`, `strict private` or `protected` method is
-    therefore never seen by the resolver: nothing is registered, nothing
-    raises, and the method is simply never called. The mistake is silent, so
-    put event methods in the `public` section.
+    attribute on a `protected` method is therefore never seen by the
+    resolver unless the unit asks for that RTTI: nothing is registered,
+    nothing raises, and the method is simply never called. Put this
+    directive at the top of the unit that declares the entity:
+
+    ```pascal
+    {$RTTI EXPLICIT
+      FIELDS([vcPrivate, vcProtected, vcPublic, vcPublished])
+      METHODS([vcProtected, vcPublic, vcPublished])
+      PROPERTIES([vcPublic, vcPublished])}
+    ```
+
+    The directive replaces the default RTTI settings, so it lists the
+    fields too: Trysil reads the private fields of the entity.
 
 ## Event Execution Order
 

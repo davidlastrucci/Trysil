@@ -339,7 +339,7 @@ Declare event methods directly on the entity:
 
 ```pascal
 TPerson = class
-public
+protected
   [TBeforeInsertEvent]
   procedure OnBeforeInsert;
   [TAfterUpdateEvent]
@@ -347,7 +347,7 @@ public
 end;
 ```
 
-Event methods must be `public`: the default RTTI does not emit private or protected methods, so an attribute on one of those is never seen and the method is never called.
+Event methods belong in the `protected` section, with `{$RTTI EXPLICIT ... METHODS([vcProtected, vcPublic, vcPublished]) ...}` at the top of the unit: the default RTTI does not emit protected methods, so without the directive the attribute is never seen and the method is never called.
 
 See [Events](../guide/events.md) for detailed usage.
 
