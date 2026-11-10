@@ -22,6 +22,8 @@ uses
   Trysil.Context,
   Trysil.Exceptions,
   Trysil.Data,
+  Trysil.Data.FireDAC.SQLite,
+  Trysil.Generics.Collections,
 
   Trysil.Tests.Model,
   Trysil.Tests.SQLite.Connection;
@@ -39,6 +41,9 @@ type
     procedure ClearTable;
     procedure InsertRowWithID(const AID: Int64);
     procedure CheckTheCacheStopsThere;
+    function CreateFreshConnection: TTConnection;
+    procedure CheckTheDeletedIDIsNotReused(const AConnection: TTConnection);
+    procedure CheckTheNextIDIsNew(const AContext: TTContext);
   public
     [Setup]
     procedure Setup;
@@ -52,6 +57,8 @@ type
     [Test]
     procedure TheCeilingIsInclusiveAndSoIsTheCache;
 
+    [Test]
+    procedure AnIDStillInTheIdentityMapIsNotHandedOutAgain;
   end;
 
 implementation
@@ -153,6 +160,75 @@ begin
     'SQLite keeps a cache of the last value it handed out, and that branch ' +
     'is the one that answers here, not the inherited method the guard was ' +
     'written in: it added one to an Int32 with nothing to stop it');
+end;
+
+function TTSQLiteSequenceCeilingTests.CreateFreshConnection: TTConnection;
+var
+  LName: String;
+begin
+  LName := Format('SequenceSeed%s', [TGUID.NewGuid.ToString()]);
+  TTSQLiteConnection.RegisterConnection(
+    LName, TTSQLiteTestConnection.DatabaseFile);
+  result := TTSQLiteConnection.Create(LName);
+end;
+
+procedure TTSQLiteSequenceCeilingTests.CheckTheNextIDIsNew(
+  const AContext: TTContext);
+var
+  LRaised: Boolean;
+  LItem: TTestSequenceCeiling;
+begin
+  LRaised := False;
+  LItem := nil;
+  try
+    LItem := AContext.CreateEntity<TTestSequenceCeiling>();
+  except
+    on E: ETException do
+      LRaised := True;
+  end;
+
+  Assert.IsFalse(
+    LRaised,
+    'The deleted row is gone from the table but its entity is still in ' +
+    'the identity map: handing its ID out again collides with it');
+  Assert.AreEqual<TTPrimaryKey>(4, LItem.ID);
+end;
+
+procedure TTSQLiteSequenceCeilingTests.CheckTheDeletedIDIsNotReused(
+  const AConnection: TTConnection);
+var
+  LContext: TTContext;
+  LList: TTList<TTestSequenceCeiling>;
+begin
+  LContext := TTContext.Create(AConnection, True);
+  try
+    LList := LContext.CreateEntityList<TTestSequenceCeiling>();
+    try
+      LContext.SelectAll<TTestSequenceCeiling>(LList);
+      FConnection.Execute('DELETE FROM SequenceCeiling WHERE ID = 3');
+      CheckTheNextIDIsNew(LContext);
+    finally
+      LList.Free;
+    end;
+  finally
+    LContext.Free;
+  end;
+end;
+
+procedure TTSQLiteSequenceCeilingTests.
+  AnIDStillInTheIdentityMapIsNotHandedOutAgain;
+var
+  LConnection: TTConnection;
+begin
+  InsertRowWithID(1);
+  InsertRowWithID(2);
+  InsertRowWithID(3);
+  LConnection := CreateFreshConnection;
+  try
+    CheckTheDeletedIDIsNotReused(LConnection);
+  finally
+    LConnection.Free;
+  end;
 end;
 
 end.

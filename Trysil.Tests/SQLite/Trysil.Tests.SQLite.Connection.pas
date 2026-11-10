@@ -33,6 +33,7 @@ type
     class procedure Finalize;
 
     class function Connection: TTConnection;
+    class function DatabaseFile: String;
   end;
 
 implementation
@@ -192,6 +193,11 @@ end;
 class function TTSQLiteTestConnection.Connection: TTConnection;
 begin
   result := FConnection;
+end;
+
+class function TTSQLiteTestConnection.DatabaseFile: String;
+begin
+  result := FDatabaseFile;
 end;
 
 end.
