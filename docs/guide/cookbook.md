@@ -330,7 +330,7 @@ end;
 
 ## Custom Validation with Event Methods
 
-The event methods go in the `protected` section, with the `$RTTI` directive described in [Events](events.md):
+The example puts the event methods in the `protected` section, as we recommend, which needs the `$RTTI` directive described in [Events](events.md):
 
 ```pascal
 type

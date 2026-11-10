@@ -186,13 +186,13 @@ end;
 A method of any other shape is refused with `SNotValidValidator` when the
 entity is validated, so a wrong signature is a message and not a silent skip.
 
-Like an event method, a validator is found through RTTI, so it follows the same
-rule: it goes in the `protected` section, with the `$RTTI` directive described
-in [Events](events.md). Without the directive a protected validator has no
-RTTI: it is never found and never runs, and that is the one mistake nothing
-reports.
+Like an event method, a validator is found through RTTI, so the same advice
+holds: a `public` validator works, and the section we recommend is `protected`,
+with the `$RTTI` directive described in [Events](events.md). Without the
+directive a protected validator has no RTTI: it is never found and never runs,
+and that is the one mistake nothing reports.
 
-For validation logic that cannot be expressed with attributes, use event method attributes directly on the entity class. The methods go in the `protected` section, with the `$RTTI` directive described in [Events](events.md):
+For validation logic that cannot be expressed with attributes, use event method attributes directly on the entity class. The example puts them in the `protected` section, as we recommend, which needs the `$RTTI` directive described in [Events](events.md):
 
 ```pascal
 TPerson = class

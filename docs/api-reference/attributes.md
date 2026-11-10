@@ -347,7 +347,7 @@ protected
 end;
 ```
 
-Event methods belong in the `protected` section, with `{$RTTI EXPLICIT ... METHODS([vcProtected, vcPublic, vcPublished]) ...}` in every unit that declares a class with event methods, ancestors included: the default RTTI does not emit protected methods, so without the directive the attribute is never seen and the method is never called.
+A `public` event method works as it is. The section we recommend is `protected`, and then `{$RTTI EXPLICIT ... METHODS([vcProtected, vcPublic, vcPublished]) ...}` is needed in every unit that declares a class with event methods, ancestors included: the default RTTI does not emit protected methods, so without the directive the attribute is never seen and the method is never called.
 
 See [Events](../guide/events.md) for detailed usage.
 
