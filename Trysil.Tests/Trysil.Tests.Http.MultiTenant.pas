@@ -218,6 +218,7 @@ procedure TTHttpTenantCircuitBreakerTests.TearDown;
 begin
   TTestFailingMultiTenant.Instance.FailureCooldown := 5000;
   TTestSweepMultiTenant.Instance.FailureCooldown := 5000;
+  TTestBoundedMultiTenant.Instance.FailureCooldown := 5000;
 end;
 
 function TTHttpTenantCircuitBreakerTests.TryGetOrAdd(
@@ -313,6 +314,7 @@ procedure TTHttpTenantCircuitBreakerTests.TheFailuresAreBounded;
 var
   LIndex: Integer;
 begin
+  TTestBoundedMultiTenant.Instance.FailureCooldown := 600000;
   for LIndex := 1 to MaxFailures * 2 do
     RefuseBounded(Format('bound%d', [LIndex]));
 
