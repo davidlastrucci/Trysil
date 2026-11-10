@@ -188,7 +188,9 @@ end;
 | `TBeforeDeleteEvent` | Before DELETE |
 | `TAfterDeleteEvent` | After DELETE |
 
-These methods are invoked by the resolver via RTTI. They must take no parameters. A `public` method works as it is, with no directive, but the section we recommend is **`protected`**: `public` lets anyone call a method that only Trysil should call, and `private` makes the compiler raise hint H2219 for a method nobody calls. They can be declared on the entity class or on one of its ancestors: an inherited event method fires as well. A virtual event method overridden in a derived class fires once, through the override, whether or not the override repeats the attribute.
+These methods are invoked by the resolver via RTTI. They must take no parameters. A `public` method works as it is, with no directive, but the section we recommend is **`protected`**. They can be declared on the entity class or on one of its ancestors: an inherited event method fires as well. A virtual event method overridden in a derived class fires once, through the override, whether or not the override repeats the attribute.
+
+**Why `protected`.** A `public` event method can be called by any code that holds the entity, at any time, although it only makes sense when Trysil calls it, around an insert, an update or a delete: `public` advertises it as part of the entity's interface, which it is not. A `private` method cannot be called from outside, which is right, but the compiler sees no caller - Trysil reaches it through RTTI - and raises hint H2219, "declared but never used", for every such method. `protected` keeps the method out of the entity's interface and gives no hint. The price is the `$RTTI` directive below, because by default Delphi emits no RTTI for protected methods.
 
 !!! warning "A protected method needs the RTTI directive"
     By default Delphi emits RTTI for `public` and `published` methods only. An event
