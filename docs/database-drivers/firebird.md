@@ -28,8 +28,13 @@ The parameter is optional and defaults to the previous behaviour, so an applicat
 uses
   Trysil.Data.FireDAC.FirebirdSQL;
 
+// Default port (3050)
 TTFirebirdSQLConnection.RegisterConnection(
   'Main', 'localhost', 'SYSDBA', 'masterkey', '/path/to/database.fdb');
+
+// Explicit port
+TTFirebirdSQLConnection.RegisterConnection(
+  'Main', 'localhost', 3051, 'SYSDBA', 'masterkey', '/path/to/database.fdb');
 
 LConnection := TTFirebirdSQLConnection.Create('Main');
 try
@@ -42,6 +47,15 @@ try
 finally
   LConnection.Free;
 end;
+```
+
+No overload takes both a port and a character set. For both, fill a `TTFireDACConnectionParameters` and register it through `TTFireDACConnectionFactory`, both in `Trysil.Data.FireDAC`:
+
+```pascal
+LParameters := TTFireDACConnectionParameters.Create(
+  'FirebirdSQL', 'localhost', 3051, 'SYSDBA', 'masterkey', '/path/to/database.fdb');
+LParameters.CharacterSet := 'UTF8';
+TTFireDACConnectionFactory.Instance.RegisterConnection('Main', LParameters);
 ```
 
 ## Connection Pooling

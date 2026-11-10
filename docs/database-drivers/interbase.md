@@ -43,8 +43,13 @@ The parameter is optional and defaults to the previous behaviour, so an applicat
 uses
   Trysil.Data.FireDAC.InterBase;
 
+// Default port (3050)
 TTInterBaseConnection.RegisterConnection(
   'Main', 'localhost', 'SYSDBA', 'masterkey', 'C:\data\database.ib');
+
+// Explicit port
+TTInterBaseConnection.RegisterConnection(
+  'Main', 'localhost', 3051, 'SYSDBA', 'masterkey', 'C:\data\database.ib');
 
 LConnection := TTInterBaseConnection.Create('Main');
 try
@@ -57,6 +62,15 @@ try
 finally
   LConnection.Free;
 end;
+```
+
+No overload takes both a port and a character set. For both, fill a `TTFireDACConnectionParameters` and register it through `TTFireDACConnectionFactory`, both in `Trysil.Data.FireDAC`:
+
+```pascal
+LParameters := TTFireDACConnectionParameters.Create(
+  'InterBase', 'localhost', 3051, 'SYSDBA', 'masterkey', 'C:\data\database.ib');
+LParameters.CharacterSet := 'UTF8';
+TTFireDACConnectionFactory.Instance.RegisterConnection('Main', LParameters);
 ```
 
 ## Connection Pooling
