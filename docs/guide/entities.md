@@ -26,7 +26,7 @@ A **qualified** name is quoted one part at a time, so writing the schema in the 
 [TTable('reporting.Sales')]  // PostgreSQL: "reporting"."sales"
 ```
 
-The one place a name is not quoted is the **expression API**: `TTProperty` builds its own `WHERE` text and `Trysil.Filter.Expression` is an upstream unit with no connection to ask, so `(TCustomerProperties.Level > 3)` reaches the engine with `Level` bare. The fluent form of the same builder - `Where('Level')` - resolves the name in the metadata and is quoted like everything else, and so is an `ORDER BY` written either way.
+The **expression API** is quoted too: the builder resolves each column of a `TTProperty` expression in the metadata, as it does for the fluent form - `Where('Level')` - and for an `ORDER BY` written either way, so `(TCustomerProperties.Level > 3)` reaches SQL Server as `[Level] > :p0`. Only the text an expression carries by itself keeps the bare name: `TTExpression.Sql` and `TTProperty.SqlReference` come from `Trysil.Filter.Expression`, an upstream unit with no connection to ask, and they are not what the builder writes.
 
 **Do not put the quotes of the engine in the attribute.** Before 2.0.0 that was the only way to reach a reserved word or a mixed-case object, and it now backfires: the framework quotes what you wrote and doubles the closing quote inside it, so `[TTable('"Clienti"')]` becomes `"""clienti"""`, which names nothing. On SQLite a name carrying a `]` is refused outright, because that engine has no escape for one inside `[ ]`, and on Oracle a name carrying a `"` is refused for the same reason - Oracle states that no identifier, quoted or not, may contain one. Write the bare name and let the framework quote it.
 

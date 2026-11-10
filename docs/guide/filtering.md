@@ -206,6 +206,8 @@ LBuilder
   .AndWhere((LRole = 'Admin') or (LRole = 'Manager'));  // expression -> :p1, :p2
 ```
 
+Both forms also name the columns the same way: the builder looks each column of the expression up in the metadata, validates it and writes the reference quoted by the driver, so `Role` reaches SQL Server as `[Role]` either way. `TTExpression.Sql` keeps the bare name: it is the text of the expression before the builder resolves it. If you build a `TTExpression` by hand with its constructor, `{{Column}}` in its text is reserved: for a column the expression names, the builder resolves it like the others.
+
 ### Generated companion record
 
 Instead of declaring `TTProperty` locals by hand, let the [Trysil Expert](../tooling/expert/generate-model.md#filter-properties-companion) generate a companion record next to each entity (enabled by default). For `TCustomer` it emits `TCustomerProperties` with one `TTProperty` per column, so column names are checked by the compiler at the call site:
