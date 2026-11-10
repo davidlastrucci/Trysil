@@ -27,6 +27,8 @@ uses
   Trysil.Consts,
   Trysil.Exceptions,
   Trysil.Mapping,
+  Trysil.Metadata,
+  Trysil.Filter,
   Trysil.Data,
   Trysil.Data.FireDAC.ConnectionPool,
   Trysil.Data.FireDAC,
@@ -63,6 +65,10 @@ type
     class destructor ClassDestroy;
 
     function SequenceKey(const ATableMap: TTTableMap): String;
+    function IsSequenceComputed(const AKey: String): Boolean;
+    procedure InitializeSequence(
+      const AKey: String; const ALast: TTPrimaryKey);
+    procedure EnsureSequence(const ATableMap: TTTableMap);
   strict protected
     function CreateSyntaxClasses: TTSyntaxClasses; override;
     function GetDatabaseVersion: String; override;
@@ -74,6 +80,35 @@ type
       const AParameters: TTFireDACConnectionParameters); override;
   public
     function GetSequenceID(const ATableMap: TTTableMap): TTPrimaryKey; override;
+
+    function SelectCount(
+      const ATableMap: TTTableMap;
+      const AFilter: TTFilter): Int64; override;
+
+    function CreateReader(
+      const ATableMap: TTTableMap;
+      const ATableMetadata: TTTableMetadata;
+      const AFilter: TTFilter): TTReader; override;
+
+    function CreateInsertCommand(
+      const ATableMap: TTTableMap;
+      const ATableMetadata: TTTableMetadata): TTAbstractCommand; override;
+
+    function CreateUpdateCommand(
+      const ATableMap: TTTableMap;
+      const ATableMetadata: TTTableMetadata): TTAbstractCommand; override;
+
+    function CreateSoftDeleteCommand(
+      const ATableMap: TTTableMap;
+      const ATableMetadata: TTTableMetadata): TTAbstractCommand; override;
+
+    function CreateUndeleteCommand(
+      const ATableMap: TTTableMap;
+      const ATableMetadata: TTTableMetadata): TTAbstractCommand; override;
+
+    function CreateDeleteCommand(
+      const ATableMap: TTTableMap;
+      const ATableMetadata: TTTableMetadata): TTAbstractCommand; override;
 
     class procedure RegisterConnection(
       const AName: String; const ADatabaseName: String); overload;
@@ -159,6 +194,41 @@ begin
     '%s.%s', [ConnectionName, ATableMap.Name]).ToLowerInvariant;
 end;
 
+function TTSQLiteConnection.IsSequenceComputed(
+  const AKey: String): Boolean;
+begin
+  FSequencesLock.Enter;
+  try
+    result := FSequences.ContainsKey(AKey);
+  finally
+    FSequencesLock.Exit;
+  end;
+end;
+
+procedure TTSQLiteConnection.InitializeSequence(
+  const AKey: String; const ALast: TTPrimaryKey);
+begin
+  FSequencesLock.Enter;
+  try
+    FSequences.TryAdd(AKey, ALast);
+  finally
+    FSequencesLock.Exit;
+  end;
+end;
+
+procedure TTSQLiteConnection.EnsureSequence(
+  const ATableMap: TTTableMap);
+var
+  LKey: String;
+begin
+  if Assigned(ATableMap.PrimaryKey) then
+  begin
+    LKey := SequenceKey(ATableMap);
+    if not IsSequenceComputed(LKey) then
+      InitializeSequence(LKey, inherited GetSequenceID(ATableMap) - 1);
+  end;
+end;
+
 function TTSQLiteConnection.GetSequenceID(
   const ATableMap: TTTableMap): TTPrimaryKey;
 var
@@ -187,6 +257,63 @@ begin
   finally
     FSequencesLock.Exit;
   end;
+end;
+
+function TTSQLiteConnection.SelectCount(
+  const ATableMap: TTTableMap;
+  const AFilter: TTFilter): Int64;
+begin
+  EnsureSequence(ATableMap);
+  result := inherited SelectCount(ATableMap, AFilter);
+end;
+
+function TTSQLiteConnection.CreateReader(
+  const ATableMap: TTTableMap;
+  const ATableMetadata: TTTableMetadata;
+  const AFilter: TTFilter): TTReader;
+begin
+  EnsureSequence(ATableMap);
+  result := inherited CreateReader(ATableMap, ATableMetadata, AFilter);
+end;
+
+function TTSQLiteConnection.CreateInsertCommand(
+  const ATableMap: TTTableMap;
+  const ATableMetadata: TTTableMetadata): TTAbstractCommand;
+begin
+  EnsureSequence(ATableMap);
+  result := inherited CreateInsertCommand(ATableMap, ATableMetadata);
+end;
+
+function TTSQLiteConnection.CreateUpdateCommand(
+  const ATableMap: TTTableMap;
+  const ATableMetadata: TTTableMetadata): TTAbstractCommand;
+begin
+  EnsureSequence(ATableMap);
+  result := inherited CreateUpdateCommand(ATableMap, ATableMetadata);
+end;
+
+function TTSQLiteConnection.CreateSoftDeleteCommand(
+  const ATableMap: TTTableMap;
+  const ATableMetadata: TTTableMetadata): TTAbstractCommand;
+begin
+  EnsureSequence(ATableMap);
+  result := inherited CreateSoftDeleteCommand(ATableMap, ATableMetadata);
+end;
+
+function TTSQLiteConnection.CreateUndeleteCommand(
+  const ATableMap: TTTableMap;
+  const ATableMetadata: TTTableMetadata): TTAbstractCommand;
+begin
+  EnsureSequence(ATableMap);
+  result := inherited CreateUndeleteCommand(ATableMap, ATableMetadata);
+end;
+
+function TTSQLiteConnection.CreateDeleteCommand(
+  const ATableMap: TTTableMap;
+  const ATableMetadata: TTTableMetadata): TTAbstractCommand;
+begin
+  EnsureSequence(ATableMap);
+  result := inherited CreateDeleteCommand(ATableMap, ATableMetadata);
 end;
 
 function TTSQLiteConnection.CreateSyntaxClasses: TTSyntaxClasses;
