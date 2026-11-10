@@ -188,10 +188,9 @@ entity is validated, so a wrong signature is a message and not a silent skip.
 
 Like an event method, a validator is found through RTTI, so the same advice
 holds: a `public` validator works as it is, with no directive, and the section
-we recommend is `protected`, for the reasons explained in
-[Events](events.md), which needs the `$RTTI` directive described in
-[Events](events.md). Without the
-directive a protected validator has no RTTI: it is never found and never runs,
+we recommend is `protected`: [Events](events.md) explains why, and describes
+the `$RTTI` directive a protected method needs. Without the directive a
+protected validator has no RTTI: it is never found and never runs,
 and that is the one mistake nothing reports.
 
 For validation logic that cannot be expressed with attributes, use event method attributes directly on the entity class. The example puts them in the `protected` section, as we recommend, which needs the `$RTTI` directive described in [Events](events.md):
