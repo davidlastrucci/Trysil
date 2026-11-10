@@ -156,6 +156,8 @@ type
   TTDateTimeParameter = class(TTParameter)
   strict private
     class function HasTimeZone(const AValue: String): Boolean; static;
+  strict protected
+    procedure WriteValue(const AValue: TDateTime); virtual;
   public
     procedure SetValue(const AEntity: TObject); overload; override;
     procedure SetValue(const AValue: TTValue); overload; override;
@@ -164,6 +166,13 @@ type
       const AFieldType: TFieldType;
       const AValue: String;
       out AResult: TTValue): Boolean; override;
+  end;
+
+{ TTTimeParameter }
+
+  TTTimeParameter = class(TTDateTimeParameter)
+  strict protected
+    procedure WriteValue(const AValue: TDateTime); override;
   end;
 
 { TTGuidParameter }
@@ -744,6 +753,11 @@ end;
 
 { TTDateTimeParameter }
 
+procedure TTDateTimeParameter.WriteValue(const AValue: TDateTime);
+begin
+  FParam.AsDateTime := AValue;
+end;
+
 procedure TTDateTimeParameter.SetValue(const AEntity: TObject);
 var
   LValue: TTValue;
@@ -757,13 +771,13 @@ begin
     if LNullable.IsNull then
       FParam.Clear()
     else
-      FParam.AsDateTime := LNullable;
+      WriteValue(LNullable);
     LParamValue := LNullable.GetValueOrDefault;
   end
   else
   begin
     LParamValue := LValue.AsType<TDateTime>();
-    FParam.AsDateTime := LParamValue;
+    WriteValue(LParamValue);
   end;
 
   if LogEnabled then
@@ -775,7 +789,7 @@ var
   LParamValue: TDateTime;
 begin
   LParamValue := AValue.AsType<TDateTime>();
-  FParam.AsDateTime := LParamValue;
+  WriteValue(LParamValue);
   if LogEnabled then
     LogParameter(FParam.Name, DateTimeToStr(LParamValue));
 end;
@@ -805,6 +819,13 @@ begin
       LValue := TTimeZone.Local.ToLocalTime(LValue);
     AResult := TTValue.From<TDateTime>(LValue);
   end;
+end;
+
+{ TTTimeParameter }
+
+procedure TTTimeParameter.WriteValue(const AValue: TDateTime);
+begin
+  FParam.AsTime := AValue;
 end;
 
 { TTGuidParameter }
@@ -1075,7 +1096,7 @@ begin
   AInstance.RegisterParameterClass<TTDateTimeParameter>(TFieldType.ftDate);
   AInstance.RegisterParameterClass<TTDateTimeParameter>(TFieldType.ftDateTime);
   AInstance.RegisterParameterClass<TTDateTimeParameter>(TFieldType.ftTimeStamp);
-  AInstance.RegisterParameterClass<TTDateTimeParameter>(TFieldType.ftTime);
+  AInstance.RegisterParameterClass<TTTimeParameter>(TFieldType.ftTime);
 end;
 
 class procedure TTParameterRegister.RegisterOtherParameterClasses(

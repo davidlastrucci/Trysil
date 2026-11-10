@@ -53,6 +53,7 @@ type
     procedure SetAsBoolean(const Value: Boolean); virtual; abstract;
     function GetAsDateTime: TDateTime; virtual; abstract;
     procedure SetAsDateTime(const Value: TDateTime); virtual; abstract;
+    procedure SetAsTime(const Value: TDateTime); virtual;
     function GetAsGuid: TGUID; virtual; abstract;
     procedure SetAsGuid(const Value: TGUID); virtual; abstract;
     procedure SetAsBytes(const Value: TBytes); virtual; abstract;
@@ -70,6 +71,7 @@ type
     property AsCurrency: Currency write SetAsCurrency;
     property AsBoolean: Boolean write SetAsBoolean;
     property AsDateTime: TDateTime write SetAsDateTime;
+    property AsTime: TDateTime write SetAsTime;
     property AsGuid: TGUID write SetAsGuid;
     property AsBytes: TBytes write SetAsBytes;
     property AsText: String write SetAsText;
@@ -273,6 +275,11 @@ type
 implementation
 
 { TTParam }
+
+procedure TTParam.SetAsTime(const Value: TDateTime);
+begin
+  SetAsDateTime(Value);
+end;
 
 procedure TTParam.SetAsText(const Value: String);
 begin

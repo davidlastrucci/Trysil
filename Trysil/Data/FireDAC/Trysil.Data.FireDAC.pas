@@ -60,6 +60,7 @@ type
     procedure SetAsBoolean(const AValue: Boolean); override;
     function GetAsDateTime: TDateTime; override;
     procedure SetAsDateTime(const AValue: TDateTime); override;
+    procedure SetAsTime(const AValue: TDateTime); override;
     function GetAsGuid: TGUID; override;
     procedure SetAsGuid(const AValue: TGUID); override;
     procedure SetAsBytes(const AValue: TBytes); override;
@@ -322,6 +323,11 @@ end;
 procedure TTFDParam.SetAsDateTime(const AValue: TDateTime);
 begin
   FParam.AsDateTime := AValue;
+end;
+
+procedure TTFDParam.SetAsTime(const AValue: TDateTime);
+begin
+  FParam.AsTime := AValue;
 end;
 
 function TTFDParam.GetAsGuid: TGUID;
