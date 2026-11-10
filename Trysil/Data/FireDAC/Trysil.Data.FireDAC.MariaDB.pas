@@ -52,6 +52,7 @@ type
   strict protected
     function CreateSyntaxClasses: TTSyntaxClasses; override;
     function GetDatabaseVersion: String; override;
+    function ExecutesDirectly: Boolean; override;
 
     class function GetDriver: String; override;
     class function GetDriverAliases: TArray<String>; override;
@@ -133,6 +134,11 @@ end;
 function TTMariaDBConnection.GetDatabaseVersion: String;
 begin
   result := Format('MariaDB %s', [inherited GetDatabaseVersion]);
+end;
+
+function TTMariaDBConnection.ExecutesDirectly: Boolean;
+begin
+  result := False;
 end;
 
 class function TTMariaDBConnection.GetDriver: String;

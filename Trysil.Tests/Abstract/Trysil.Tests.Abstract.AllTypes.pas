@@ -18,6 +18,7 @@ uses
   DUnitX.TestFramework,
 
   Trysil.Types,
+  Trysil.Rtti,
   Trysil.Generics.Collections,
   Trysil.Filter,
 
@@ -64,6 +65,9 @@ type
 
     [Test]
     procedure ATextLobKeepsWhatWouldNotFitInAVarchar;
+
+    [Test]
+    procedure AFilterOnAGuidColumnFindsTheRow;
   end;
 
 implementation
@@ -341,6 +345,44 @@ begin
   Assert.AreEqual<Currency>(0.7, LLoaded.Price);
   Assert.IsFalse(LLoaded.OptPrice.IsNull);
   Assert.AreEqual<Currency>(1000000.0001, LLoaded.OptPrice.GetValueOrDefault);
+end;
+
+procedure TTAbstractAllTypesTests.AFilterOnAGuidColumnFindsTheRow;
+var
+  LEntity: TTestAllTypes;
+  LBuilder: TTFilterBuilder<TTestAllTypes>;
+  LFilter: TTFilter;
+  LList: TTList<TTestAllTypes>;
+begin
+  LEntity := FContext.CreateEntity<TTestAllTypes>();
+  LEntity.LargeNumber := 1;
+  LEntity.IsActive := True;
+  LEntity.BirthDate := Now;
+  LEntity.UniqueID := GUID_TWO;
+  LEntity.Payload := TBytes.Create($01);
+  FContext.Insert<TTestAllTypes>(LEntity);
+
+  LBuilder := FContext.CreateFilterBuilder<TTestAllTypes>();
+  try
+    LFilter := LBuilder
+      .Where('UniqueID').Equal(TTValue.From<TGuid>(GUID_TWO))
+      .Build;
+  finally
+    LBuilder.Free;
+  end;
+
+  LList := TTList<TTestAllTypes>.Create;
+  try
+    FContext.Select<TTestAllTypes>(LList, LFilter);
+    Assert.AreEqual<Integer>(
+      1,
+      LList.Count,
+      'A filter on a GUID column must find the row the insert wrote: the ' +
+      'value of the filter must reach the engine in the form the insert ' +
+      'stored');
+  finally
+    LList.Free;
+  end;
 end;
 
 end.

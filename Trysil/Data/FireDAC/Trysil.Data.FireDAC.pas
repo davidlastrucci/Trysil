@@ -160,6 +160,7 @@ type
     function GetInTransaction: Boolean; override;
     function GetSupportTransaction: Boolean; override;
     function GetConnectionName: String; override;
+    function ExecutesDirectly: Boolean; virtual;
 
     procedure ConfigureConnection(const AConnection: TFDConnection);
     procedure ConfigureMapRules(const AConnection: TFDConnection); virtual;
@@ -505,6 +506,11 @@ begin
   result := FConnectionName;
 end;
 
+function TTFireDACConnection.ExecutesDirectly: Boolean;
+begin
+  result := True;
+end;
+
 procedure TTFireDACConnection.InternalStartTransaction;
 begin
   FConnection.StartTransaction;
@@ -625,7 +631,7 @@ begin
   LDataSet := TFDQuery.Create(nil);
   try
     LDataSet.Connection := FConnection;
-    LDataSet.ResourceOptions.DirectExecute := True;
+    LDataSet.ResourceOptions.DirectExecute := ExecutesDirectly;
     LDataSet.SQL.Text := ASQL;
     for LParameter in AFilter.Parameters do
       SetParameter(LDataSet, LParameter);
