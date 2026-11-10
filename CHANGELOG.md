@@ -15,6 +15,8 @@ their moment.
 
 ### ORM
 
+- **`[TRequired]` accepts a number at zero.** A required `Integer`, `Int64`, `Double` or `Currency` member that is not nullable was refused at zero with "cannot be empty": the check meant for an empty date took the number for a date. The check now applies only to a `TDateTime`, `TDate` or `TTime` member, where zero is still refused as a date never entered. A member that is not nullable always has a value: to refuse zero, use `[TGreater(0)]`.
+
 - **Firebird and InterBase connections take a port.** `TTFirebirdSQLConnection` and `TTInterBaseConnection` gain `RegisterConnection(Name, Server, Port, Username, Password, DatabaseName)`, as PostgreSQL, MariaDB and Oracle already had. `TTFireDACConnectionParameters.Port` reaches these two drivers too: registered through `TTFireDACConnectionFactory`, the port used to be dropped and the connection went to 3050. A port of 0 still means the default, and the overloads without a port are unchanged.
 
 - **SQLite does not hand out a deleted key again.** The SQLite driver keeps a counter of the keys it hands out for each table, and the counter now starts the first time the connection reads entities from the table, counts its rows or writes to it, instead of at the first `CreateEntity<T>`. A key deleted while the application runs is therefore not handed out again: a new entity used to get it back and collide with the deleted one, still in the identity map. A table emptied outside Trysil after it was read no longer starts again from one: its keys go on from the highest one the connection has seen, until the application restarts.
