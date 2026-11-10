@@ -187,8 +187,9 @@ A method of any other shape is refused with `SNotValidValidator` when the
 entity is validated, so a wrong signature is a message and not a silent skip.
 
 Like an event method, a validator is found through RTTI, so the same advice
-holds: a `public` validator works, and the section we recommend is `protected`,
-with the `$RTTI` directive described in [Events](events.md). Without the
+holds: a `public` validator works as it is, with no directive, and the section
+we recommend is `protected`, which needs the `$RTTI` directive described in
+[Events](events.md). Without the
 directive a protected validator has no RTTI: it is never found and never runs,
 and that is the one mistake nothing reports.
 
