@@ -238,3 +238,11 @@ All seven FireDAC drivers extend `TTGenericConnection`.
     ignores it behaves exactly as it did. Override it if your engine needs a
     text LOB bound as a LOB rather than as a string - the FireDAC driver does,
     because an Oracle `VARCHAR2` bind stops at 4000 bytes.
+
+!!! note "`SetAsTime` is virtual with a body too"
+    `TTParam` also has `SetAsTime`, used for a `TIME` column. Like `SetAsText`
+    it is `virtual` with a body: it calls `SetAsDateTime`, so a descendant that
+    ignores it behaves exactly as it did. Override it if your engine tells a
+    time from a date and time - the FireDAC driver does, with
+    `TFDParam.AsTime`, because a `TIME` column written as a date and time
+    comes back as midnight on SQLite.
