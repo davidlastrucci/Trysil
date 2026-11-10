@@ -40,7 +40,7 @@ The database file path can be absolute or relative. If the file does not exist, 
 
 ## Sequences
 
-SQLite has no sequences. The connection keeps a counter for each table: the first time it touches the table, with a select, a count or a command, it reads the highest key (`SELECT IFNULL(MAX([ID]), 0) + 1 FROM [Persons]`). From then on `CreateEntity<T>` hands out the higher of that query and one past the last key it gave, so a key deleted while the application runs is never handed out again. The `[TSequence]` attribute is still required on the entity, but its name is not used.
+SQLite has no sequences. The connection keeps a counter for each table: the first time it reads entities from the table, counts its rows or writes to it, it reads the highest key (`SELECT IFNULL(MAX([ID]), 0) + 1 FROM [Persons]`). From then on `CreateEntity<T>` hands out the higher of that query and one past the last key it gave, so a key deleted while the application runs is never handed out again. The `[TSequence]` attribute is still required on the entity, but its name is not used.
 
 !!! tip "One application per database file"
     Without a real sequence a key can only be worked out from the rows already saved, so two applications writing the same file at the same time can give the same key to two new rows. SQLite also locks the whole file on every write. Use SQLite for a database that belongs to one application; when several applications or users write the same data, use a server database.

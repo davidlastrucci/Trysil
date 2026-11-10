@@ -55,10 +55,11 @@ Names the database sequence used for ID generation. Behavior varies by database:
 | MariaDB | `SELECT NEXTVAL(PersonsID) AS ID` (MariaDB 10.3+) |
 | SQLite | `SELECT IFNULL(MAX([ID]), 0) + 1 FROM [Persons]` |
 
-SQLite has no sequences, so it reads the highest key in the table and adds one,
-or one past the last key it handed out on this connection name if that is higher: the
-name in `[TSequence]` is required by the mapping but unused there, and two
-processes writing the same file can still get the same key. Every other engine
+SQLite has no sequences, so it reads the highest key in the table and adds one:
+the name in `[TSequence]` is required by the mapping but unused there. How the
+connection keeps track of the keys it hands out, and why a database file should
+belong to one application, is explained in
+[SQLite](../database-drivers/sqlite.md#sequences). Every other engine
 reads a real sequence, which must exist in the database - Trysil never creates
 it. The identifier is quoted and case-folded per engine, which is why the
 uppercase forms appear above: see the note on quoting in

@@ -43,7 +43,7 @@ The entity maps to this table with `[TSequence('PersonsID')]`. `CreateEntity<T>`
 
 ## SQLite
 
-SQLite has no sequences. `CreateEntity<T>` reads the highest key in the table and adds one (`SELECT IFNULL(MAX([ID]), 0) + 1 FROM [Persons]`), or one past the last key it handed out on this connection name if that is higher: the `[TSequence]` attribute is still required on the entity, but its name is not used, and two processes writing the same file can still get the same key.
+SQLite has no sequences. `CreateEntity<T>` reads the highest key in the table and adds one (`SELECT IFNULL(MAX([ID]), 0) + 1 FROM [Persons]`): the `[TSequence]` attribute is still required on the entity, but its name is not used. How the connection keeps track of the keys it hands out, and why a database file should belong to one application, is explained in [SQLite](../database-drivers/sqlite.md#sequences).
 
 ```sql
 CREATE TABLE IF NOT EXISTS [Persons] (
