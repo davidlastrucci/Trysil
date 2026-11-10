@@ -1329,6 +1329,24 @@ type
     property Name: String read FName write FName;
   end;
 
+{ TTestOrderByCountry - JOIN entity keyed on a column Orders does not have }
+
+  [TTable('Orders')]
+  [TSequence('OrdersID')]
+  [TJoin(TJoinKind.Inner, 'Customers', 'CustomerID', 'ID')]
+  TTestOrderByCountry = class
+  strict private
+    [TPrimaryKey]
+    [TColumn('Customers', 'CountryID')]
+    FCountryID: TTPrimaryKey;
+
+    [TColumn('Amount')]
+    FAmount: Double;
+  public
+    property CountryID: TTPrimaryKey read FCountryID;
+    property Amount: Double read FAmount;
+  end;
+
 { TTestCustomerWithRelation - customer with non-cascade relation to Orders }
 
   [TTable('Customers')]

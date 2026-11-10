@@ -247,7 +247,7 @@ procedure TTSQLiteConnection.EnsureSequence(
 var
   LKey: String;
 begin
-  if Assigned(ATableMap.PrimaryKey) then
+  if Assigned(ATableMap.PrimaryKey) and (not ATableMap.HasJoins) then
   begin
     LKey := SequenceKey(ATableMap);
     if not IsSequenceComputed(LKey) then

@@ -45,6 +45,7 @@ type
     procedure CheckTheDeletedIDIsNotReused(const AConnection: TTConnection);
     procedure CheckTheNextIDIsNew(const AContext: TTContext);
     procedure CheckTheTableIsRead(const AConnection: TTConnection);
+    procedure CheckTheJoinEntityIsRead(const AConnection: TTConnection);
   public
     [Setup]
     procedure Setup;
@@ -63,6 +64,9 @@ type
 
     [Test]
     procedure ATableAtTheCeilingCanStillBeRead;
+
+    [Test]
+    procedure AJoinEntityKeyedOnTheJoinedTableCanBeRead;
   end;
 
 implementation
@@ -268,6 +272,50 @@ begin
   LConnection := CreateFreshConnection;
   try
     CheckTheTableIsRead(LConnection);
+  finally
+    LConnection.Free;
+  end;
+end;
+
+procedure TTSQLiteSequenceCeilingTests.CheckTheJoinEntityIsRead(
+  const AConnection: TTConnection);
+var
+  LRaised: Boolean;
+  LContext: TTContext;
+  LList: TTList<TTestOrderByCountry>;
+begin
+  LRaised := False;
+  LContext := TTContext.Create(AConnection, False);
+  try
+    LList := LContext.CreateEntityList<TTestOrderByCountry>();
+    try
+      try
+        LContext.SelectAll<TTestOrderByCountry>(LList);
+      except
+        on E: Exception do
+          LRaised := True;
+      end;
+    finally
+      LList.Free;
+    end;
+  finally
+    LContext.Free;
+  end;
+
+  Assert.IsFalse(
+    LRaised,
+    'A join entity never creates entities, so its first read must not ' +
+    'start a key counter: Orders has no CountryID column');
+end;
+
+procedure TTSQLiteSequenceCeilingTests.
+  AJoinEntityKeyedOnTheJoinedTableCanBeRead;
+var
+  LConnection: TTConnection;
+begin
+  LConnection := CreateFreshConnection;
+  try
+    CheckTheJoinEntityIsRead(LConnection);
   finally
     LConnection.Free;
   end;
