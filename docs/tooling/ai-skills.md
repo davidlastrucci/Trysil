@@ -1,14 +1,15 @@
 # AI Assistant Skills
 
-Trysil ships ready-made **skills** — instruction files that teach an AI coding assistant how to use the Trysil API correctly: entity mapping, CRUD and queries, JSON serialization, and REST hosting. Installed into your project, they let your coding agent write real Trysil code instead of guessing.
+Trysil ships ready-made **skills** — instruction files that teach an AI coding assistant how to use the Trysil API correctly: entity mapping, CRUD and queries, JSON serialization, REST hosting, and the OpenAPI document of a REST server. Installed into your project, they let your coding agent write real Trysil code instead of guessing.
 
-The skills cover three areas:
+The skills cover these areas:
 
 | Skill | Covers |
 |---|---|
 | `trysil-orm` | `TTContext`, entity mapping attributes, CRUD, `TTFilterBuilder<T>`, `TTSession<T>`, lazy loading, change tracking & soft delete, JOIN queries, `RawSelect` |
 | `trysil-json` | `TTJSonContext`, serialization & deserialization, `DatasetToJSon`, `MetadataToJSon` |
 | `trysil-http` | Attribute-routed controllers, `TTHttpServer`, authentication, CORS, multi-tenant hosting |
+| `trysil-openapi` | `TTOpenApi<C>` OpenAPI 3.1 document for a `TTHttpServer`, `[TTag]`/`[TSummary]`/`[TRequestBody]`/`[TResponse]` attributes, entity schemas and validation constraints |
 
 ## Installing from the Trysil Expert
 
